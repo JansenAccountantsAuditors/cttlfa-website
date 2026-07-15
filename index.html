@@ -713,15 +713,17 @@ img[data-broken]{display:none!important}
 .ko-stats>div{text-align:center}
 .ko-stats b{display:block;color:var(--gold);font-family:var(--head);font-size:19px;line-height:1.1}
 .ko-stats span{color:#9fb0d8;font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em;font-size:11px}
-/* proper knockout bracket: rounds left-to-right, funnel-centred, with connector lines */
-.ko-bracket{display:flex;gap:36px;overflow-x:auto;padding:6px 6px 14px;align-items:stretch;min-height:320px}
-.ko-round{flex:0 0 256px;display:flex;flex-direction:column;position:relative}
-.ko-round-h{font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;font-size:13.5px;text-align:center;padding:9px;background:rgba(255,255,255,.05);border-radius:9px;margin-bottom:14px}
-.ko-ties{display:flex;flex-direction:column;gap:14px;justify-content:space-around;flex:1}
-.kt{background:#fff;border-radius:12px;padding:9px 12px;box-shadow:0 6px 16px rgba(0,0,0,.18);position:relative}
-/* connector lines — each tie sends a line forward to the next round, showing progression */
-.ko-round:not(:last-child) .kt::after{content:"";position:absolute;top:50%;right:-18px;width:18px;height:2px;background:rgba(255,255,255,.3)}
-.ko-round:not(:first-child) .kt::before{content:"";position:absolute;top:50%;left:-18px;width:18px;height:2px;background:rgba(255,255,255,.3)}
+/* proper knockout bracket: real tree, winners flow left-to-right, SVG connectors */
+.ko-bracket{display:flex;gap:46px;overflow-x:auto;padding:6px 8px 22px;align-items:stretch;position:relative}
+.ko-col{flex:0 0 244px;display:flex;flex-direction:column}
+.ko-col-h{font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;font-size:13.5px;text-align:center;padding:9px;background:rgba(255,255,255,.05);border-radius:9px;margin-bottom:14px}
+.ko-col-body{flex:1;display:flex;flex-direction:column;justify-content:space-around;gap:10px}
+.kt{background:#fff;border-radius:12px;padding:9px 12px;box-shadow:0 6px 16px rgba(0,0,0,.18);position:relative;z-index:1;min-height:64px;display:flex;flex-direction:column;justify-content:center}
+.ko-svg{position:absolute;top:0;left:0;pointer-events:none;z-index:0;overflow:visible}
+.kt-tbd .kt-nm,.kt-byerow .kt-nm{color:#9aa6bd;font-style:italic;font-weight:600}
+.kt-cbph{width:22px;height:22px;border-radius:50%;background:#eef2fb;border:1px dashed var(--line);flex:none;display:inline-block}
+.kt-bye{opacity:.9}
+.kt-adv .kt-nm{color:var(--green);font-weight:800}
 /* finals & key dates */
 .ko-finals{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px 20px;margin:0 auto 26px;max-width:900px}
 .ko-finals-h{display:flex;align-items:center;gap:9px;color:var(--gold);font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:13px;margin-bottom:14px;justify-content:center}
@@ -737,8 +739,8 @@ img[data-broken]{display:none!important}
 .kt-tm{display:flex;align-items:center;gap:9px;min-width:0}
 .kt-nm{font-size:14px;font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .kt-s{font-family:var(--cond);font-weight:800;font-size:17px;color:var(--muted);flex:none}
-.kt-win .kt-nm{color:var(--green);font-weight:800}
-.kt-win .kt-s{color:var(--green)}
+.kt-win .kt-nm,.kt-adv .kt-nm{color:var(--green);font-weight:800}
+.kt-win .kt-s,.kt-adv .kt-s{color:var(--green)}
 .kt-vs{text-align:center;font-family:var(--cond);text-transform:uppercase;font-size:11px;color:var(--blue);font-weight:800;margin:2px 0;letter-spacing:.06em}
 .kt-foot{border-top:1px dashed var(--line);margin-top:6px;padding-top:6px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.04em;font-size:11px;color:var(--muted);text-align:center}
 .kt-next{background:#fbfcff;border:1px solid var(--line)}
@@ -4165,33 +4167,64 @@ let CUPS=[];                    // populated from season.json (cups) in applySea
 let CUR_UPDATED='';
 let koActive=0;
 const KO_GROUP_ORDER=['Senior','Women','Veterans','Under-18','Under-16','Under-14','Under-12'];
-// a tie is [home, away, homeScore, awayScore, date, venue]
-function koPlayed(t){return t[2]!==''&&t[2]!=null&&t[3]!==''&&t[3]!=null;}
-function koTieCard(t,roundName){
-  const played=koPlayed(t);
-  if(played){const hs=+t[2],as=+t[3],hw=hs>as,aw=as>hs;
-    const row=(n,s,w)=>`<div class="kt-row ${w?'kt-win':''}"><span class="kt-tm">${crest(n,22)}<span class="kt-nm">${n}</span></span><span class="kt-s">${s}</span></div>`;
-    return `<div class="kt kt-done">${row(t[0],t[2],hw)}${row(t[1],t[3],aw)}${(!hw&&!aw)?`<div class="kt-foot">Level after normal time</div>`:''}</div>`;}
-  const row=n=>`<div class="kt-row"><span class="kt-tm">${crest(n,22)}<span class="kt-nm">${n}</span></span></div>`;
-  // semi-finals are played at the association's neutral venue (De Beers AFC)
+/* Each cup carries a bracket {rounds:[names], cols:[[box,...],...]} taken from
+   the association's own tournament chart — a clean tree ending at the Final,
+   with byes, penalties and undecided future ties laid out for us. A box is
+   {a,b,d,t,v,p}; a/b is {n,s} (team+score) or {bye:1} or {tbd:1}. */
+function koFinalHost(group){return group==='Senior'?'Cape Town Spurs FC':/^Under/.test(group)?'Norway Parks FC':'';}
+function koHasScore(x){return x&&x.s!==''&&x.s!=null&&x.s!==undefined;}
+function koBoxPlayed(b){return koHasScore(b.a)&&koHasScore(b.b);}
+function koRow(x,score,cls){
+  if(!x||x.tbd)return `<div class="kt-row kt-tbd"><span class="kt-tm"><span class="kt-cbph"></span><span class="kt-nm">To be confirmed</span></span></div>`;
+  if(x.bye)return `<div class="kt-row kt-byerow"><span class="kt-tm"><span class="kt-cbph"></span><span class="kt-nm">Bye</span></span></div>`;
+  const s=(score!==''&&score!=null&&score!==undefined)?`<span class="kt-s">${score}</span>`:'';
+  return `<div class="kt-row ${cls||''}"><span class="kt-tm">${crest(x.n,22)}<span class="kt-nm">${x.n}</span></span>${s}</div>`;}
+function koBoxCard(b,roundName,group){
   const isSemi=/semi/i.test(roundName||'');
-  const venue=isSemi?'De Beers AFC · neutral venue':t[5];
-  const meta=[t[4],venue].filter(Boolean).join(' · ');
-  return `<div class="kt kt-next">${row(t[0])}<div class="kt-vs">v</div>${row(t[1])}${meta?`<div class="kt-foot">${meta}</div>`:''}</div>`;}
-function koChampion(cup){
-  const fin=(cup.rounds||[]).find(r=>/final/i.test(r.name)&&!/semi|quarter|third|3rd|play/i.test(r.name));
-  if(!fin||!fin.ties.length)return '';
-  const t=fin.ties[0];if(!koPlayed(t))return '';
-  const hs=+t[2],as=+t[3];if(hs===as)return '';
-  const w=hs>as?t[0]:t[1];
+  const isFinal=/final/i.test(roundName||'')&&!/semi|quarter|third|3rd|play/i.test(roundName||'');
+  // bye — the real team goes through
+  if((b.a&&b.a.bye)||(b.b&&b.b.bye)){
+    const real=(b.a&&b.a.bye)?b.b:b.a, byeS=(b.a&&b.a.bye)?b.a:b.b;
+    return `<div class="kt kt-bye">${koRow(real,'', 'kt-adv')}${koRow(byeS)}<div class="kt-foot">Bye &middot; through to the next round</div></div>`;}
+  if(koBoxPlayed(b)){
+    const as=+b.a.s,bs=+b.b.s;let wa=as>bs,wb=bs>as;
+    if(as===bs&&b.p){const pp=b.p.split('-').map(Number);wa=pp[0]>pp[1];wb=pp[1]>pp[0];}
+    const foot=b.p?`<div class="kt-foot">Penalties ${b.p}</div>`:'';
+    return `<div class="kt kt-done">${koRow(b.a,b.a.s,wa?'kt-adv':'')}${koRow(b.b,b.b.s,wb?'kt-adv':'')}${foot}</div>`;}
+  // upcoming (teams known or to be confirmed)
+  const venue=isSemi?'De Beers AFC · neutral venue':(isFinal?(koFinalHost(group)||b.v||''):(b.v||''));
+  const meta=[b.d,b.t,venue].filter(Boolean).join(' &middot; ');
+  return `<div class="kt kt-next">${koRow(b.a)}<div class="kt-vs">v</div>${koRow(b.b)}${meta?`<div class="kt-foot">${meta}</div>`:''}</div>`;}
+function koWinnerName(b){
+  if(!koBoxPlayed(b))return '';
+  const as=+b.a.s,bs=+b.b.s;
+  if(as>bs)return b.a.n; if(bs>as)return b.b.n;
+  if(b.p){const pp=b.p.split('-').map(Number);return pp[0]>pp[1]?b.a.n:b.b.n;}
+  return '';}
+function koChampion(cup){const cols=(cup.bracket||{}).cols||[];if(!cols.length)return '';
+  const fin=cols[cols.length-1];if(!fin||fin.length!==1)return '';
+  const w=koWinnerName(fin[0]);if(!w)return '';
   return `<div class="ko-champ"><div class="ko-champ-ic">${trophySVG}</div><div><span>Champions</span><b>${w}</b></div></div>`;}
-function koStage(cup){
-  const rounds=cup.rounds||[];if(!rounds.length)return '';
-  // current stage = earliest round that still has an unplayed tie, else the last round
-  let stage=rounds[rounds.length-1];
-  for(const r of rounds){if(r.ties.some(t=>!koPlayed(t))){stage=r;break;}}
-  return stage?stage.name:'';}
-function koTeamCount(cup){const s=new Set();(cup.rounds||[]).forEach(r=>r.ties.forEach(t=>{s.add(t[0]);s.add(t[1]);}));return s.size;}
+function koStage(cup){const b=cup.bracket||{};const cols=b.cols||[],names=b.rounds||[];
+  for(let i=0;i<cols.length;i++){if(cols[i].some(x=>!koBoxPlayed(x)&&!((x.a&&x.a.bye)||(x.b&&x.b.bye))))return names[i];}
+  return names[names.length-1]||'';}
+function koTeamCount(cup){const s=new Set();((cup.bracket||{}).cols||[]).forEach(col=>col.forEach(x=>{[x.a,x.b].forEach(t=>{if(t&&t.n)s.add(t.n);});}));return s.size;}
+function drawKoConnectors(bracket){
+  if(!bracket)return;
+  const old=bracket.querySelector('.ko-svg');if(old)old.remove();
+  const cols=[...bracket.querySelectorAll('.ko-col')];if(cols.length<2)return;
+  const br=bracket.getBoundingClientRect();const ox=bracket.scrollLeft-br.left,oy=bracket.scrollTop-br.top;
+  const W=bracket.scrollWidth,H=bracket.scrollHeight;
+  let paths='';
+  for(let r=1;r<cols.length;r++){
+    const cur=[...cols[r].querySelectorAll('.kt')],prev=[...cols[r-1].querySelectorAll('.kt')];
+    cur.forEach((box,i)=>{const bx=box.getBoundingClientRect();const bl=bx.left+ox,bmy=bx.top+oy+bx.height/2;
+      [prev[2*i],prev[2*i+1]].forEach(fb=>{if(!fb)return;const fr=fb.getBoundingClientRect();
+        const fx=fr.left+ox+fr.width,fmy=fr.top+oy+fr.height/2;const mx=(fx+bl)/2;
+        paths+=`<path d="M${fx.toFixed(1)},${fmy.toFixed(1)} H${mx.toFixed(1)} V${bmy.toFixed(1)} H${bl.toFixed(1)}" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="2"/>`;});});
+  }
+  bracket.insertAdjacentHTML('afterbegin',`<svg class="ko-svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${paths}</svg>`);
+}
 function renderKnockouts(){
   const sel=document.getElementById('koSelect');if(!sel)return;
   const head=document.getElementById('koHead'),wrap=document.getElementById('koBracketWrap');
@@ -4199,23 +4232,25 @@ function renderKnockouts(){
     sel.innerHTML='';if(head)head.innerHTML='';
     if(wrap)wrap.innerHTML=`<div class="ko-empty"><div class="ko-empty-ic">${trophySVG}</div><h3>Cup football</h3><p>The association's knockout competitions load here as the draws are published. Each cup shows its rounds, results and upcoming ties.</p></div>`;
     return;}
-  // grouped selector
   const groups=[...new Set(CUPS.map(c=>c.group))].sort((a,b)=>KO_GROUP_ORDER.indexOf(a)-KO_GROUP_ORDER.indexOf(b));
   const glabel={'Senior':'Senior & Reserves','Women':"Women's",'Veterans':'Veterans','Under-18':'Under-18','Under-16':'Under-16','Under-14':'Under-14','Under-12':'Under-12'};
   sel.innerHTML=groups.map(g=>`<optgroup label="${glabel[g]||g}">`+CUPS.map((c,i)=>c.group===g?`<option value="${i}">${c.name}</option>`:'').join('')+`</optgroup>`).join('');
   sel.value=String(koActive);
   const cup=CUPS[koActive]||CUPS[0];
-  const rounds=cup.rounds||[];
-  const champ=koChampion(cup);
-  if(head)head.innerHTML=champ+`<div class="ko-meta"><div class="ko-meta-t"><span class="ko-badge">${trophySVG}</span><div><h3>${cup.name}</h3><span>${cup.group==='Senior'?'Senior competition':cup.group+' competition'}</span></div></div>
-    <div class="ko-stats"><div><b>${koTeamCount(cup)}</b><span>Teams</span></div><div><b>${rounds.length}</b><span>Rounds</span></div><div><b>${koStage(cup)||'—'}</b><span>Current stage</span></div></div></div>`;
+  const br=cup.bracket||{rounds:[],cols:[]};const cols=br.cols||[],names=br.rounds||[];
+  if(head)head.innerHTML=koChampion(cup)+`<div class="ko-meta"><div class="ko-meta-t"><span class="ko-badge">${trophySVG}</span><div><h3>${cup.name}</h3><span>${cup.group==='Senior'?'Senior competition':cup.group+' competition'}</span></div></div>
+    <div class="ko-stats"><div><b>${koTeamCount(cup)}</b><span>Teams</span></div><div><b>${names.length}</b><span>Rounds</span></div><div><b>${koStage(cup)||'—'}</b><span>Current stage</span></div></div></div>`;
   if(wrap){
-    if(!rounds.length){wrap.innerHTML=`<div class="ko-empty"><div class="ko-empty-ic">${trophySVG}</div><h3>${cup.name}</h3><p>The draw for this cup has not been published yet. Rounds and results appear here as soon as the competition begins.</p></div>`;}
-    else{wrap.innerHTML=`<div class="ko-bracket">`+rounds.map(r=>`<div class="ko-round"><div class="ko-round-h">${r.name}</div><div class="ko-ties">${r.ties.map(t=>koTieCard(t,r.name)).join('')}</div></div>`).join('')+`</div>`;}
+    if(!cols.length){wrap.innerHTML=`<div class="ko-empty"><div class="ko-empty-ic">${trophySVG}</div><h3>${cup.name}</h3><p>The draw for this cup has not been published yet. Rounds and results appear here as soon as the competition begins.</p></div>`;}
+    else{const rows=cols[0].length;const minH=Math.max(300,rows*84);
+      wrap.innerHTML=`<div class="ko-bracket" style="min-height:${minH}px">`+cols.map((col,ri)=>`<div class="ko-col"><div class="ko-col-h">${names[ri]||''}</div><div class="ko-col-body">${col.map(b=>koBoxCard(b,names[ri],cup.group)).join('')}</div></div>`).join('')+`</div>`;
+      const bel=wrap.querySelector('.ko-bracket');
+      requestAnimationFrame(()=>requestAnimationFrame(()=>drawKoConnectors(bel)));}
   }
   const up=document.getElementById('koUpdated');if(up&&CUR_UPDATED)up.textContent='Live · updated '+CUR_UPDATED;
 }
 document.getElementById('koSelect')&&(document.getElementById('koSelect').onchange=function(){koActive=+this.value||0;renderKnockouts();});
+{let kot;window.addEventListener('resize',()=>{clearTimeout(kot);kot=setTimeout(()=>{const b=document.querySelector('#koBracketWrap .ko-bracket');if(b&&document.getElementById('page-knockouts').classList.contains('active'))drawKoConnectors(b);},200);});}
 renderKnockouts();
 
 /* ---------- CLUB HUB ---------- */
@@ -4449,7 +4484,8 @@ function go(page,fromHash){
   document.getElementById('page-'+page).classList.add('active');
   document.querySelectorAll('.menu a[data-nav]').forEach(a=>{const on=a.dataset.nav===page;a.classList.toggle('active',on);on?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current');});
   setMeta(page);setCrumbs(page);
-  const dyn={thisweekend:renderThisWeekend,stats:renderStats,downloads:renderDownloads,grounds:renderGrounds,parents:renderParents,clubadmin:renderClubAdmin,champions:renderChampions,halloffame:renderHOF,media:renderMedia,clubs:initClubMap};
+  const dyn={thisweekend:renderThisWeekend,stats:renderStats,downloads:renderDownloads,grounds:renderGrounds,parents:renderParents,clubadmin:renderClubAdmin,champions:renderChampions,halloffame:renderHOF,media:renderMedia,clubs:initClubMap,
+    knockouts:()=>{const b=document.querySelector('#koBracketWrap .ko-bracket');if(b)requestAnimationFrame(()=>requestAnimationFrame(()=>drawKoConnectors(b)));}};
   if(dyn[page])try{dyn[page]();}catch(e){}
   window.scrollTo({top:0,behavior:'auto'});
   closeDrawer();

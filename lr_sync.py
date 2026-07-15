@@ -206,61 +206,115 @@ def round_rank(r):
     return 60
 
 
-def round_of(tr):
-    """The tie's round, read from the row tooltip title (e.g. '... - Quarter-Final')."""
-    for td in tr.find_all("td"):
-        t = td.get("title") or ""
-        t = re.sub(r"<[^>]+>", " ", t)
-        m = re.search(r"-\s*([A-Za-z0-9 /\-]+?)\s*$", t.strip())
-        if m and any(k in m.group(1) for k in ("Round", "Final", "Prelim", "Last")):
-            return m.group(1).strip()
-    return ""
+CODE = re.compile(r"^([A-Za-z0-9]{1,6}-\s*\d+)-\s*(.*)$")
+
+
+def build_codemap(soup):
+    """team code (e.g. 'PD-05') -> full club name, read from the fixture-group page
+    where names are not truncated. Lets us resolve the chart's shortened names."""
+    m = {}
+    for td in soup.find_all("td"):
+        t = re.sub(r"\s+", " ", td.get_text(" ", strip=True)).strip()
+        cm = CODE.match(t)
+        if cm:
+            code = re.sub(r"\s+", "", cm.group(1))
+            name = re.sub(r"\s*\d+(\s*-\s*\d+)?\s*$", "", cm.group(2)).strip()
+            if name and not name.isdigit():
+                m.setdefault(code, name)
+    return m
+
+
+def parse_cup_team(text, codemap):
+    """A chart team cell -> {'n','s'} | {'bye':1} | {'tbd':1}."""
+    t = re.sub(r"\s+", " ", (text or "")).strip()
+    if not t:
+        return {"tbd": 1}
+    cm = CODE.match(t)
+    if cm:
+        code = re.sub(r"\s+", "", cm.group(1))
+        rest = cm.group(2).strip()
+        sm = re.search(r"(\d+)\s*$", rest)
+        score = sm.group(1) if sm else ""
+        name = codemap.get(code) or re.sub(r"\s*\d+\s*$", "", rest)
+        if name.lower() == "bye":
+            return {"bye": 1}
+        return {"n": name, "s": score}
+    if t.lower() == "bye" or t.lower().startswith("bye "):
+        return {"bye": 1}
+    if " or " in t.lower() or "winner" in t.lower():
+        return {"tbd": 1}
+    sm = re.search(r"(\d+)\s*$", t)
+    if sm:
+        return {"n": re.sub(r"\s*\d+\s*$", "", t), "s": sm.group(1)}
+    return {"n": t}
 
 
 def scrape_cup(fgkey, crests):
+    """Return the cup's bracket as {rounds:[names], cols:[[box,...],...]} using
+    LeagueRepublic's own tournament chart (the authoritative tree — byes, the
+    final, and undecided future ties are all laid out for us)."""
     soup = BeautifulSoup(get(f"{SITE}/fg/{fgkey}.html"), "html.parser")
-    rounds = {}
-    for t in soup.find_all("table"):
-        first = t.find("tr")
-        head = (first.get_text(" ", strip=True) if first else "").upper()
-        is_res, is_fix = "SCORE" in head, "VENUE" in head
-        if not (is_res or is_fix):
+    codemap = build_codemap(soup)
+    # collect crest ids for cup teams (resolved by name on the site)
+    for td in soup.find_all("td"):
+        c = crest_id(td)
+        if c:
+            nm = clean(td.get_text(" ", strip=True))
+            if nm:
+                crests[nm] = c
+    link = soup.find("a", href=re.compile(r"/displayCompetition/"))
+    if not link:
+        return {"rounds": [], "cols": []}
+    chart = BeautifulSoup(get(SITE + link.get("href")), "html.parser")
+    rounds = []
+    for h in chart.find_all("h4", class_="competition-round-title"):
+        p = h.find_parent("div", style=re.compile("left"))
+        mm = re.search(r"left:\s*(\d+)px", p.get("style", "")) if p else None
+        rounds.append((int(mm.group(1)) if mm else 0, h.get_text(strip=True)))
+    rounds.sort()
+    lefts = [r[0] for r in rounds]
+    names = [r[1] for r in rounds]
+    cols = [[] for _ in rounds]
+    for outer in chart.find_all("div", class_="competition-box-outer"):
+        pos = outer.find_parent("div", style=re.compile(r"position:\s*absolute"))
+        st = pos.get("style", "") if pos else ""
+        lm = re.search(r"left:\s*(\d+)px", st)
+        tm = re.search(r"top:\s*(\d+)px", st)
+        if not (lm and tm):
             continue
-        for tr in t.find_all("tr")[1:]:
-            td = tr.find_all("td")
-            if len(td) < 5:
-                continue
-            rnd = round_of(tr) or "Fixtures"
-            hn, an = clean(td[2].get_text(" ", strip=True)), clean(td[4].get_text(" ", strip=True))
-            if not (hn and an):
-                continue
-            for c in (crest_id(td[2]), crest_id(td[4])):
-                nmc = clean(td[2].get_text(" ", strip=True)) if c == crest_id(td[2]) else clean(td[4].get_text(" ", strip=True))
-                if c:
-                    crests[nmc] = c
-            if is_res:
-                m = re.search(r"(\d+)\s*-\s*(\d+)", td[3].get_text())
-                if not m:
-                    continue
-                rounds.setdefault(rnd, []).append(
-                    [hn, an, m.group(1), m.group(2), fdate(td[1].get_text()), ""])
-            else:
-                rounds.setdefault(rnd, []).append(
-                    [hn, an, "", "", fdate(td[1].get_text()),
-                     td[5].get_text(" ", strip=True) if len(td) > 5 else ""])
-    ordered = [{"name": rn, "ties": rounds[rn]}
-               for rn in sorted(rounds, key=round_rank)]
-    return ordered
+        L, T = int(lm.group(1)), int(tm.group(1))
+        ri = min(range(len(lefts)), key=lambda i: abs(lefts[i] - L)) if lefts else 0
+        cells = outer.find_all("div", class_="competition-match-team")
+        teams = [parse_cup_team(c.get_text(" ", strip=True), codemap) for c in cells]
+        while len(teams) < 2:
+            teams.append({"tbd": 1})
+        dd = outer.find("div", class_="competition-match-date")
+        dtx = re.sub(r"\s+", " ", dd.get_text(" ", strip=True)) if dd else ""
+        box = {"a": teams[0], "b": teams[1],
+               "d": fdate(dtx), "t": ftime(dtx)}
+        if dd:
+            for a in dd.find_all("a"):
+                atx = re.sub(r"\s+", " ", a.get_text(" ", strip=True)).strip()
+                if atx and not re.match(r"^\d{2}/\d{2}/\d{2}", atx):
+                    box["v"] = atx
+        pm = re.search(r"Pens?\s*(\d+\s*-\s*\d+)", dtx, re.I)
+        if pm:
+            box["p"] = re.sub(r"\s+", "", pm.group(1))
+        cols[ri].append((T, box))
+    for c in cols:
+        c.sort(key=lambda x: x[0])
+    return {"rounds": names, "cols": [[b for _, b in c] for c in cols]}
 
 
 def build_cups(seed, crests):
     cups = []
     for raw, fgkey in discover_cups(seed):
         try:
-            rounds = scrape_cup(fgkey, crests)
+            bracket = scrape_cup(fgkey, crests)
             cups.append({"key": fgkey, "name": cup_clean_name(raw),
-                         "group": cup_group(raw), "rounds": rounds})
-            print(f"  ○ {cup_clean_name(raw):34} {sum(len(r['ties']) for r in rounds)} ties, {len(rounds)} rounds")
+                         "group": cup_group(raw), "bracket": bracket})
+            n = sum(len(c) for c in bracket["cols"])
+            print(f"  ○ {cup_clean_name(raw):34} {n} ties, {len(bracket['rounds'])} rounds")
         except Exception as e:
             print(f"  ✗ cup {raw[:34]} {e}")
         time.sleep(0.12)
