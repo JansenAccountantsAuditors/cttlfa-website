@@ -1,0 +1,57 @@
+name: LeagueRepublic sync
+
+# Pulls fixtures, results and logs from LeagueRepublic and commits season.json
+# next to the site, so the public pages always show current data. No secrets,
+# no login — the data is public (Route 2 / scrape mode).
+
+on:
+  schedule:
+    # Hourly keeps a private repo inside GitHub's free Actions minutes. The sync
+    # only commits when the data actually changes, so the site rebuilds just a
+    # few times a day. On a public production repo (Actions are free/unlimited)
+    # you can tighten this to "*/20 * * * *" for ~20-minute freshness.
+    - cron: "0 * * * *"        # top of every hour (UTC)
+  workflow_dispatch: {}         # lets you run it on demand from the Actions tab
+
+permissions:
+  contents: write             # allow the workflow to commit season.json
+
+concurrency:
+  group: lr-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4
+
+      - name: Pull the current season
+        run: python3 lr_sync.py --out season.json
+
+      # Optional: also rebuild the 2025 archive each run. 2025 is a fixed
+      # season, so this is usually unnecessary — un-comment the step AND add
+      # season-2025.json to the "git add" line below if you want it refreshed.
+      # - name: Pull 2025 archive
+      #   run: python3 lr_sync.py --season 2025 --out season-2025.json
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "cttlfa-sync-bot"
+          git config user.email "sync-bot@users.noreply.github.com"
+          # season.json carries leagues AND knockout cups; photos/crests holds the
+          # locally-hosted club badges the sync mirrors so nothing loads off-site.
+          git add season.json photos/crests
+          if git diff --staged --quiet; then
+            echo "No changes."
+          else
+            git commit -m "chore: update season.json + crests ($(date -u +%FT%TZ))"
+            git push
+          fi
