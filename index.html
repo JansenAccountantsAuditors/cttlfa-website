@@ -644,6 +644,24 @@ footer ul a{font-size:14px;transition:.2s}footer ul a:hover{color:var(--gold);pa
 .event .einfo .em span{display:flex;align-items:center;gap:5px}
 .event .einfo svg{width:14px;height:14px;color:var(--blue)}
 .event .etag{flex:none}
+.event .cal.tbc{background:linear-gradient(160deg,#7f8fbf,#48598f)}
+.event .cal.tbc .d{font-size:19px}
+.event .cal.gold{background:linear-gradient(160deg,#e7b84b,#b8860b);color:#fff}
+.event.spot{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),var(--shadow-sm)}
+.event .em .rule{color:var(--blue);font-weight:700}
+/* ---- mobile hardening ---- */
+html{overflow-x:hidden}
+.cta-row{flex-wrap:wrap}
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;max-width:100%}
+@media(max-width:640px){
+  .sec-head{flex-wrap:wrap;gap:14px}
+  .tbl-scroll>.tbl{min-width:480px}
+  .mc2-select{flex-wrap:wrap;width:100%;box-sizing:border-box;border-radius:16px}
+  .mc2-select span{flex:0 0 auto}
+  .mc2-select select{min-width:0;flex:1 1 100%;width:100%}
+  .event{gap:12px;padding:14px 15px}
+  .event .em{gap:8px}
+}
 /* facebook feed + news&events layout */
 .ne-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:30px;align-items:start}
 @media(max-width:920px){.ne-grid{grid-template-columns:1fr}}
@@ -945,6 +963,30 @@ img[data-broken]{display:none!important}
 .acc ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:9px}
 .acc ol li{color:var(--ink);font-size:14.5px;line-height:1.55}
 .acc ol li b{color:var(--navy)}
+/* protest & complaint guide */
+.pc-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:820px){.pc-grid{grid-template-columns:1fr}}
+.pccard{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);display:flex;flex-direction:column}
+.pccard .pchead{color:#fff;padding:18px 22px}
+.pccard.protest .pchead{background:linear-gradient(120deg,var(--navy),var(--blue))}
+.pccard.complaint .pchead{background:linear-gradient(120deg,#7a1220,var(--red))}
+.pccard .pchead .rl{font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;font-size:12px;opacity:.85}
+.pccard .pchead h4{color:#fff;font-size:22px;margin:2px 0 0}
+.pccard .pchead p{color:rgba(255,255,255,.85);font-size:13.5px;margin-top:5px}
+.pccard .pcbody{padding:18px 22px;display:flex;flex-direction:column;flex:1}
+.pc-row{display:flex;gap:12px;padding:9px 0;border-top:1px solid var(--line);font-size:14px}
+.pc-row:first-of-type{border-top:none}
+.pc-row b{color:var(--navy);min-width:76px;flex:none;font-family:var(--cond);text-transform:uppercase;letter-spacing:.04em;font-size:12.5px;padding-top:1px}
+.pc-row span{color:var(--muted)}
+.pc-row span a{color:var(--blue);font-weight:700}
+.pccard .btn{margin-top:auto}
+.pc-extra{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+@media(max-width:820px){.pc-extra{grid-template-columns:1fr}}
+.pc-note{background:#F0F4FE;border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.pc-note h5{color:var(--navy);font-family:var(--head);font-size:16px;margin:0 0 6px}
+.pc-note p{color:var(--muted);font-size:13.7px;margin:0}
+.pc-note.warn{background:#FEF3F2;border-color:#f6d5d0}
+.pc-note a{color:var(--blue);font-weight:700}
 /* accessibility */
 .skip{position:absolute;left:-9999px;top:10px;z-index:500;background:var(--gold);color:var(--navy);padding:11px 18px;border-radius:8px;font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 .skip:focus{left:12px}
@@ -1556,7 +1598,7 @@ html.pw-unlocked #pwgate{display:none}
         <!-- table -->
         <div class="card">
           <div class="card-h"><h3><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F4B41A" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-6"/></svg>Premier Log</h3><span class="lr">Top 6</span></div>
-          <div class="card-b" style="padding-top:14px"><table class="tbl" id="home-table"></table></div>
+          <div class="card-b" style="padding-top:14px"><div class="tbl-scroll"><table class="tbl" id="home-table"></table></div></div>
           <div class="card-f"><a data-nav="matchcentre">Full standings →</a></div>
         </div>
       </div>
@@ -1700,7 +1742,7 @@ html.pw-unlocked #pwgate{display:none}
         <div class="mc2-grid">
           <div class="card mc2-log">
             <div class="card-h"><h3 id="mcLogTitle">Premier Division</h3><span class="lr"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F4B41A" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-6"/></svg>League Log</span></div>
-            <div class="card-b" style="padding:8px 18px 14px"><table class="tbl" id="mcLogTable"></table></div>
+            <div class="card-b" style="padding:8px 18px 14px"><div class="tbl-scroll"><table class="tbl" id="mcLogTable"></table></div></div>
             <div class="card-f mc2-legend"><span><i class="lz-p"></i>Promotion</span><span><i class="lz-r"></i>Relegation</span><span>Tap a club for its hub</span></div>
           </div>
           <div class="card mc2-side">
@@ -2298,7 +2340,10 @@ html.pw-unlocked #pwgate{display:none}
         <div><b>Where it fits.</b> Our approach aligns with the SAFA National Safeguarding Policy and the SASCOC safeguarding policy for all sport, and follows the duty of care clubs owe to children, the Children's Act 38 of 2005 and the National Child Protection Register, the Criminal Law (Sexual Offences and Related Matters) Amendment Act 32 of 2007, and the Protection from Harassment Act 17 of 2011. As a SAFA affiliate the association is required to have its own safeguarding policy, which it is now putting in place. If a child is in immediate danger, contact the SAPS on 10111 or Childline South Africa on 116.</div>
       </div>
 
-      <div class="cta-band" style="margin-top:30px"><div><h2>Report a safeguarding concern</h2><p>If you are worried about a child or an adult at risk in our football, do not keep it to yourself. Speak to your club's Safeguarding Officer, or report it to the association.</p></div><a class="btn btn-gold" data-nav="report">Report a concern →</a></div>
+      <div style="margin-top:26px;background:linear-gradient(120deg,var(--navy),var(--blue));border-radius:14px;padding:16px 22px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap">
+        <div style="color:#dfe7fb;font-size:14px;max-width:660px"><b style="color:#fff">Need to report a safeguarding concern?</b> Speak to your club's Safeguarding Officer, or report it to the association. If a child is in immediate danger, call SAPS 10111 or Childline 116 first.</div>
+        <a class="btn btn-gold" style="flex:none" href="mailto:ops@cttlfa.com?subject=Safeguarding%20concern%20%E2%80%94%20CTTLFA&body=Hello%20CTTLFA%20office%2C%0A%0AI%20would%20like%20to%20report%20a%20safeguarding%20concern%2C%20for%20the%20attention%20of%20the%20General%20Secretary%20/%20Safeguarding.%0A%0AIf%20a%20child%20is%20in%20immediate%20danger%2C%20please%20call%20SAPS%2010111%20or%20Childline%20116%20first%2C%20then%20send%20this.%0A%0AClub%20or%20team%20%28if%20any%29%3A%0AWhat%20happened%2C%20where%20and%20when%3A%0AWho%20is%20involved%3A%0AHas%20anyone%20else%20been%20told%3A%0A%0AYour%20name%3A%0AYour%20role%3A%0AContact%20number%3A%0A%0AThank%20you.">Report a concern →</a>
+      </div>
     </div>
   </section>
 </div>
@@ -2552,21 +2597,25 @@ html.pw-unlocked #pwgate{display:none}
 
 <!-- ================= DISCIPLINARY PROCESS ================= -->
 <div class="page" id="page-discipline">
-  <section class="sec navy" style="padding-top:108px">
+  <section class="sec navy p2hero">
     <div class="wrap">
-      <div class="center" style="max-width:760px;margin:0 auto 30px">
+      <div class="center" style="max-width:760px;margin:0 auto">
         <span class="eyebrow gold">Governance</span>
         <h2 style="font-size:clamp(30px,5vw,46px);margin:10px 0">Disciplinary &amp; Dispute Process</h2>
         <p style="color:#c3cdea">Know how to raise a matter correctly and on time. This is a plain-English guide for clubs on lodging protests, complaints and appeals — and how the association's three governing documents work together.</p>
       </div>
+    </div>
+  </section>
 
+  <section class="sec" style="padding-top:36px">
+    <div class="wrap">
       <h3 class="dc-h">How the three documents fit together</h3>
       <div class="dc-docs">
         <div class="dcdoc"><span class="tagx">The powers &amp; the ceiling</span><h4>Constitution</h4><p>Creates the Association, its structures and powers. Houses the <b>Dispute Resolution Committee</b> and the arbitration route, and sets the fee and fine schedules. Where our documents are silent, SAFA Cape Town and SAFA National apply.</p></div>
         <div class="dcdoc g"><span class="tagx">How you lodge things</span><h4>Rules &amp; Regulations</h4><p>The club's day-to-day manual for competitions. It sets out <b>protests, complaints and appeals</b> — who may lodge, the prescribed forms, the deadlines and the fees.</p></div>
         <div class="dcdoc r"><span class="tagx">Offences &amp; hearings</span><h4>Disciplinary Code</h4><p>Defines misconduct offences and sanctions, establishes the <b>Disciplinary Committee</b> and <b>Appeal Committee</b>, and governs how hearings are run and disciplinary appeals decided.</p></div>
       </div>
-      <p class="center" style="color:#8ea0cf;font-size:13.5px;margin-top:14px;max-width:760px;margin-inline:auto">In short: the <b style="color:#c3cdea">Constitution</b> governs powers, structures and disputes; the <b style="color:#c3cdea">Rules &amp; Regulations</b> govern protests, complaints and appeals; the <b style="color:#c3cdea">Disciplinary Code</b> governs offences, hearings and sanctions.</p>
+      <p class="center" style="color:var(--muted);font-size:13.5px;margin-top:14px;max-width:760px;margin-inline:auto">In short: the <b style="color:var(--navy)">Constitution</b> governs powers, structures and disputes; the <b style="color:var(--navy)">Rules &amp; Regulations</b> govern protests, complaints and appeals; the <b style="color:var(--navy)">Disciplinary Code</b> governs offences, hearings and sanctions.</p>
 
       <h3 class="dc-h" style="margin-top:52px">The process at a glance</h3>
       <div class="card" style="padding:26px 20px">
@@ -2595,8 +2644,53 @@ html.pw-unlocked #pwgate{display:none}
           <p>Against a Disciplinary Committee decision, on the facts or the law. Some minor sanctions cannot be appealed — check first.</p></div>
       </div>
 
+      <h3 class="dc-h" style="margin-top:52px">Protests &amp; complaints — at a glance</h3>
+      <p style="color:var(--muted);max-width:840px;margin-bottom:18px">This is the same guide the association circulated to clubs. A <b style="color:var(--navy)">protest</b> is about a match; a <b style="color:var(--navy)">complaint</b> is about misconduct or an off-field offence. Both are lodged with the Disciplinary Committee, in writing, within the deadline, with the <b style="color:var(--navy)">R700</b> fee and proof of payment attached.</p>
+      <div class="pc-grid">
+        <div class="pccard protest">
+          <div class="pchead">
+            <span class="rl">Rule 11</span>
+            <h4>Protest</h4>
+            <p>About a match — an ineligible or unregistered player, or a matter raised with the referee during the game.</p>
+          </div>
+          <div class="pcbody">
+            <div class="meta2" style="margin:0 0 12px"><span class="tag tag-blue">Within 4 days</span><span class="tag tag-gold">R700</span><span class="tag tag-green">+2 days for grounds</span></div>
+            <div class="pc-row"><b>Who lodges</b><span>The captain or a listed team official, recorded on the official return and signed on both team sheets on the day.</span></div>
+            <div class="pc-row"><b>How</b><span>Written notice of intention on the prescribed form, signed by a club executive, with the fee and proof of payment.</span></div>
+            <div class="pc-row"><b>Then</b><span>Full written grounds and evidence within a further 2 days. Both clubs are asked to attend the hearing.</span></div>
+            <div class="pc-row"><b>Where</b><span>The Disciplinary Committee — <a href="mailto:dc@cttlfa.com">dc@cttlfa.com</a></span></div>
+            <a class="btn btn-blue" style="margin-top:16px;width:100%;justify-content:center" href="mailto:dc@cttlfa.com?subject=Protest%20%E2%80%94%20CTTLFA&body=Dear%20Disciplinary%20Committee%2C%0A%0ANOTICE%20OF%20INTENTION%20TO%20PROTEST%20%28Rule%2011%29.%0A%0APlease%20note%3A%20a%20protest%20must%20be%20lodged%20within%204%20days%20of%20the%20match%2C%20on%20the%20prescribed%20form%20signed%20by%20a%20club%20executive%2C%20with%20the%20R700%20fee%20and%20proof%20of%20payment%20attached.%20Full%20written%20grounds%20follow%20within%20a%20further%202%20days.%0A%0AClub%20lodging%3A%0AOpponent%3A%0AMatch%20%28date%2C%20division%2C%20venue%29%3A%0AGrounds%20of%20protest%3A%0A%0AProof%20of%20payment%20attached%20%28yes/no%29%3A%0A%0AName%3A%0APosition%20at%20club%3A%0AContact%20number%3A%0A%0AThank%20you.">Start a protest by email →</a>
+          </div>
+        </div>
+        <div class="pccard complaint">
+          <div class="pchead">
+            <span class="rl">Rule 12.1</span>
+            <h4>Complaint</h4>
+            <p>Misconduct or an off-field offence by a team, official, player or club.</p>
+          </div>
+          <div class="pcbody">
+            <div class="meta2" style="margin:0 0 12px"><span class="tag tag-blue">Within 4 days</span><span class="tag tag-gold">R700</span><span class="tag tag-green">+2 days for full complaint</span></div>
+            <div class="pc-row"><b>Who lodges</b><span>Any team, affiliate, official, player or club with an interest in the matter.</span></div>
+            <div class="pc-row"><b>How</b><span>Written notice of intention on the prescribed form, with the fee and proof of payment, then the full written complaint citing the rule breached.</span></div>
+            <div class="pc-row"><b>Not this</b><span>Not a referee's decision on a point of play, unless corruption is alleged (Rule 12.1.2).</span></div>
+            <div class="pc-row"><b>Where</b><span>The Disciplinary Committee — <a href="mailto:dc@cttlfa.com">dc@cttlfa.com</a></span></div>
+            <a class="btn btn-blue" style="margin-top:16px;width:100%;justify-content:center;background:var(--red);border-color:var(--red)" href="mailto:dc@cttlfa.com?subject=Complaint%20%E2%80%94%20CTTLFA&body=Dear%20Disciplinary%20Committee%2C%0A%0ANOTICE%20OF%20INTENTION%20TO%20COMPLAIN%20%28Rule%2012.1%29.%0A%0APlease%20note%3A%20a%20complaint%20must%20be%20lodged%20within%204%20days%20of%20the%20incident%2C%20on%20the%20prescribed%20form%2C%20with%20the%20R700%20fee%20and%20proof%20of%20payment%20attached.%20The%20full%20written%20complaint%20follows%20within%20a%20further%202%20days.%20A%20referee%27s%20decision%20on%20a%20point%20of%20play%20cannot%20be%20complained%20about%20unless%20corruption%20is%20alleged%20%28Rule%2012.1.2%29.%0A%0AClub%20or%20party%20lodging%3A%0AParty%20complained%20against%3A%0AIncident%20%28date%2C%20division%2C%20what%20happened%29%3A%0ARule%20or%20article%20you%20say%20was%20breached%3A%0A%0AProof%20of%20payment%20attached%20%28yes/no%29%3A%0A%0AName%3A%0APosition%3A%0AContact%20number%3A%0A%0AThank%20you.">Start a complaint by email →</a>
+          </div>
+        </div>
+      </div>
+      <div class="pc-extra">
+        <div class="pc-note">
+          <h5>Right of appeal (Rule 13)</h5>
+          <p>Not satisfied with a decision? Appeal to the CTTLFA Appeal Committee within 7 days, with the <b>R1 000</b> deposit. A further escalation to SAFA Cape Town carries a <b>R5 000</b> fee. <a href="mailto:dc@cttlfa.com?subject=Appeal%20%E2%80%94%20CTTLFA&body=Dear%20Appeal%20Committee%2C%0A%0ANOTICE%20OF%20INTENTION%20TO%20APPEAL%20%28Rule%2013%29.%0A%0APlease%20note%3A%20an%20appeal%20must%20be%20lodged%20within%207%20days%20of%20the%20decision%2C%20with%20the%20R1%20000%20deposit%20and%20proof%20of%20payment%20attached.%20Written%20grounds%20follow%20within%20a%20further%205%20days.%0A%0AClub%20appealing%3A%0ADecision%20appealed%20%28date%2C%20committee%2C%20matter%29%3A%0AAppealing%20the%20%28verdict%20/%20sentence%20/%20both%29%3A%0AGrounds%3A%0A%0AProof%20of%20payment%20attached%20%28yes/no%29%3A%0A%0AName%3A%0APosition%3A%0AContact%20number%3A%0A%0AThank%20you.">Start an appeal by email →</a></p>
+        </div>
+        <div class="pc-note">
+          <h5>Informal complaint (Rule 2.12.3)</h5>
+          <p>A minor, day-to-day matter can be raised informally within <b>72 hours</b>, with no fee, for the office to resolve. It does not replace a formal complaint where one is required. <a href="mailto:dc@cttlfa.com?subject=Informal%20complaint%20%E2%80%94%20CTTLFA&body=Dear%20Disciplinary%20Committee%2C%0A%0AINFORMAL%20COMPLAINT%20%28Rule%202.12.3%29%20%E2%80%94%20lodged%20within%2072%20hours%2C%20no%20fee.%0A%0AClub%20or%20party%20lodging%3A%0AMatter%3A%0AWhat%20happened%20%28date%2C%20division%29%3A%0A%0AName%3A%0APosition%3A%0AContact%20number%3A%0A%0AThank%20you.">Raise it informally →</a></p>
+        </div>
+      </div>
+
       <h3 class="dc-h" style="margin-top:52px">Deadlines &amp; fees</h3>
-      <div class="card" style="padding:6px 20px 14px"><table class="tbl dc-tbl">
+      <div class="card" style="padding:6px 20px 14px"><div class="tbl-scroll"><table class="tbl dc-tbl">
         <thead><tr><th class="l">Action</th><th class="l">Deadline</th><th>Fee</th></tr></thead>
         <tbody>
           <tr><td class="l">Protest — notice of intention</td><td class="l">4 days of the match</td><td class="pts">R700</td></tr>
@@ -2607,8 +2701,8 @@ html.pw-unlocked #pwgate{display:none}
           <tr><td class="l">Appeal — notice of intention</td><td class="l">7 days of the decision</td><td class="pts">R1 000</td></tr>
           <tr><td class="l">Appeal — written reasons</td><td class="l">+5 days</td><td>—</td></tr>
           <tr><td class="l">Escalation — appeal to SAFA Cape Town</td><td class="l">—</td><td class="pts">R5 000</td></tr>
-        </tbody></table></div>
-      <p class="center" style="color:#8ea0cf;font-size:12.5px;margin-top:10px">Deadlines are strict and run from the match or the decision. A protest, complaint or appeal without its fee and proof of payment inside the deadline is not entertained.</p>
+        </tbody></table></div></div>
+      <p class="center" style="color:var(--muted);font-size:12.5px;margin-top:10px">Deadlines are strict and run from the match or the decision. A protest, complaint or appeal without its fee and proof of payment inside the deadline is not entertained.</p>
 
       <h3 class="dc-h" style="margin-top:52px">Step-by-step for clubs</h3>
       <details class="acc"><summary>Lodge a protest</summary><div class="accb"><ol>
@@ -2641,7 +2735,7 @@ html.pw-unlocked #pwgate{display:none}
 
       <div class="embed-note" style="margin-top:34px">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m4 7 8 6 8-6"/></svg>
-        <div><b>Where to submit.</b> Protests, complaints and appeals are lodged in writing with the association, addressed to the General Secretary, with the fee and proof of payment. Disciplinary correspondence goes to <a href="mailto:dc@cttlfa.com" style="color:var(--gold);font-weight:700">dc@cttlfa.com</a>; general correspondence to <a href="mailto:gs@cttfa.co.za" style="color:var(--gold);font-weight:700">gs@cttfa.co.za</a> or <a href="mailto:ops@cttlfa.com" style="color:var(--gold);font-weight:700">ops@cttlfa.com</a>. See the <a data-nav="contact" style="color:var(--gold);font-weight:700;cursor:pointer">Contact</a> page for office details, and download the governing documents below.</div>
+        <div><b>Where to submit.</b> Protests, complaints and appeals are lodged in writing with the association, addressed to the General Secretary, with the fee and proof of payment. Disciplinary correspondence goes to <a href="mailto:dc@cttlfa.com" style="color:var(--blue);font-weight:700">dc@cttlfa.com</a>; general correspondence to <a href="mailto:gs@cttfa.co.za" style="color:var(--blue);font-weight:700">gs@cttfa.co.za</a> or <a href="mailto:ops@cttlfa.com" style="color:var(--blue);font-weight:700">ops@cttlfa.com</a>. See the <a data-nav="contact" style="color:var(--blue);font-weight:700;cursor:pointer">Contact</a> page for office details, and download the governing documents below.</div>
       </div>
       <h3 class="dc-h" style="margin-top:40px">Governing documents</h3>
       <div class="docs" id="dc-docs-list"></div>
@@ -2723,6 +2817,7 @@ html.pw-unlocked #pwgate{display:none}
         </ul>
         <h3>How to report</h3>
         <p>Send a written report to the association office at <a href="mailto:ops@cttlfa.com">ops@cttlfa.com</a>, marked for the attention of the General Secretary. Include what happened, where and when, who was involved, and any evidence. If a child is in immediate danger, contact the SAPS on 10111 first.</p>
+        <p style="margin-top:14px"><a class="btn btn-blue" href="mailto:ops@cttlfa.com?subject=Report%20%E2%80%94%20misconduct%20or%20concern%20%E2%80%94%20CTTLFA&body=Hello%20CTTLFA%20office%2C%0A%0AI%20would%20like%20to%20report%20a%20matter%2C%20for%20the%20attention%20of%20the%20General%20Secretary.%0A%0AWhat%20I%20am%20reporting%20%28misconduct%20/%20welfare%20concern%20/%20protected%20disclosure%29%3A%0AWhat%20happened%2C%20where%20and%20when%3A%0AWho%20is%20involved%3A%0AAny%20evidence%20I%20can%20provide%3A%0A%0AYour%20name%3A%0AClub%20or%20role%20%28if%20any%29%3A%0AContact%20number%3A%0A%0AThank%20you.">Open a report email →</a></p>
         <h3>Disciplinary matters</h3>
         <p>A formal protest, complaint or appeal about a match or a disciplinary charge follows a separate, time-bound process with prescribed forms and fees. See the <a data-nav="discipline" style="color:var(--blue);font-weight:600;cursor:pointer">Disciplinary &amp; Dispute Process</a> page.</p>
         <h3>Confidentiality and protection</h3>
@@ -3410,7 +3505,7 @@ html.pw-unlocked #pwgate{display:none}
         <div>
           <h3 class="dc-h" style="margin-top:0">Media resources</h3>
           <div class="tile" style="margin-bottom:14px"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="9" cy="9" r="2"/><path d="m21 15-5-5L5 21"/></svg></div><h4>Brand &amp; crest</h4><p>The association crest and brand guidance for correct use in coverage. Available from the office on request.</p><a class="tlink" data-nav="contact">Request assets →</a></div>
-          <div class="tile"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m4 7 8 6 8-6"/></svg></div><h4>Media enquiries</h4><p>For interviews, comment, fixtures and results, contact the association office.</p><a class="tlink" href="mailto:ops@cttlfa.com">ops@cttlfa.com</a></div>
+          <div class="tile"><div class="ti"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m4 7 8 6 8-6"/></svg></div><h4>Media enquiries</h4><p>For interviews, comment, fixtures and results, contact the association office.</p><a class="tlink" href="mailto:ops@cttlfa.com?subject=Media%20enquiry%20%E2%80%94%20CTTLFA&body=Hello%20CTTLFA%20office%2C%0A%0AI%20have%20a%20media%20enquiry%20%28interview%2C%20comment%2C%20fixtures%20or%20results%29.%0A%0APublication%20or%20outlet%3A%0ANature%20of%20the%20enquiry%3A%0ADeadline%3A%0A%0AName%3A%0AContact%20number%3A%0A%0AThank%20you.">Email media enquiry →</a></div>
         </div>
       </div>
     </div>
@@ -4105,22 +4200,36 @@ const clkSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
      {date:"YYYY-MM-DD", title:"...", venue:"...", time:"15:00", tag:"Final", cls:"tag-gold"}
    tag classes: tag-gold, tag-blue, tag-green. Events sort by date and each drops off
    this list automatically once its date has passed. Empty list = placeholder shown. */
-const EVENTS=[];
+/* 2026 cup climax — semi-final venue is confirmed (neutral) but the date is not
+   yet posted, so it shows as a "TBC" lead card and is not date-filtered. The two
+   finals carry firm dates and drop off automatically once they have been played.
+   dateEnd keeps a multi-day event on the list until the last day has passed. */
+const EVENTS=[
+  {tbc:true, title:"Knockout Semi-Finals", venue:"De Beers AFC — neutral venue for all clubs", time:"Fixtures & dates to be confirmed", tag:"Semi-Finals", cls:"tag-blue", spot:true},
+  {date:"2026-09-26", dateEnd:"2026-09-27", title:"Junior Knockout Finals", venue:"Norway Parks FC", time:"26–27 September 2026", tag:"Junior Finals", cls:"tag-green"},
+  {date:"2026-10-03", title:"Senior Knockout Final", venue:"Cape Town Spurs FC", time:"Saturday 3 October 2026", tag:"Senior Final", cls:"tag-gold", gold:true}
+];
 (function(){
   const el=document.getElementById('eventsList'); if(!el)return;
   const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const today=new Date(); today.setHours(0,0,0,0);
-  const up=EVENTS.map(e=>({...e,dt:new Date(e.date+'T00:00:00')}))
-    .filter(e=>!isNaN(e.dt.getTime()) && e.dt>=today)
+  const dated=EVENTS.filter(e=>e.date).map(e=>({...e,dt:new Date(e.date+'T00:00:00'),dtEnd:new Date((e.dateEnd||e.date)+'T00:00:00')}))
+    .filter(e=>!isNaN(e.dt.getTime()) && e.dtEnd>=today)
     .sort((a,b)=>a.dt-b.dt);
+  const up=EVENTS.filter(e=>e.tbc).concat(dated);
   if(!up.length){
     el.innerHTML=`<div class="empty-panel"><b>No events are scheduled right now.</b>Tournaments, finals, courses and meetings will appear here as the association confirms them, and each one drops off automatically once it has taken place.</div>`;
     return;
   }
-  el.innerHTML=up.map(e=>`<div class="event">
-  <div class="cal"><span class="d">${String(e.dt.getDate()).padStart(2,'0')}</span><span class="m">${MON[e.dt.getMonth()]}</span></div>
+  el.innerHTML=up.map(e=>{
+    const cal=e.tbc
+      ? `<div class="cal tbc"><span class="d">TBC</span></div>`
+      : `<div class="cal${e.gold?' gold':''}"><span class="d">${String(e.dt.getDate()).padStart(2,'0')}</span><span class="m">${MON[e.dt.getMonth()]}</span></div>`;
+    return `<div class="event${e.spot?' spot':''}">
+  ${cal}
   <div class="einfo"><div class="et">${e.title}</div><div class="em"><span>${pinSVG}${e.venue}</span><span>${clkSVG}${e.time}</span></div></div>
-  <span class="etag"><span class="tag ${e.cls||'tag-blue'}">${e.tag||'Event'}</span></span></div>`).join('');
+  <span class="etag"><span class="tag ${e.cls||'tag-blue'}">${e.tag||'Event'}</span></span></div>`;
+  }).join('');
 })();
 
 /* ---------- GALLERY (real event photos, served from ./photos) ---------- */
@@ -4319,7 +4428,7 @@ function openClub(name,fromRoute){const d=clubData(name),L=CLUBLINKS[name]||{};c
     <div class="cm-body">
       ${clubCards(name)}
       <h4>Teams in the league · ${CURSEASON} season</h4>
-      <table class="tbl cm-tbl"><thead><tr><th class="l">Team / Division</th><th>Pos</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th><th>Form</th></tr></thead><tbody>${rows}</tbody></table>
+      <div class="tbl-scroll"><table class="tbl cm-tbl"><thead><tr><th class="l">Team / Division</th><th>Pos</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th><th>Form</th></tr></thead><tbody>${rows}</tbody></table></div>
       ${honHtml(name)}
       <div class="cm-links">
         ${L.web?`<a class="btn btn-blue" href="${L.web}" target="_blank" rel="noopener">Club Website ↗</a>`:''}
