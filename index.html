@@ -713,11 +713,25 @@ img[data-broken]{display:none!important}
 .ko-stats>div{text-align:center}
 .ko-stats b{display:block;color:var(--gold);font-family:var(--head);font-size:19px;line-height:1.1}
 .ko-stats span{color:#9fb0d8;font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em;font-size:11px}
-.ko-bracket{display:flex;gap:18px;overflow-x:auto;padding-bottom:10px;align-items:flex-start}
-.ko-round{flex:0 0 268px;display:flex;flex-direction:column}
-.ko-round-h{font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;font-size:13.5px;text-align:center;padding:9px;background:rgba(255,255,255,.05);border-radius:9px;margin-bottom:12px}
-.ko-ties{display:flex;flex-direction:column;gap:12px;justify-content:space-around;height:100%}
+/* proper knockout bracket: rounds left-to-right, funnel-centred, with connector lines */
+.ko-bracket{display:flex;gap:36px;overflow-x:auto;padding:6px 6px 14px;align-items:stretch;min-height:320px}
+.ko-round{flex:0 0 256px;display:flex;flex-direction:column;position:relative}
+.ko-round-h{font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;color:var(--gold);font-weight:700;font-size:13.5px;text-align:center;padding:9px;background:rgba(255,255,255,.05);border-radius:9px;margin-bottom:14px}
+.ko-ties{display:flex;flex-direction:column;gap:14px;justify-content:space-around;flex:1}
 .kt{background:#fff;border-radius:12px;padding:9px 12px;box-shadow:0 6px 16px rgba(0,0,0,.18);position:relative}
+/* connector lines — each tie sends a line forward to the next round, showing progression */
+.ko-round:not(:last-child) .kt::after{content:"";position:absolute;top:50%;right:-18px;width:18px;height:2px;background:rgba(255,255,255,.3)}
+.ko-round:not(:first-child) .kt::before{content:"";position:absolute;top:50%;left:-18px;width:18px;height:2px;background:rgba(255,255,255,.3)}
+/* finals & key dates */
+.ko-finals{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px 20px;margin:0 auto 26px;max-width:900px}
+.ko-finals-h{display:flex;align-items:center;gap:9px;color:var(--gold);font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:13px;margin-bottom:14px;justify-content:center}
+.ko-finals-h svg{width:18px;height:18px}
+.ko-finals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media(max-width:720px){.ko-finals-grid{grid-template-columns:1fr}}
+.kof{text-align:center;background:rgba(255,255,255,.05);border-radius:12px;padding:14px 12px}
+.kof-t{display:block;color:#9fb0d8;font-family:var(--cond);text-transform:uppercase;letter-spacing:.06em;font-size:11.5px;margin-bottom:6px}
+.kof b{display:block;color:#fff;font-size:16px;margin-bottom:3px}
+.kof small{color:var(--gold);font-size:12.5px;font-weight:700}
 .kt-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0}
 .kt-row+.kt-row{border-top:1px solid var(--line)}
 .kt-tm{display:flex;align-items:center;gap:9px;min-width:0}
@@ -1805,6 +1819,14 @@ html.pw-unlocked #pwgate{display:none}
         <span class="eyebrow gold">Cup football</span>
         <h2 style="font-size:clamp(30px,5vw,46px);margin:10px 0">Knockout Cups</h2>
         <p style="color:#c3cdea">Win or go home. Every knockout competition in the association — senior, women's, veterans and all the junior age groups — with each round's draw, results and fixtures as they are played. Choose a cup to follow its road to the final.</p>
+      </div>
+      <div class="ko-finals">
+        <div class="ko-finals-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4a2 2 0 0 1-2-2V5h4M18 9h2a2 2 0 0 0 2-2V5h-4M6 3h12v6a6 6 0 0 1-12 0zM12 15v4M8 21h8"/></svg>2026 Finals &amp; Venues</div>
+        <div class="ko-finals-grid">
+          <div class="kof"><span class="kof-t">Semi-Finals</span><b>Neutral venue</b><small>De Beers AFC · for all clubs</small></div>
+          <div class="kof"><span class="kof-t">Junior Knockout Finals</span><b>Norway Parks FC</b><small>26–27 September 2026</small></div>
+          <div class="kof"><span class="kof-t">Senior Knockout Final</span><b>Cape Town Spurs FC</b><small>3 October 2026</small></div>
+        </div>
       </div>
       <div class="ko2">
         <div class="ko2-controls">
@@ -4145,13 +4167,16 @@ let koActive=0;
 const KO_GROUP_ORDER=['Senior','Women','Veterans','Under-18','Under-16','Under-14','Under-12'];
 // a tie is [home, away, homeScore, awayScore, date, venue]
 function koPlayed(t){return t[2]!==''&&t[2]!=null&&t[3]!==''&&t[3]!=null;}
-function koTieCard(t){
+function koTieCard(t,roundName){
   const played=koPlayed(t);
   if(played){const hs=+t[2],as=+t[3],hw=hs>as,aw=as>hs;
     const row=(n,s,w)=>`<div class="kt-row ${w?'kt-win':''}"><span class="kt-tm">${crest(n,22)}<span class="kt-nm">${n}</span></span><span class="kt-s">${s}</span></div>`;
     return `<div class="kt kt-done">${row(t[0],t[2],hw)}${row(t[1],t[3],aw)}${(!hw&&!aw)?`<div class="kt-foot">Level after normal time</div>`:''}</div>`;}
   const row=n=>`<div class="kt-row"><span class="kt-tm">${crest(n,22)}<span class="kt-nm">${n}</span></span></div>`;
-  const meta=[t[4],t[5]].filter(Boolean).join(' · ');
+  // semi-finals are played at the association's neutral venue (De Beers AFC)
+  const isSemi=/semi/i.test(roundName||'');
+  const venue=isSemi?'De Beers AFC · neutral venue':t[5];
+  const meta=[t[4],venue].filter(Boolean).join(' · ');
   return `<div class="kt kt-next">${row(t[0])}<div class="kt-vs">v</div>${row(t[1])}${meta?`<div class="kt-foot">${meta}</div>`:''}</div>`;}
 function koChampion(cup){
   const fin=(cup.rounds||[]).find(r=>/final/i.test(r.name)&&!/semi|quarter|third|3rd|play/i.test(r.name));
@@ -4186,7 +4211,7 @@ function renderKnockouts(){
     <div class="ko-stats"><div><b>${koTeamCount(cup)}</b><span>Teams</span></div><div><b>${rounds.length}</b><span>Rounds</span></div><div><b>${koStage(cup)||'—'}</b><span>Current stage</span></div></div></div>`;
   if(wrap){
     if(!rounds.length){wrap.innerHTML=`<div class="ko-empty"><div class="ko-empty-ic">${trophySVG}</div><h3>${cup.name}</h3><p>The draw for this cup has not been published yet. Rounds and results appear here as soon as the competition begins.</p></div>`;}
-    else{wrap.innerHTML=`<div class="ko-bracket">`+rounds.map(r=>`<div class="ko-round"><div class="ko-round-h">${r.name}</div><div class="ko-ties">${r.ties.map(koTieCard).join('')}</div></div>`).join('')+`</div>`;}
+    else{wrap.innerHTML=`<div class="ko-bracket">`+rounds.map(r=>`<div class="ko-round"><div class="ko-round-h">${r.name}</div><div class="ko-ties">${r.ties.map(t=>koTieCard(t,r.name)).join('')}</div></div>`).join('')+`</div>`;}
   }
   const up=document.getElementById('koUpdated');if(up&&CUR_UPDATED)up.textContent='Live · updated '+CUR_UPDATED;
 }
