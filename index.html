@@ -987,6 +987,34 @@ img[data-broken]{display:none!important}
 .pc-note p{color:var(--muted);font-size:13.7px;margin:0}
 .pc-note.warn{background:#FEF3F2;border-color:#f6d5d0}
 .pc-note a{color:var(--blue);font-weight:700}
+/* mini football (zones) */
+.dev-badge{display:inline-flex;align-items:center;gap:7px;background:rgba(244,180,26,.16);border:1px solid rgba(244,180,26,.5);color:#F4B41A;font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:12px;padding:5px 13px;border-radius:100px}
+.dev-badge.dark{background:#FFF6E0;border-color:#f0d68a;color:#9a6b00}
+.mz-legend{display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin:18px 0 4px}
+.mz-legend .lg{display:flex;align-items:center;gap:8px;font-weight:700;color:var(--navy);font-size:14px}
+.mz-dot{width:15px;height:15px;border-radius:50%;flex:none;box-shadow:0 0 0 3px rgba(0,0,0,.05)}
+.mz-statrow{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin:6px 0 4px}
+.mz-stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 22px;text-align:center;min-width:120px;box-shadow:var(--shadow-sm)}
+.mz-stat b{display:block;font-family:var(--cond);font-weight:800;font-size:30px;color:var(--blue);line-height:1}
+.mz-stat span{font-size:12.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-family:var(--cond);font-weight:700}
+#minisMap{height:440px;border-radius:16px;border:1px solid var(--line);box-shadow:var(--shadow-sm);z-index:1}
+@media(max-width:640px){#minisMap{height:360px}}
+.mzcards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:8px}
+@media(max-width:960px){.mzcards{grid-template-columns:1fr}}
+.mzcard{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);display:flex;flex-direction:column}
+.mzcard .mzhead{padding:15px 20px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.mzcard .mzhead h4{color:inherit;font-size:20px;margin:0;font-family:var(--head)}
+.mzcard .mzhead .mzn{font-family:var(--cond);font-weight:700;font-size:13px;opacity:.9}
+.mzbody{padding:12px 16px 18px}
+.mztable{width:100%;border-collapse:collapse;font-size:13.5px}
+.mztable th{font-family:var(--cond);text-transform:uppercase;letter-spacing:.03em;font-size:11px;color:var(--muted);font-weight:700;padding:6px 5px;border-bottom:2px solid var(--line);text-align:center}
+.mztable th.l,.mztable td.l{text-align:left}
+.mztable td{padding:7px 5px;text-align:center;border-bottom:1px solid var(--line);font-weight:600;color:var(--ink)}
+.mztable tr.tot td{border-top:2px solid var(--line);border-bottom:none;font-weight:800;color:var(--navy);padding-top:9px}
+.mztable td.zero{color:#c8cede}
+.mztable tr.na td.l{color:var(--muted)}
+.mz-rules{margin-top:12px;background:#F7F9FE;border:1px dashed var(--blue-600);border-radius:12px;padding:12px 15px;font-size:13px;color:var(--muted)}
+.mz-rules b{color:var(--navy)}
 /* accessibility */
 .skip{position:absolute;left:-9999px;top:10px;z-index:500;background:var(--gold);color:var(--navy);padding:11px 18px;border-radius:8px;font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em}
 .skip:focus{left:12px}
@@ -1385,6 +1413,7 @@ html.pw-unlocked #pwgate{display:none}
         <div class="dropdown">
           <a data-nav="senior"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7l1.5 3.2 3.5.3-2.7 2.3.9 3.4L12 17.7 8.8 19.5l.9-3.4L7 13.8l3.5-.3z"/></svg></span><span>Senior Football<small>The competitive senior game</small></span></a>
           <a data-nav="junior"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span><span>Junior Football<small>Age-group &amp; development</small></span></a>
+          <a data-nav="minis"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z"/><path d="M12 8v8M8 12h8"/></svg></span><span>Mini Football<small>Under-7 to Under-11 &middot; for parents</small></span></a>
           <a data-nav="women"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="7" r="4"/><path d="M12 11v10M8 17h8"/></svg></span><span>Women's Football<small>Growing the women's game</small></span></a>
         </div>
       </div>
@@ -1442,6 +1471,7 @@ html.pw-unlocked #pwgate{display:none}
   <a data-nav="knockouts">Knockouts</a>
   <a data-nav="senior">Senior Football</a>
   <a data-nav="junior">Junior Football</a>
+  <a data-nav="minis">Mini Football</a>
   <a data-nav="women">Women's Football</a>
   <a data-nav="clubs">Clubs</a>
   <a data-nav="clubzone">Club Zone · Live Dashboard</a>
@@ -2224,6 +2254,67 @@ html.pw-unlocked #pwgate{display:none}
       </div>
 
       <div class="cta-band" style="margin-top:30px"><div><h2>Entering women's teams</h2><p>Team entries and fees for the season are handled through your club and the association office. Speak to us about growing women's football with your club.</p></div><a class="btn btn-gold" data-nav="register">Fees &amp; how to join →</a></div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= MINI FOOTBALL (zones) ================= -->
+<div class="page" id="page-minis">
+  <section class="sec navy p2hero">
+    <div class="wrap"><div class="center" style="max-width:820px;margin:0 auto">
+      <span class="eyebrow gold">For parents</span>
+      <h2 style="font-size:clamp(30px,5vw,46px);margin:10px 0">Mini Football</h2>
+      <p style="color:#c3cdea">The first steps in the game, for our youngest players from Under-7 to Under-11. Mini football is organised into local zones so children play close to home, against nearby clubs, with less travel for families. This page shows where each club sits, which zone it plays in, and how the age groups are made up.</p>
+      <div style="margin-top:16px"><span class="dev-badge"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/><circle cx="12" cy="12" r="4"/></svg>Section in development</span></div>
+    </div></div>
+  </section>
+
+  <section class="sec" style="padding-top:34px">
+    <div class="wrap">
+      <div class="feat" style="align-items:flex-start;margin-bottom:6px">
+        <div>
+          <h3 style="font-size:24px;color:var(--navy);margin-bottom:12px">How mini football is organised</h3>
+          <p class="heritage-lead">Our mini programme runs across three zones, shown here by colour. Each club is placed in the zone closest to it, so young children play their football locally and parents spend less time on the road. Within a zone, clubs field teams at each age group from Under-7 to Under-11.</p>
+          <p style="color:var(--muted);margin-top:12px">Find your club below to see its zone and how many teams it runs at your child's age. The map shows where every mini club plays, coloured by zone.</p>
+          <div class="mz-legend" id="mzLegend"></div>
+        </div>
+        <div class="feat-visual"><div class="mz-statrow" id="mzStats"></div></div>
+      </div>
+
+      <h3 class="blocktitle">Where the clubs play</h3>
+      <p style="color:var(--muted);max-width:880px;margin-bottom:14px">Every mini club on the map, pinned at its home ground and coloured by zone. Tap a pin for the club, its ground and directions.</p>
+      <div id="minisMap"></div>
+      <p class="center" style="color:var(--muted);font-size:12.5px;margin-top:10px">Pins are placed at each club's registered home ground. A handful of newer mini clubs are still being located and will appear as their grounds are confirmed.</p>
+
+      <h3 class="blocktitle">Find your club and zone</h3>
+      <p style="color:var(--muted);max-width:880px;margin-bottom:16px">The three zones and the clubs in each, with the number of teams entered at every age group for the current season. Totals are shown at the foot of each zone.</p>
+      <div class="mzcards" id="mzCards"></div>
+
+      <div class="embed-note" style="margin-top:28px">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9M3 20h4M3 12h9M3 4h13"/></svg>
+        <div><b>Zone rules are on the way.</b> Each zone runs to its own local arrangements for match days, formats and festival dates. Those are being finalised with the clubs and will be published here per zone. For now this page shows the structure and where every club plays.</div>
+      </div>
+
+      <h3 class="blocktitle">What our Constitution says</h3>
+      <div class="statrow">
+        <div class="card" style="padding:22px 24px">
+          <h4 style="color:var(--navy);margin-bottom:10px">Development is a founding object</h4>
+          <p style="color:var(--muted);font-size:14.5px">Object 2.1 of the Constitution commits the association to the <b>encouragement, promotion, development and administration</b> of football across its area, on a basis of non-racism, non-sexism and non-ageism, so that age is never a basis for excluding any child from the game. Mini football is where that development begins.</p>
+        </div>
+        <div class="card" style="padding:22px 24px">
+          <h4 style="color:var(--navy);margin-bottom:10px">Youth football has its own leadership</h4>
+          <p style="color:var(--muted);font-size:14.5px">The Constitution creates dedicated <b>Youth Football</b> and <b>Technical Development</b> portfolios, chaired by the <b>Vice President: Youth Football</b> (article 7.10), who is responsible for the youth and development leagues, for setting up age-group structures and competitions with the Operations Manager, and for keeping youth on the agenda at every General Meeting.</p>
+        </div>
+      </div>
+      <div class="fnote" style="margin-top:14px;max-width:940px"><b>In short:</b> mini and youth football are not an afterthought in our rules. They sit in the objects of the association and carry their own committee and office-bearer, because the youngest players are where the association's future is built.</div>
+
+      <div class="cta-band" style="margin-top:30px;flex-wrap:wrap;gap:14px">
+        <div><h2>Getting your child started</h2><p>Registration and team entries for mini football are handled through affiliated clubs and the association office. Find a club near you, and read how we keep children safe in our football.</p></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn btn-gold" data-nav="clubs">Find a club →</a>
+          <a class="btn btn-outline" data-nav="safeguarding" style="color:#fff;border-color:rgba(255,255,255,.5)">Safeguarding</a>
+        </div>
+      </div>
     </div>
   </section>
 </div>
@@ -4460,6 +4551,7 @@ const PAGES={
   referees:{t:"Referees | Cape Town Tygerberg LFA",d:"Become a SAFA-accredited referee with the Cape Town Tygerberg LFA — accreditation, weekly appointments and development."},
   senior:{t:"Senior Football | Cape Town Tygerberg LFA",d:"Senior league and cup football in the Cape Town Tygerberg LFA — the senior game, our focus for the season, and how to follow fixtures, results and standings.",crumb:"Senior Football",parent:"Football"},
   junior:{t:"Junior Football | Cape Town Tygerberg LFA",d:"Age-group junior football in the Cape Town Tygerberg LFA — participation, development and safe, positive football for our youngest players.",crumb:"Junior Football",parent:"Football"},
+  minis:{t:"Mini Football | Cape Town Tygerberg LFA",d:"Mini football (Under-7 to Under-11) in the Cape Town Tygerberg LFA — the three local zones, where every club plays, age-group team numbers and how to get your child started.",crumb:"Mini Football",parent:"Football"},
   women:{t:"Women's Football | Cape Town Tygerberg LFA",d:"Women's and girls' league and cup football in the Cape Town Tygerberg LFA — growing the women's game, opportunity and how to follow it.",crumb:"Women's Football",parent:"Football"},
   register:{t:"Fees & How to Join 2026 | Cape Town Tygerberg LFA",d:"2026 affiliation, team-entry and player-registration fees for the Cape Town Tygerberg LFA, and the steps clubs follow with the association office. No online sign-up — registration is handled through your club and the office."},
   governance:{t:"Governance & Documents | Cape Town Tygerberg LFA",d:"Constitution, management committee, rules and audited financials for the Cape Town Tygerberg Local Football Association."},
@@ -4587,13 +4679,84 @@ function initClubMap(){
   setTimeout(()=>_clubMap.invalidateSize(),90);
 }
 
+/* ---------- MINI FOOTBALL (U7-U11 zones) ---------- */
+/* Source: association Mini Zones sheet. Each row: [club, U7,U8,U9,U10,U11, (na?)].
+   To update next season, edit the counts below (and add clubs to the right zone).
+   Map pins reuse CLUBS_GEO by name; MINI_GEO_ALIAS maps the few name spellings that differ. */
+const MINI_ZONES=[
+ {key:'blue',name:'Blue Zone',color:'#0070C0',clubs:[
+   ['Bellville City',2,2,2,2,2],['Bothasig',4,4,4,4,2],['Cape Town Spurs',1,1,1,1,1],
+   ['C.R Vasco da Gama',2,2,2,2,2],['De Beers',2,2,2,2,2],['Durbanville',4,4,4,4,4],
+   ['Edgemead G/W',3,3,3,3,3],['Goodwood',2,2,2,2,2],['Hellenic',1,1,1,1,1],
+   ['Holy Cross',2,2,2,1,0],['Kuilsriver',2,2,2,2,2],['Northpine United',2,2,2,2,2],
+   ['Sunningdale City',4,4,4,3,3],['Table View',2,2,2,2,2],['YSD Macassar',1,1,1,1,1]]},
+ {key:'green',name:'Green Zone',color:'#00E000',textDark:true,clubs:[
+   ['Camps Bay',1,2,3,1,1],['FC Kapstadt',1,1,1,1,0],['Fish Hoek',2,2,2,2,0],
+   ['Garlandale FC',1,1,1,1,0],['Grass Boots',2,3,1,1,0],['Green Point',2,2,2,2,0],
+   ['J M I',0,1,1,1,0],['Lansdowne',0,0,0,0,0,true],['Meadowridge',4,4,4,4,0],
+   ['Rygersdal',2,2,1,1,0],['Shosholoza',0,0,1,1,0],['Stephanian Ottery',2,2,2,2,0],
+   ['Tramway',0,2,2,2,0],['Wynberg st Johns',3,3,3,3,0]]},
+ {key:'purple',name:'Purple Zone',color:'#7030A0',clubs:[
+   ['Avendale Athletico',1,1,1,1,1],['Barmsley Spurs',0,0,0,1,0],['Chelsea Bridgetown',1,1,0,1,0],
+   ['Clyde Pinelands',1,2,0,1,0],['FN Rangers',0,1,0,2,0],['Garden Village',1,0,1,0,1],
+   ['Hanover Park',1,0,1,0,1],['Kensington',1,1,0,1,0],['Mutual',1,1,0,1,0],
+   ['Norway Parks',1,2,0,2,0],['Ruyterwacht',0,1,0,1,0],['Saxon Rovers',1,1,0,1,0],
+   ['West End United',0,1,0,1,0],['Young Bafana',0,2,0,2,0]]}
+];
+const MINI_GEO_ALIAS={'Edgemead G/W':'Edgemead Goodwood','Wynberg st Johns':'Wynberg St Johns'};
+const MINI_AGES=['U7','U8','U9','U10','U11'];
+function renderMinis(){
+  const lg=document.getElementById('mzLegend');
+  if(lg)lg.innerHTML=MINI_ZONES.map(z=>`<span class="lg"><span class="mz-dot" style="background:${z.color}"></span>${z.name}</span>`).join('');
+  let clubs=0,teams=0;
+  MINI_ZONES.forEach(z=>{clubs+=z.clubs.length;z.clubs.forEach(c=>{for(let i=1;i<=5;i++)teams+=c[i]||0;});});
+  const st=document.getElementById('mzStats');
+  if(st)st.innerHTML=[[clubs,'clubs'],[teams,'mini teams'],[MINI_ZONES.length,'zones']].map(s=>`<div class="mz-stat"><b>${s[0]}</b><span>${s[1]}</span></div>`).join('');
+  const wrap=document.getElementById('mzCards');
+  if(wrap)wrap.innerHTML=MINI_ZONES.map(z=>{
+    const tot=[0,0,0,0,0];
+    const rows=z.clubs.map(c=>{
+      const na=c[6]===true;
+      const tds=MINI_AGES.map((a,i)=>{const v=c[i+1]||0;if(!na)tot[i]+=v;return `<td class="${v?'':'zero'}">${na?'–':(v||'–')}</td>`;}).join('');
+      return `<tr class="${na?'na':''}"><td class="l">${c[0]}${na?' <span style="font-size:11px">(not fielding this season)</span>':''}</td>${tds}</tr>`;
+    }).join('');
+    const totrow=`<tr class="tot"><td class="l">Zone total</td>${tot.map(v=>`<td>${v}</td>`).join('')}</tr>`;
+    return `<div class="mzcard"><div class="mzhead" style="background:${z.color};color:${z.textDark?'#0A2A6B':'#fff'}"><h4>${z.name}</h4><span class="mzn">${z.clubs.length} clubs</span></div>
+      <div class="mzbody"><div class="tbl-scroll"><table class="mztable"><thead><tr><th class="l">Club</th>${MINI_AGES.map(a=>`<th>${a}</th>`).join('')}</tr></thead><tbody>${rows}${totrow}</tbody></table></div>
+      <div class="mz-rules"><b>${z.name} match days &amp; rules:</b> being finalised with the clubs — coming soon.</div></div></div>`;
+  }).join('');
+}
+let _minisMap=null;
+function initMinisMap(){
+  if(typeof L==='undefined'){setTimeout(initMinisMap,150);return;}
+  const el=document.getElementById('minisMap');if(!el)return;
+  if(_minisMap){setTimeout(()=>_minisMap.invalidateSize(),60);return;}
+  _minisMap=L.map(el,{scrollWheelZoom:false,zoomControl:true}).setView([-33.95,18.55],11);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; OpenStreetMap contributors &copy; CARTO',subdomains:'abcd',maxZoom:19}).addTo(_minisMap);
+  const geo={};CLUBS_GEO.forEach(c=>{geo[c[0]]=c;});
+  const bounds=[],seen={};
+  MINI_ZONES.forEach(z=>z.clubs.forEach(c=>{
+    if(c[6]===true)return;
+    const key=MINI_GEO_ALIAS[c[0]]||c[0];const g=geo[key];if(!g)return;
+    let lat=g[3],lng=g[4];const k=lat.toFixed(3)+','+lng.toFixed(3);
+    const n=(seen[k]=(seen[k]||0)+1)-1;if(n){const a=2*Math.PI*n/6;lat+=0.004*Math.cos(a);lng+=0.004*Math.sin(a);}
+    const teams=[1,2,3,4,5].reduce((s,i)=>s+(c[i]||0),0);
+    const icon=L.divIcon({className:'',html:`<div style="width:16px;height:16px;border-radius:50%;background:${z.color};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45)"></div>`,iconSize:[16,16],iconAnchor:[8,8]});
+    L.marker([lat,lng],{icon,title:c[0]}).addTo(_minisMap)
+      .bindPopup(`<b>${c[0]}</b><div class="cm-pop-sub"><b style="color:var(--navy)">${g[1]}</b><br>${g[2]}</div><span class="cm-pop-tag" style="background:${z.color};color:#fff">${z.name} &middot; ${teams} mini teams</span><br><a class="cm-pop-dir" href="${dirLatLng(g[3],g[4])}" target="_blank" rel="noopener">Get directions ↗</a>`);
+    bounds.push([lat,lng]);
+  }));
+  if(bounds.length)_minisMap.fitBounds(bounds,{padding:[30,30]});
+  setTimeout(()=>_minisMap.invalidateSize(),90);
+}
+
 function go(page,fromHash){
   if(!document.getElementById('page-'+page))page='404';
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.querySelectorAll('.menu a[data-nav]').forEach(a=>{const on=a.dataset.nav===page;a.classList.toggle('active',on);on?a.setAttribute('aria-current','page'):a.removeAttribute('aria-current');});
   setMeta(page);setCrumbs(page);
-  const dyn={thisweekend:renderThisWeekend,stats:renderStats,downloads:renderDownloads,grounds:renderGrounds,parents:renderParents,clubadmin:renderClubAdmin,champions:renderChampions,halloffame:renderHOF,media:renderMedia,clubs:initClubMap,
+  const dyn={thisweekend:renderThisWeekend,stats:renderStats,downloads:renderDownloads,grounds:renderGrounds,parents:renderParents,clubadmin:renderClubAdmin,champions:renderChampions,halloffame:renderHOF,media:renderMedia,clubs:initClubMap,minis:()=>{renderMinis();initMinisMap();},
     knockouts:()=>{const b=document.querySelector('#koBracketWrap .ko-bracket');if(b)requestAnimationFrame(()=>requestAnimationFrame(()=>drawKoConnectors(b)));}};
   if(dyn[page])try{dyn[page]();}catch(e){}
   window.scrollTo({top:0,behavior:'auto'});
