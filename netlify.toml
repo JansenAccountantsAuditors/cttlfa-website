@@ -1,3 +1,27 @@
 [build]
   publish = "."
   command = ""
+
+# ---- Security headers on every response (matches the CTAPD hardening) ----
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "SAMEORIGIN"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# ---- Long-cache the truly static assets so repeat visits are instant ----
+# Photos and club crests never change (unique filenames) -> cache a year.
+[[headers]]
+  for = "/photos/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# Governing / rule documents rarely change -> cache a month.
+[[headers]]
+  for = "/docs/*"
+  [headers.values]
+    Cache-Control = "public, max-age=2592000"
+
+# NOTE: index.html and season.json deliberately keep Netlify's default
+# (revalidate every visit) so site updates and the hourly league feed stay fresh.
