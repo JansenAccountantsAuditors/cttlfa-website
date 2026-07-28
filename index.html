@@ -1227,34 +1227,36 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,te
 .snap .s .sv{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px;color:var(--ink)}
 .snap .s .sv small{color:var(--muted);font-weight:600;font-size:12px}
 /* comparison */
-/* ===== Compare two clubs — head-to-head with side-by-side bars ===== */
-.cmp{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:20px;box-shadow:var(--shadow-sm);color:var(--ink)}
-.cmp h3{font-family:var(--cond);font-size:20px;color:var(--navy);margin-bottom:6px}
-.cmp-intro{color:var(--muted);font-size:13.5px;line-height:1.55;margin-bottom:16px;max-width:640px}
-.cmp-pick{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-.cmp-lab{flex:1;min-width:160px;display:flex;flex-direction:column;gap:5px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em;font-size:11.5px;font-weight:700;color:var(--muted)}
-.cmp-lab select{border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:14px;font-family:var(--body);color:var(--ink);background:#fff}
+/* ===== Compare two clubs — compact head-to-head with side-by-side bars ===== */
+.cmp{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-top:20px;box-shadow:var(--shadow-sm);color:var(--ink);max-width:760px;margin-left:auto;margin-right:auto}
+.cmp h3{font-family:var(--cond);font-size:18px;color:var(--navy);margin-bottom:5px;text-align:center}
+.cmp-intro{color:var(--muted);font-size:13px;line-height:1.5;margin:0 auto 12px;max-width:560px;text-align:center}
+.cmp-pick{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.cmp-lab{flex:1;min-width:150px;display:flex;flex-direction:column;gap:4px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em;font-size:11px;font-weight:700;color:var(--muted)}
+.cmp-lab select{border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:14px;font-family:var(--body);color:var(--ink);background:#fff}
+.cmp-context{text-align:center;font-size:12.5px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:100px;padding:6px 14px;margin:0 auto 14px;width:fit-content;max-width:100%}
+.cmp-context b{color:var(--navy);font-weight:700}
 /* header: the two clubs as two clear columns */
-.cmp-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:16px;padding-bottom:16px;border-bottom:1px solid var(--line);margin-bottom:6px}
-.cmp-team{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center}
-.cmp-team b{font-size:15px;color:var(--navy);line-height:1.2}
-.cmp-team small{color:var(--muted);font-size:12px}
-.cmp-vs{align-self:center;font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;font-weight:800;font-size:13px;color:var(--muted)}
+.cmp-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:2px}
+.cmp-team{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
+.cmp-team b{font-size:14px;color:var(--navy);line-height:1.2}
+.cmp-team small{color:var(--muted);font-size:11.5px}
+.cmp-vs{align-self:center;font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;font-weight:800;font-size:12px;color:var(--muted)}
 /* metric rows: value / label / value on top, a two-sided bar below */
 .cmp-metrics{display:flex;flex-direction:column}
-.cm-r{padding:12px 0;border-top:1px solid var(--line)}
+.cm-r{padding:8px 0;border-top:1px solid var(--line)}
 .cm-r:first-child{border-top:0}
-.cm-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:7px}
-.cm-va,.cm-vb{font-family:var(--cond);font-weight:800;font-size:19px;color:var(--navy);min-width:44px}
+.cm-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:5px}
+.cm-va,.cm-vb{font-family:var(--cond);font-weight:800;font-size:17px;color:var(--navy);min-width:40px}
 .cm-va{text-align:left}.cm-vb{text-align:right}
 .cm-va.win,.cm-vb.win{color:var(--green)}
-.cm-lbl{flex:1;text-align:center;font-family:var(--cond);text-transform:uppercase;letter-spacing:.06em;font-size:12px;font-weight:700;color:var(--muted)}
-.cm-track{display:grid;grid-template-columns:1fr 1fr;gap:4px;height:9px}
-.cm-fill{height:100%;border-radius:5px;background:#E4E9F5;min-width:3px}
+.cm-lbl{flex:1;text-align:center;font-family:var(--cond);text-transform:uppercase;letter-spacing:.06em;font-size:11.5px;font-weight:700;color:var(--muted)}
+.cm-track{display:grid;grid-template-columns:1fr 1fr;gap:4px;height:7px}
+.cm-fill{height:100%;border-radius:4px;background:#E4E9F5;min-width:3px}
 .cm-fill.fa{justify-self:end}
 .cm-fill.fb{justify-self:start}
 .cm-fill.win{background:var(--green)}
-.cmp-legend{display:flex;align-items:center;gap:8px;margin-top:16px;padding-top:14px;border-top:1px solid var(--line);color:var(--muted);font-size:12.5px}
+.cmp-legend{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
 .cmp-dot{width:10px;height:10px;border-radius:3px;background:var(--green);flex:none}
 /* generic Phase 2 pages */
 .p2hero{padding-top:104px;padding-bottom:38px}
@@ -1878,7 +1880,7 @@ html.pw-unlocked #pwgate{display:none}
 
         <div class="cmp">
           <h3>Compare two clubs</h3>
-          <p class="cmp-intro">See how any two clubs in this competition measure up across the league season so far. Pick a club in each box below. In every row, the stronger figure is shown in green and the longer bar.</p>
+          <p class="cmp-intro">A head-to-head of two clubs' league seasons. Pick a club in each box and their records line up side by side — position, matches, points, goals and goal difference. In every row the stronger figure is shown in green with the longer bar, so you can see at a glance who is having the better season.</p>
           <div class="cmp-pick">
             <label class="cmp-lab">First club<select id="cmpA" aria-label="First club"></select></label>
             <label class="cmp-lab">Second club<select id="cmpB" aria-label="Second club"></select></label>
@@ -4226,11 +4228,13 @@ function cmpRender(){const d=currentLeague();const a=document.getElementById('cm
       <div class="cm-track"><span class="cm-fill fa${wa?' win':''}" style="width:${Math.round(Math.abs(na)/mx*100)}%"></span><span class="cm-fill fb${wb?' win':''}" style="width:${Math.round(Math.abs(nb)/mx*100)}%"></span></div>
     </div>`;}
   const posA=d.table.indexOf(ra)+1,posB=d.table.indexOf(rb)+1;
+  const L=activeLeagues();const leagueName=((L[+mcSel.value||0]||L[0]||{}).name)||'this competition';const nTeams=d.table.length;
   document.getElementById('cmpOut').innerHTML=`
+    <div class="cmp-context">Comparing within the <b>${leagueName}</b> &middot; ${nTeams} clubs &middot; 2026 season</div>
     <div class="cmp-head">
-      <div class="cmp-team">${crest(ra[0],48)}<b>${ra[0]}</b><small>${posA}${ord(posA)} in the log</small></div>
+      <div class="cmp-team">${crest(ra[0],42)}<b>${ra[0]}</b><small>${posA}${ord(posA)} of ${nTeams}</small></div>
       <div class="cmp-vs">vs</div>
-      <div class="cmp-team">${crest(rb[0],48)}<b>${rb[0]}</b><small>${posB}${ord(posB)} in the log</small></div>
+      <div class="cmp-team">${crest(rb[0],42)}<b>${rb[0]}</b><small>${posB}${ord(posB)} of ${nTeams}</small></div>
     </div>
     <div class="cmp-metrics">
       ${row('Points',ra[7],rb[7],true)}
