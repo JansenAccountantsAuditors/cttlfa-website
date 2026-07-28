@@ -1227,37 +1227,6 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,te
 .snap .s .sv{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px;color:var(--ink)}
 .snap .s .sv small{color:var(--muted);font-weight:600;font-size:12px}
 /* comparison */
-/* ===== Compare two clubs — compact head-to-head with side-by-side bars ===== */
-.cmp{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;margin-top:20px;box-shadow:var(--shadow-sm);color:var(--ink);max-width:760px;margin-left:auto;margin-right:auto}
-.cmp h3{font-family:var(--cond);font-size:18px;color:var(--navy);margin-bottom:5px;text-align:center}
-.cmp-intro{color:var(--muted);font-size:13px;line-height:1.5;margin:0 auto 12px;max-width:560px;text-align:center}
-.cmp-pick{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
-.cmp-lab{flex:1;min-width:150px;display:flex;flex-direction:column;gap:4px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em;font-size:11px;font-weight:700;color:var(--muted)}
-.cmp-lab select{border:1px solid var(--line);border-radius:9px;padding:9px 12px;font-size:14px;font-family:var(--body);color:var(--ink);background:#fff}
-.cmp-context{text-align:center;font-size:12.5px;color:var(--muted);background:var(--bg);border:1px solid var(--line);border-radius:100px;padding:6px 14px;margin:0 auto 14px;width:fit-content;max-width:100%}
-.cmp-context b{color:var(--navy);font-weight:700}
-/* header: the two clubs as two clear columns */
-.cmp-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:start;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line);margin-bottom:2px}
-.cmp-team{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center}
-.cmp-team b{font-size:14px;color:var(--navy);line-height:1.2}
-.cmp-team small{color:var(--muted);font-size:11.5px}
-.cmp-vs{align-self:center;font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;font-weight:800;font-size:12px;color:var(--muted)}
-/* metric rows: value / label / value on top, a two-sided bar below */
-.cmp-metrics{display:flex;flex-direction:column}
-.cm-r{padding:8px 0;border-top:1px solid var(--line)}
-.cm-r:first-child{border-top:0}
-.cm-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:5px}
-.cm-va,.cm-vb{font-family:var(--cond);font-weight:800;font-size:17px;color:var(--navy);min-width:40px}
-.cm-va{text-align:left}.cm-vb{text-align:right}
-.cm-va.win,.cm-vb.win{color:var(--green)}
-.cm-lbl{flex:1;text-align:center;font-family:var(--cond);text-transform:uppercase;letter-spacing:.06em;font-size:11.5px;font-weight:700;color:var(--muted)}
-.cm-track{display:grid;grid-template-columns:1fr 1fr;gap:4px;height:7px}
-.cm-fill{height:100%;border-radius:4px;background:#E4E9F5;min-width:3px}
-.cm-fill.fa{justify-self:end}
-.cm-fill.fb{justify-self:start}
-.cm-fill.win{background:var(--green)}
-.cmp-legend{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
-.cmp-dot{width:10px;height:10px;border-radius:3px;background:var(--green);flex:none}
 /* generic Phase 2 pages */
 .p2hero{padding-top:104px;padding-bottom:38px}
 .p2hero .center{max-width:740px;margin:0 auto}
@@ -1876,16 +1845,6 @@ html.pw-unlocked #pwgate{display:none}
             <div class="card-b" id="mcSide" style="padding:4px 18px 14px"></div>
             <div class="card-f"><a data-nav="knockouts">Cup fixtures →</a></div>
           </div>
-        </div>
-
-        <div class="cmp">
-          <h3>Compare two clubs</h3>
-          <p class="cmp-intro">A head-to-head of two clubs' league seasons. Pick a club in each box and their records line up side by side — position, matches, points, goals and goal difference. In every row the stronger figure is shown in green with the longer bar, so you can see at a glance who is having the better season.</p>
-          <div class="cmp-pick">
-            <label class="cmp-lab">First club<select id="cmpA" aria-label="First club"></select></label>
-            <label class="cmp-lab">Second club<select id="cmpB" aria-label="Second club"></select></label>
-          </div>
-          <div id="cmpOut"></div>
         </div>
       </div>
     </div>
@@ -4200,11 +4159,26 @@ function mcRender(){const L=activeLeagues();const lg=L[+mcSel.value||0]||L[0];co
   tbl.innerHTML=mcTableHtml(rows,mcMode==='compact');
   if(q){tbl.querySelectorAll('tbody tr').forEach(tr=>{const on=tr.textContent.toLowerCase().includes(q);tr.style.display=on?'':'none';});}
   mcSnapshot(d,lg.name);
-  const el=document.getElementById('mcSide');mcView==='fixtures'?fixtureCard(d.fixtures,el):resultCard(d.results,el);}
+  const el=document.getElementById('mcSide');mcView==='fixtures'?fixtureCard(d.fixtures,el):resultCard(d.results,el);
+  if(typeof mcSyncHeights==='function')requestAnimationFrame(mcSyncHeights);}
+/* Keep the fixtures/results column the same height as the league log so the two
+   sit as one neat, symmetrical block; the list scrolls inside its card if long.
+   Only applies in the side-by-side layout — stacked on mobile, it clears itself. */
+function mcSyncHeights(){
+  const log=document.querySelector('.mc2-log'),side=document.querySelector('.mc2-side'),body=document.getElementById('mcSide');
+  if(!log||!side||!body)return;
+  if(window.innerWidth<=900||log.offsetHeight<40){body.style.maxHeight='';body.style.overflowY='';return;}
+  const tabs=side.querySelector('.mc2-tabs'),foot=side.querySelector('.card-f');
+  const avail=log.offsetHeight-(tabs?tabs.offsetHeight:0)-(foot?foot.offsetHeight:0)-2;
+  if(avail>160){body.style.maxHeight=avail+'px';body.style.overflowY='auto';}
+}
+(function(){const log=document.querySelector('.mc2-log');
+  if(log&&window.ResizeObserver){new ResizeObserver(()=>mcSyncHeights()).observe(log);}
+  let t;window.addEventListener('resize',()=>{clearTimeout(t);t=setTimeout(mcSyncHeights,150);});})();
 function mcPopulate(){const L=activeLeagues();const groups=[...new Set(L.map(l=>l.group))];
   mcSel.innerHTML=groups.map(g=>`<optgroup label="${g}">`+L.map((l,i)=>l.group===g?`<option value="${i}">${l.name}</option>`:'').join('')+`</optgroup>`).join('');
   mcSel.value='0';mcRender();}
-mcSel.onchange=()=>{mcRender();cmpRender();};
+mcSel.onchange=()=>{mcRender();};
 document.querySelectorAll('.mc2-tab').forEach(t=>t.onclick=()=>{
   document.querySelectorAll('.mc2-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
   mcView=t.dataset.v;mcRender();});
@@ -4212,45 +4186,8 @@ document.querySelectorAll('.mc2-tab').forEach(t=>t.onclick=()=>{
 document.querySelectorAll('.mc2-toggle button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.mc2-toggle button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
   mcMode=b.dataset.mode;mcRender();});
-/* club comparison */
-function currentLeague(){const L=activeLeagues();return fillForm(leagueData(L[+mcSel.value||0]||L[0]));}
-function cmpPopulate(){const d=currentLeague();const opts=d.table.map((r,i)=>`<option value="${i}">${r[0]}</option>`).join('');
-  const a=document.getElementById('cmpA'),b=document.getElementById('cmpB');if(!a)return;
-  a.innerHTML=opts;b.innerHTML=opts;if(d.table.length>1)b.value='1';cmpRender();}
-function cmpRender(){const d=currentLeague();const a=document.getElementById('cmpA'),b=document.getElementById('cmpB');if(!a||!a.options.length){return;}
-  cmpPopulateIfNeeded(d);
-  const ra=d.table[+a.value]||d.table[0],rb=d.table[+b.value]||d.table[1]||d.table[0];if(!ra||!rb)return;
-  const row=(label,va,vb,hib)=>{const na=parseFloat(va)||0,nb=parseFloat(vb)||0;
-    const wa=hib===null?false:(hib?na>nb:na<nb), wb=hib===null?false:(hib?nb>na:nb<na);
-    const mx=Math.max(Math.abs(na),Math.abs(nb),1);
-    return `<div class="cm-r">
-      <div class="cm-top"><span class="cm-va${wa?' win':''}">${va}</span><span class="cm-lbl">${label}</span><span class="cm-vb${wb?' win':''}">${vb}</span></div>
-      <div class="cm-track"><span class="cm-fill fa${wa?' win':''}" style="width:${Math.round(Math.abs(na)/mx*100)}%"></span><span class="cm-fill fb${wb?' win':''}" style="width:${Math.round(Math.abs(nb)/mx*100)}%"></span></div>
-    </div>`;}
-  const posA=d.table.indexOf(ra)+1,posB=d.table.indexOf(rb)+1;
-  const L=activeLeagues();const leagueName=((L[+mcSel.value||0]||L[0]||{}).name)||'this competition';const nTeams=d.table.length;
-  document.getElementById('cmpOut').innerHTML=`
-    <div class="cmp-context">Comparing within the <b>${leagueName}</b> &middot; ${nTeams} clubs &middot; 2026 season</div>
-    <div class="cmp-head">
-      <div class="cmp-team">${crest(ra[0],42)}<b>${ra[0]}</b><small>${posA}${ord(posA)} of ${nTeams}</small></div>
-      <div class="cmp-vs">vs</div>
-      <div class="cmp-team">${crest(rb[0],42)}<b>${rb[0]}</b><small>${posB}${ord(posB)} of ${nTeams}</small></div>
-    </div>
-    <div class="cmp-metrics">
-      ${row('Points',ra[7],rb[7],true)}
-      ${row('Played',ra[1],rb[1],null)}
-      ${row('Won',ra[2],rb[2],true)}
-      ${row('Drawn',ra[3],rb[3],null)}
-      ${row('Lost',ra[4],rb[4],false)}
-      ${row('Goals for',ra[5],rb[5],true)}
-      ${row('Goals against',ra[6],rb[6],false)}
-      ${row('Goal difference',(ra[5]-ra[6]>0?'+':'')+(ra[5]-ra[6]),(rb[5]-rb[6]>0?'+':'')+(rb[5]-rb[6]),true)}
-    </div>
-    <div class="cmp-legend"><span class="cmp-dot"></span>Green marks the stronger figure in each row; the bars show the two clubs side by side.</div>`;}
-function cmpPopulateIfNeeded(d){const a=document.getElementById('cmpA');if(a&&a.options.length!==d.table.length){const opts=d.table.map((r,i)=>`<option value="${i}">${r[0]}</option>`).join('');const bsel=document.getElementById('cmpB');const av=a.value,bv=bsel.value;a.innerHTML=opts;bsel.innerHTML=opts;a.value=av&&+av<d.table.length?av:'0';bsel.value=bv&&+bv<d.table.length?bv:(d.table.length>1?'1':'0');}}
 function ord(n){return n===1?'st':n===2?'nd':n===3?'rd':'th';}
-{const a=document.getElementById('cmpA'),b=document.getElementById('cmpB');if(a){a.onchange=cmpRender;b.onchange=cmpRender;}}
-mcPopulate();cmpPopulate();
+mcPopulate();
 
 // ===== JUNIOR COMBINED LOGS =====
 // Aggregate each club's four junior age-group teams (U12/U14/U16/U18) within a
@@ -5312,7 +5249,7 @@ function applySeason(j){
   if(typeof renderWeekendResults==='function')renderWeekendResults();
   if('cups' in j){CUPS=j.cups||[];koActive=0;CUR_UPDATED=j.updated?new Date(j.updated).toLocaleDateString():'';if(typeof renderKnockouts==='function')renderKnockouts();}
   if(typeof tickMatchClock==='function'){MC_CLOCK_DAY='';tickMatchClock();}
-  if(document.getElementById('mcLeague')){mcPopulate();if(typeof cmpPopulate==='function')cmpPopulate();}
+  if(document.getElementById('mcLeague')){mcPopulate();}
   const el=document.getElementById('mcUpdated');
   if(el)el.textContent=(j.label||'Live')+(j.updated?' · updated '+new Date(j.updated).toLocaleDateString():'');
   // refresh whichever dynamic page is open
