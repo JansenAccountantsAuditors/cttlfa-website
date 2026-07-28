@@ -1432,7 +1432,7 @@ html.pw-unlocked #pwgate{display:none}
           <a data-nav="thisweekend"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><span>This Weekend<small>Every fixture, ground &amp; kick-off</small></span></a>
           <a data-nav="matchcentre"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-6"/></svg></span><span>League Match Centre<small>Fixtures, results &amp; log</small></span></a>
           <a data-nav="combinedlogs"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 16V9M12 16V5M17 16v-4"/></svg></span><span>Junior Combined Logs<small>U12–U18 clubs ranked as one</small></span></a>
-          <a data-nav="weekendresults"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/></svg></span><span>Weekend Results<small>Every score, updated automatically</small></span></a>
+          <a data-nav="weekendresults"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/></svg></span><span>Weekend Results<small>Every score, senior &amp; junior</small></span></a>
           <a data-nav="stats"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M18 9l-5 5-3-3-4 4"/></svg></span><span>Statistics Centre<small>Goals, leaders &amp; standout results</small></span></a>
           <a data-nav="knockouts"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4a2 2 0 0 1-2-2V5h4M18 9h2a2 2 0 0 0 2-2V5h-4M6 3h12v6a6 6 0 0 1-12 0zM12 15v4M8 21h8"/></svg></span><span>Knockout Cups<small>Senior &amp; junior cups</small></span></a>
         </div>
@@ -1841,9 +1841,9 @@ html.pw-unlocked #pwgate{display:none}
   <section class="sec navy p2hero">
     <div class="wrap">
       <div class="center" style="max-width:840px;margin:0 auto">
-        <span class="eyebrow gold">Junior aggregate tables · updated daily</span>
+        <span class="eyebrow gold">Junior aggregate tables</span>
         <h2 style="font-size:clamp(30px,5vw,46px);margin:10px 0">Junior Combined Logs</h2>
-        <p style="color:#c3cdea;font-size:16px">A club's junior teams, counted as one. Where the age-group logs rank a single age group, the combined log measures how a club is performing right across its junior programme, by adding its Under-12, Under-14, Under-16 and Under-18 teams together into one table. It rebuilds automatically as results come in, so clubs can check it every day.</p>
+        <p style="color:#c3cdea;font-size:16px">A club's junior teams, counted as one. Where the age-group logs rank a single age group, the combined log measures how a club is performing right across its junior programme, by adding its Under-12, Under-14, Under-16 and Under-18 teams together into one table.</p>
         <div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <a class="btn btn-gold" data-nav="matchcentre">Age-group logs &amp; fixtures</a>
           <a class="btn btn-ghost" href="https://dash.cttlfa.com/combined-logs" target="_blank" rel="noopener">Open the live dashboard ↗</a>
@@ -1861,19 +1861,19 @@ html.pw-unlocked #pwgate{display:none}
       </div>
       <div class="jc-tabs" id="jcTabs"></div>
       <div id="jcBody"></div>
-      <p class="jc-src">Built from the same league data as the individual age-group logs, aggregated across the four junior age groups. Updates automatically as results come in. Green highlights the log leader; <b>Pts</b>, <b>GD</b> and <b>P</b> under "Combined" are the club's totals across all four teams.</p>
+      <p class="jc-src">Green highlights the log leader. <b>Pts</b>, <b>GD</b> and <b>P</b> under "Combined" are the club's totals across all four junior age groups; the right-hand columns show each club's position in its own age-group log.</p>
     </div>
   </section>
 </div>
 
-<!-- ================= WEEKEND RESULTS (auto, from the live feed) ================= -->
+<!-- ================= WEEKEND RESULTS ================= -->
 <div class="page" id="page-weekendresults">
   <section class="sec navy p2hero">
     <div class="wrap">
       <div class="center" style="max-width:860px;margin:0 auto">
-        <span class="eyebrow gold">Association-wide · updated automatically</span>
+        <span class="eyebrow gold">Association-wide · senior &amp; junior</span>
         <h2 style="font-size:clamp(30px,5vw,46px);margin:10px 0">Weekend Results</h2>
-        <p style="color:#c3cdea;font-size:16px">Every score from across the Cape Town Tygerberg LFA, senior and junior, pulled together in one place. This page rebuilds itself from the league feed as results come in, so there is nothing to load or update by hand.</p>
+        <p style="color:#c3cdea;font-size:16px">Every score from across the Cape Town Tygerberg LFA, senior and junior, in one place. All divisions, all age groups, from the weekend just gone.</p>
         <div class="wr-when" id="wrLabel"></div>
         <div style="margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <a class="btn btn-gold" data-nav="matchcentre">Logs &amp; fixtures</a>
@@ -4217,7 +4217,7 @@ function jcBuild(tierLabel){const logs=jcTierLogs(tierLabel);
   return {rows,present:JC_AGES.filter(n=>logs[n])};}
 const jcSign=v=>(v>0?'+':'')+v;
 function jcTableHtml(tier){const {rows,present}=jcBuild(tier.label);
-  if(!rows.length)return `<div class="jc-empty"><b>The ${tier.name} combined log will appear here.</b><br>It builds automatically once the Under-12 to Under-18 age-group logs for this tier are published for the season.</div>`;
+  if(!rows.length)return `<div class="jc-empty"><b>The ${tier.name} combined log will appear here.</b><br>It will show once the Under-12 to Under-18 age-group logs for this tier are published for the season.</div>`;
   const grpAges=JC_AGES.map(n=>`<th colspan="3" class="jc-age">Under ${n}</th>`).join('');
   const sub=JC_AGES.map(()=>`<th>P</th><th>GD</th><th>Pts</th>`).join('');
   const body=rows.map((a,i)=>{
@@ -4280,7 +4280,7 @@ function renderWeekendResults(){
   const w=weekendData();
   if(!w||!w.games.length){
     if(lab)lab.style.display='none';
-    el.innerHTML=`<div class="wr-empty"><b>Weekend results appear here automatically.</b>As soon as the weekend's matches are played and captured in the league system, every score across the association is pulled together on this page. For match-day photos, follow us on Facebook.</div>`;
+    el.innerHTML=`<div class="wr-empty"><b>This weekend's results will appear here.</b>Once the weekend's matches have been played, every score from across the association is shown here, senior and junior. For match-day photos, follow us on Facebook.</div>`;
     return;}
   if(lab){lab.style.display='';lab.textContent=wkLabel(w);}
   const tiles=`<div class="wr-stats">
@@ -4378,7 +4378,7 @@ function buildNews(){
   // newsroom order: weekend results feature, curated announcements, then freshest results, upcoming fixtures, standings
   const feed=[...wknd,...ann,...results.slice(0,6),...fixtures.slice(0,3),...standings.slice(0,2)];
   if(!feed.length){
-    const ph=`<div class="news-empty"><b>Live match updates load here.</b><p>Results, fixtures and standings appear automatically from the league system as each match day is played. For match-day photos and announcements, follow us on Facebook.</p><a class="btn btn-blue" href="https://www.facebook.com/capetowntygerberg/" target="_blank" rel="noopener">Latest on Facebook ↗</a></div>`;
+    const ph=`<div class="news-empty"><b>Live match updates load here.</b><p>Results, fixtures and standings appear here through the season as each match day is played. For match-day photos and announcements, follow us on Facebook.</p><a class="btn btn-blue" href="https://www.facebook.com/capetowntygerberg/" target="_blank" rel="noopener">Latest on Facebook ↗</a></div>`;
     if(home)home.innerHTML=ph;if(all)all.innerHTML=ph;return;}
   if(home)home.innerHTML=feed.slice(0,3).map(liveNewsCard).join('');
   if(all)all.innerHTML=feed.map(liveNewsCard).join('');}
@@ -4488,7 +4488,7 @@ const EVENTS=[
     .sort((a,b)=>a.dt-b.dt);
   const up=EVENTS.filter(e=>e.tbc).concat(dated);
   if(!up.length){
-    el.innerHTML=`<div class="empty-panel"><b>No events are scheduled right now.</b>Tournaments, finals, courses and meetings will appear here as the association confirms them, and each one drops off automatically once it has taken place.</div>`;
+    el.innerHTML=`<div class="empty-panel"><b>No events are scheduled right now.</b>Tournaments, finals, courses and meetings will appear here as the association confirms them.</div>`;
     return;
   }
   el.innerHTML=up.map(e=>{
@@ -4724,8 +4724,8 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElement
 const PAGES={
   home:{t:"Cape Town Tygerberg LFA — Football in Cape Town | Fixtures, Results & Clubs",d:"Official home of the Cape Town Tygerberg Local Football Association. Live logs, fixtures, results, 50+ affiliated clubs, referees and registration for senior, youth, women's and veterans football since 1993."},
   matchcentre:{t:"Match Centre — Fixtures, Results & League Logs | CTTLFA",d:"Follow every Cape Town Tygerberg league, senior and junior, with up-to-date fixtures, results and standings from the association's own match centre."},
-  combinedlogs:{t:"Junior Combined Logs — U12–U18 Aggregate Tables | CTTLFA",d:"The Cape Town Tygerberg junior combined logs: each club's Under-12 to Under-18 teams added together and ranked as one, per Premier tier. Rebuilt automatically as results come in.",crumb:"Junior Combined Logs",parent:"Football"},
-  weekendresults:{t:"Weekend Results — Every Score Across the Association | CTTLFA",d:"Every Cape Town Tygerberg LFA result from the weekend, senior and junior, in one place. Built automatically from the league feed with a summary of the biggest wins, goals and clean sheets.",crumb:"Weekend Results",parent:"Football"},
+  combinedlogs:{t:"Junior Combined Logs — U12–U18 Aggregate Tables | CTTLFA",d:"The Cape Town Tygerberg junior combined logs: each club's Under-12 to Under-18 teams added together and ranked as one, per Premier tier.",crumb:"Junior Combined Logs",parent:"Football"},
+  weekendresults:{t:"Weekend Results — Every Score Across the Association | CTTLFA",d:"Every Cape Town Tygerberg LFA result from the weekend, senior and junior, in one place, with a summary of the biggest wins, goals and clean sheets.",crumb:"Weekend Results",parent:"Football"},
   knockouts:{t:"Knockout Cups — Senior & Junior | Cape Town Tygerberg LFA",d:"Cup football in the Cape Town Tygerberg LFA: senior and junior knockout draws, fixtures, brackets and finals."},
   clubs:{t:"Affiliated Clubs | Cape Town Tygerberg LFA",d:"Browse the clubs affiliated to the Cape Town Tygerberg Local Football Association and see how each is performing across the leagues."},
   news:{t:"News & Events | Cape Town Tygerberg LFA",d:"Match reports, announcements and the fixtures diary for the Cape Town Tygerberg Local Football Association."},
