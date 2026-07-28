@@ -927,6 +927,10 @@ img[data-broken]{display:none!important}
 .wr-t img{flex:none}
 .wr-sc{font-family:var(--head);font-weight:800;color:var(--navy);font-size:16px;white-space:nowrap;padding:2px 9px;background:#F0F4FE;border-radius:8px}
 .wr-sc span{color:var(--muted);margin:0 2px;font-weight:600}
+.wr-prose{background:#FFFDF9;border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:14px;padding:22px 26px;margin-bottom:26px}
+.wr-prose p{color:var(--ink);font-size:15.5px;line-height:1.7;margin-bottom:10px}
+.wr-prose p b{color:var(--navy)}
+.wr-prose p.wr-src{margin-bottom:0;color:var(--muted);font-size:14px}
 .wr-empty{background:#FFFDF9;border:1px solid var(--line);border-radius:16px;padding:30px;text-align:center;color:var(--muted);font-size:15px}
 .wr-empty b{color:var(--navy);display:block;margin-bottom:6px;font-size:16px}
 .roy-foot{color:var(--muted);font-size:14px;margin-top:16px}
@@ -4266,6 +4270,22 @@ function weekendData(){
   const byDiv={};games.forEach(g=>{(byDiv[g.div]=byDiv[g.div]||{grade:g.grade,rows:[]}).rows.push(g);});
   return {sat,sun,games,goals,biggest,highest,clean,byDiv,divCount:Object.keys(byDiv).length};
 }
+/* Deterministic round-up: built entirely from the actual scores, so it is always
+   factually correct. This is the written summary that leads the weekend post. */
+function weekendProse(w){
+  if(!w||!w.games.length)return '';
+  const S=[];
+  S.push(`A full programme across the Cape Town Tygerberg LFA this weekend: <b>${w.games.length}</b> matches played and <b>${w.goals}</b> goals scored across <b>${w.divCount}</b> divisions, senior and junior.`);
+  const prem=w.games.filter(g=>g.key==='A1');
+  if(prem.length){
+    const bits=prem.slice(0,3).map(g=>`${g.home} ${g.hs}–${g.as} ${g.away}`);
+    S.push(`In the Premier Division: ${bits.join('; ')}${prem.length>3?', and more':''}.`);
+  }
+  if(w.biggest){const g=w.biggest.g;
+    S.push(`The weekend's biggest win came in ${g.div}, where ${g.home} beat ${g.away} ${g.hs}–${g.as}.`);}
+  S.push(`Every score across the association is set out below, division by division.`);
+  return S.map((p,i)=>`<p${i===S.length-1?' class="wr-src"':''}>${p}</p>`).join('');
+}
 function wkLabel(w){const o={weekday:'long',day:'numeric',month:'long'};
   const sameDay=w.games.every(g=>g.d.getTime()===w.games[0].d.getTime());
   if(sameDay)return w.games[0].d.toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -4302,7 +4322,8 @@ function renderWeekendResults(){
     inSec.forEach(n=>{const D=w.byDiv[n];
       body+=`<div class="wr-div"><h4>${n}</h4>${D.rows.map(wrRow).join('')}</div>`;});
     body+='</div>';});
-  el.innerHTML=tiles+hl+body;
+  const prose=`<div class="wr-prose">${weekendProse(w)}</div>`;
+  el.innerHTML=tiles+prose+hl+body;
 }
 renderWeekendResults();
 
