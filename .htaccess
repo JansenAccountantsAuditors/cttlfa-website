@@ -1,26 +1,26 @@
 # ==========================================================
-# CTTLFA website - performance & security configuration
-# For Apache / cPanel hosting (e.g. Xneelo). Netlify ignores this file,
-# so it is harmless now and takes effect automatically when the site
-# moves to the Xneelo domain. Place in public_html (with index.html).
+# CTTLFA website (cttfa.co.za) — Apache / xneelo configuration
+# Place this file in public_html together with index.html.
 # ==========================================================
 
-# ---- 1. Force HTTPS and drop the www. (fixes the "Not Secure" warning) ----
+# ---- 1. Force HTTPS and force the www. host (matches the site's canonical) ----
 RewriteEngine On
-RewriteCond %{HTTPS} off [OR]
-RewriteCond %{HTTP_HOST} ^www\. [NC]
-RewriteCond %{HTTP_HOST} ^(?:www\.)?(.+)$ [NC]
-RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+# add https if missing
+RewriteCond %{HTTPS} off
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+# add www if missing (non-www -> www)
+RewriteCond %{HTTP_HOST} !^www\. [NC]
+RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# ---- 2. Compress text, HTML, CSS and JavaScript (gzip) ----
+# ---- 2. Compress text, HTML, CSS, JS and JSON (gzip) ----
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css \
     text/javascript application/javascript application/x-javascript \
     application/json application/xml image/svg+xml
 </IfModule>
 
-# ---- 3. Browser caching. Static media is cached hard; the page and the
-#         live league feed are kept short so updates come through quickly. ----
+# ---- 3. Browser caching. Static media cached hard; the page and the live
+#         league feed kept short so updates come through quickly. ----
 <IfModule mod_expires.c>
   ExpiresActive On
   ExpiresByType image/jpeg "access plus 1 year"
@@ -40,7 +40,11 @@ RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
   Header set X-Content-Type-Options "nosniff"
   Header set X-Frame-Options "SAMEORIGIN"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
+  # keep the live feed and the page fresh
+  <FilesMatch "season\.json$">
+    Header set Cache-Control "public, max-age=300, must-revalidate"
+  </FilesMatch>
 </IfModule>
 
-# ---- 5. Optional: uncomment to send unknown paths to the home page ----
-# ErrorDocument 404 /index.html
+# ---- 5. Default document ----
+DirectoryIndex index.html

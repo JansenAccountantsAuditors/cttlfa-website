@@ -1,0 +1,43 @@
+name: Deploy to Xneelo (cttfa.co.za)
+
+# Publishes the public site to the Xneelo hosting (public_html) over FTP.
+# Runs on every change to main and after the hourly league-data sync, so the
+# site and its live data stay current with no manual uploads.
+# It only publishes once the FTP_SERVER / FTP_USERNAME / FTP_PASSWORD
+# repository secrets have been added (Settings -> Secrets and variables -> Actions).
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+concurrency:
+  group: xneelo-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+    steps:
+      - name: Check out the site
+        uses: actions/checkout@v4
+
+      - name: Publish to Xneelo public_html (only if secrets are set)
+        if: env.FTP_SERVER != ''
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps
+          server-dir: ./
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/.github/**
+            netlify.toml
+            **/*.md
+            build_deploy.py
+            lr_sync.py
