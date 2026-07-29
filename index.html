@@ -1430,6 +1430,7 @@ body .card-f{background:#FBF7F0}
         <div class="dropdown">
           <a data-nav="thisweekend"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><span>This Weekend<small>Every fixture, ground &amp; kick-off</small></span></a>
           <a data-nav="matchcentre"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-6"/></svg></span><span>League Match Centre<small>Fixtures, results &amp; log</small></span></a>
+          <a data-nav="submissions"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg></span><span>Submissions<small>Results, team returns &amp; reports</small></span></a>
           <a data-nav="combinedlogs"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M7 16V9M12 16V5M17 16v-4"/></svg></span><span>Junior Combined Logs<small>U12–U18 clubs ranked as one</small></span></a>
           <a data-nav="weekendresults"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/></svg></span><span>Weekend Results<small>Every score, senior &amp; junior</small></span></a>
           <a data-nav="stats"><span class="di"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18M18 9l-5 5-3-3-4 4"/></svg></span><span>Statistics Centre<small>Goals, leaders &amp; standout results</small></span></a>
@@ -1496,6 +1497,7 @@ body .card-f{background:#FBF7F0}
   <a data-nav="halloffame">Hall of Fame</a>
   <a data-nav="thisweekend">This Weekend</a>
   <a data-nav="matchcentre">Match Centre</a>
+  <a data-nav="submissions">Submissions</a>
   <a data-nav="combinedlogs">Junior Combined Logs</a>
   <a data-nav="weekendresults">Weekend Results</a>
   <a data-nav="knockouts">Knockouts</a>
@@ -1856,6 +1858,68 @@ body .card-f{background:#FBF7F0}
   </section>
 </div>
 
+<!-- ================= SUBMISSIONS ================= -->
+<style>
+#page-submissions .subwrap{max-width:640px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+#page-submissions .subbtn{display:flex;align-items:center;gap:16px;background:#fff;border:1px solid var(--line);border-left:5px solid var(--navy);border-radius:14px;padding:18px 20px;text-decoration:none;box-shadow:0 6px 18px rgba(12,29,62,.06);transition:transform .15s ease,box-shadow .15s ease,border-color .15s ease}
+#page-submissions .subbtn:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(12,29,62,.12);border-left-color:var(--gold)}
+#page-submissions .sb-ic{flex:0 0 auto;width:46px;height:46px;border-radius:12px;background:rgba(12,29,62,.07);display:flex;align-items:center;justify-content:center;color:var(--navy)}
+#page-submissions .sb-ic svg{width:24px;height:24px}
+#page-submissions .sb-tx{flex:1 1 auto;text-align:left}
+#page-submissions .sb-tx b{display:block;color:var(--navy);font-size:18px;font-weight:800;line-height:1.2}
+#page-submissions .sb-tx small{color:var(--muted);font-size:13.5px}
+#page-submissions .sb-go{flex:0 0 auto;color:var(--navy);opacity:.7}
+#page-submissions .sub-note{max-width:640px;margin:24px auto 0;background:var(--navy);color:#dfe6f5;border-radius:14px;padding:16px 20px;font-size:14.5px;text-align:center;line-height:1.55}
+#page-submissions .sub-note b{color:#fff}
+#page-submissions .sub-alt{max-width:640px;margin:14px auto 0;text-align:center;color:var(--muted);font-size:13px;line-height:1.7}
+@media(max-width:520px){#page-submissions .sb-tx b{font-size:16px}#page-submissions .subbtn{padding:15px 16px;gap:12px}}
+</style>
+<div class="page" id="page-submissions">
+  <section class="sec navy p2hero">
+    <div class="wrap">
+      <div class="center" style="max-width:760px;margin:0 auto">
+        <span class="eyebrow gold">Match-day forms</span>
+        <h2 style="font-size:clamp(30px,5vw,46px);margin:10px 0">Submissions</h2>
+        <p style="color:#c3cdea;font-size:16px">One place for match-day forms. Referees, club officials and team managers use the buttons below to send in results, team returns and reports after a game. Choose a form and it opens straight away.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" style="padding-top:34px">
+    <div class="wrap">
+      <div class="subwrap">
+        <a class="subbtn" href="https://form.jotform.com/221095830059556" target="_blank" rel="noopener" aria-label="Open the Junior Match Result form">
+          <span class="sb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></span>
+          <span class="sb-tx"><b>Junior Match Result</b><small>Send the score for a junior fixture</small></span>
+          <span class="sb-go"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
+        </a>
+        <a class="subbtn" href="https://form.jotform.com/221082801095045" target="_blank" rel="noopener" aria-label="Open the Senior Match Result form">
+          <span class="sb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></span>
+          <span class="sb-tx"><b>Senior Match Result</b><small>Send the score for a senior fixture</small></span>
+          <span class="sb-go"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
+        </a>
+        <a class="subbtn" href="https://form.jotform.com/220944917396063" target="_blank" rel="noopener" aria-label="Open the Team Return form">
+          <span class="sb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg></span>
+          <span class="sb-tx"><b>Team Return</b><small>Record the teams and players for a match</small></span>
+          <span class="sb-go"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
+        </a>
+        <a class="subbtn" href="https://form.jotform.com/221095432461551" target="_blank" rel="noopener" aria-label="Open the Referee Incident Report form">
+          <span class="sb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></span>
+          <span class="sb-tx"><b>Referee Incident Report</b><small>Report an on- or off-field incident</small></span>
+          <span class="sb-go"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
+        </a>
+        <a class="subbtn" href="https://form.jotform.com/221095015577051" target="_blank" rel="noopener" aria-label="Open the Referee Send Off Report form">
+          <span class="sb-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="3" width="10" height="18" rx="2"/></svg></span>
+          <span class="sb-tx"><b>Referee Send Off Report</b><small>Report a red card and dismissal</small></span>
+          <span class="sb-go"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M8 7h9v9"/></svg></span>
+        </a>
+      </div>
+      <div class="sub-note"><b>Not sure which one?</b> Use a Match Result form for the score (Junior or Senior), the Team Return for the team and player list, and the Incident or Send Off report when something needs to be recorded.</div>
+      <p class="sub-alt">If a button will not open, type the address into your browser: <b>cttfa.co.za/junior-match-result</b>, <b>/senior-match-result</b>, <b>/team-return</b>, <b>/referee-incident-report</b> or <b>/referee-send-off</b>.</p>
+    </div>
+  </section>
+</div>
+
 <!-- ================= WEEKEND RESULTS ================= -->
 <div class="page" id="page-weekendresults">
   <section class="wr-hero" id="wrHero">
@@ -2015,44 +2079,6 @@ body .card-f{background:#FBF7F0}
           <blockquote>Our match officials make the game happen every weekend. If you have ever thought about taking up the whistle, the association will help you get started.</blockquote>
           <div class="qs-by">Wayne Engelbrecht, Head of Referees</div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="sec" style="padding-top:26px;padding-bottom:2px" id="ref-submissions">
-    <div class="wrap">
-      <h3 class="blocktitle">Match-day submissions &mdash; referee forms</h3>
-      <p style="color:var(--muted);max-width:860px;margin:-6px 0 16px">After each game, use the correct form below to send your result or report to the association. Tap a card and the form opens straight away. It takes a few minutes and goes directly to the office and the results team.</p>
-      <div class="docs" style="justify-content:flex-start;flex-wrap:wrap;gap:14px">
-        <a class="doc" href="https://form.jotform.com/221095830059556" target="_blank" rel="noopener" aria-label="Open the Junior Match Result Submission form" style="min-width:300px">
-          <div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></div>
-          <div class="dt"><b>Junior &middot; Match Result Submission</b><span>Send the score for a junior fixture</span></div>
-          <div class="dl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M8 7h9v9"/></svg></div>
-        </a>
-        <a class="doc" href="https://form.jotform.com/221082801095045" target="_blank" rel="noopener" aria-label="Open the Senior Match Result Submission form" style="min-width:300px">
-          <div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h9"/></svg></div>
-          <div class="dt"><b>Senior &middot; Match Result Submission</b><span>Send the score for a senior fixture</span></div>
-          <div class="dl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M8 7h9v9"/></svg></div>
-        </a>
-        <a class="doc" href="https://form.jotform.com/220944917396063" target="_blank" rel="noopener" aria-label="Open the Team Return Submission form" style="min-width:300px">
-          <div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.9"/></svg></div>
-          <div class="dt"><b>Team Return Submission</b><span>Record the teams and players for a match</span></div>
-          <div class="dl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M8 7h9v9"/></svg></div>
-        </a>
-        <a class="doc" href="https://form.jotform.com/221095432461551" target="_blank" rel="noopener" aria-label="Open the Referee Incident Report form" style="min-width:300px">
-          <div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/></svg></div>
-          <div class="dt"><b>Referee Incident Report</b><span>Report an on- or off-field incident</span></div>
-          <div class="dl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M8 7h9v9"/></svg></div>
-        </a>
-        <a class="doc" href="https://form.jotform.com/221095015577051" target="_blank" rel="noopener" aria-label="Open the Referee Send Off Report form" style="min-width:300px">
-          <div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="3" width="10" height="18" rx="2"/></svg></div>
-          <div class="dt"><b>Referee Send Off Report</b><span>Report a red card and dismissal</span></div>
-          <div class="dl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 17 17 7M8 7h9v9"/></svg></div>
-        </a>
-      </div>
-      <div class="embed-note" style="margin-top:16px">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
-        <div><b>Not sure which one?</b> Use a Match Result form for the score (Junior or Senior), the Team Return for the team and player list, and the Incident or Send Off report when something needs to be recorded. If a link will not open, type the address into your browser: <b>cttfa.co.za/junior-match-result</b>, <b>/senior-match-result</b>, <b>/team-return</b>, <b>/referee-incident-report</b> or <b>/referee-send-off</b>.</div>
       </div>
     </div>
   </section>
@@ -4789,6 +4815,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElement
 const PAGES={
   home:{t:"Cape Town Tygerberg LFA — Football in Cape Town | Fixtures, Results & Clubs",d:"Official home of the Cape Town Tygerberg Local Football Association. Live logs, fixtures, results, 50+ affiliated clubs, referees and registration for senior, youth, women's and veterans football since 1993."},
   matchcentre:{t:"Match Centre — Fixtures, Results & League Logs | CTTLFA",d:"Follow every Cape Town Tygerberg league, senior and junior, with up-to-date fixtures, results and standings from the association's own match centre."},
+  submissions:{t:"Submissions — Match Results, Team Returns & Referee Reports | CTTLFA",d:"Send in match-day forms for the Cape Town Tygerberg LFA: junior and senior match results, team returns, and referee incident and send-off reports.",crumb:"Submissions",parent:"Match Centre"},
   combinedlogs:{t:"Junior Combined Logs — U12–U18 Aggregate Tables | CTTLFA",d:"The Cape Town Tygerberg junior combined logs: each club's Under-12 to Under-18 teams added together and ranked as one, per Premier tier.",crumb:"Junior Combined Logs",parent:"Football"},
   weekendresults:{t:"Weekend Results — Every Score Across the Association | CTTLFA",d:"Every Cape Town Tygerberg LFA result from the weekend, senior and junior, in one place, with a summary of the biggest wins, goals and clean sheets.",crumb:"Weekend Results",parent:"Football"},
   knockouts:{t:"Knockout Cups — Senior & Junior | Cape Town Tygerberg LFA",d:"Cup football in the Cape Town Tygerberg LFA: senior and junior knockout draws, fixtures, brackets and finals."},
