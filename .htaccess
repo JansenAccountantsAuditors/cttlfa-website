@@ -5,6 +5,19 @@
 
 # ---- 1. Force HTTPS and force the www. host (matches the site's canonical) ----
 RewriteEngine On
+
+# ---- 1a. Dashboard bridge: restore old cttfa.co.za paths lost when the previous
+#          WordPress site was replaced. The operations dashboard lives on the
+#          subdomain (dash.cttlfa.com) and is NOT touched by these rules. ----
+RewriteRule ^match/?$                          https://dash.cttlfa.com/match [R=302,L,NC]
+RewriteRule ^announcements/?$                  https://dash.cttlfa.com/announcements [R=302,L,NC]
+RewriteRule ^referee-appointments/?$           https://dash.cttlfa.com/referee-appointments [R=302,L,NC]
+RewriteRule ^yellow-card-tracker/?$            https://dash.cttlfa.com/yellow-card-tracker [R=302,L,NC]
+RewriteRule ^administrative-rulings-public/?$  https://dash.cttlfa.com/administrative-rulings-public [R=302,L,NC]
+RewriteRule ^login/?$                          https://dash.cttlfa.com/login [R=302,L,NC]
+# combined-logs stays on our own site (Junior Combined Logs page)
+RewriteRule ^combined-logs/?$                  https://www.cttfa.co.za/#combinedlogs [R=302,L,NE,NC]
+
 # add https if missing
 RewriteCond %{HTTPS} off
 RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
