@@ -12,8 +12,9 @@ RewriteRule ^senior-match-result/?$      https://form.jotform.com/22108280109504
 RewriteRule ^referee-incident-report/?$  https://form.jotform.com/221095432461551 [R=302,L,NC]
 RewriteRule ^team-return/?$              https://form.jotform.com/220944917396063 [R=302,L,NC]
 RewriteRule ^referee-send-off/?$         https://form.jotform.com/221095015577051 [R=302,L,NC]
-# legacy single link kept alive -> Junior match result (primary of the two match forms)
+# /match and /match-result both open the Junior match result form
 RewriteRule ^match/?$                    https://form.jotform.com/221095830059556 [R=302,L,NC]
+RewriteRule ^match-result/?$             https://form.jotform.com/221095830059556 [R=302,L,NC]
 
 # ---- 1b. Dashboard bridge: restore old cttfa.co.za paths lost when the previous
 #          WordPress site was replaced. The operations dashboard lives on the
