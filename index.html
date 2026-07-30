@@ -3972,10 +3972,11 @@ body .card-f{background:#FBF7F0}
 <script>
 /* ---------- DATA ---------- */
 const CLUBS=[
-["Edgemead G/W",""],["Garlandale",""],["Young Bafana",""],["Hout Bay",""],["Jamestown United",""],["Turfhall",""],["Everton United",""],["Nova Generation",""],
+["Edgemead G/W",""],["Garlandale",""],["Young Bafana","assets/young-bafana.jpg"],["Hout Bay",""],["Jamestown United",""],["Turfhall",""],["Everton United",""],["Nova Generation",""],
 ["Avendale","2022/11/avendale-150x150.jpg"],["Badgers","2022/03/BadgersLogo-150x150.png"],["Barmsley Spurs","2022/11/barmsley-spurs-logo.jpg"],["BCFC","2020/05/BCFC-logo-2020-for-CTTFA-150x150.jpg"],["Bothasig","2022/11/Bothasig-150x150.jpg"],["Brooklyn Superstars","2022/11/Brooklyn-Superstars-150x150.jpg"],["Camps Bay","2022/11/camps-bay-logo.jpg"],["Cape Town Spurs","2022/11/Cape-Town-Spurs-150x150.jpg"],["Chelsea","2022/11/chelsea-logo.jpg"],["Clyde","2022/11/Clyde-150x150.jpg"],["De Beers","2022/11/de-beers-logo.jpg"],["Durbanville","2020/05/DURBANVILLE-fc-logo-150x150.jpg"],["FC Kapstad","2020/05/fckapstad-150x150.jpg"],["Fish Hoek","2020/05/Fish-Hoek-Badge-150x150.jpg"],["FN Rangers","2020/05/FN-Rangers-Club-Badge-150x150.jpg"],["Garden Village","2022/11/Garden-Village.jpg"],["Goodwood United","2022/11/goodwood-united-logo.jpg"],["Grass Boots","2022/11/grass-boots.jpg"],["Green Point","2020/05/greenpoint-150x150.png"],["Hanover Park","2020/05/HANOVER-PARK-LOGO-jpeg-150x150.jpg"],["Hellenic","2020/05/hellenic-150x150.jpg"],["Holy Cross","2022/11/holycross-logo.jpg"],["JMI","2022/11/jmi-logo.jpg"],["Kensington","2022/11/kensington-logo.jpg"],["KRAFC","2020/05/KRAFC-Full-logo-150x150.jpg"],["Lansdowne FC","2022/11/lansdowne-fc-150x150.jpg"],["Magic Ladies","2022/11/Magic-Ladies-150x150.jpg"],["Meadowridge","2022/11/meadowridge-logo.jpg"],["Northpine United","2022/11/northpine-united-logo.jpg"],["Norway Parks","2020/05/Norway-Parks-FC-Jpeg-150x150.jpg"],["Old Mutual","2022/11/old-mutual-150x82.jpg"],["Queens Park FC","2022/11/queens-park-fc-logo.jpg"],["Ruyterwacht","2022/11/Ruyterwacht.jpg"],["Rygersdal","2020/05/Rygersdal-Logo-Final-Colour-Small-150x150.png"],["Saxons","2020/05/Saxons-new-logo-150x150.jpg"],["SCFC","2020/05/SCFC-logo-2018-01-150x150.jpg"],["Shosholoza","2022/11/Shosholoza-150x150.jpg"],["Steph's United","2022/11/Stephs-New-logo-CMYK-on-white-150x150.jpg"],["Tramway","2022/11/tramway-logo.jpg"],["TVFC","2020/05/TVFC-Logo-150x150.jpg"],["UCT","2022/11/uct-logo-150x150.jpg"],["Varsity College","2022/11/Varsity-College-150x109.jpg"],["Vasco","2020/05/Vasco-logo-150x150.jpg"],["West End","2022/11/west-end.jpg"],["Wynberg St Johns","2020/05/Wynberg-St-Johns-logo-high-res-jpeg-150x150.jpg"],["Yimo Lukes","2022/11/yimo-lukes-logo.jpg"],["YSD","2022/11/YSD-150x78.jpg"]
 ];
 const CBASE="https://www.cttfa.co.za/wp-content/uploads/";
+const logoURL=v=>/^(assets\/|https?:|data:)/.test(v)?v:CBASE+v;
 /* Guest teams: they play in CTTLFA competitions but are NOT full affiliated member clubs
    (per the 2026 team-entry register). Denoted as such in the directory and hub. Declared here, ahead of
    the first renderClubs() call, so the directory render can reference it safely. */
@@ -4045,7 +4046,7 @@ const baseName=n=>n.replace(/\s+U\d+$/,'').replace(/\s+Reserves?$/i,'');
 let TEAMCRESTS={},CRESTBASE='photos/crests';
 function crest(n,s){s=s||24;const b=baseName(n);
   const lr=TEAMCRESTS[n]||TEAMCRESTS[b];
-  const src=lr?`${CRESTBASE}/${lr}/115.jpg`:(LOGO[b]?CBASE+LOGO[b]:'');
+  const src=lr?`${CRESTBASE}/${lr}/115.jpg`:(LOGO[b]?logoURL(LOGO[b]):'');
   const inner=src?`<img src="${src}" alt="" loading="lazy" onerror="this.parentNode.textContent='${ini(b)}'">`:ini(b);
   return `<span class="cb" style="width:${s}px;height:${s}px;font-size:${Math.round(s*0.4)}px">${inner}</span>`;}
 const teamRow=(n,extra='')=>`<div class="t">${crest(n,26)}<span class="tn">${n}</span>${extra}</div>`;
@@ -4542,7 +4543,7 @@ const fbSVG='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 
 const extSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>';
 const cg=document.getElementById('clubsGrid'),cc=document.getElementById('clubCount');
 function renderClubs(q=''){q=q.toLowerCase();const list=CLUBS.filter(c=>c[0].toLowerCase().includes(q));
-  cg.innerHTML=list.map(c=>{const n=c[0],L=CLUBLINKS[n]||{};const primary=clubPrimary(n);const bsrc=c[1]?(CBASE+c[1]):(TEAMCRESTS[n]?(CRESTBASE+'/'+TEAMCRESTS[n]+'/115.jpg'):'');
+  cg.innerHTML=list.map(c=>{const n=c[0],L=CLUBLINKS[n]||{};const primary=clubPrimary(n);const bsrc=c[1]?logoURL(c[1]):(TEAMCRESTS[n]?(CRESTBASE+'/'+TEAMCRESTS[n]+'/115.jpg'):'');
     const web=L.web?`<a class="web" href="${L.web}" target="_blank" rel="noopener" aria-label="${n} website" title="${n} website" onclick="event.stopPropagation()">${globeSVG}</a>`:'';
     const fb=`<a class="fb" href="${L.fb||fbSearch(n)}" target="_blank" rel="noopener" aria-label="${n} on Facebook" title="${n} on Facebook" onclick="event.stopPropagation()">${fbSVG}</a>`;
     return `<div class="club">
