@@ -34,6 +34,14 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 RewriteCond %{HTTP_HOST} !^www\. [NC]
 RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
+# ---- 1b3. Per-page share previews for link crawlers only (WhatsApp, Facebook, etc.).
+#           Humans and search engines get the real app; only known preview-bot UAs get a static OG stub. ----
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|redditbot|SkypeUriPreview|vkShare) [NC]
+RewriteRule ^$ /og/home.html [L]
+RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|redditbot|SkypeUriPreview|vkShare) [NC]
+RewriteCond %{DOCUMENT_ROOT}/og/$1.html -f
+RewriteRule ^([a-z0-9-]+)/?$ /og/$1.html [L]
+
 # ---- 1c. Single-page-app fallback: clean URLs (no #) are served the app shell.
 #          Real files and folders are served normally; the redirects above run first. ----
 RewriteCond %{REQUEST_FILENAME} !-f
