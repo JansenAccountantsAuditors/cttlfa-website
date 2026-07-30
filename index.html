@@ -3972,6 +3972,7 @@ body .card-f{background:#FBF7F0}
 <script>
 /* ---------- DATA ---------- */
 const CLUBS=[
+["Edgemead G/W",""],["Garlandale",""],["Hout Bay",""],["Jamestown United",""],["Turfhall",""],["Young Bafana",""],
 ["Avendale","2022/11/avendale-150x150.jpg"],["Badgers","2022/03/BadgersLogo-150x150.png"],["Barmsley Spurs","2022/11/barmsley-spurs-logo.jpg"],["BCFC","2020/05/BCFC-logo-2020-for-CTTFA-150x150.jpg"],["Bothasig","2022/11/Bothasig-150x150.jpg"],["Brooklyn Superstars","2022/11/Brooklyn-Superstars-150x150.jpg"],["Camps Bay","2022/11/camps-bay-logo.jpg"],["Cape Town Spurs","2022/11/Cape-Town-Spurs-150x150.jpg"],["Chelsea","2022/11/chelsea-logo.jpg"],["Clyde","2022/11/Clyde-150x150.jpg"],["De Beers","2022/11/de-beers-logo.jpg"],["Durbanville","2020/05/DURBANVILLE-fc-logo-150x150.jpg"],["EFC","2020/05/EFC-logo-FC-300dpi-150x150.jpg"],["FC Kapstad","2020/05/fckapstad-150x150.jpg"],["Fish Hoek","2020/05/Fish-Hoek-Badge-150x150.jpg"],["FN Rangers","2020/05/FN-Rangers-Club-Badge-150x150.jpg"],["Garden Village","2022/11/Garden-Village.jpg"],["Goodwood United","2022/11/goodwood-united-logo.jpg"],["Grass Boots","2022/11/grass-boots.jpg"],["Green Point","2020/05/greenpoint-150x150.png"],["Hanover Park","2020/05/HANOVER-PARK-LOGO-jpeg-150x150.jpg"],["Helderberg Lions","2022/11/Helderberg-Lions-150x150.jpg"],["Hellenic","2020/05/hellenic-150x150.jpg"],["Holy Cross","2022/11/holycross-logo.jpg"],["JMI","2022/11/jmi-logo.jpg"],["Kensington","2022/11/kensington-logo.jpg"],["KRAFC","2020/05/KRAFC-Full-logo-150x150.jpg"],["Lansdowne FC","2022/11/lansdowne-fc-150x150.jpg"],["Magic Ladies","2022/11/Magic-Ladies-150x150.jpg"],["Meadowridge","2022/11/meadowridge-logo.jpg"],["Northpine United","2022/11/northpine-united-logo.jpg"],["Norway Parks","2020/05/Norway-Parks-FC-Jpeg-150x150.jpg"],["Nova Nacional","2022/11/Nova-Nacional-Logo-150x150.jpg"],["Old Mutual","2022/11/old-mutual-150x82.jpg"],["Queens Park FC","2022/11/queens-park-fc-logo.jpg"],["Ruyterwacht","2022/11/Ruyterwacht.jpg"],["Rygersdal","2020/05/Rygersdal-Logo-Final-Colour-Small-150x150.png"],["Saxons","2020/05/Saxons-new-logo-150x150.jpg"],["SCFC","2020/05/SCFC-logo-2018-01-150x150.jpg"],["Shosholoza","2022/11/Shosholoza-150x150.jpg"],["Steph's United","2022/11/Stephs-New-logo-CMYK-on-white-150x150.jpg"],["Tramway","2022/11/tramway-logo.jpg"],["TVFC","2020/05/TVFC-Logo-150x150.jpg"],["UCT","2022/11/uct-logo-150x150.jpg"],["Varsity College","2022/11/Varsity-College-150x109.jpg"],["Vasco","2020/05/Vasco-logo-150x150.jpg"],["West End","2022/11/west-end.jpg"],["Wynberg St Johns","2020/05/Wynberg-St-Johns-logo-high-res-jpeg-150x150.jpg"],["Yimo Lukes","2022/11/yimo-lukes-logo.jpg"],["YSD","2022/11/YSD-150x78.jpg"]
 ];
 const CBASE="https://www.cttfa.co.za/wp-content/uploads/";
@@ -4534,13 +4535,13 @@ const fbSVG='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 
 const extSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>';
 const cg=document.getElementById('clubsGrid'),cc=document.getElementById('clubCount');
 function renderClubs(q=''){q=q.toLowerCase();const list=CLUBS.filter(c=>c[0].toLowerCase().includes(q));
-  cg.innerHTML=list.map(c=>{const n=c[0],L=CLUBLINKS[n]||{};const primary=clubPrimary(n);
+  cg.innerHTML=list.map(c=>{const n=c[0],L=CLUBLINKS[n]||{};const primary=clubPrimary(n);const bsrc=c[1]?(CBASE+c[1]):(TEAMCRESTS[n]?(CRESTBASE+'/'+TEAMCRESTS[n]+'/115.jpg'):'');
     const web=L.web?`<a class="web" href="${L.web}" target="_blank" rel="noopener" aria-label="${n} website" title="${n} website" onclick="event.stopPropagation()">${globeSVG}</a>`:'';
     const fb=`<a class="fb" href="${L.fb||fbSearch(n)}" target="_blank" rel="noopener" aria-label="${n} on Facebook" title="${n} on Facebook" onclick="event.stopPropagation()">${fbSVG}</a>`;
     return `<div class="club">
       <button class="club-open" aria-label="View ${n} club hub" onclick="openClub('${n.replace(/'/g,"\\'")}')"></button>
       <span class="ext" aria-hidden="true">${extSVG}</span>
-      <div class="badge"><img loading="lazy" src="${CBASE}${c[1]}" alt="${n}" onerror="this.parentNode.innerHTML='<span style=&quot;font-family:var(--cond);font-weight:800;color:var(--blue);font-size:20px&quot;>${ini(n)}</span>'"></div>
+      <div class="badge"><img loading="lazy" src="${bsrc}" alt="${n}" onerror="this.parentNode.innerHTML='<span style=&quot;font-family:var(--cond);font-weight:800;color:var(--blue);font-size:20px&quot;>${ini(n)}</span>'"></div>
       <div class="nm">${n}</div>
       <div class="clinks">${web}${fb}</div></div>`;}).join('');
   cc.textContent=list.length+' clubs';}
@@ -4739,20 +4740,23 @@ const VENUES=["Parow","Goodwood","Bellville","Ruyterwacht","Bothasig","Green Poi
 const TEAMSUFFIX=/\s+(?:[A-Z]|\d{1,2}|I{2,3}|Reserves?)\.?$/;
 function foldClub(t0){let n=String(t0||'').trim().replace(/\.+$/,'');let prev=null;
   while(prev!==n){prev=n;n=n.replace(TEAMSUFFIX,'').replace(/\.+$/,'').trim();}return n;}
+/* Alias map: LeagueRepublic registered name (folded to its base) -> canonical affiliated club in the
+   directory. Confirmed with the treasurer against the 2026 source export (FIXTURE_23345, 30 Jul 2026). */
+const CLUBALIAS={"CR Vasco Da Gama":"Vasco","C.R. Vasco Da Gama":"Vasco","Bellville City":"BCFC","Bellville City FC":"BCFC","Table View":"TVFC","Sunningdale City":"SCFC","Kuilsriver":"KRAFC","FC Kapstadt":"FC Kapstad","Mutual":"Old Mutual","Mutual FC":"Old Mutual","Lansdowne":"Lansdowne FC","Queens Park":"Queens Park FC","West End United":"West End","Avendale Athletico":"Avendale","Chelsea Bridgetown":"Chelsea","Clyde Pinelands":"Clyde","YSD Macassar":"YSD","Stephanian Ottery":"Steph's United","YMO FC":"Yimo Lukes","Saxon Rovers":"Saxons","Everton United":"EFC","Green Point Salesians":"Green Point","Nova Generation":"Nova Nacional","Garlandale FC":"Garlandale","Shosholoza FC":"Shosholoza"};
+function canonClub(t0){const b=foldClub(t0);return CLUBALIAS[b]||b;}
 function clubData(name){const r=seeded(name);const teams=[];
-  // derive the club's real teams by scanning the canonical season — includes B/C/D second teams and
-  // captures every matching row per division (not just the first)
+  // derive the club's real teams by scanning the canonical season — folds B/C/D second teams and applies
+  // the LeagueRepublic name-alias map; captures every matching row per division (not just the first)
   SEASON.forEach(L=>{(L.table||[]).forEach((t,i)=>{
-    if(t[0]===name||foldClub(t[0])===name){teams.push({nm:t[0],div:L.name,pos:i+1,P:t[1],W:t[2],D:t[3],L:t[4],GF:t[5],GA:t[6],pts:t[7],form:t[8]});}});});
-  if(!teams.length){const P=14,W=Math.floor(r()*15),D=Math.floor(r()*(P-W+1)),Lo=P-W-D;
-    teams.push({div:"First Division",pos:1+Math.floor(r()*11),P,W,D,L:Lo,GF:W*2,GA:Lo*2,pts:W*3+D,form:"WDWLD"});}
+    if(t[0]===name||canonClub(t[0])===name){teams.push({nm:t[0],div:L.name,pos:i+1,P:t[1],W:t[2],D:t[3],L:t[4],GF:t[5],GA:t[6],pts:t[7],form:t[8]});}});});
+  const hasData=teams.length>0;
   const est=1968+Math.floor(r()*46);const ground=VENUES[Math.floor(r()*VENUES.length)]+" Sports Complex";
   const grades=[...new Set(teams.map(t=>gradeOf(t.div)))];
-  return {name,teams,est,ground,grades};}
-function clubMatches(name){const nb=baseName(name);const fixtures=[],results=[];
+  return {name,teams,hasData,est,ground,grades};}
+function clubMatches(name){const fixtures=[],results=[];
   SEASON.forEach(L=>{
-    upcomingFixtures(L.fixtures||[]).forEach(f=>{if(baseName(f[0])===nb||baseName(f[1])===nb)fixtures.push({f,div:L.name});});
-    (L.results||[]).forEach(r=>{if((baseName(r[0])===nb||baseName(r[1])===nb)&&r[2]!==''&&r[2]!=null)results.push({r,div:L.name});});});
+    upcomingFixtures(L.fixtures||[]).forEach(f=>{if(canonClub(f[0])===name||canonClub(f[1])===name)fixtures.push({f,div:L.name});});
+    (L.results||[]).forEach(r=>{if((canonClub(r[0])===name||canonClub(r[1])===name)&&r[2]!==''&&r[2]!=null)results.push({r,div:L.name});});});
   fixtures.sort((a,b)=>{const da=fxDate(a.f[2]),db=fxDate(b.f[2]);return (da?da.getTime():Infinity)-(db?db.getTime():Infinity);});
   return {next:fixtures[0],last:results[0]};}
 function clubCards(name){const cm=clubMatches(name);
@@ -4791,9 +4795,9 @@ function openClub(name,fromRoute){const d=clubData(name),L=CLUBLINKS[name]||{};c
     <div class="cm-head">
       <div class="cm-crest">${crest(name,72)}</div>
       <div class="cm-id"><div class="cm-sub">Affiliated Club</div><h3>${name}</h3>
-        <div class="cm-tags"><span class="tag">Est. ${d.est}</span><span class="tag">${d.ground}</span>${d.grades.map(g=>`<span class="tag">${g}</span>`).join('')}</div>
+        ${d.hasData?`<div class="cm-tags"><span class="tag">Est. ${d.est}</span><span class="tag">${d.ground}</span>${d.grades.map(g=>`<span class="tag">${g}</span>`).join('')}</div>`:`<div class="cm-tags"><span class="tag">Affiliated club</span></div>`}
         ${col?`<div class="cm-colours"><span style="font-size:12px;color:var(--muted)">Colours</span>${col.map(c=>`<span class="cm-sw" style="background:${c}"></span>`).join('')}</div>`:''}
-        <div class="cm-map"><a href="https://www.google.com/maps/search/?api=1&query=${mapq}" target="_blank" rel="noopener">📍 Directions to ${d.ground} ↗</a></div>
+        ${d.hasData?`<div class="cm-map"><a href="https://www.google.com/maps/search/?api=1&query=${mapq}" target="_blank" rel="noopener">📍 Directions to ${d.ground} ↗</a></div>`:''}
       </div>
       <div class="cm-stats">
         <div class="cm-stat"><div class="n">${d.teams.length}</div><div class="l">Teams</div></div>
@@ -4802,8 +4806,8 @@ function openClub(name,fromRoute){const d=clubData(name),L=CLUBLINKS[name]||{};c
     </div>
     <div class="cm-body">
       ${clubCards(name)}
-      <h4>Teams in the league · ${CURSEASON} season</h4>
-      <div class="tbl-scroll"><table class="tbl cm-tbl"><thead><tr><th class="l">Team / Division</th><th>Pos</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th><th>Form</th></tr></thead><tbody>${rows}</tbody></table></div>
+      ${d.hasData?`<h4>Teams in the league · ${CURSEASON} season</h4>
+      <div class="tbl-scroll"><table class="tbl cm-tbl"><thead><tr><th class="l">Team / Division</th><th>Pos</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GD</th><th>Pts</th><th>Form</th></tr></thead><tbody>${rows}</tbody></table></div>`:`<div class="cm-card empty" style="margin-top:6px">No teams are registered for ${name} in the ${CURSEASON} season. Standings appear here automatically once the club enters teams in the association's competitions.</div>`}
       ${honHtml(name)}
       <div class="cm-links">
         ${L.web?`<a class="btn btn-blue" href="${L.web}" target="_blank" rel="noopener">Club Website ↗</a>`:''}
@@ -5312,6 +5316,7 @@ function applySeason(j){
     document.getElementById('home-table').innerHTML=tableHtml(A1.table.slice(0,6),false);
   }
   rebuildSeason();
+  if(typeof renderClubs==='function')renderClubs();
   if(typeof buildTicker==='function')buildTicker();
   if(typeof buildNews==='function')buildNews();
   if(typeof renderJuniorCombined==='function')renderJuniorCombined();
