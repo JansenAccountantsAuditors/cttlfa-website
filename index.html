@@ -5038,6 +5038,7 @@ function go(page,fromRoute){
   window.scrollTo({top:0,behavior:'auto'});
   closeDrawer();
   if(!fromRoute){const path='/'+(page==='home'?'':page);if(location.pathname+location.search!==path)history.pushState({page},'',path);}
+  gaPageview();
 }
 const pathPage=()=>{const p=location.pathname.replace(/^\/+/,'').replace(/\/+$/,'').split('/')[0];return p||'home';};
 function routePath(fromRoute){
@@ -5155,16 +5156,28 @@ document.querySelectorAll('#fabMenu [data-nav]').forEach(b=>b.addEventListener('
 
 /* ================= PHASE 1: COOKIE CONSENT + FB GATE ================= */
 let cookieChoice=null;
+/* Google Analytics (GA4) — loads ONLY after the visitor accepts cookies (POPIA/consent) */
+const GA_ID='G-11WRGHL7WK';
+let gaLoaded=false;
+function gaPageview(){if(window.gtag)gtag('event','page_view',{page_title:document.title,page_location:location.href,page_path:location.pathname});}
+function loadAnalytics(){
+  if(gaLoaded||!GA_ID)return;gaLoaded=true;
+  var sc=document.createElement('script');sc.async=true;sc.src='https://www.googletagmanager.com/gtag/js?id='+encodeURIComponent(GA_ID);document.head.appendChild(sc);
+  window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};
+  gtag('js',new Date());
+  gtag('config',GA_ID,{send_page_view:false});
+  gaPageview();
+}
 function loadEmbeds(){document.querySelectorAll('.fb-embed[data-fbsrc]').forEach(w=>{
   const src=w.getAttribute('data-fbsrc'),h=w.getAttribute('data-h')||620;
   w.innerHTML=`<iframe title="CTTLFA Facebook feed" src="${src}" loading="lazy" scrolling="no" allowfullscreen="true" allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share" style="min-height:${h}px;width:100%;border:0"></iframe><p class="fbfall">Feed not showing? <a href="https://www.facebook.com/capetowntygerberg/" target="_blank" rel="noopener">Open our page on Facebook ↗</a></p>`;
   w.removeAttribute('data-fbsrc');});}
 function setConsentCookie(v){try{document.cookie='cttlfa_consent='+v+';path=/;max-age=15552000;samesite=lax';}catch(e){}}
 function readConsent(){const m=document.cookie.match(/cttlfa_consent=(\w+)/);return m?m[1]:null;}
-function acceptCookies(){cookieChoice='accepted';setConsentCookie('accepted');document.getElementById('consent').classList.remove('show');loadEmbeds();}
+function acceptCookies(){cookieChoice='accepted';setConsentCookie('accepted');document.getElementById('consent').classList.remove('show');loadEmbeds();loadAnalytics();}
 function declineCookies(){cookieChoice='declined';setConsentCookie('declined');document.getElementById('consent').classList.remove('show');}
 function reopenConsent(){document.getElementById('consent').classList.add('show');}
-(function initConsent(){const c=readConsent();cookieChoice=c;if(c==='accepted'){loadEmbeds();}else if(c!=='declined'){setTimeout(()=>document.getElementById('consent').classList.add('show'),700);}})();
+(function initConsent(){const c=readConsent();cookieChoice=c;if(c==='accepted'){loadEmbeds();loadAnalytics();}else if(c!=='declined'){setTimeout(()=>document.getElementById('consent').classList.add('show'),700);}})();
 
 /* ================= PHASE 1: SKELETON LOADERS ================= */
 (function skeletons(){const t=document.getElementById('home-table');if(t&&!t.innerHTML.trim())t.innerHTML='<tbody>'+Array(6).fill('<tr><td colspan="9"><div class="skel skel-row"></div></td></tr>').join('')+'</tbody>';
