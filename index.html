@@ -4732,10 +4732,18 @@ renderKnockouts();
 function seeded(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619);}
   return ()=>{h+=0x6D2B79F5;let t=h;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
 const VENUES=["Parow","Goodwood","Bellville","Ruyterwacht","Bothasig","Green Point","Vasco","Durbanville"];
+/* Fold a registered team name down to its owning club: "Tramway B" / "Fish Hoek C." -> "Tramway" / "Fish Hoek".
+   Only a single letter, a number, "II"/"III" or "Reserve(s)" (with an optional trailing dot) count as a
+   second-team designator. Verified that no affiliated club in CLUBS is a suffix-variant of another, so this
+   can never merge two distinct clubs; it only reunites a club's own B/C/D sides with its hub. */
+const TEAMSUFFIX=/\s+(?:[A-Z]|\d{1,2}|I{2,3}|Reserves?)\.?$/;
+function foldClub(t0){let n=String(t0||'').trim().replace(/\.+$/,'');let prev=null;
+  while(prev!==n){prev=n;n=n.replace(TEAMSUFFIX,'').replace(/\.+$/,'').trim();}return n;}
 function clubData(name){const r=seeded(name);const teams=[];
-  // derive the club's real teams by scanning the canonical season — identical to the Match Centre
-  SEASON.forEach(L=>{const idx=L.table.findIndex(t=>t[0]===name);
-    if(idx>=0){const t=L.table[idx];teams.push({div:L.name,pos:idx+1,P:t[1],W:t[2],D:t[3],L:t[4],GF:t[5],GA:t[6],pts:t[7],form:t[8]});}});
+  // derive the club's real teams by scanning the canonical season — includes B/C/D second teams and
+  // captures every matching row per division (not just the first)
+  SEASON.forEach(L=>{(L.table||[]).forEach((t,i)=>{
+    if(t[0]===name||foldClub(t[0])===name){teams.push({nm:t[0],div:L.name,pos:i+1,P:t[1],W:t[2],D:t[3],L:t[4],GF:t[5],GA:t[6],pts:t[7],form:t[8]});}});});
   if(!teams.length){const P=14,W=Math.floor(r()*15),D=Math.floor(r()*(P-W+1)),Lo=P-W-D;
     teams.push({div:"First Division",pos:1+Math.floor(r()*11),P,W,D,L:Lo,GF:W*2,GA:Lo*2,pts:W*3+D,form:"WDWLD"});}
   const est=1968+Math.floor(r()*46);const ground=VENUES[Math.floor(r()*VENUES.length)]+" Sports Complex";
@@ -4775,7 +4783,7 @@ function honHtml(name){const h=HONOURS[name];
   return `<div class="hon"><h4>Honours <span style="font-weight:600;color:var(--muted);font-size:12px;font-family:var(--body)">${h.length} title${h.length>1?'s':''} since 2022</span></h4><div class="hon-list">${show.map(x=>`<div class="hon-item"><span class="hy">${x[0]}</span><span>${x[1]}</span></div>`).join('')}${extra>0?`<div class="hon-item" style="color:var(--muted)"><span class="hy" style="background:var(--muted)">+${extra}</span><span>earlier league &amp; cup honours</span></div>`:''}</div></div>`;}
 function openClub(name,fromRoute){const d=clubData(name),L=CLUBLINKS[name]||{};const divs=new Set(d.teams.map(t=>t.div)).size;
   const rows=d.teams.map(t=>{const gd=t.GF-t.GA;return `<tr>
-    <td class="l"><span class="clubcell">${crest(name,26)}<span class="tc"><b>${name}</b><small>${t.div}</small></span></span></td>
+    <td class="l"><span class="clubcell">${crest(name,26)}<span class="tc"><b>${t.nm||name}</b><small>${t.div}</small></span></span></td>
     <td class="pos">${t.pos}</td><td>${t.P}</td><td>${t.W}</td><td>${t.D}</td><td>${t.L}</td><td>${gd>0?'+':''}${gd}</td><td class="pts">${t.pts}</td><td>${formHtml(t.form)}</td></tr>`;}).join('');
   const col=CLUBCOLOURS[name];
   const mapq=encodeURIComponent(d.ground+' Cape Town');
