@@ -4940,14 +4940,16 @@ const CLUBS_GEO=[
 ["Stephanian Ottery","Stephanian, Ottery","Ottery",-34.0175,18.5135,26,"F"],
 ["Sunningdale City","Sunningdale Sports Complex","Sunningdale",-33.8019,18.4854,32,"F"],
 ["Table View","Table View Sports Ground","Table View",-33.8293,18.4871,29,"F"],
-["Tramway","Groenewald Park","Plumstead",-34.0345,18.4811,17,"F"],
+["Tramway","Groenewald Road Sports Complex","Plumstead",-34.0345,18.4811,17,"F"],
 ["U C T","UCT Sports Fields","Rondebosch",-33.9580,18.4615,4,"A"],
 ["Varsity College","WPCC, Ave de Mist","Rondebosch",-33.9615,18.4725,2,"A"],
 ["West End United","West End Park","Sunnyside, Athlone",-33.9694,18.5133,11,"F"],
 ["Wynberg St Johns","Wynberg Sports Ground","Wynberg",-34.0031,18.4785,32,"F"],
 ["YMO FC","Upper Cambridge","Walmer Estate",-33.9366,18.4408,2,"A"],
 ["Young Bafana","YB Arena","Broadlands, Strand",-34.1075,18.8125,10,"F"],
-["YSD Macassar","Macassar Sports Ground","Macassar",-34.0578,18.7615,12,"F"]
+["YSD Macassar","Macassar Sports Ground","Macassar",-34.0578,18.7615,12,"F"],
+["Hout Bay","Hout Bay Stadium","Hout Bay",-34.0308,18.35588,3,"G"],
+["Everton United","Heideveld Sport Field","Heideveld",-33.96535,18.55075,2,"G"]
 ];
 /* directions link to Google Maps for a ground (by coordinates) */
 function dirLatLng(lat,lng){return 'https://www.google.com/maps/dir/?api=1&destination='+lat+','+lng;}
@@ -4962,13 +4964,13 @@ function initClubMap(){
   const cnt={};CLUBS_GEO.forEach(c=>{const k=c[3].toFixed(3)+','+c[4].toFixed(3);cnt[k]=(cnt[k]||0)+1;});
   const seen={},bounds=[];
   CLUBS_GEO.forEach(c=>{
-    let name=c[0],ground=c[1],suburb=c[2],lat=c[3],lng=c[4],teams=c[5],assoc=c[6]==='A';
+    let name=c[0],ground=c[1],suburb=c[2],lat=c[3],lng=c[4],teams=c[5],guest=c[6]==='G',assoc=c[6]==='A'||guest;
     const k=lat.toFixed(3)+','+lng.toFixed(3);
     if(cnt[k]>1){const i=(seen[k]=(seen[k]||0)+1)-1;const a=2*Math.PI*i/cnt[k];lat+=0.0045*Math.cos(a);lng+=0.0045*Math.sin(a);}
     const sz=assoc?15:17;
     const icon=L.divIcon({className:'',html:'<div class="cm-marker '+(assoc?'assoc':'full')+'" style="width:'+sz+'px;height:'+sz+'px"></div>',iconSize:[sz,sz],iconAnchor:[sz/2,sz/2]});
     L.marker([lat,lng],{icon,title:name}).addTo(_clubMap)
-     .bindPopup('<b>'+name+'</b><div class="cm-pop-sub"><b style="color:var(--navy)">'+ground+'</b><br>'+suburb+'</div><span class="cm-pop-tag'+(assoc?' assoc':'')+'">'+(assoc?'Associate member':'Full member')+' &middot; '+teams+' teams</span><br><a class="cm-pop-dir" href="'+dirLatLng(c[3],c[4])+'" target="_blank" rel="noopener">Get directions ↗</a>');
+     .bindPopup('<b>'+name+'</b><div class="cm-pop-sub"><b style="color:var(--navy)">'+ground+'</b><br>'+suburb+'</div><span class="cm-pop-tag'+(assoc?' assoc':'')+'">'+(guest?'Guest team':assoc?'Associate member':'Full member')+' &middot; '+teams+' teams</span><br><a class="cm-pop-dir" href="'+dirLatLng(c[3],c[4])+'" target="_blank" rel="noopener">Get directions ↗</a>');
     bounds.push([lat,lng]);
   });
   _clubMap.fitBounds(bounds,{padding:[28,28]});
