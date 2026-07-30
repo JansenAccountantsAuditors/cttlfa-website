@@ -5166,7 +5166,6 @@ function loadAnalytics(){
   window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments);};
   gtag('js',new Date());
   gtag('config',GA_ID,{send_page_view:false});
-  gaPageview();
 }
 function loadEmbeds(){document.querySelectorAll('.fb-embed[data-fbsrc]').forEach(w=>{
   const src=w.getAttribute('data-fbsrc'),h=w.getAttribute('data-h')||620;
@@ -5174,7 +5173,7 @@ function loadEmbeds(){document.querySelectorAll('.fb-embed[data-fbsrc]').forEach
   w.removeAttribute('data-fbsrc');});}
 function setConsentCookie(v){try{document.cookie='cttlfa_consent='+v+';path=/;max-age=15552000;samesite=lax';}catch(e){}}
 function readConsent(){const m=document.cookie.match(/cttlfa_consent=(\w+)/);return m?m[1]:null;}
-function acceptCookies(){cookieChoice='accepted';setConsentCookie('accepted');document.getElementById('consent').classList.remove('show');loadEmbeds();loadAnalytics();}
+function acceptCookies(){cookieChoice='accepted';setConsentCookie('accepted');document.getElementById('consent').classList.remove('show');loadEmbeds();loadAnalytics();gaPageview();}
 function declineCookies(){cookieChoice='declined';setConsentCookie('declined');document.getElementById('consent').classList.remove('show');}
 function reopenConsent(){document.getElementById('consent').classList.add('show');}
 (function initConsent(){const c=readConsent();cookieChoice=c;if(c==='accepted'){loadEmbeds();loadAnalytics();}else if(c!=='declined'){setTimeout(()=>document.getElementById('consent').classList.add('show'),700);}})();
