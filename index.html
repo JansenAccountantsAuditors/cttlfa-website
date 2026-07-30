@@ -4803,12 +4803,12 @@ function openClub(name,fromRoute){const d=clubData(name),L=CLUBLINKS[name]||{};c
       <p class="cm-note">Standings update from the association's competitions system. Honours are listed once confirmed by the association.</p>
     </div>`;
   document.getElementById('clubModal').classList.add('open');document.body.style.overflow='hidden';
-  if(!fromRoute){const h='#/club/'+slug(name);if(location.hash!==h)history.replaceState(null,'',h);}}
-function shareClub(name){const url=location.origin+location.pathname+'#/club/'+slug(name);
+  if(!fromRoute){history.replaceState(null,'','/clubs?club='+slug(name));}}
+function shareClub(name){const url=location.origin+'/clubs?club='+slug(name);
   if(navigator.clipboard)navigator.clipboard.writeText(url).then(()=>toast('Club link copied')).catch(()=>toast(url));else toast(url);}
 function toast(msg){let t=document.getElementById('toast');if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;left:50%;bottom:28px;transform:translateX(-50%);background:#071A4A;color:#fff;padding:11px 20px;border-radius:30px;font-size:14px;z-index:200;box-shadow:0 10px 30px rgba(0,0,0,.3)';document.body.appendChild(t);}
   t.textContent=msg;t.style.opacity='1';clearTimeout(t._h);t._h=setTimeout(()=>t.style.opacity='0',2200);}
-function closeClub(){document.getElementById('clubModal').classList.remove('open');document.body.style.overflow='';if(/^#\/club\//.test(location.hash))history.replaceState(null,'','#/clubs');}
+function closeClub(){document.getElementById('clubModal').classList.remove('open');document.body.style.overflow='';if(new URLSearchParams(location.search).get('club'))history.replaceState(null,'','/clubs');}
 document.getElementById('cmClose').onclick=closeClub;
 document.getElementById('clubModal').onclick=e=>{if(e.target.id==='clubModal')closeClub();};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.getElementById('clubModal').classList.contains('open'))closeClub();});
@@ -4865,7 +4865,7 @@ const CRUMB={matchcentre:{crumb:"Match Centre",parent:"Football"},knockouts:{cru
 function setMeta(page){const p=PAGES[page]||PAGES.home;document.title=p.t;
   const set=(id,attr,val)=>{const el=document.getElementById(id);if(el)el.setAttribute(attr,val);};
   const m=document.querySelector('meta[name="description"]');if(m)m.setAttribute('content',p.d);
-  const url='https://www.cttfa.co.za/'+(page==='home'?'':'#/'+page);
+  const url='https://www.cttfa.co.za/'+(page==='home'?'':page);
   set('og-title','content',p.t);set('og-desc','content',p.d);set('og-url','content',url);
   set('tw-title','content',p.t);set('tw-desc','content',p.d);
   let c=document.querySelector('link[rel="canonical"]');if(c)c.setAttribute('href',url);}
@@ -5026,7 +5026,7 @@ function initMinisMap(){
   setTimeout(()=>_minisMap.invalidateSize(),90);
 }
 
-function go(page,fromHash){
+function go(page,fromRoute){
   if(!document.getElementById('page-'+page))page='404';
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
@@ -5037,17 +5037,16 @@ function go(page,fromHash){
   if(dyn[page])try{dyn[page]();}catch(e){}
   window.scrollTo({top:0,behavior:'auto'});
   closeDrawer();
-  if(!fromHash){const h='#/'+page;if(location.hash!==h)location.hash=h;}
+  if(!fromRoute){const path='/'+(page==='home'?'':page);if(location.pathname+location.search!==path)history.pushState({page},'',path);}
 }
-const hashPage=()=>(location.hash.replace(/^#\/?/,'').split(/[?#]/)[0])||'home';
-function routeHash(fromHash){
-  const raw=location.hash.replace(/^#\/?/,'');
-  const m=raw.match(/^club\/(.+)$/);
-  if(m){const name=deSlug(decodeURIComponent(m[1]));go('clubs',true);setTimeout(()=>openClub(name,true),50);return;}
-  go(hashPage(),fromHash);
+const pathPage=()=>{const p=location.pathname.replace(/^\/+/,'').replace(/\/+$/,'').split('/')[0];return p||'home';};
+function routePath(fromRoute){
+  const cs=new URLSearchParams(location.search).get('club');
+  if(pathPage()==='clubs'&&cs){go('clubs',true);setTimeout(()=>openClub(deSlug(decodeURIComponent(cs)),true),50);return;}
+  go(pathPage(),fromRoute);
 }
 document.addEventListener('click',e=>{const t=e.target.closest('[data-nav]');if(t){e.preventDefault();go(t.dataset.nav);}});
-window.addEventListener('hashchange',()=>routeHash(true));
+window.addEventListener('popstate',()=>routePath(true));
 /* keyboard activation for custom (non-button) controls */
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('[data-clickable]')){e.preventDefault();e.target.click();}});
 
@@ -5267,8 +5266,12 @@ function renderMedia(){const el=document.getElementById('prList');if(!el)return;
   if(!ANNOUNCEMENTS.length){el.innerHTML=`<div class="pr-item"><div><b>Official releases appear here</b><p>Formal association announcements — AGM notices, appointments and statements — are posted here. For day-to-day updates and match-day photos, follow our Facebook page.</p></div></div>`;return;}
   el.innerHTML=ANNOUNCEMENTS.map(n=>`<div class="pr-item"><span class="pr-date">${n[3]||''}</span><div><b>${n[1]}</b><p>${n[2]}</p></div></div>`).join('');}
 
-/* initial route (deep-link / refresh support) */
-routeHash(true);
+/* initial route (deep-link / refresh support) + legacy #/ link compatibility */
+(function(){var h=location.hash;
+  if(/^#\//.test(h)){var raw=h.replace(/^#\//,'');var cm=raw.match(/^club\/(.+)$/);
+    if(cm){history.replaceState({},'','/clubs?club='+cm[1]);}
+    else if(raw){history.replaceState({},'','/'+raw.split(/[?#]/)[0]);}}
+  routePath(true);})();
 
 /* ===== PRODUCTION LIVE DATA + SEASON SWITCHER =====
    Publish season.json / season-2025.json (from lr_sync.py) next to this file and
