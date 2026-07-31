@@ -9,8 +9,8 @@ on:
     # Hourly keeps a private repo inside GitHub's free Actions minutes. The sync
     # only commits when the data actually changes, so the site rebuilds just a
     # few times a day. On a public production repo (Actions are free/unlimited)
-    # you can tighten this to "*/20 * * * *" for ~20-minute freshness.
-    - cron: "0 * * * *"        # top of every hour (UTC)
+    # you can tighten this to "*/2*/1*/10 * * * *" for ~20-minute freshness.
+    - cron: "*/10 * * * *"     # every 10 minutes (UTC)
   workflow_dispatch: {}         # lets you run it on demand from the Actions tab
 
 permissions:
