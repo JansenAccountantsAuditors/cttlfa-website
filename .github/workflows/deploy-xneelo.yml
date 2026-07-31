@@ -9,6 +9,9 @@ name: Deploy to Xneelo (cttfa.co.za)
 on:
   push:
     branches: [ main ]
+  workflow_run:
+    workflows: ["LeagueRepublic sync"]
+    types: [completed]
   workflow_dispatch: {}
 
 concurrency:
