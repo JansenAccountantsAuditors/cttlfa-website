@@ -513,6 +513,8 @@ header.shrink .brand .crestwrap{width:44px;height:44px}
 .person .av img{width:100%;height:100%;object-fit:cover;border-radius:50%}
 .person h4{font-size:17px;color:var(--navy)}
 .person .role{font-family:var(--cond);text-transform:uppercase;letter-spacing:.06em;color:var(--blue-600);font-weight:600;font-size:13px;margin-top:3px}
+.person-mail{display:inline-block;margin-top:8px;font-size:13px;color:var(--blue);text-decoration:none;word-break:break-word}
+.person-mail:hover{text-decoration:underline}
 .staff-tag{display:inline-block;margin-top:10px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em;font-size:11.5px;font-weight:700;padding:3px 11px;border-radius:20px}
 .staff-tag.full{color:#0b6b3a;background:#E3F5EC}
 .staff-tag.part{color:#8a6d00;background:#FFF3D1}
@@ -979,6 +981,19 @@ img[data-broken]{display:none!important}
 .notice{display:flex;gap:14px;align-items:flex-start;background:#FFF7E6;border:1px solid #F1D592;border-radius:14px;padding:16px 20px;margin-bottom:36px}
 .notice svg{width:24px;height:24px;color:#B8860B;flex:none;margin-top:1px}
 .notice b{color:var(--navy)}
+/* site-wide notice banner (admin-driven, per page) */
+.notice-bar{display:block}
+.notice-bar[hidden]{display:none}
+.notice-bar .nb-in{display:flex;gap:12px;align-items:center;justify-content:center;flex-wrap:wrap;padding:11px 20px;font-size:14.5px;line-height:1.4;text-align:center}
+.notice-bar .nb-in svg{width:19px;height:19px;flex:none}
+.notice-bar .nb-msg b{font-weight:700}
+.notice-bar a.nb-link{font-weight:700;text-decoration:underline;white-space:nowrap}
+.notice-bar.nb-info .nb-in{background:#EAF1FF;color:var(--navy);border-bottom:1px solid #C9DAFB}
+.notice-bar.nb-info a.nb-link,.notice-bar.nb-info svg{color:var(--blue)}
+.notice-bar.nb-important .nb-in{background:#FFF3CD;color:#5b4708;border-bottom:1px solid #F1D592}
+.notice-bar.nb-important a.nb-link,.notice-bar.nb-important svg{color:#B8860B}
+.notice-bar .nb-x{background:none;border:0;cursor:pointer;color:inherit;opacity:.6;font-size:17px;line-height:1;padding:2px 4px}
+.notice-bar .nb-x:hover{opacity:1}
 .blocktitle{font-family:var(--head);font-weight:800;color:var(--navy);font-size:22px;margin:40px 0 18px}
 .rsteps{display:flex;flex-wrap:wrap;justify-content:center;gap:16px}
 .rsteps>*{flex:1 1 300px;max-width:480px}
@@ -1260,7 +1275,10 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,te
 .dl-chip.active{background:var(--blue);color:#fff;border-color:var(--blue)}
 .dl-list{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
 .dl-list>*{flex:1 1 280px;max-width:370px}
-.dl-item{display:flex;align-items:center;gap:13px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-sm)}
+.dl-item{display:flex;align-items:center;gap:13px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow-sm);text-decoration:none}
+a.dl-item{transition:.18s}
+a.dl-item:hover{border-color:var(--blue);box-shadow:0 2px 10px rgba(18,63,181,.12)}
+.dl-item .dbtn-req{color:var(--muted)}
 .dl-item .di{width:40px;height:40px;border-radius:10px;background:#FDF3D6;color:#B8860B;display:flex;align-items:center;justify-content:center;flex:none}
 .dl-item .di svg{width:20px;height:20px}
 .dl-item b{font-size:14.5px;color:var(--ink);display:block}
@@ -1533,6 +1551,9 @@ body .card-f{background:#FBF7F0}
 <nav class="crumbs" id="crumbs" aria-label="Breadcrumb" style="display:none"></nav>
 
 <main id="main" tabindex="-1">
+<!-- Site-wide notice banner. Renders only when the admin turns it on and the
+     current page is in scope; otherwise it stays empty and takes no space. -->
+<div id="noticeBar" class="notice-bar" hidden></div>
 <!-- ================= HOME ================= -->
 <div class="page active" id="page-home">
   <section class="hero">
@@ -1584,7 +1605,7 @@ body .card-f{background:#FBF7F0}
   <!-- president's welcome -->
   <section class="sec">
     <div class="wrap">
-      <div class="quotestrip">
+      <div class="quotestrip" data-msg-page="home">
         <div class="qs-av"><img src="assets/hs_donovan.jpg" alt="Donovan Neilson" loading="lazy"></div>
         <div class="qs-in">
           <blockquote>Welcome to the official home of Cape Town Tygerberg football. For over thirty years the association has organised the game for clubs right across our city, and whoever you are, there is a place for you here.</blockquote>
@@ -1679,13 +1700,15 @@ body .card-f{background:#FBF7F0}
         <h2 style="font-size:clamp(28px,4vw,38px);color:var(--navy);margin:10px 0 12px">Straight from our Facebook</h2>
         <p style="color:var(--muted);font-size:16px">Results, match-day photos and announcements land on our Facebook page first, often the same day, like our latest InterLFA results. It is the page we update every week, so follow <b>@capetowntygerberg</b> to never miss a beat across the league.</p>
       </div>
-      <div class="fb-center">
+      <div class="fb-center" id="homeFbRow">
+        <div class="hnews-slot" id="home-news-left" style="display:none"></div>
         <div class="fbwrap">
           <div class="fbhead"><span class="fbi"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg></span><div><b>Cape Town Tygerberg FA</b><br><span>@capetowntygerberg</span></div></div>
           <div class="fb-embed" data-fbsrc="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fcapetowntygerberg%2F&tabs=timeline&width=500&height=720&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false" data-h="720">
             <div class="fb-gate"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.5h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12z"/></svg><b>Our Facebook feed</b><p>The live feed loads from Facebook once you accept cookies. Facebook may set its own cookies.</p><button class="btn btn-blue" onclick="acceptCookies()">Load the feed</button><a class="fbfall" href="https://www.facebook.com/capetowntygerberg/" target="_blank" rel="noopener">Or open our page on Facebook ↗</a></div>
           </div>
         </div>
+        <div class="hnews-slot" id="home-news-right" style="display:none"></div>
       </div>
       <div class="center" style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
         <a class="btn btn-blue" href="https://www.facebook.com/capetowntygerberg/" target="_blank" rel="noopener">Follow on Facebook
@@ -1760,8 +1783,8 @@ body .card-f{background:#FBF7F0}
             <a class="hc-logo safa" href="https://safacapetown.com" target="_blank" rel="noopener" title="SAFA Cape Town — our parent body"><img src="assets/safact.png" alt="SAFA Cape Town" loading="lazy"></a>
           </div>
           <div class="hc-item">
-            <span class="hc-lbl">Website sponsored by</span>
-            <a class="hc-logo jacc" href="https://www.jacc.co.za" target="_blank" rel="noopener" title="Jansen Accountants &amp; Auditors — Serious technical expertise, made genuinely accessible."><img src="assets/jacc.png" alt="Jansen Accountants &amp; Auditors" loading="lazy"></a>
+            <span class="hc-lbl" id="homeSponsorLbl">Website sponsored by</span>
+            <a class="hc-logo jacc" id="homeSponsorLink" href="https://www.jacc.co.za" target="_blank" rel="noopener" title="Jansen Accountants &amp; Auditors — Serious technical expertise, made genuinely accessible."><img id="homeSponsorImg" src="assets/jacc.png" alt="Jansen Accountants &amp; Auditors" loading="lazy"></a>
           </div>
           <div class="hc-item">
             <span class="hc-lbl">Partner with us</span>
@@ -2077,7 +2100,7 @@ body .card-f{background:#FBF7F0}
 
   <section class="sec" style="padding-top:30px;padding-bottom:6px">
     <div class="wrap">
-      <div class="quotestrip">
+      <div class="quotestrip" data-msg-page="referees">
         <div class="qs-av"><img src="assets/hs_wayne.jpg" alt="Wayne Engelbrecht" loading="lazy"></div>
         <div class="qs-in">
           <blockquote>Our match officials make the game happen every weekend. If you have ever thought about taking up the whistle, the association will help you get started.</blockquote>
@@ -2210,7 +2233,7 @@ body .card-f{background:#FBF7F0}
 
   <section class="sec" style="padding-top:30px;padding-bottom:6px">
     <div class="wrap">
-      <div class="quotestrip">
+      <div class="quotestrip" data-msg-page="senior">
         <div class="qs-av"><img src="assets/hs_gregory.jpg" alt="Gregory Nicholls" loading="lazy"></div>
         <div class="qs-in">
           <blockquote>Senior football is the competitive heart of the association, played across our divisions every weekend, hard, fair and well.</blockquote>
@@ -4033,9 +4056,30 @@ const RES2=[
    [category, title, summary, "DD Mon YYYY" or "" , navTarget or "" ]  */
 const ANNOUNCEMENTS=[
 ];
+/* Committee records. Backward-compatible: each entry may be the legacy
+   [name, role, photo] array OR the richer object below. Optional fields:
+     email  — shown as a mailto link on the committee card (omit = no email shown)
+     page   — the section key where this member's message publishes (home/referees/senior)
+     by     — the exact byline shown under the message (defaults to "Name, Role")
+     msg    — the member's message/quote for that page
+   The three messages below are the current site text and act as the never-blank
+   fallback; when the admin supplies updated records the publish step overwrites them. */
 const COMMITTEE=[
-["Donovan Neilson","President","assets/hs_donovan.jpg"],["Grant Scholtz","Vice President","assets/hs_grant.jpg"],["Des da Silva","Vice President","assets/hs_desiree.jpg"],["Greg Nicholls","Vice President","assets/hs_gregory.jpg"],["Charlton Jansen","Treasurer","assets/hs_charlton.jpg"],["Justin Asher","General Secretary","assets/hs_justin.jpg"],["W Engelbrecht","Head of Referees","assets/hs_wayne.jpg"]
+  {name:"Donovan Neilson",role:"President",photo:"assets/hs_donovan.jpg",email:"",page:"home",by:"Donovan Neilson, President",msg:"Welcome to the official home of Cape Town Tygerberg football. For over thirty years the association has organised the game for clubs right across our city, and whoever you are, there is a place for you here."},
+  {name:"Grant Scholtz",role:"Vice President",photo:"assets/hs_grant.jpg",email:""},
+  {name:"Des da Silva",role:"Vice President",photo:"assets/hs_desiree.jpg",email:""},
+  {name:"Greg Nicholls",role:"Vice President",photo:"assets/hs_gregory.jpg",email:"",page:"senior",by:"Gregory Nicholls, Vice-President: Senior Football",msg:"Senior football is the competitive heart of the association, played across our divisions every weekend, hard, fair and well."},
+  {name:"Charlton Jansen",role:"Treasurer",photo:"assets/hs_charlton.jpg",email:""},
+  {name:"Justin Asher",role:"General Secretary",photo:"assets/hs_justin.jpg",email:""},
+  {name:"W Engelbrecht",role:"Head of Referees",photo:"assets/hs_wayne.jpg",email:"",page:"referees",by:"Wayne Engelbrecht, Head of Referees",msg:"Our match officials make the game happen every weekend. If you have ever thought about taking up the whistle, the association will help you get started."}
 ];
+/* Normalise so both array and object entries work everywhere; missing fields
+   simply omit their element, so a partial record can never blank a card. */
+function cmMember(m){
+  if(Array.isArray(m))return{name:m[0]||'',role:m[1]||'',photo:m[2]||'',email:'',page:'',by:'',msg:''};
+  m=m||{};return{name:m.name||'',role:m.role||'',photo:m.photo||m.image||'',email:m.email||'',page:m.page||'',by:m.by||'',msg:m.msg||m.message||''};
+}
+let COMMITTEE_N=COMMITTEE.map(cmMember);
 const DOCS=[
 ["CTTLFA Constitution 2026","PDF · Governing rules"],["Rules & Regulations 2026","PDF · Competition framework"],["Disciplinary Code 2026","PDF · DC procedures"],["2026 Team Entry Form","PDF · Registration"],["Treasurer's Report — 2025 AGM","PDF · Financials"],["Annual Financial Statements 2025","PDF · Audited"]
 ];
@@ -4557,7 +4601,21 @@ renderClubs();
 document.getElementById('clubSearch').addEventListener('input',e=>renderClubs(e.target.value));
 
 // committee + docs
-document.getElementById('committee').innerHTML=COMMITTEE.map(p=>`<div class="person"><div class="av">${p[2]?`<img src="${p[2]}" alt="${p[0]}" loading="lazy">`:ini(p[0])}</div><h4>${p[0]}</h4><div class="role">${p[1]}</div></div>`).join('');
+function renderCommittee(){const el=document.getElementById('committee');if(el)el.innerHTML=COMMITTEE_N.map(p=>`<div class="person"><div class="av">${p.photo?`<img src="${p.photo}" alt="${p.name}" loading="lazy">`:ini(p.name)}</div><h4>${p.name}</h4><div class="role">${p.role}</div>${p.email?`<a class="person-mail" href="mailto:${p.email}">${p.email}</a>`:''}</div>`).join('');}
+renderCommittee();
+/* Publish committee members' messages into their page quote-strips. The strips
+   carry the current text as static fallback, so if this never runs (or a record
+   is missing) the page still reads correctly. */
+function applyCommitteeMessages(){
+  try{COMMITTEE_N.forEach(m=>{
+    if(!m.page||!m.msg)return;
+    const box=document.querySelector('.quotestrip[data-msg-page="'+m.page+'"]');if(!box)return;
+    const bq=box.querySelector('blockquote');if(bq)bq.textContent=m.msg;
+    const by=box.querySelector('.qs-by');if(by)by.textContent=m.by||(m.name+(m.role?', '+m.role:''));
+    const img=box.querySelector('.qs-av img');if(img&&m.photo){img.src=m.photo;img.alt=m.name;}
+  });}catch(e){}
+}
+applyCommitteeMessages();
 const docItem=d=>`<div class="doc" role="button" tabindex="0" data-clickable aria-label="Download ${d[0]}"><div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div class="dt"><b>${d[0]}</b><span>${d[1]}</span></div><div class="dl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></div></div>`;
 const DC_DOCS=[
 ["CTTLFA Constitution 2026","PDF · Powers & structures","docs/cttlfa-constitution-2026.pdf","CTTLFA Constitution 2026.pdf"],
@@ -4615,28 +4673,40 @@ const EVENTS=[
 const PBASE='photos/';
 const PBASE_ABS='https://cttlfa.netlify.app/photos/';
 function pOnErr(img){var s=img.getAttribute('data-p');if(s&&!img.dataset.tried){img.dataset.tried='1';img.src=PBASE_ABS+s;}else{img.setAttribute('data-broken','1');}}
-// album: [display name, filename slug, count]  — files are photos/thumbs/<slug>-NNN.jpg and photos/full/<slug>-NNN.jpg
-const GALB=[["2025 Knockouts","cttlfa-knockout-2025",77],["2023 Junior Finals","2023-junior-finals",60],["2023 Annual Awards","2023-annual-awards",47],["2024 Annual Awards","2024-annual-awards",15],["Golf Day","cttlfa-golf-day",27]];
-const GAL=[];GALB.forEach(a=>{for(let i=1;i<=a[2];i++){GAL.push([a[0],a[1]+'-'+String(i).padStart(3,'0')+'.jpg']);}});
-let galFilter='All',galList=[];
-const gcats=['All'].concat(GALB.map(a=>a[0]));
-document.getElementById('gfilter').innerHTML=gcats.map((c,i)=>`<div class="divchip${i===0?' active':''}" role="button" tabindex="0" data-clickable aria-pressed="${i===0}" data-gcat="${c}">${c}${c==='All'?' ('+GAL.length+')':''}</div>`).join('');
-function renderGallery(){galList=GAL.filter(g=>galFilter==='All'||g[0]===galFilter);
-  document.getElementById('gallery').innerHTML=galList.map((g,i)=>`<div class="gitem" role="button" tabindex="0" data-clickable aria-label="View photo from ${g[0]}" onclick="openLb(${i})">
-    <img loading="lazy" data-p="thumbs/${g[1]}" src="${PBASE}thumbs/${g[1]}" alt="${g[0]}" onerror="pOnErr(this)">
-    <span class="gt"><span class="tag tag-blue">${g[0]}</span></span></div>`).join('');}
-document.querySelectorAll('#gfilter .divchip').forEach(ch=>ch.onclick=()=>{
-  document.querySelectorAll('#gfilter .divchip').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-pressed','false');});
-  ch.classList.add('active');ch.setAttribute('aria-pressed','true');
-  galFilter=ch.dataset.gcat;renderGallery();});
-renderGallery();
+// Base albums are baked (repo-served, fast): [display name, filename slug, count].
+// Admin-uploaded albums arrive later as objects {name, slug, photos:[fullURL,...]} and are
+// appended by the admin sync using their own URLs (thumbs derived by inserting /thumbs/).
+let GALB=[["2025 Knockouts","cttlfa-knockout-2025",77],["2023 Junior Finals","2023-junior-finals",60],["2023 Annual Awards","2023-annual-awards",47],["2024 Annual Awards","2024-annual-awards",15],["Golf Day","cttlfa-golf-day",27]];
+let GAL=[],galFilter='All',galList=[];
+function galIsBase(a){return Array.isArray(a)&&typeof a[2]==='number';}
+function galName(a){return galIsBase(a)?a[0]:(a&&a.name)||'';}
+function galThumbFromFull(u){const i=String(u).lastIndexOf('/');return i<0?u:u.slice(0,i+1)+'thumbs/'+u.slice(i+1);}
+function buildGAL(){GAL=[];GALB.forEach(a=>{
+  if(galIsBase(a)){for(let i=1;i<=a[2];i++){const fn=a[1]+'-'+String(i).padStart(3,'0')+'.jpg';
+    GAL.push({a:a[0],t:PBASE+'thumbs/'+fn,f:PBASE+'full/'+fn,p:'thumbs/'+fn,pf:'full/'+fn});}}
+  else if(a&&a.photos){a.photos.forEach(u=>{if(u)GAL.push({a:a.name,t:galThumbFromFull(u),f:u,p:'',pf:''});});}
+});}
+function buildGfilter(){const el=document.getElementById('gfilter');if(!el)return;
+  const cats=['All'].concat(GALB.map(galName));
+  el.innerHTML=cats.map(c=>`<div class="divchip${c===galFilter?' active':''}" role="button" tabindex="0" data-clickable aria-pressed="${c===galFilter}" data-gcat="${c}">${c}${c==='All'?' ('+GAL.length+')':''}</div>`).join('');
+  el.querySelectorAll('.divchip').forEach(ch=>ch.onclick=()=>{
+    el.querySelectorAll('.divchip').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-pressed','false');});
+    ch.classList.add('active');ch.setAttribute('aria-pressed','true');
+    galFilter=ch.dataset.gcat;renderGallery();});}
+function renderGallery(){galList=GAL.filter(g=>galFilter==='All'||g.a===galFilter);
+  const el=document.getElementById('gallery');if(!el)return;
+  el.innerHTML=galList.map((g,i)=>`<div class="gitem" role="button" tabindex="0" data-clickable aria-label="View photo from ${g.a}" onclick="openLb(${i})">
+    <img loading="lazy"${g.p?` data-p="${g.p}"`:''} src="${g.t}" alt="${g.a}" onerror="pOnErr(this)">
+    <span class="gt"><span class="tag tag-blue">${g.a}</span></span></div>`).join('');}
+function buildGalleryAll(){buildGAL();buildGfilter();renderGallery();}
+buildGalleryAll();
 /* home featured strip: a spread across the albums */
 (function(){const el=document.getElementById('home-photos');if(!el)return;
   const sel=['2023-junior-finals-001.jpg','2023-junior-finals-012.jpg','2023-annual-awards-003.jpg','2024-annual-awards-002.jpg','cttlfa-golf-day-004.jpg','cttlfa-golf-day-015.jpg'];
   el.innerHTML=sel.map(f=>`<div class="pstile" role="button" tabindex="0" data-clickable aria-label="Open the gallery" onclick="go('gallery')"><img loading="lazy" data-p="thumbs/${f}" src="${PBASE}thumbs/${f}" alt="Association photo" onerror="pOnErr(this)"></div>`).join('');})();
 let lbIdx=0;const lb=document.getElementById('lightbox');
 function openLb(i){lbIdx=i;showLb();lb.classList.add('open');}
-function showLb(){const g=galList[lbIdx];const im=document.getElementById('lbimg');im.removeAttribute('data-tried');im.dataset.tried='';im.setAttribute('data-p','full/'+g[1]);im.onerror=function(){pOnErr(im);};im.src=PBASE+'full/'+g[1];document.getElementById('lbcap').textContent=g[0];}
+function showLb(){const g=galList[lbIdx];const im=document.getElementById('lbimg');im.removeAttribute('data-tried');im.dataset.tried='';if(g.pf){im.setAttribute('data-p',g.pf);}else{im.removeAttribute('data-p');}im.onerror=function(){pOnErr(im);};im.src=g.f;document.getElementById('lbcap').textContent=g.a;}
 function lbMove(d){lbIdx=(lbIdx+d+galList.length)%galList.length;showLb();}
 document.getElementById('lbclose').onclick=()=>lb.classList.remove('open');
 lb.onclick=e=>{if(e.target===lb)lb.classList.remove('open');};
@@ -5079,6 +5149,7 @@ function go(page,fromRoute){
   if(dyn[page])try{dyn[page]();}catch(e){}
   window.scrollTo({top:0,behavior:'auto'});
   closeDrawer();
+  CURRENT_PAGE=page;try{applyNotice(page);}catch(e){}
   if(!fromRoute){const path='/'+(page==='home'?'':page);if(location.pathname+location.search!==path)history.pushState({page},'',path);}
   gaPageview();
 }
@@ -5092,6 +5163,68 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-nav]');if(
 document.querySelectorAll('a[data-nav]:not([href])').forEach(a=>{a.setAttribute('role','link');if(!a.hasAttribute('tabindex'))a.setAttribute('tabindex','0');});
 document.addEventListener('keydown',e=>{const t=e.target;if(e.key==='Enter'&&t&&t.matches&&t.matches('a[data-nav]:not([href])')){e.preventDefault();t.click();}});
 window.addEventListener('popstate',()=>routePath(true));
+
+/* ================= SITE-WIDE NOTICE BANNER =================
+   Admin-driven, per page. Reads the notice live from the admin so staff can
+   post or clear an urgent notice without a redeploy. It is purely additive and
+   fully guarded: the default is OFF, any fetch error is swallowed, and when the
+   notice is off or out of scope the bar renders nothing and takes no space —
+   so it can never blank a page or stop the site rendering.
+   Admin file (data/notice.json) shape:
+     {"on":true,"type":"info"|"important","text":"...",
+      "link":{"label":"Read more","url":"https://..."},
+      "pages":["all"]  // or e.g. ["home","news","register"]
+     } */
+let CURRENT_PAGE='home';
+const ADMIN_BASE='https://www.websiteadmin.cttfa.co.za';
+let NOTICES=[];                 /* list of notices from the admin; empty until loaded */
+let noticeDismissed='';         /* signature of a notice dismissed this visit */
+function nbToday(){const d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+function noticeSig(n){return n?((n.id||'')+'|'+(n.type||'info')+'|'+(n.text||'')):'';}
+/* newest live notice for this page (admin stores newest-first); respects on + date window + page scope */
+function noticePick(page){
+  const t=nbToday();
+  const m=NOTICES.filter(n=>n&&n.on&&n.text
+    &&((n.page||'all')==='all'||(n.page||'all')===page)
+    &&(!n.start||n.start<=t)&&(!n.end||n.end>=t));
+  return m.length?m[0]:null;
+}
+/* place the bar directly under the current page's hero (falls back to top of the page) */
+function nbRelocate(page){
+  const bar=document.getElementById('noticeBar');if(!bar)return;
+  const pg=document.getElementById('page-'+page)||document.querySelector('.page.active');if(!pg)return;
+  const hero=pg.querySelector('.hero, .p2hero');
+  if(hero){if(hero.nextSibling!==bar)hero.parentNode.insertBefore(bar,hero.nextSibling);}
+  else if(pg.firstChild!==bar){pg.insertBefore(bar,pg.firstChild);}
+}
+function applyNotice(page){
+  const bar=document.getElementById('noticeBar');if(!bar)return;
+  const n=noticePick(page);
+  const sig=noticeSig(n);
+  if(!n||(sig&&sig===noticeDismissed)){bar.hidden=true;bar.innerHTML='';return;}
+  nbRelocate(page);
+  const type=(n.type==='important')?'important':'info';
+  const ic=type==='important'
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.3 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.3a2 2 0 0 0-3.4 0z"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>';
+  const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const link=(n.link_url&&n.link_label)
+    ? `<a class="nb-link" href="${esc(n.link_url)}"${/^https?:/i.test(n.link_url)?' target="_blank" rel="noopener"':''}>${esc(n.link_label)} ↗</a>`:'';
+  const detail=n.detail?` <span class="nb-detail" style="opacity:.82">${esc(n.detail)}</span>`:'';
+  bar.className='notice-bar nb-'+type;
+  bar.innerHTML=`<div class="nb-in">${ic}<span class="nb-msg">${esc(n.text)}${detail}</span>${link}<button class="nb-x" type="button" aria-label="Dismiss notice">✕</button></div>`;
+  const x=bar.querySelector('.nb-x');if(x)x.onclick=()=>{noticeDismissed=sig;bar.hidden=true;bar.innerHTML='';};
+  bar.hidden=false;
+}
+function loadNotice(){
+  try{
+    fetch(ADMIN_BASE+'/data/notice.json?ts='+Date.now(),{cache:'no-store'})
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{if(d&&Array.isArray(d.notices)){NOTICES=d.notices;applyNotice(CURRENT_PAGE);}})
+      .catch(()=>{});   /* offline / CORS / bad JSON => no notices, page unaffected */
+  }catch(e){}
+}
+loadNotice();
 /* keyboard activation for custom (non-button) controls */
 document.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&e.target.matches&&e.target.matches('[data-clickable]')){e.preventDefault();e.target.click();}});
 
@@ -5125,7 +5258,7 @@ function buildIndex(){
   const idx=[];
   Object.keys(PAGES).forEach(k=>{if(k==='404')return;const p=PAGES[k];idx.push({type:'Page',ic:SVGpg,label:p.crumb||p.t.split(/[—|]/)[0].trim(),sub:'',act:()=>go(k)});});
   CLUBS.forEach(c=>idx.push({type:'Club',ic:SVGclub,label:c[0],sub:'Open the club hub',act:()=>{go('clubs');setTimeout(()=>openClub(c[0]),60);}}));
-  COMMITTEE.forEach(m=>idx.push({type:'Person',ic:SVGperson,label:m[0],sub:m[1],act:()=>go('governance')}));
+  COMMITTEE_N.forEach(m=>idx.push({type:'Person',ic:SVGperson,label:m.name,sub:m.role,act:()=>go('governance')}));
   ANNOUNCEMENTS.forEach(n=>idx.push({type:'News',ic:SVGnews,label:n[1],sub:n[0]||'Announcement',act:()=>go('news')}));
   DOCS.forEach(d=>idx.push({type:'Document',ic:SVGdoc,label:d[0],sub:d[1],act:()=>go('governance')}));
   return idx;}
@@ -5244,17 +5377,35 @@ function renderStats(){
   // leaders
   document.getElementById('statLeaders').innerHTML=SEASON.filter(L=>(L.table||[]).length).slice(0,12).map(L=>`<div class="sr"><span>${crest(L.table[0][0],20)}</span><span>${L.table[0][0]}</span><span style="color:var(--muted);font-size:12.5px">${L.name}</span><span class="sv">${L.table[0][7]} pts</span></div>`).join('');}
 
-const DOWNLOADS=[
-  {n:"CTTLFA Constitution 2026",m:"Governing rules of the association",t:"Governance"},
-  {n:"Rules & Regulations 2026",m:"Competition & disciplinary framework",t:"Governance"},
-  {n:"Disciplinary Code 2026",m:"Offences, hearings and sanctions",t:"Discipline"},
-  {n:"2026 Team Entry Form",m:"For clubs entering teams (submitted to the office)",t:"Forms"},
-  {n:"Player Registration Guide",m:"How clubs register players and obtain SAFA cards",t:"Forms"},
-  {n:"Treasurer's Report — 2025 AGM",m:"Financial report to members",t:"Financial"},
+/* Canonical downloads library. One reconciled list, mapped to the real files in
+   /docs/. Items with an "f" (file) render as working downloads; items without an
+   "f" show an "On request" tag instead of a dead link. Add a PDF to /docs/ and
+   set its "f"/"d" to turn any request-only item into a live download. */
+let DOWNLOADS=[
+  /* Governance */
+  {n:"CTTLFA Constitution 2026",m:"Governing rules, structures and powers of the association",t:"Governance",f:"docs/cttlfa-constitution-2026.pdf",d:"CTTLFA Constitution 2026.pdf"},
+  {n:"Rules & Regulations 2026",m:"Competition, protest, complaint and appeal framework",t:"Governance",f:"docs/cttlfa-rules-and-regulations-2026.pdf",d:"CTTLFA Rules and Regulations 2026.pdf"},
+  {n:"SAFA Cape Town Statutes",m:"Statutes of the regional body (SAFA Cape Town)",t:"Governance",f:"docs/safa-cape-town-statutes.pdf",d:"SAFA Cape Town Statutes.pdf"},
+  {n:"SAFA Cape Town Standing Orders",m:"Standing orders of the regional body",t:"Governance",f:"docs/safa-cape-town-standing-orders.pdf",d:"SAFA Cape Town Standing Orders.pdf"},
+  /* Discipline */
+  {n:"Disciplinary Code 2026",m:"Offences, hearings, sanctions and appeals",t:"Discipline",f:"docs/cttlfa-disciplinary-code-2026.pdf",d:"CTTLFA Disciplinary Code 2026.pdf"},
+  /* Referees */
+  {n:"Referees Committee Constitution 2024",m:"Constitution of the CTTLFA Referees Committee",t:"Referees",f:"docs/cttlfa-referees-committee-constitution-2024.pdf",d:"CTTLFA Referees Committee Constitution 2024.pdf"},
+  /* Forms */
+  {n:"New Club Application Form",m:"For clubs applying to affiliate (submitted to the office)",t:"Forms",f:"docs/cttlfa-new-club-application-form.pdf",d:"CTTLFA New Club Application Form.pdf"},
+  /* Mini Football */
+  {n:"Mini Football Rules — U7, U8 & U9",m:"Playing rules for the youngest age groups",t:"Mini Football",f:"docs/cttlfa-mini-football-rules-u7-u8-u9.pdf",d:"CTTLFA Mini Football Rules U7-U8-U9.pdf"},
+  {n:"Mini Football Rules — U10 & U11",m:"Playing rules for U10 and U11",t:"Mini Football",f:"docs/cttlfa-mini-football-rules-u10-u11.pdf",d:"CTTLFA Mini Football Rules U10-U11.pdf"},
+  {n:"Mini Football Technical Regulations",m:"Formats, field sizes and technical regulations",t:"Mini Football",f:"docs/cttlfa-mini-football-technical-regulations.pdf",d:"CTTLFA Mini Football Technical Regulations.pdf"},
+  /* Insurance */
+  {n:"Insurance Summary 2025/2026",m:"Summary of player insurance cover",t:"Insurance",f:"docs/cttlfa-insurance-summary-2025-2026.pdf",d:"CTTLFA Insurance Summary 2025-2026.pdf"},
+  {n:"SAFA Soccer Insurance Policy 2025/2026",m:"Full soccer insurance policy wording",t:"Insurance",f:"docs/safa-soccer-insurance-policy-2025-2026.pdf",d:"SAFA Soccer Insurance Policy 2025-2026.pdf"},
+  {n:"SAFA Injury Claim Process 2025",m:"How to lodge a player injury claim",t:"Insurance",f:"docs/safa-injury-claim-process-2025.pdf",d:"SAFA Injury Claim Process 2025.pdf"},
+  {n:"SAFA Additional Benefit Claim Process 2025",m:"Claiming additional insurance benefits",t:"Insurance",f:"docs/safa-additional-benefit-claim-process-2025.pdf",d:"SAFA Additional Benefit Claim Process 2025.pdf"},
+  /* Financial — member documents; add the PDFs to /docs/ to make them live downloads */
   {n:"Audited Annual Financial Statements 2025",m:"Independently audited financials",t:"Financial"},
-  {n:"AGM Pack 2025",m:"Annual General Meeting pack & budget",t:"Financial"},
-  {n:"Protest / Complaint Form",m:"Lodging a protest or complaint (with fee)",t:"Discipline"},
-  {n:"Appeal Form",m:"Notice of intention to appeal (with deposit)",t:"Discipline"}
+  {n:"Treasurer's Report — 2025 AGM",m:"Financial report to members",t:"Financial"},
+  {n:"AGM Pack 2025",m:"Annual General Meeting pack & budget",t:"Financial"}
 ];
 let dlFilter='All';
 function renderDownloads(){
@@ -5266,7 +5417,11 @@ function renderDownloads(){
   const q=(document.getElementById('dlSearch')?.value||'').trim().toLowerCase();
   const doc='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
   const items=DOWNLOADS.filter(d=>(dlFilter==='All'||d.t===dlFilter)&&(!q||(d.n+' '+d.m).toLowerCase().includes(q)));
-  list.innerHTML=items.map(d=>`<div class="dl-item"><span class="di">${doc}</span><span><b>${d.n}</b><small>${d.t} · ${d.m}</small></span><span class="dbtn">PDF ↗</span></div>`).join('')||'<div class="tw-empty">No documents match your search.</div>';}
+  const row=d=>{const inner=`<span class="di">${doc}</span><span><b>${d.n}</b><small>${d.t} · ${d.m}</small></span>`;
+    return d.f
+      ? `<a class="dl-item" href="${d.f}" download="${d.d||''}" target="_blank" rel="noopener" aria-label="Download ${d.n}">${inner}<span class="dbtn">PDF ↗</span></a>`
+      : `<div class="dl-item">${inner}<span class="dbtn dbtn-req">On request</span></div>`;};
+  list.innerHTML=items.map(row).join('')||'<div class="tw-empty">No documents match your search.</div>';}
 {const s=document.getElementById('dlSearch');if(s)s.addEventListener('input',renderDownloads);}
 
 function renderGrounds(){
@@ -5364,6 +5519,107 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-season]');
   document.querySelectorAll('[data-season]').forEach(x=>x.classList.remove('active'));b.classList.add('active');
   loadSeason(b.dataset.season);});
 loadSeason('season.json');
+
+/* ================= ADMIN LIVE-READ LAYER =================
+   Reads the office admin (data/*.json on the admin host) and updates the site in
+   place. Every section keeps its current baked content as the never-blank
+   fallback: each fetch is wrapped in try/catch and only overwrites when it gets
+   good data, so a missing, empty or broken admin file leaves the page exactly as
+   it renders now. Purely additive — nothing here can blank a section. */
+(function(){
+  var AB=(typeof ADMIN_BASE!=='undefined')?ADMIN_BASE:'https://websiteadmin.cttfa.co.za';
+  function xesc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+  function xatt(s){return String(s==null?'':s).replace(/"/g,'%22');}
+  function today(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
+  function getJSON(f){return fetch(AB+'/data/'+f+'.json?ts='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null;});}
+
+  /* one-time CSS for the news blocks */
+  try{var st=document.createElement('style');st.textContent=
+    '#homeFbRow{display:flex;gap:18px;align-items:flex-start;justify-content:center;flex-wrap:wrap}'+
+    '.hnews-slot{flex:0 1 300px;max-width:320px}'+
+    '.ncard{border-radius:14px;overflow:hidden;border:1px solid var(--line);box-shadow:0 8px 22px rgba(7,26,74,.10);background:#fff}'+
+    '.ncard a{display:block}.ncard img{width:100%;height:auto;display:block}'+
+    '.ncard .ncard-cap{padding:10px 12px;font-size:13px;color:var(--navy);font-weight:600}'+
+    '@media(max-width:820px){.hnews-slot{flex-basis:100%;max-width:440px}}';
+    document.head.appendChild(st);}catch(e){}
+
+  /* ---- COMMITTEE ---- */
+  function loadCommittee(){try{getJSON('committee').then(function(d){
+    if(!d||!Array.isArray(d.committee)||!d.committee.length)return;
+    try{COMMITTEE_N=d.committee.map(cmMember);renderCommittee();applyCommitteeMessages();}catch(e){}
+  }).catch(function(){});}catch(e){}}
+
+  /* ---- DOWNLOADS (documents; updating a file in the admin updates the live link) ---- */
+  function loadDownloads(){try{getJSON('downloads').then(function(d){
+    if(!d||!Array.isArray(d.downloads)||!d.downloads.length)return;
+    try{
+      DOWNLOADS=d.downloads.map(function(x){var o={n:x.title||'',m:x.desc||'',t:x.category||'Documents'};
+        if(x.url){o.f=x.url;o.d=x.filename||'';}return o;});
+      if(typeof renderDownloads==='function')renderDownloads();
+    }catch(e){}
+  }).catch(function(){});}catch(e){}}
+
+  /* ---- SPONSORS (drive the home credit slot from the feed) ---- */
+  function loadSponsors(){try{getJSON('sponsors').then(function(d){
+    if(!d||!Array.isArray(d.sponsors)||!d.sponsors.length)return;
+    var s=d.sponsors[0];if(!s||!s.logo)return;
+    try{
+      var a=document.getElementById('homeSponsorLink'),img=document.getElementById('homeSponsorImg');
+      if(a){if(s.url)a.setAttribute('href',s.url);a.setAttribute('title',s.name+(s.tagline?' — '+s.tagline:''));}
+      if(img){img.setAttribute('src',s.logo);img.setAttribute('alt',s.name||'Sponsor');}
+    }catch(e){}
+  }).catch(function(){});}catch(e){}}
+
+  /* ---- GALLERY (Option A: append admin albums using their own photo URLs) ---- */
+  function loadGallery(){try{getJSON('gallery').then(function(d){
+    if(!d||!Array.isArray(d.gallery)||!d.gallery.length)return;
+    try{
+      var baseSlugs={};GALB.forEach(function(a){if(galIsBase(a))baseSlugs[a[1]]=1;});
+      var added=0;
+      d.gallery.forEach(function(al){
+        if(!al||!al.slug||baseSlugs[al.slug])return;                 /* skip base albums (already baked) */
+        if(!Array.isArray(al.photos)||!al.photos.length)return;
+        GALB.push({name:al.name||al.slug,slug:al.slug,photos:al.photos});added++;
+      });
+      if(added)buildGalleryAll();
+    }catch(e){}
+  }).catch(function(){});}catch(e){}}
+
+  /* ---- NEWS (uploaded graphics: home either side of Facebook + first blocks of News & Events) ---- */
+  var NEWSITEMS=[];
+  function newsLive(){var t=today();return NEWSITEMS.filter(function(n){return n&&n.on&&n.image
+    &&(!n.start||n.start<=t)&&(!n.end||n.end>=t);}).slice(0,2);}
+  function newsCard(n,cls){
+    var img='<img src="'+xatt(n.image)+'" alt="'+xatt(n.title||'News')+'" loading="lazy">';
+    var inner=n.link_url?'<a href="'+xatt(n.link_url)+'"'+(/^https?:/i.test(n.link_url)?' target="_blank" rel="noopener"':'')+'>'+img+'</a>':img;
+    var cap=n.title?'<div class="ncard-cap">'+xesc(n.title)+'</div>':'';
+    return '<div class="ncard'+(cls?' '+cls:'')+'">'+inner+cap+'</div>';
+  }
+  function applyNews(){
+    var items=newsLive();
+    var L=document.getElementById('home-news-left'),R=document.getElementById('home-news-right'),row=document.getElementById('homeFbRow');
+    if(L&&R){
+      if(items[0]){L.innerHTML=newsCard(items[0]);L.style.display='';}else{L.innerHTML='';L.style.display='none';}
+      if(items[1]){R.innerHTML=newsCard(items[1]);R.style.display='';}else{R.innerHTML='';R.style.display='none';}
+      if(row)row.classList.toggle('has-news',items.length>0);
+    }
+    var all=document.getElementById('allNews');
+    if(all){
+      Array.prototype.slice.call(all.querySelectorAll('[data-adminnews]')).forEach(function(x){x.remove();});
+      items.slice().reverse().forEach(function(n){var d=document.createElement('div');
+        d.setAttribute('data-adminnews','1');d.innerHTML=newsCard(n,'ncard-grid');
+        var card=d.firstChild;if(card){card.setAttribute('data-adminnews','1');all.insertBefore(card,all.firstChild);}});
+    }
+  }
+  /* keep admin news in place even when the match-news feed re-renders #allNews */
+  try{if(typeof buildNews==='function'){var _bn=buildNews;buildNews=function(){var r;try{r=_bn.apply(this,arguments);}catch(e){}try{applyNews();}catch(e){}return r;};}}catch(e){}
+  function loadNews(){try{getJSON('news').then(function(d){
+    if(!d||!Array.isArray(d.news))return;
+    NEWSITEMS=d.news;try{applyNews();}catch(e){}
+  }).catch(function(){});}catch(e){}}
+
+  loadCommittee();loadDownloads();loadSponsors();loadGallery();loadNews();
+})();
 </script>
 <script>
 /* Scroll-reveal for the landing page — fail-safe: content only hides once IO support is confirmed */
