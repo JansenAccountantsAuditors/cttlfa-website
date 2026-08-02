@@ -4725,6 +4725,11 @@ const PBASE_ABS='https://cttlfa.netlify.app/photos/';
 function pOnErr(img){var s=img.getAttribute('data-p');if(s&&!img.dataset.tried){img.dataset.tried='1';img.src=PBASE_ABS+s;}else{img.setAttribute('data-broken','1');}}
 function galEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function galThumbFromFull(u){const i=String(u).lastIndexOf('/');return i<0?u:u.slice(0,i+1)+'thumbs/'+u.slice(i+1);}
+/* Thumbnails load via IntersectionObserver, not native loading="lazy": the gallery
+   cards are built while the page is hidden, and native lazy does not reliably load
+   them on reveal. IO loads each img (from data-src) as it nears the viewport. */
+var galIO=('IntersectionObserver' in window)?new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){var im=e.target;var d=im.getAttribute('data-src');if(d){im.src=d;im.removeAttribute('data-src');}galIO.unobserve(im);}});},{rootMargin:'300px'}):null;
+function galObserve(root){root=root||document;var ims=root.querySelectorAll('img[data-src]');if(!galIO){ims.forEach(function(im){var d=im.getAttribute('data-src');if(d){im.src=d;im.removeAttribute('data-src');}});return;}ims.forEach(function(im){galIO.observe(im);});}
 /* Event-album gallery. Base albums are baked (repo-served, fast). Admin-uploaded
    albums are appended later by the admin sync (thumbs derived by inserting /thumbs/).
    Each card shows a 2x2 preview + count; clicking opens the album; clicking a photo
@@ -4750,7 +4755,7 @@ function galBuild(){
 }
 function galCardHTML(al,idx){
   var prev='';for(var i=0;i<4;i++){var p=al.photos[i];
-    prev+='<div class="g-ph">'+(p?'<img loading="lazy"'+(p.p?' data-p="'+p.p+'"':'')+' src="'+p.t+'" alt="" onerror="pOnErr(this)">':'')+'</div>';}
+    prev+='<div class="g-ph">'+(p?'<img'+(p.p?' data-p="'+p.p+'"':'')+' data-src="'+p.t+'" alt="" onerror="pOnErr(this)">':'')+'</div>';}
   return '<div class="g-card" role="button" tabindex="0" data-clickable onclick="galOpen('+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();galOpen('+idx+');}" aria-label="Open album: '+galEsc(al.name)+'">'+
     '<div class="g-body"><div class="g-k">Album</div><h3>'+galEsc(al.name)+'</h3><p>'+(al.cap||'')+'</p></div>'+
     '<div class="g-preview">'+prev+
@@ -4758,14 +4763,14 @@ function galCardHTML(al,idx){
       '<span class="g-pcount">'+al.photos.length+' <span>photos</span></span>'+
     '</div><div class="g-cardfoot"><span class="g-view">View album &rarr;</span></div></div>';
 }
-function galRender(){var el=document.getElementById('galCards');if(!el)return;el.innerHTML=GALBUMS.map(galCardHTML).join('');}
+function galRender(){var el=document.getElementById('galCards');if(!el)return;el.innerHTML=GALBUMS.map(galCardHTML).join('');galObserve(el);}
 let galCur=null;
 function galOpen(idx){var al=GALBUMS[idx];if(!al)return;
   var nm=document.getElementById('galOvName');if(nm)nm.innerHTML=galEsc(al.name);
   var ct=document.getElementById('galOvCount');if(ct)ct.textContent=al.photos.length+' photos';
   var cp=document.getElementById('galOvCap');if(cp)cp.innerHTML=al.cap||'';
-  var g='';al.photos.forEach(function(p,i){g+='<div class="g-oph" role="button" tabindex="0" data-clickable onclick="galLbOpen('+idx+','+i+')"><img loading="lazy"'+(p.p?' data-p="'+p.p+'"':'')+' src="'+p.t+'" alt="" onerror="pOnErr(this)"></div>';});
-  var og=document.getElementById('galOvGrid');if(og)og.innerHTML=g;
+  var g='';al.photos.forEach(function(p,i){g+='<div class="g-oph" role="button" tabindex="0" data-clickable onclick="galLbOpen('+idx+','+i+')"><img'+(p.p?' data-p="'+p.p+'"':'')+' data-src="'+p.t+'" alt="" onerror="pOnErr(this)"></div>';});
+  var og=document.getElementById('galOvGrid');if(og){og.innerHTML=g;galObserve(og);}
   var o=document.getElementById('galOv');if(o)o.classList.add('on');document.body.style.overflow='hidden';
 }
 function galClose(){var o=document.getElementById('galOv');if(o)o.classList.remove('on');document.body.style.overflow='';}
