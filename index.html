@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cape Town Tygerberg LFA — Official Website</title>
+<link rel="preconnect" href="https://www.websiteadmin.cttfa.co.za" crossorigin>
+<script>/* start the match-data fetch immediately so it isn't queued behind other requests */try{window.__seasonP=fetch('season.json').then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}catch(e){}</script>
 <meta name="description" content="The official home of the Cape Town Tygerberg Local Football Association. Fixtures, results, league standings, clubs, referees, registration and news. Est. 1993.">
 <link rel="canonical" href="https://www.cttfa.co.za/">
 <meta name="theme-color" content="#071A4A">
@@ -5457,7 +5459,7 @@ function readConsent(){const m=document.cookie.match(/cttlfa_consent=(\w+)/);ret
 function acceptCookies(){cookieChoice='accepted';setConsentCookie('accepted');document.getElementById('consent').classList.remove('show');loadEmbeds();loadAnalytics();gaPageview();}
 function declineCookies(){cookieChoice='declined';setConsentCookie('declined');document.getElementById('consent').classList.remove('show');}
 function reopenConsent(){document.getElementById('consent').classList.add('show');}
-(function initConsent(){const c=readConsent();cookieChoice=c;if(c==='accepted'){loadEmbeds();loadAnalytics();}else if(c!=='declined'){setTimeout(()=>document.getElementById('consent').classList.add('show'),700);}})();
+(function initConsent(){const c=readConsent();cookieChoice=c;if(c==='accepted'){/* defer the heavy Facebook embed off the initial-load critical path */setTimeout(loadEmbeds,2500);loadAnalytics();}else if(c!=='declined'){setTimeout(()=>document.getElementById('consent').classList.add('show'),700);}})();
 
 /* ================= PHASE 1: SKELETON LOADERS ================= */
 (function skeletons(){const t=document.getElementById('home-table');if(t&&!t.innerHTML.trim())t.innerHTML='<tbody>'+Array(6).fill('<tr><td colspan="9"><div class="skel skel-row"></div></td></tr>').join('')+'</tbody>';
@@ -5618,7 +5620,7 @@ function applySeason(j){
   if(active&&rf[active.id])try{rf[active.id]();}catch(e){}
   return true;
 }
-function loadSeason(url){return fetch(url,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(applySeason).catch(()=>false);}
+function loadSeason(url){var p=(url==='season.json'&&window.__seasonP)?window.__seasonP:fetch(url).then(r=>r.ok?r.json():null);window.__seasonP=null;return p.then(applySeason).catch(()=>false);}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-season]');if(!b)return;
   document.querySelectorAll('[data-season]').forEach(x=>x.classList.remove('active'));b.classList.add('active');
   loadSeason(b.dataset.season);});
