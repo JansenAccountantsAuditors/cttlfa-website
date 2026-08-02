@@ -2026,14 +2026,64 @@ body .card-f{background:#FBF7F0}
 </div>
 
 <!-- ================= GALLERY ================= -->
+<style>
+/* Event-album gallery */
+.g-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding:6px 0 8px}
+@media(max-width:920px){.g-cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:560px){.g-cards{grid-template-columns:1fr}}
+.g-card{background:#fff;border:1px solid var(--line,#e7e3d9);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(7,26,74,.10);cursor:pointer;transition:transform .18s,box-shadow .18s;display:flex;flex-direction:column}
+.g-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(7,26,74,.18)}
+.g-card:focus-visible{outline:3px solid var(--blue,#123FB5);outline-offset:2px}
+.g-body{padding:18px 20px 12px}
+.g-body .g-k{font-family:"Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.14em;font-size:11px;color:var(--blue,#123FB5);font-weight:700}
+.g-body h3{font-family:Archivo,sans-serif;font-weight:800;font-size:20px;margin:3px 0 6px;color:var(--navy,#071A4A)}
+.g-body p{margin:0;font-size:13.5px;color:var(--muted,#64748b);line-height:1.45;min-height:38px}
+.g-preview{position:relative;aspect-ratio:16/9;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:3px;background:var(--navy,#071A4A)}
+.g-preview .g-ph{position:relative;overflow:hidden;min-height:0;background:var(--navy,#071A4A)}
+.g-preview .g-ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.g-ptag{position:absolute;top:12px;left:12px;background:rgba(255,255,255,.92);color:var(--navy,#071A4A);font-family:"Barlow Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:12px;padding:4px 10px;border-radius:20px;box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.g-pcount{position:absolute;bottom:12px;right:12px;background:var(--gold,#F4B41A);color:var(--navy,#071A4A);font-family:"Barlow Condensed",sans-serif;font-weight:700;font-size:15px;padding:5px 12px;border-radius:9px;box-shadow:0 3px 10px rgba(0,0,0,.25)}
+.g-pcount span{font-size:11px;letter-spacing:.04em}
+.g-cardfoot{padding:12px 20px;border-top:1px solid var(--line,#e7e3d9);margin-top:auto}
+.g-view{font-family:"Barlow Condensed",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:13px;color:var(--blue,#123FB5)}
+.g-card:hover .g-view{color:var(--navy,#071A4A)}
+.g-ov{position:fixed;inset:0;background:rgba(7,16,40,.72);backdrop-filter:blur(3px);display:none;z-index:1200;padding:26px}
+.g-ov.on{display:block}
+.g-sheet{background:var(--cream,#F5F2EC);max-width:1000px;margin:0 auto;border-radius:18px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.4);max-height:calc(100vh - 52px);display:flex;flex-direction:column}
+.g-sheet-h{background:var(--navy,#071A4A);color:#fff;padding:16px 22px;display:flex;align-items:center;gap:14px}
+.g-sheet-h .g-k{font-family:"Barlow Condensed",sans-serif;text-transform:uppercase;letter-spacing:.16em;color:#9db4e6;font-size:12px;font-weight:700}
+.g-sheet-h h2{font-family:Archivo,sans-serif;font-weight:800;font-size:22px;margin:2px 0 0;color:#fff}
+.g-sheet-h .g-ct{margin-left:auto;background:var(--gold,#F4B41A);color:var(--navy,#071A4A);font-family:"Barlow Condensed",sans-serif;font-weight:700;padding:5px 12px;border-radius:9px;font-size:14px;white-space:nowrap}
+.g-xbtn{background:rgba(255,255,255,.14);border:0;color:#fff;width:38px;height:38px;border-radius:10px;font-size:18px;cursor:pointer}
+.g-xbtn:hover{background:rgba(255,255,255,.28)}
+.g-sheet-b{padding:16px 22px 24px;overflow:auto}
+.g-sheet-cap{color:var(--muted,#64748b);font-size:14px;margin:0 0 14px}
+.g-sheet-cap:empty{display:none}
+.g-pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.g-oph{aspect-ratio:4/3;border-radius:10px;overflow:hidden;cursor:pointer;box-shadow:0 2px 8px rgba(7,26,74,.12);transition:transform .15s;background:#e9edf5}
+.g-oph:hover{transform:scale(1.03)}
+.g-oph img{width:100%;height:100%;object-fit:cover;display:block}
+</style>
 <div class="page" id="page-gallery">
   <section class="sec">
     <div class="wrap">
-      <div class="sec-head"><div><span class="eyebrow">Media</span><h2>Gallery</h2><p>Moments from around the association: junior finals day, the annual awards evenings and the CTTLFA Golf Day. Choose an album, then click any photo to view it larger.</p></div></div>
-      <div class="divchips" id="gfilter"></div>
-      <div class="gallery" id="gallery"></div>
+      <div class="sec-head"><div><span class="eyebrow">Media</span><h2>Gallery</h2><p>Match days, finals and association events, grouped by event. Tap an album to see every photo.</p></div></div>
+      <div class="g-cards" id="galCards"></div>
     </div>
   </section>
+  <div class="g-ov" id="galOv">
+    <div class="g-sheet">
+      <div class="g-sheet-h">
+        <div><div class="g-k">Event album</div><h2 id="galOvName">Album</h2></div>
+        <div class="g-ct" id="galOvCount">0 photos</div>
+        <button class="g-xbtn" id="galOvClose" aria-label="Close album">&times;</button>
+      </div>
+      <div class="g-sheet-b">
+        <p class="g-sheet-cap" id="galOvCap"></p>
+        <div class="g-pgrid" id="galOvGrid"></div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- ================= KNOCKOUTS ================= -->
@@ -4673,47 +4723,77 @@ const EVENTS=[
 const PBASE='photos/';
 const PBASE_ABS='https://cttlfa.netlify.app/photos/';
 function pOnErr(img){var s=img.getAttribute('data-p');if(s&&!img.dataset.tried){img.dataset.tried='1';img.src=PBASE_ABS+s;}else{img.setAttribute('data-broken','1');}}
-// Base albums are baked (repo-served, fast): [display name, filename slug, count].
-// Admin-uploaded albums arrive later as objects {name, slug, photos:[fullURL,...]} and are
-// appended by the admin sync using their own URLs (thumbs derived by inserting /thumbs/).
-let GALB=[["2025 Knockouts","cttlfa-knockout-2025",77],["2023 Junior Finals","2023-junior-finals",60],["2023 Annual Awards","2023-annual-awards",47],["2024 Annual Awards","2024-annual-awards",15],["Golf Day","cttlfa-golf-day",27]];
-let GAL=[],galFilter='All',galList=[];
-function galIsBase(a){return Array.isArray(a)&&typeof a[2]==='number';}
-function galName(a){return galIsBase(a)?a[0]:(a&&a.name)||'';}
+function galEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function galThumbFromFull(u){const i=String(u).lastIndexOf('/');return i<0?u:u.slice(0,i+1)+'thumbs/'+u.slice(i+1);}
-function buildGAL(){GAL=[];GALB.forEach(a=>{
-  if(galIsBase(a)){for(let i=1;i<=a[2];i++){const fn=a[1]+'-'+String(i).padStart(3,'0')+'.jpg';
-    GAL.push({a:a[0],t:PBASE+'thumbs/'+fn,f:PBASE+'full/'+fn,p:'thumbs/'+fn,pf:'full/'+fn});}}
-  else if(a&&a.photos){a.photos.forEach(u=>{if(u)GAL.push({a:a.name,t:galThumbFromFull(u),f:u,p:'',pf:''});});}
-});}
-function buildGfilter(){const el=document.getElementById('gfilter');if(!el)return;
-  const cats=['All'].concat(GALB.map(galName));
-  el.innerHTML=cats.map(c=>`<div class="divchip${c===galFilter?' active':''}" role="button" tabindex="0" data-clickable aria-pressed="${c===galFilter}" data-gcat="${c}">${c}${c==='All'?' ('+GAL.length+')':''}</div>`).join('');
-  el.querySelectorAll('.divchip').forEach(ch=>ch.onclick=()=>{
-    el.querySelectorAll('.divchip').forEach(x=>{x.classList.remove('active');x.setAttribute('aria-pressed','false');});
-    ch.classList.add('active');ch.setAttribute('aria-pressed','true');
-    galFilter=ch.dataset.gcat;renderGallery();});}
-function renderGallery(){galList=GAL.filter(g=>galFilter==='All'||g.a===galFilter);
-  const el=document.getElementById('gallery');if(!el)return;
-  el.innerHTML=galList.map((g,i)=>`<div class="gitem" role="button" tabindex="0" data-clickable aria-label="View photo from ${g.a}" onclick="openLb(${i})">
-    <img loading="lazy"${g.p?` data-p="${g.p}"`:''} src="${g.t}" alt="${g.a}" onerror="pOnErr(this)">
-    <span class="gt"><span class="tag tag-blue">${g.a}</span></span></div>`).join('');}
-function buildGalleryAll(){buildGAL();buildGfilter();renderGallery();}
-buildGalleryAll();
+/* Event-album gallery. Base albums are baked (repo-served, fast). Admin-uploaded
+   albums are appended later by the admin sync (thumbs derived by inserting /thumbs/).
+   Each card shows a 2x2 preview + count; clicking opens the album; clicking a photo
+   opens the lightbox. Capped at 8 albums on the page. */
+let GAL_BASE=[
+  {name:'2025 Knockouts',slug:'cttlfa-knockout-2025',count:77,year:'2025',cap:'Senior and junior knockout finals across the season.'},
+  {name:'2023 Junior Finals',slug:'2023-junior-finals',count:60,year:'2023',cap:'Our youngest sides on the big stage.'},
+  {name:'2023 Annual Awards',slug:'2023-annual-awards',count:47,year:'2023',cap:'Celebrating the season&rsquo;s champions and volunteers.'},
+  {name:'2024 Annual Awards',slug:'2024-annual-awards',count:15,year:'2024',cap:'The 2024 awards evening.'},
+  {name:'Golf Day',slug:'cttlfa-golf-day',count:27,year:'2025',cap:'The association&rsquo;s annual fundraising golf day.'}
+];
+let GAL_ADMIN=[];                 /* filled by the admin sync with any NEW albums */
+let GALBUMS=[];
+function galBaseSlugs(){var s={};GAL_BASE.forEach(function(a){s[a.slug]=1;});return s;}
+function galBuild(){
+  GALBUMS=[];
+  GAL_BASE.forEach(function(a){var ph=[];for(var i=1;i<=a.count;i++){var fn=a.slug+'-'+String(i).padStart(3,'0')+'.jpg';
+    ph.push({t:PBASE+'thumbs/'+fn,f:PBASE+'full/'+fn,p:'thumbs/'+fn,pf:'full/'+fn});}
+    GALBUMS.push({name:a.name,year:a.year||'',cap:a.cap||'',photos:ph});});
+  GAL_ADMIN.forEach(function(a){if(!a||!Array.isArray(a.photos)||!a.photos.length)return;
+    GALBUMS.push({name:a.name,year:a.year||'',cap:a.cap||'',photos:a.photos.map(function(u){return {t:galThumbFromFull(u),f:u,p:'',pf:''};})});});
+  if(GALBUMS.length>8)GALBUMS=GALBUMS.slice(0,8);
+}
+function galCardHTML(al,idx){
+  var prev='';for(var i=0;i<4;i++){var p=al.photos[i];
+    prev+='<div class="g-ph">'+(p?'<img loading="lazy"'+(p.p?' data-p="'+p.p+'"':'')+' src="'+p.t+'" alt="" onerror="pOnErr(this)">':'')+'</div>';}
+  return '<div class="g-card" role="button" tabindex="0" data-clickable onclick="galOpen('+idx+')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();galOpen('+idx+');}" aria-label="Open album: '+galEsc(al.name)+'">'+
+    '<div class="g-body"><div class="g-k">Album</div><h3>'+galEsc(al.name)+'</h3><p>'+(al.cap||'')+'</p></div>'+
+    '<div class="g-preview">'+prev+
+      (al.year?'<span class="g-ptag">'+galEsc(al.year)+'</span>':'')+
+      '<span class="g-pcount">'+al.photos.length+' <span>photos</span></span>'+
+    '</div><div class="g-cardfoot"><span class="g-view">View album &rarr;</span></div></div>';
+}
+function galRender(){var el=document.getElementById('galCards');if(!el)return;el.innerHTML=GALBUMS.map(galCardHTML).join('');}
+let galCur=null;
+function galOpen(idx){var al=GALBUMS[idx];if(!al)return;
+  var nm=document.getElementById('galOvName');if(nm)nm.innerHTML=galEsc(al.name);
+  var ct=document.getElementById('galOvCount');if(ct)ct.textContent=al.photos.length+' photos';
+  var cp=document.getElementById('galOvCap');if(cp)cp.innerHTML=al.cap||'';
+  var g='';al.photos.forEach(function(p,i){g+='<div class="g-oph" role="button" tabindex="0" data-clickable onclick="galLbOpen('+idx+','+i+')"><img loading="lazy"'+(p.p?' data-p="'+p.p+'"':'')+' src="'+p.t+'" alt="" onerror="pOnErr(this)"></div>';});
+  var og=document.getElementById('galOvGrid');if(og)og.innerHTML=g;
+  var o=document.getElementById('galOv');if(o)o.classList.add('on');document.body.style.overflow='hidden';
+}
+function galClose(){var o=document.getElementById('galOv');if(o)o.classList.remove('on');document.body.style.overflow='';}
+/* photo lightbox — reuses the existing #lightbox element */
+const lb=document.getElementById('lightbox');
+function galLbOpen(ai,i){galCur={photos:GALBUMS[ai].photos,i:i};galLbShow();if(lb)lb.classList.add('open');}
+function galLbShow(){if(!galCur)return;var p=galCur.photos[galCur.i];var im=document.getElementById('lbimg');if(!im)return;
+  im.removeAttribute('data-tried');im.dataset.tried='';if(p.pf){im.setAttribute('data-p',p.pf);}else{im.removeAttribute('data-p');}
+  im.onerror=function(){pOnErr(im);};im.src=p.f;var c=document.getElementById('lbcap');if(c)c.textContent='';}
+function galLbMove(d){if(!galCur)return;galCur.i=(galCur.i+d+galCur.photos.length)%galCur.photos.length;galLbShow();}
+galBuild();galRender();
 /* home featured strip: a spread across the albums */
 (function(){const el=document.getElementById('home-photos');if(!el)return;
   const sel=['2023-junior-finals-001.jpg','2023-junior-finals-012.jpg','2023-annual-awards-003.jpg','2024-annual-awards-002.jpg','cttlfa-golf-day-004.jpg','cttlfa-golf-day-015.jpg'];
   el.innerHTML=sel.map(f=>`<div class="pstile" role="button" tabindex="0" data-clickable aria-label="Open the gallery" onclick="go('gallery')"><img loading="lazy" data-p="thumbs/${f}" src="${PBASE}thumbs/${f}" alt="Association photo" onerror="pOnErr(this)"></div>`).join('');})();
-let lbIdx=0;const lb=document.getElementById('lightbox');
-function openLb(i){lbIdx=i;showLb();lb.classList.add('open');}
-function showLb(){const g=galList[lbIdx];const im=document.getElementById('lbimg');im.removeAttribute('data-tried');im.dataset.tried='';if(g.pf){im.setAttribute('data-p',g.pf);}else{im.removeAttribute('data-p');}im.onerror=function(){pOnErr(im);};im.src=g.f;document.getElementById('lbcap').textContent=g.a;}
-function lbMove(d){lbIdx=(lbIdx+d+galList.length)%galList.length;showLb();}
-document.getElementById('lbclose').onclick=()=>lb.classList.remove('open');
-lb.onclick=e=>{if(e.target===lb)lb.classList.remove('open');};
-document.querySelector('.lbprev').onclick=()=>lbMove(-1);
-document.querySelector('.lbnext').onclick=()=>lbMove(1);
-document.addEventListener('keydown',e=>{if(!lb.classList.contains('open'))return;
-  if(e.key==='Escape')lb.classList.remove('open');if(e.key==='ArrowLeft')lbMove(-1);if(e.key==='ArrowRight')lbMove(1);});
+/* wiring: album overlay + lightbox controls */
+(function(){
+  var ovC=document.getElementById('galOvClose');if(ovC)ovC.onclick=galClose;
+  var ov=document.getElementById('galOv');if(ov)ov.addEventListener('click',function(e){if(e.target===ov)galClose();});
+  if(lb){var lx=document.getElementById('lbclose');if(lx)lx.onclick=function(){lb.classList.remove('open');};
+    lb.onclick=function(e){if(e.target===lb)lb.classList.remove('open');};
+    var pv=document.querySelector('.lbprev');if(pv)pv.onclick=function(){galLbMove(-1);};
+    var nx=document.querySelector('.lbnext');if(nx)nx.onclick=function(){galLbMove(1);};}
+  document.addEventListener('keydown',function(e){
+    if(lb&&lb.classList.contains('open')){if(e.key==='Escape')lb.classList.remove('open');if(e.key==='ArrowLeft')galLbMove(-1);if(e.key==='ArrowRight')galLbMove(1);return;}
+    if(e.key==='Escape')galClose();
+  });
+})();
 
 /* ---------- KNOCKOUT CUPS (live from the association feed) ---------- */
 const trophySVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4a2 2 0 0 1-2-2V5h4M18 9h2a2 2 0 0 0 2-2V5h-4M6 3h12v6a6 6 0 0 1-12 0zM12 15v4M8 21h8"/></svg>';
@@ -5574,14 +5654,15 @@ loadSeason('season.json');
   function loadGallery(){try{getJSON('gallery').then(function(d){
     if(!d||!Array.isArray(d.gallery)||!d.gallery.length)return;
     try{
-      var baseSlugs={};GALB.forEach(function(a){if(galIsBase(a))baseSlugs[a[1]]=1;});
-      var added=0;
+      var baseSlugs=(typeof galBaseSlugs==='function')?galBaseSlugs():{};
+      var add=[];
       d.gallery.forEach(function(al){
         if(!al||!al.slug||baseSlugs[al.slug])return;                 /* skip base albums (already baked) */
         if(!Array.isArray(al.photos)||!al.photos.length)return;
-        GALB.push({name:al.name||al.slug,slug:al.slug,photos:al.photos});added++;
+        var yr=(String(al.date||al.name||'').match(/(20\d\d)/)||[])[1]||'';
+        add.push({name:al.name||al.slug,slug:al.slug,year:yr,cap:al.date||'',photos:al.photos});
       });
-      if(added)buildGalleryAll();
+      if(add.length){ GAL_ADMIN=add; galBuild(); galRender(); }
     }catch(e){}
   }).catch(function(){});}catch(e){}}
 
