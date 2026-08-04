@@ -288,15 +288,33 @@ def scrape_cup(fgkey, crests):
         teams = [parse_cup_team(c.get_text(" ", strip=True), codemap) for c in cells]
         while len(teams) < 2:
             teams.append({"tbd": 1})
-        dd = outer.find("div", class_="competition-match-date")
-        dtx = re.sub(r"\s+", " ", dd.get_text(" ", strip=True)) if dd else ""
+        dds = outer.find_all("div", class_="competition-match-date")
+        dtx = re.sub(r"\s+", " ", dds[0].get_text(" ", strip=True)) if dds else ""
         box = {"a": teams[0], "b": teams[1],
                "d": fdate(dtx), "t": ftime(dtx)}
-        if dd:
-            for a in dd.find_all("a"):
-                atx = re.sub(r"\s+", " ", a.get_text(" ", strip=True)).strip()
-                if atx and not re.match(r"^\d{2}/\d{2}/\d{2}", atx):
-                    box["v"] = atx
+        # Venue lives in the SECOND date div, which LeagueRepublic renders as
+        # "<home team name> <venue>". Strip the leading home-team name so we keep
+        # just the ground. A neutral/allocated venue (prefix is NOT the home team,
+        # e.g. a semi-final played at Kensington) is left exactly as LR gives it.
+        if len(dds) > 1:
+            vtx = re.sub(r"\s+", " ", dds[1].get_text(" ", strip=True)).strip()
+            if vtx and not re.match(r"^\d{2}/\d{2}/\d{2}", vtx):
+                # Strip a leading host-team name (either side of the tie) so only the
+                # ground remains; a neutral venue keeps its full text.
+                for tm in (teams[0], teams[1]):
+                    nm = (tm.get("n") or "").strip()
+                    if nm and vtx.lower().startswith(nm.lower() + " "):
+                        vtx = vtx[len(nm):].strip()
+                        break
+                # Backstop: collapse an exact leading duplication such as
+                # "Table View Table View A" -> "Table View A".
+                w = vtx.split()
+                for k in range(len(w) // 2, 0, -1):
+                    if w[:k] == w[k:2 * k]:
+                        vtx = " ".join(w[k:])
+                        break
+                if vtx and vtx.lower() != "bye":
+                    box["v"] = vtx
         pm = re.search(r"Pens?\s*(\d+\s*-\s*\d+)", dtx, re.I)
         if pm:
             box["p"] = re.sub(r"\s+", "", pm.group(1))

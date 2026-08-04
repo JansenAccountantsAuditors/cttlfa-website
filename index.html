@@ -4836,8 +4836,6 @@ function koRow(x,score,cls){
   const s=(score!==''&&score!=null&&score!==undefined)?`<span class="kt-s">${score}</span>`:'';
   return `<div class="kt-row ${cls||''}"><span class="kt-tm">${crest(x.n,22)}<span class="kt-nm">${x.n}</span></span>${s}</div>`;}
 function koBoxCard(b,roundName,group){
-  const isSemi=/semi/i.test(roundName||'');
-  const isFinal=/final/i.test(roundName||'')&&!/semi|quarter|third|3rd|play/i.test(roundName||'');
   // bye — the real team goes through
   if((b.a&&b.a.bye)||(b.b&&b.b.bye)){
     const real=(b.a&&b.a.bye)?b.b:b.a, byeS=(b.a&&b.a.bye)?b.a:b.b;
@@ -4847,8 +4845,10 @@ function koBoxCard(b,roundName,group){
     if(as===bs&&b.p){const pp=b.p.split('-').map(Number);wa=pp[0]>pp[1];wb=pp[1]>pp[0];}
     const foot=b.p?`<div class="kt-foot">Penalties ${b.p}</div>`:'';
     return `<div class="kt kt-done">${koRow(b.a,b.a.s,wa?'kt-adv':'')}${koRow(b.b,b.b.s,wb?'kt-adv':'')}${foot}</div>`;}
-  // upcoming (teams known or to be confirmed)
-  const venue=isSemi?'De Beers AFC · neutral venue':(isFinal?(koFinalHost(group)||b.v||''):(b.v||''));
+  // upcoming — venue, date and time come straight from LeagueRepublic (b.v/b.d/b.t).
+  // No standard or neutral venue is assumed: if LR gives no venue but a date or time
+  // is set, we show "Venue TBC"; if nothing is set the line is left off entirely.
+  const venue=b.v||((b.d||b.t)?'Venue TBC':'');
   const meta=[b.d,b.t,venue].filter(Boolean).join(' &middot; ');
   return `<div class="kt kt-next">${koRow(b.a)}<div class="kt-vs">v</div>${koRow(b.b)}${meta?`<div class="kt-foot">${meta}</div>`:''}</div>`;}
 function koWinnerName(b){
