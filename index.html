@@ -4151,9 +4151,17 @@ const LOGO=Object.fromEntries(CLUBS.map(c=>[c[0],c[1]]));
 const baseName=n=>n.replace(/\s+U\d+$/,'').replace(/\s+Reserves?$/i,'');
 let TEAMCRESTS={},CRESTBASE='photos/crests';
 function crest(n,s){s=s||24;const b=baseName(n);
-  const lr=TEAMCRESTS[n]||TEAMCRESTS[b];
-  const src=lr?`${CRESTBASE}/${lr}/115.jpg`:(LOGO[b]?logoURL(LOGO[b]):'');
-  const inner=src?`<img src="${src}" alt="" loading="lazy" onerror="this.parentNode.textContent='${ini(b)}'">`:ini(b);
+  // Resolve the LeagueRepublic team name to its canonical club (the same alias map
+  // the Clubs directory uses) so a club logo still shows when the fixture name
+  // differs from the club's registered name (e.g. "Kuilsriver" -> "Kuilsrivier AFC",
+  // "Edgemead G/W" -> "Edgemead Goodwood"). Wrapped in try/catch because canonClub's
+  // alias map initialises later in the script than the first knockout render.
+  let canon=b;
+  try{ if(typeof canonClub==='function') canon=canonClub(n)||b; }catch(e){}
+  const lr=TEAMCRESTS[n]||TEAMCRESTS[b]||TEAMCRESTS[canon];
+  const logo=LOGO[n]||LOGO[b]||LOGO[canon];
+  const src=lr?`${CRESTBASE}/${lr}/115.jpg`:(logo?logoURL(logo):'');
+  const inner=src?`<img src="${src}" alt="" loading="lazy" onerror="this.parentNode.textContent='${ini(canon)}'">`:ini(canon);
   return `<span class="cb" style="width:${s}px;height:${s}px;font-size:${Math.round(s*0.4)}px">${inner}</span>`;}
 const teamRow=(n,extra='')=>`<div class="t">${crest(n,26)}<span class="tn">${n}</span>${extra}</div>`;
 /* ---- fixture date handling: parse "DD Mon" against the season year, drop
