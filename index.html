@@ -233,6 +233,7 @@ header.shrink .brand .crestwrap{width:44px;height:44px}
 .tbl .clubcell .cl{width:20px;height:20px;border-radius:50%;background:#EEF2FB;font-family:var(--cond);font-weight:700;font-size:10px;color:var(--blue);display:flex;align-items:center;justify-content:center;flex:none}
 .tbl td.pts{color:var(--navy);font-weight:800}
 .tbl tr.promo td.pos{color:var(--green)}
+.jc-table tr.jc-promo td.jc-rank{color:var(--green)}.jc-table tr.jc-releg td.jc-rank{color:var(--red)}
 .tbl .form{display:flex;gap:3px;justify-content:center}
 .tbl .form i{width:16px;height:16px;border-radius:4px;font-style:normal;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--cond)}
 .f-w{background:var(--green)}.f-d{background:#9aa6bd}.f-l{background:var(--red)}
@@ -2226,18 +2227,24 @@ body .card-f{background:#FBF7F0}
       <h3 class="blocktitle">Referee grades</h3>
       <div class="statrow">
         <div class="card" style="padding:20px 22px"><div class="statlist">
-          <div class="sr"><span class="rk">L1</span><span>Level 1 — entry level, no match participation yet</span></div>
-          <div class="sr"><span class="rk">L2</span><span>Level 2 — officiate junior games; assistant referee at senior games</span></div>
-          <div class="sr"><span class="rk">L3</span><span>Level 3 — officiate senior games</span></div>
+          <div class="sr"><span class="rk">SL</span><span>Simplified Laws of the Game — for ages 12 to 15 years</span></div>
+          <div class="sr"><span class="rk">L1</span><span>Level 1 — officiate at junior promotional games and assistant referee at senior promotional games</span></div>
+          <div class="sr"><span class="rk">L2</span><span>Level 2 — officiate in all CTTLFA leagues</span></div>
+          <div class="sr"><span class="rk">L3</span><span>Level 3 — officiate at SAFA Regional level</span></div>
+          <div class="sr"><span class="rk">L4</span><span>Level 4 — officiate at SAFA Regional &amp; Provincial level</span></div>
+          <div class="sr"><span class="rk">L5</span><span>Level 5 — officiate at SAFA Regional &amp; Provincial level</span></div>
         </div></div>
         <div class="card" style="padding:20px 22px"><h4 style="color:var(--navy);margin-bottom:8px">What good looks like</h4><p style="color:var(--muted);font-size:14.5px">Fitness and positioning, a sound knowledge of the Laws, consistency, calm communication, and respect shown both ways between officials and players. Officials are assessed through the season and supported to improve.</p></div>
       </div>
 
       <div class="ladder" style="margin-top:16px">
-        <div class="rung" style="border-top-color:var(--gold)"><div class="lv">Start</div><h5>Course &amp; registration</h5><p>Attend a SAFA referees' course and pass the examination.</p></div>
-        <div class="rung"><div class="lv">L1</div><h5>Level 1 · entry</h5><p>Registered and learning; not yet appointed to matches.</p></div>
-        <div class="rung"><div class="lv">L2</div><h5>Level 2</h5><p>Officiate junior games; assistant referee at senior games.</p></div>
-        <div class="rung"><div class="lv">L3</div><h5>Level 3</h5><p>Officiate senior games.</p></div>
+        <div class="rung" style="border-top-color:var(--gold)"><div class="lv">Start</div><h5>Course &amp; registration</h5><p>Attend an LFA / SAFA referees' course and pass the examination.</p></div>
+        <div class="rung"><div class="lv">SL</div><h5>Simplified Laws</h5><p>For ages 12 to 15 years.</p></div>
+        <div class="rung"><div class="lv">L1</div><h5>Level 1</h5><p>Officiate at junior promotional games and assistant referee at senior promotional games.</p></div>
+        <div class="rung"><div class="lv">L2</div><h5>Level 2</h5><p>Officiate in all CTTLFA leagues.</p></div>
+        <div class="rung"><div class="lv">L3</div><h5>Level 3</h5><p>Officiate at SAFA Regional level.</p></div>
+        <div class="rung"><div class="lv">L4</div><h5>Level 4</h5><p>Officiate at SAFA Regional &amp; Provincial level.</p></div>
+        <div class="rung"><div class="lv">L5</div><h5>Level 5</h5><p>Officiate at SAFA Regional &amp; Provincial level.</p></div>
       </div>
       <p style="color:var(--muted);font-size:13px;margin-top:10px">Officials are assessed through the season and supported to progress. In 2025 the department presented thirteen courses and completed fifty-six assessments.</p>
 
@@ -2255,6 +2262,7 @@ body .card-f{background:#FBF7F0}
             <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><span>Entry-level through to senior grades, with examination.</span></li>
             <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><span>Weekly assessment and mentoring to develop officials.</span></li>
             <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><span>A development pathway for young match officials.</span></li>
+            <li><span class="ck"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span><span>Simplified Laws and Levels 1 to 3 are conducted by the LFA, Level 4 by the Region, and Level 5 by the Province.</span></li>
           </ul>
         </div>
         <div class="feat-visual"><div class="mini-cards">
@@ -2265,10 +2273,10 @@ body .card-f{background:#FBF7F0}
         </div></div>
       </div>
 
-      <h3 class="blocktitle">The CAF course pathway</h3>
-      <p style="color:var(--muted);max-width:840px;margin:-6px 0 14px">Beyond match-day officiating, football's coaching and development qualifications follow the CAF course pathway, delivered in our region by SAFA Cape Town. It runs from the entry-level D course up to the elite A course, with each level building on the one before. Match officials, in turn, progress through SAFA's officiating grades from local level into regional, national and ultimately FIFA appointments. Both pathways start with a course through SAFA Cape Town.</p>
+      <h3 class="blocktitle">The SAFA &amp; CAF course pathway</h3>
+      <p style="color:var(--muted);max-width:840px;margin:-6px 0 14px">Beyond match-day officiating, football's coaching and development qualifications follow the SAFA and CAF course pathway, delivered in our region by SAFA Cape Town. It runs from the entry-level D course up to the elite A course, with each level building on the one before. Match officials, in turn, progress through SAFA's officiating grades from local level into regional, national and ultimately FIFA appointments. Both pathways start with a course through SAFA Cape Town.</p>
       <div class="ladder">
-        <div class="rung" style="border-top-color:var(--gold)"><div class="lv">CAF D</div><h5>Entry level</h5><p>The introductory course and the starting point for grassroots coaching and development.</p></div>
+        <div class="rung" style="border-top-color:var(--gold)"><div class="lv">SAFA D</div><h5>Entry level</h5><p>The introductory course and the starting point for grassroots coaching and development.</p></div>
         <div class="rung"><div class="lv">CAF C</div><h5>Developing</h5><p>Builds on the D licence with deeper technical, tactical and match-management content.</p></div>
         <div class="rung"><div class="lv">CAF B</div><h5>Advanced</h5><p>An advanced qualification for those working at a higher competitive level.</p></div>
         <div class="rung"><div class="lv">CAF A</div><h5>Elite</h5><p>The top of the CAF pathway, for the senior competitive game.</p></div>
@@ -4197,9 +4205,22 @@ function fillForm(d){if(!d||!d.table)return d;const have=d.table.some(r=>r[8]);i
   const seq={};(d.results||[]).slice().reverse().forEach(r=>{const h=r[0],a=r[1],hs=+r[2],as=+r[3];
     (seq[h]=seq[h]||[]).push(hs>as?'W':hs<as?'L':'D');(seq[a]=seq[a]||[]).push(as>hs?'W':as<hs?'L':'D');});
   d.table.forEach(r=>{if(seq[r[0]])r[8]=seq[r[0]].slice(-5).join('');});return d;}
-function tableHtml(rows,full,showForm){const sf=showForm||full;
+/* Promotion (green) and relegation (red) counts per division, set by the
+   association (Ops Manager, Aug 2026). Keyed by LeagueRepublic division code so
+   it stays correct if a display name changes. [promotion, relegation].
+   Seniors, veterans and women use their own numbers. Junior promotion/relegation
+   is decided on the Junior Combined Logs (2 up / 2 down), so the individual
+   age-group tables are left uncoloured and the combined logs carry the 2/2 zones.
+   Reserves and anything unlisted show no promotion/relegation. */
+const PROMO_RELEG={
+  A1:[1,4], B1:[2,3], C1:[2,2], D1:[1,2], D2:[2,2], D3:[2,2], D4:[2,2],
+  E1:[1,2], E2:[2,2], F1:[1,2], F2:[2,2], G1:[1,2], G4:[1,2], G5:[2,2], G6:[2,2],
+  H1:[1,2], H2:[2,2]
+};
+function prFor(code){const x=PROMO_RELEG[code];return x?{up:x[0],down:x[1]}:{up:0,down:0};}
+function tableHtml(rows,full,showForm,pr){const sf=showForm||full;
   let head=`<thead><tr><th>#</th><th class="l">Club</th><th>P</th><th>W</th><th>D</th><th>L</th>${full?'<th>GF</th><th>GA</th>':''}<th>GD</th><th>Pts</th>${sf?'<th class="fh">Form</th>':''}</tr></thead>`;
-  let body=rows.map((r,i)=>{const gd=r[5]-r[6];const promo=i<3;const releg=rows.length>=8&&i>=rows.length-2;const nm=r[0].replace(/'/g,"\\'");
+  let body=rows.map((r,i)=>{const gd=r[5]-r[6];const _u=(pr&&pr.up)||0,_d=(pr&&pr.down)||0,_ok=rows.length>_u+_d;const promo=_ok&&_u>0&&i<_u;const releg=_ok&&_d>0&&i>=rows.length-_d;const nm=r[0].replace(/'/g,"\\'");
     return `<tr class="${promo?'promo':releg?'releg':''}" tabindex="0" role="button" data-clickable aria-label="View ${r[0]} club hub" onclick="openClub('${nm}')" title="View ${r[0]} club hub"><td class="pos">${i+1}</td>
     <td class="l"><span class="clubcell">${crest(r[0],24)}${r[0]}</span></td>
     <td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>
@@ -4220,7 +4241,7 @@ tickMatchClock();setInterval(tickMatchClock,60000);
 // home widgets
 fixtureCard(FIX,document.getElementById('home-fixtures'),4);
 resultCard(RES.slice(0,4),document.getElementById('home-results'));
-document.getElementById('home-table').innerHTML=tableHtml(TABLE.slice(0,6),false);
+document.getElementById('home-table').innerHTML=tableHtml(TABLE.slice(0,6),false,false,{up:1,down:0});
 
 // ===== NATIVE MATCH CENTRE =====
 function gradeOf(d){return /Under|U1\d/i.test(d)?'Youth':/Women/i.test(d)?'Women':/Vet/i.test(d)?'Veterans':'Senior';}
@@ -4294,10 +4315,10 @@ function sparkHtml(s){s=(s||'').slice(-5);if(!s)return '';const H={W:20,D:13,L:8
   return '<span class="spark" aria-hidden="true">'+s.split('').map(c=>`<i class="${c.toLowerCase()}" style="height:${H[c]||6}px"></i>`).join('')+'</span>';}
 function gdBar(gd,max){const w=Math.min(48,Math.round(Math.abs(gd)/(max||1)*48));
   return `<span class="gdbar"><span class="bar"><span class="${gd>=0?'pos':'neg'}" style="width:${w}%"></span></span><b>${gd>0?'+':''}${gd}</b></span>`;}
-function mcTableHtml(rows,compact){
+function mcTableHtml(rows,compact,pr){
   const maxGd=Math.max(1,...rows.map(r=>Math.abs(r[5]-r[6])));
   let head=`<thead><tr><th>#</th><th class="l">Club</th><th>P</th><th>W</th><th>D</th><th>L</th>${compact?'':'<th>GF</th><th>GA</th>'}<th class="l">GD</th><th>Pts</th>${compact?'':'<th class="fh">Form</th>'}</tr></thead>`;
-  let body=rows.map((r,i)=>{const gd=r[5]-r[6];const promo=i<3;const releg=rows.length>=8&&i>=rows.length-2;const nm=r[0].replace(/'/g,"\\'");
+  let body=rows.map((r,i)=>{const gd=r[5]-r[6];const _u=(pr&&pr.up)||0,_d=(pr&&pr.down)||0,_ok=rows.length>_u+_d;const promo=_ok&&_u>0&&i<_u;const releg=_ok&&_d>0&&i>=rows.length-_d;const nm=r[0].replace(/'/g,"\\'");
     return `<tr class="${promo?'promo':releg?'releg':''}" tabindex="0" role="button" data-clickable aria-label="View ${r[0]} club hub" onclick="openClub('${nm}')" title="View ${r[0]} club hub"><td class="pos">${i+1}</td>
     <td class="l"><span class="clubcell">${crest(r[0],compact?20:24)}${r[0]}</span></td>
     <td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>
@@ -4321,7 +4342,7 @@ function mcRender(){const L=activeLeagues();const lg=L[+mcSel.value||0]||L[0];co
   const q=(document.getElementById('mcSearch')?.value||'').trim().toLowerCase();
   let rows=d.table;
   const tbl=document.getElementById('mcLogTable');
-  tbl.innerHTML=mcTableHtml(rows,mcMode==='compact');
+  tbl.innerHTML=mcTableHtml(rows,mcMode==='compact',prFor(lg.key));
   if(q){tbl.querySelectorAll('tbody tr').forEach(tr=>{const on=tr.textContent.toLowerCase().includes(q);tr.style.display=on?'':'none';});}
   mcSnapshot(d,lg.name);
   const el=document.getElementById('mcSide');mcView==='fixtures'?fixtureCard(d.fixtures,el):resultCard(d.results,el);
@@ -4390,7 +4411,8 @@ function jcTableHtml(tier){const {rows,present}=jcBuild(tier.label);
   const body=rows.map((a,i)=>{
     const ages=JC_AGES.map(n=>{const x=a.ages[n];return x?`<td>${x.pld}</td><td>${jcSign(x.gd)}</td><td class="jc-p">${x.pts}</td>`:`<td>–</td><td>–</td><td>–</td>`;}).join('');
     const posc=JC_AGES.map(n=>{const x=a.ages[n];return `<td class="jc-pos">${x&&x.pos?x.pos:'–'}</td>`;}).join('');
-    return `<tr class="${i===0?'jc-leader':''}"><td class="jc-rank">${i+1}</td><td class="jc-club"><span class="clubcell">${crest(a.name,22)}${a.name}</span></td>${ages}<td class="jc-c">${a.PTS}</td><td class="jc-c">${jcSign(a.GD)}</td><td class="jc-c">${a.PLD}</td>${posc}</tr>`;}).join('');
+    const _ok=rows.length>4,_pr=_ok&&i<2,_rl=_ok&&i>=rows.length-2;
+    return `<tr class="${i===0?'jc-leader ':''}${_pr?'jc-promo':_rl?'jc-releg':''}"><td class="jc-rank">${i+1}</td><td class="jc-club"><span class="clubcell">${crest(a.name,22)}${a.name}</span></td>${ages}<td class="jc-c">${a.PTS}</td><td class="jc-c">${jcSign(a.GD)}</td><td class="jc-c">${a.PLD}</td>${posc}</tr>`;}).join('');
   return `<div class="jc-scroll"><table class="jc-table"><thead>
     <tr class="jc-grp"><th class="jc-rank" rowspan="2">#</th><th class="jc-club" rowspan="2">Club</th>${grpAges}<th colspan="3" class="jc-comb">Combined</th><th colspan="4" class="jc-poscol">Log positions</th></tr>
     <tr>${sub}<th>Pts</th><th>GD</th><th>P</th><th>U12</th><th>U14</th><th>U16</th><th>U18</th></tr>
@@ -5609,7 +5631,7 @@ function applySeason(j){
   if(A1&&A1.table){
     fixtureCard((A1.fixtures||[]),document.getElementById('home-fixtures'),4);
     resultCard((A1.results||[]).slice(0,4),document.getElementById('home-results'));
-    document.getElementById('home-table').innerHTML=tableHtml(A1.table.slice(0,6),false);
+    document.getElementById('home-table').innerHTML=tableHtml(A1.table.slice(0,6),false,false,{up:1,down:0});
   }
   rebuildSeason();
   if(typeof renderClubs==='function')renderClubs();
