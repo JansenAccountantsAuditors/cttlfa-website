@@ -1,3 +1,6 @@
 .DS_Store
 __pycache__/
 *.pyc
+
+# Prerendered per-route pages (generated at build by prerender.js)
+/p/

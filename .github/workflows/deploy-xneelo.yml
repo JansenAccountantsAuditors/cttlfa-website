@@ -27,6 +27,14 @@ jobs:
       - name: Check out the site
         uses: actions/checkout@v4
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Prerender per-route pages (SEO)
+        run: node prerender.js
+
       - name: Publish to Xneelo public_html (only if secrets are set)
         if: env.FTP_SERVER != ''
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
@@ -44,3 +52,4 @@ jobs:
             **/*.md
             build_deploy.py
             lr_sync.py
+            prerender.js

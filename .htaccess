@@ -42,7 +42,17 @@ RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|Facebot|WhatsApp|Twitterbot|
 RewriteCond %{DOCUMENT_ROOT}/og/$1.html -f
 RewriteRule ^([a-z0-9-]+)/?$ /og/$1.html [L]
 
-# ---- 1c. Single-page-app fallback: clean URLs (no #) are served the app shell.
+# ---- 1c. Prerendered per-route pages (SEO): each clean URL is served its own
+#          static HTML from /p, identical to the app but with a page-specific
+#          title, description and self-canonical, so search engines index each
+#          page in its own right. Generated at build time by prerender.js. Any
+#          route without a prerendered file falls through to the app shell below. ----
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{DOCUMENT_ROOT}/p/$1.html -f
+RewriteRule ^([a-z0-9-]+)/?$ /p/$1.html [L]
+
+# ---- 1d. Single-page-app fallback: clean URLs (no #) are served the app shell.
 #          Real files and folders are served normally; the redirects above run first. ----
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
