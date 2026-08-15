@@ -32,11 +32,15 @@ jobs:
           python-version: "3.12"
 
       - name: Pull referee appointments
-        if: ${{ secrets.SUPABASE_ANON_KEY != '' }}
         env:
           SUPABASE_URL:      ${{ secrets.SUPABASE_URL }}
           SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
-        run: python3 fetch_appointments.py
+        run: |
+          if [ -z "$SUPABASE_ANON_KEY" ]; then
+            echo "SUPABASE_ANON_KEY not set - skipping pull, nothing changes."
+            exit 0
+          fi
+          python3 fetch_appointments.py
 
       - name: Commit if changed
         run: |
