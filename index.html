@@ -4205,9 +4205,15 @@ function fixtureCard(list,el,limit){let a=upcomingFixtures(list);if(limit)a=a.sl
   <div class="meta"><div class="time">${f[3]}</div>${f[2]}<br><span style="font-size:11px">${f[4]||''}</span></div></div>`).join('')
   :`<div class="fx-empty" style="padding:18px;color:var(--muted);font-size:14px">No upcoming fixtures are currently scheduled for this division. New fixtures appear here as soon as they are published by the association.</div>`;}
 function resultCard(list,el){el.innerHTML=list.map(r=>{const hw=+r[2]>+r[3],aw=+r[3]>+r[2];
+  const _rv=(typeof _apResV==='function')?_apResV(r[0],r[1],r[4]):null;
+  const _as=_rv?[_rv.a1,_rv.a2].filter(x=>x&&x.toUpperCase()!=='TBA'):[];
+  const _mb=[];
+  if(r[4])_mb.push(`<span>${(typeof _apE==='function'?_apE(r[4]):r[4])}</span>`);
+  if(_rv&&_rv.ref)_mb.push(`<span style="color:var(--blue,#123FB5)"><b style="font-weight:700">Ref</b> ${_apE(_rv.ref)}${_as.length?` <span style="color:var(--muted,#5A667C);font-weight:400">&middot; ${_apE(_as.join(', '))}</span>`:''}</span>`);
+  const _meta=_mb.length?`<div class="fx-rmeta" style="font-size:12px;color:var(--muted,#5A667C);margin-top:3px;line-height:1.35">${_mb.join(' &middot; ')}</div>`:'';
   return `<div class="fx"><div class="teams">
     <div class="t">${crest(r[0],26)}<span class="tn">${r[0]}</span></div>
-    <div class="t">${crest(r[1],26)}<span class="tn">${r[1]}</span></div></div>
+    <div class="t">${crest(r[1],26)}<span class="tn">${r[1]}</span></div>${_meta}</div>
   <div class="score"><span class="${hw?'win':''}">${r[2]}</span><br><span class="${aw?'win':''}">${r[3]}</span></div></div>`;}).join('');}
 function formHtml(s){s=s||'';if(!s)return '<span class="form-na" title="Form builds as results come in">–</span>';
   return '<div class="form">'+s.split('').slice(-5).map(c=>{const t=c==='W'?'Win':c==='D'?'Draw':'Loss';return `<i class="f-${c.toLowerCase()}" title="${t}">${c}</i>`;}).join('')+'</div>';}
@@ -5548,7 +5554,18 @@ function twRef(r){try{
     +'<span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;background:#eef2fb;color:#123FB5;padding:1px 7px;border-radius:4px">Referee</span>'
     +'<span style="color:#123FB5">'+_apE(v.ref)+'</span>'+(as.length?'<span style="color:var(--muted,#5A667C);font-weight:400">&middot; '+_apE(as.join(', '))+'</span>':'')+'</span>';
 }catch(e){return '';}}
-try{if(window.__apptP){window.__apptP.then(buildApptIdx).then(function(){try{if(typeof renderThisWeekend==='function')renderThisWeekend();}catch(e){}});}}catch(e){}
+/* Referee for a PLAYED result: match by teams and date (±1 day, because the
+   dashboard and LeagueRepublic sometimes disagree on the exact match date).
+   Best-effort — returns null if appointments aren't loaded or no match. */
+function _apResV(home,away,dateStr){try{
+  if(!APPTIDX)return null;var h=_apCanon(home),a=_apCanon(away);if(!h||!a)return null;
+  var base=(typeof fxDate==='function')?fxDate(dateStr):null,keys=[];
+  if(base){for(var dd=-1;dd<=1;dd++){var x=new Date(base.getTime());x.setDate(x.getDate()+dd);keys.push((x.getMonth()+1)+'-'+x.getDate());}}
+  else{var k=_apDate(dateStr);if(k)keys.push(k);}
+  var v=null;for(var i=0;i<keys.length&&!v;i++){var dk=keys[i];v=APPTIDX[dk+'||'+h+'|'+a]||APPTIDX[dk+'||'+a+'|'+h];}
+  return v||null;
+}catch(e){return null;}}
+try{if(window.__apptP){window.__apptP.then(buildApptIdx).then(function(){try{if(typeof renderThisWeekend==='function')renderThisWeekend();}catch(e){}try{if(typeof mcRender==='function')mcRender();}catch(e){}});}}catch(e){}
 /* Export the currently filtered fixtures to CSV (Excel-friendly, BOM + CRLF). */
 function twExportCSV(){
   const rows=(TW_FILTERED&&TW_FILTERED.length)?TW_FILTERED:twAllFixtures();
