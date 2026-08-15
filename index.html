@@ -5526,7 +5526,9 @@ function renderThisWeekend(){
 var APPTIDX=null;
 function _apE(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
 function _apK(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
-function _apCanon(s){try{return _apK(typeof canonClub==='function'?canonClub(s):s);}catch(e){return _apK(s);}}
+var _APALIAS={goodwood:'Goodwood United',greenpoint:'Green Point Salesians',badgersfc:'Badgers',uct:'UCT'};
+function _apPre(s){s=String(s==null?'':s).replace(/\s*\(guest\)\s*$/i,'').trim();var k=s.toLowerCase().replace(/[^a-z0-9]/g,'');return _APALIAS[k]||s;}
+function _apCanon(s){try{return _apK(typeof canonClub==='function'?canonClub(_apPre(s)):_apPre(s));}catch(e){return _apK(_apPre(s));}}
 function _apDate(s){var m=String(s||'').match(/(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return (+m[2])+'-'+(+m[3]);var d=(typeof fxDate==='function')?fxDate(s):null;return d?((d.getMonth()+1)+'-'+d.getDate()):'';}
 function buildApptIdx(j){try{
   if(!j)return;var rows=[].concat(j.senior||[],j.junior||[],j.ladies||[]);if(!rows.length)return;
