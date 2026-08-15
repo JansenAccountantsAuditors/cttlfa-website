@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cape Town Tygerberg LFA — Official Website</title>
 <link rel="preconnect" href="https://www.websiteadmin.cttfa.co.za" crossorigin>
-<script>/* start the match-data fetch immediately so it isn't queued behind other requests */try{window.__seasonP=fetch('season.json').then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}catch(e){}</script>
+<script>/* start the match-data fetch immediately so it isn't queued behind other requests */try{window.__seasonP=fetch('season.json').then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}catch(e){}try{window.__apptP=fetch('appointments.json').then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}catch(e){}</script>
 <meta name="description" content="The official home of the Cape Town Tygerberg Local Football Association. Fixtures, results, league standings, clubs, referees, registration and news. Est. 1993.">
 <link rel="canonical" href="https://www.cttfa.co.za/">
 <meta name="theme-color" content="#071A4A">
@@ -5518,8 +5518,35 @@ function renderThisWeekend(){
     byDate[d].map(r=>{const mapq=encodeURIComponent((r.venue||'')+' Cape Town');const realVenue=r.venue&&r.venue!=='Venue TBC';return `<div class="twf">
       <div class="twf-t">${crest(r.home,24)}<span>${r.home}</span><span class="twf-v">Home</span></div>
       <div class="twf-t">${crest(r.away,24)}<span>${r.away}</span></div>
-      <div class="twf-meta"><span class="kick">${r.time||'TBC'}</span>${r.venue?`<span>${r.venue}</span>`:''}<span class="twf-div${r.cup?' twf-cup':''}">${r.div}</span>${realVenue?`<a href="https://www.google.com/maps/search/?api=1&query=${mapq}" target="_blank" rel="noopener">Directions ↗</a>`:''}</div>
+      <div class="twf-meta"><span class="kick">${r.time||'TBC'}</span>${r.venue?`<span>${r.venue}</span>`:''}<span class="twf-div${r.cup?' twf-cup':''}">${r.div}</span>${twRef(r)}${realVenue?`<a href="https://www.google.com/maps/search/?api=1&query=${mapq}" target="_blank" rel="noopener">Directions ↗</a>`:''}</div>
     </div>`;}).join('')}</div></div>`).join('');}
+/* ===== Referee appointments (appointments.json, published every ~2h from the
+   dashboard's public Supabase feed). Fully guarded: if the file is missing,
+   empty or malformed, nothing renders and fixtures look exactly as before. ===== */
+var APPTIDX=null;
+function _apE(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
+function _apK(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');}
+function _apCanon(s){try{return _apK(typeof canonClub==='function'?canonClub(s):s);}catch(e){return _apK(s);}}
+function _apDate(s){var m=String(s||'').match(/(\d{4})-(\d{1,2})-(\d{1,2})/);if(m)return (+m[2])+'-'+(+m[3]);var d=(typeof fxDate==='function')?fxDate(s):null;return d?((d.getMonth()+1)+'-'+d.getDate()):'';}
+function buildApptIdx(j){try{
+  if(!j)return;var rows=[].concat(j.senior||[],j.junior||[],j.ladies||[]);if(!rows.length)return;
+  var idx={};rows.forEach(function(r){
+    var ref=String(r[5]||'').trim();if(!ref||ref.toUpperCase()==='TBA')return;
+    var dk=_apDate(r[1]),tk=String(r[2]||'').slice(0,5),h=_apCanon(r[3]),a=_apCanon(r[4]);
+    if(!h||!a)return;var v={ref:ref,a1:String(r[6]||'').trim(),a2:String(r[7]||'').trim()};
+    idx[dk+'|'+tk+'|'+h+'|'+a]=v;idx[dk+'|'+tk+'|'+a+'|'+h]=v;
+    if(!idx[dk+'||'+h+'|'+a])idx[dk+'||'+h+'|'+a]=v;if(!idx[dk+'||'+a+'|'+h])idx[dk+'||'+a+'|'+h]=v;
+  });APPTIDX=idx;
+}catch(e){}}
+function twRef(r){try{
+  if(!APPTIDX)return '';var dk=_apDate(r.date),tk=String(r.time||'').slice(0,5),h=_apCanon(r.home),a=_apCanon(r.away);
+  var v=APPTIDX[dk+'|'+tk+'|'+h+'|'+a]||APPTIDX[dk+'||'+h+'|'+a];if(!v)return '';
+  var as=[v.a1,v.a2].filter(function(x){return x&&x.toUpperCase()!=='TBA';});
+  return '<span class="twf-ref" style="display:inline-flex;align-items:center;gap:6px;font-weight:600">'
+    +'<span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;background:#eef2fb;color:#123FB5;padding:1px 7px;border-radius:4px">Referee</span>'
+    +'<span style="color:#123FB5">'+_apE(v.ref)+'</span>'+(as.length?'<span style="color:var(--muted,#5A667C);font-weight:400">&middot; '+_apE(as.join(', '))+'</span>':'')+'</span>';
+}catch(e){return '';}}
+try{if(window.__apptP){window.__apptP.then(buildApptIdx).then(function(){try{if(typeof renderThisWeekend==='function')renderThisWeekend();}catch(e){}});}}catch(e){}
 /* Export the currently filtered fixtures to CSV (Excel-friendly, BOM + CRLF). */
 function twExportCSV(){
   const rows=(TW_FILTERED&&TW_FILTERED.length)?TW_FILTERED:twAllFixtures();
