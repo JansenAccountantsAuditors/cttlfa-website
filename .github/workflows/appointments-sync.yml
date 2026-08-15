@@ -1,0 +1,51 @@
+name: Referee appointments sync
+
+# Pulls referee appointments from the dashboard's public Supabase endpoint and
+# commits appointments.json next to the site, so the public pages can show the
+# appointed referee on each fixture. Separate from the LeagueRepublic sync
+# because appointments change far less often than scores — every 2 hours is
+# plenty — and it runs on demand from the Actions tab (or the admin refresh).
+#
+# Needs the SUPABASE_ANON_KEY repository secret (the project's PUBLIC anon key).
+# Until it's set, the pull is skipped and nothing changes.
+
+on:
+  schedule:
+    - cron: "0 */2 * * *"     # every 2 hours (UTC)
+  workflow_dispatch: {}        # manual refresh (Actions tab, or admin button via API)
+
+permissions:
+  contents: write
+
+concurrency:
+  group: appointments-sync
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pull referee appointments
+        if: ${{ secrets.SUPABASE_ANON_KEY != '' }}
+        env:
+          SUPABASE_URL:      ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: python3 fetch_appointments.py
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "cttlfa-appts-bot"
+          git config user.email "appts-bot@users.noreply.github.com"
+          git add appointments.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "No appointment change (or key not set)."
+          else
+            git commit -m "chore: update appointments.json ($(date -u +%FT%TZ))"
+            git push
+          fi
