@@ -15,7 +15,7 @@ Optional:
 """
 import json, os, sys, urllib.request
 
-BASE = os.environ.get("SUPABASE_URL", "https://thwfepmpcmxakajryutt.supabase.co").rstrip("/") + "/rest/v1"
+BASE = (os.environ.get("SUPABASE_URL") or "https://thwfepmpcmxakajryutt.supabase.co").rstrip("/") + "/rest/v1"
 KEY  = os.environ.get("SUPABASE_ANON_KEY", "").strip()
 
 def get(path):
