@@ -10,7 +10,7 @@ on:
   push:
     branches: [ main ]
   workflow_run:
-    workflows: ["LeagueRepublic sync"]
+    workflows: ["LeagueRepublic sync", "Referee appointments sync"]
     types: [completed]
   workflow_dispatch: {}
 
