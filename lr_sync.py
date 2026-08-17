@@ -42,8 +42,15 @@ MON = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct",
 PREFIX = re.compile(r"^[A-Za-z0-9]{1,5}-\s*\d+\s*-\s*")   # strips "PD-01- " team codes
 
 
+SESSION = requests.Session()
+SESSION.headers.update(UA)
+
+
 def get(url):
-    r = requests.get(url, headers=UA, timeout=30)
+    # Shared session so the cookie LeagueRepublic sets on the /fg/ page is carried
+    # to the report endpoints (the matchHub 'View All Matches' view), which return
+    # an empty HTTP 202 to a cookieless request.
+    r = SESSION.get(url, timeout=30)
     r.raise_for_status()
     return r.text
 
@@ -392,7 +399,7 @@ def build(season):
             d = scrape_division(fgkey, crests)
             d["name"], d["group"] = name, group_of(code)
             leagues[code] = d
-            print(f"  ✓ {code:4} {name:26} {len(d['table'])} teams")
+            print(f"  ✓ {code:4} {name:26} {len(d['table'])} teams, {len(d['fixtures'])} fx")
         except Exception as e:
             print(f"  ✗ {code:4} {name:26} {e}")
         time.sleep(0.15)   # be gentle
