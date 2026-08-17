@@ -30,25 +30,38 @@ def clean_venue(v):
         prev=v; v=re.sub(r'^(.+?)\s+\1(\s|$)', r'\1\2', v)
     return v.strip()
 
+# --- mode: 'weekend'   = Thursday bulletin (this weekend Fri-Sun, with referees)
+#          'weekahead' = Monday bulletin (whole current week Mon-Sun, no referees yet) ---
+MODE=(os.environ.get('BULLETIN_MODE','weekend') or 'weekend').strip().lower()
+if MODE not in ('weekend','weekahead'): MODE='weekend'
+SHOW_REFS=(MODE=='weekend')
+
 def _run_date():
     ov=os.environ.get('RUN_DATE','').strip()
     if ov:
         y,m,d=map(int,ov.split('-')); return datetime.date(y,m,d)
     return datetime.date.today()
 RUN=_run_date()
-# coming weekend = the Fri/Sat/Sun around the next Saturday on/after the run date
-_SAT=RUN+datetime.timedelta((5-RUN.weekday())%7)
-_FRI=_SAT-datetime.timedelta(1); _SUN=_SAT+datetime.timedelta(1)
-_WD=[_FRI,_SAT,_SUN]
+if MODE=='weekahead':
+    # the whole current week, Monday to Sunday (the job runs Monday 12:00 SAST)
+    _MON=RUN-datetime.timedelta(RUN.weekday())
+    _WD=[_MON+datetime.timedelta(i) for i in range(7)]
+    _FRI,_SAT,_SUN=_WD[4],_WD[5],_WD[6]
+    _RA,_RB=_WD[0],_WD[6]
+else:
+    # coming weekend = the Fri/Sat/Sun around the next Saturday on/after the run date
+    _SAT=RUN+datetime.timedelta((5-RUN.weekday())%7)
+    _FRI=_SAT-datetime.timedelta(1); _SUN=_SAT+datetime.timedelta(1)
+    _WD=[_FRI,_SAT,_SUN]
+    _RA,_RB=_FRI,_SUN
 def _lab(d): return '%s %d %s'%(d.strftime('%A'), d.day, d.strftime('%B'))
 WEEK={d:_lab(d) for d in _WD}
 DAY_ORDER=[_lab(d) for d in _WD]
 DAYSHORT={_lab(d):'%s %d'%(d.strftime('%a'), d.day) for d in _WD}
-if _FRI.month==_SUN.month:
-    RANGE_LABEL='%d \u2013 %d %s %d'%(_FRI.day,_SUN.day,_SUN.strftime('%B'),_SUN.year)
+if _RA.month==_RB.month:
+    RANGE_LABEL='%d – %d %s %d'%(_RA.day,_RB.day,_RB.strftime('%B'),_RB.year)
 else:
-    RANGE_LABEL='%d %s \u2013 %d %s %d'%(_FRI.day,_FRI.strftime('%B'),_SUN.day,_SUN.strftime('%B'),_SUN.year)
-RANGE_LABEL=RANGE_LABEL.replace('\\u2013','\u2013')
+    RANGE_LABEL='%d %s – %d %s %d'%(_RA.day,_RA.strftime('%B'),_RB.day,_RB.strftime('%B'),_RB.year)
 ISSUE_LABEL='%d %s %d'%(RUN.day,RUN.strftime('%b'),RUN.year)
 def is_senior(n): return ('Under' not in n) and ('Girls' not in n)
 
@@ -209,44 +222,51 @@ def make_xlsx(path):
             c.alignment=Alignment(horizontal='left',vertical='center'); c.border=Border(bottom=Side(style='thin',color='FF999999'))
     wb=openpyxl.Workbook()
     def apptxt(x): return '' if (x or '').strip().upper() in ('TBA','') else x.strip()
+    refcols=['Referee','Asst 1','Asst 2'] if SHOW_REFS else []
     ws=wb.active; ws.title='By Club'
-    ws.append(['Club','Team','H/A','Opponent','Date','Day','Kick-off','Type','Competition','Venue','Referee','Asst 1','Asst 2']); style_header(ws)
+    ws.append(['Club','Team','H/A','Opponent','Date','Day','Kick-off','Type','Competition','Venue']+refcols); style_header(ws)
     lr=[]
     for r in rows:
         lr.append((canonclub(r['home']),r['home'],'Home',r['away'],r))
         lr.append((canonclub(r['away']),r['away'],'Away',r['home'],r))
     lr.sort(key=lambda x:(x[0].lower(),order[x[4]['day']],x[4]['time']))
     for i,(club,team,ha,opp,r) in enumerate(lr):
-        rf,ra1,ra2=find_appt(r)
-        ws.append([club,team,ha,opp,DAYSHORT[r['day']],r['day'].split()[0],r['time'],r['type'],r['comp'],r['venue'],apptxt(rf),apptxt(ra1),apptxt(ra2)])
+        base=[club,team,ha,opp,DAYSHORT[r['day']],r['day'].split()[0],r['time'],r['type'],r['comp'],r['venue']]
+        if SHOW_REFS:
+            rf,ra1,ra2=find_appt(r); base+=[apptxt(rf),apptxt(ra1),apptxt(ra2)]
+        ws.append(base)
         rr=ws[ws.max_row]
         for c in rr:
             c.alignment=Alignment(vertical='center'); c.border=Border(bottom=thin)
             if i%2: c.fill=PatternFill('solid',fgColor='FFF7F9FC')
         rr[0].font=Font(bold=True,color='FF071A4A')
         rr[2].font=Font(bold=True,color=('FF1a7f37' if ha=='Home' else 'FF8a5a00'))
-        rr[10].font=Font(bold=True,color='FF071A4A')
+        if SHOW_REFS: rr[10].font=Font(bold=True,color='FF071A4A')
         if r['type']=='Cup':
             rr[7].font=Font(bold=True,color='FF8A6D0A'); rr[7].fill=PatternFill('solid',fgColor='FFFBF1D6')
         else: rr[7].font=Font(color='FF123FB5')
-    for i,w in enumerate([22,22,7,22,11,9,9,8,24,28,18,16,16]): ws.column_dimensions[chr(65+i)].width=w
-    ws.freeze_panes='A2'; ws.auto_filter.ref='A1:M%d'%(len(lr)+1)
+    widths=[22,22,7,22,11,9,9,8,24,28]+([18,16,16] if SHOW_REFS else [])
+    for i,w in enumerate(widths): ws.column_dimensions[chr(65+i)].width=w
+    ws.freeze_panes='A2'; ws.auto_filter.ref='A1:%s%d'%(chr(64+len(widths)),len(lr)+1)
     ws2=wb.create_sheet('All Fixtures')
-    ws2.append(['Date','Day','Kick-off','Type','Competition','Home','Away','Venue','Referee','Asst 1','Asst 2']); style_header(ws2)
+    ws2.append(['Date','Day','Kick-off','Type','Competition','Home','Away','Venue']+refcols); style_header(ws2)
     srt=sorted(rows,key=lambda r:(order[r['day']],r['time'],r['comp']))
     for i,r in enumerate(srt):
-        rf,ra1,ra2=find_appt(r)
-        ws2.append([DAYSHORT[r['day']],r['day'].split()[0],r['time'],r['type'],r['comp'],r['home'],r['away'],r['venue'],apptxt(rf),apptxt(ra1),apptxt(ra2)])
+        base=[DAYSHORT[r['day']],r['day'].split()[0],r['time'],r['type'],r['comp'],r['home'],r['away'],r['venue']]
+        if SHOW_REFS:
+            rf,ra1,ra2=find_appt(r); base+=[apptxt(rf),apptxt(ra1),apptxt(ra2)]
+        ws2.append(base)
         rr=ws2[ws2.max_row]
         for c in rr:
             c.alignment=Alignment(vertical='center'); c.border=Border(bottom=thin)
             if i%2: c.fill=PatternFill('solid',fgColor='FFF7F9FC')
-        rr[8].font=Font(bold=True,color='FF071A4A')
+        if SHOW_REFS: rr[8].font=Font(bold=True,color='FF071A4A')
         if r['type']=='Cup':
             rr[3].font=Font(bold=True,color='FF8A6D0A'); rr[3].fill=PatternFill('solid',fgColor='FFFBF1D6')
         else: rr[3].font=Font(color='FF123FB5')
-    for i,w in enumerate([11,9,9,8,26,22,22,30,18,16,16]): ws2.column_dimensions[chr(65+i)].width=w
-    ws2.freeze_panes='A2'; ws2.auto_filter.ref='A1:K%d'%(len(srt)+1)
+    widths2=[11,9,9,8,26,22,22,30]+([18,16,16] if SHOW_REFS else [])
+    for i,w in enumerate(widths2): ws2.column_dimensions[chr(65+i)].width=w
+    ws2.freeze_panes='A2'; ws2.auto_filter.ref='A1:%s%d'%(chr(64+len(widths2)),len(srt)+1)
     wb.save(path)
     return len(lr),len(srt)
 
@@ -298,7 +318,7 @@ def fcard(time,home,away,venue,lab,iscup,ref='',a1='',a2=''):
       f'<tr><td style="padding:14px 16px;">{team_row(home,True)}'
       f'<div style="height:9px;font-size:0;line-height:0;">&nbsp;</div>{team_row(away,False)}'
       f'<div style="border-top:1px solid {LINE};margin-top:12px;padding-top:11px;">{meta}</div>'
-      f'{ref_html(ref,a1,a2)}'
+      f'{ref_html(ref,a1,a2) if SHOW_REFS else ""}'
       f'</td></tr></table></a>')
 def grid3(cards):
     out='<table role="presentation" width="100%" cellpadding="0" cellspacing="0">'
@@ -333,10 +353,55 @@ def stat(n,lab,gold=False):
 
 def page(crest):
     days_html=''.join(day_section(d) for d in DAY_ORDER)
-    return f"""<!DOCTYPE html>
+
+    # ---- mode-specific copy ----
+    if MODE=='weekahead':
+        KICKER='The Week Ahead'
+        EYEBROW='Week Ahead &middot; %s'%RANGE_LABEL
+        H1='The week ahead at a glance'
+        INTRO=('Dear Clubs, Life Members and Referees,<br><br>Here is the week ahead across the association, '
+               'together with a recap of last weekend&rsquo;s results. Every fixture from Monday to Sunday is listed '
+               'below and attached as a spreadsheet. This is a summary &mdash; tap any section heading or fixture to open '
+               f'the full, live detail on <a href="{SITE}" target="_blank" style="color:{BLUE};font-weight:bold;text-decoration:none;">the website</a>, '
+               'which is always the main source. Referee appointments are confirmed midweek and will be published in '
+               'Thursday&rsquo;s weekend bulletin.')
+        PREHEADER=('The week ahead across the association &mdash; last weekend&rsquo;s results plus every fixture from Monday to '
+                   f'Sunday ({sen} senior, {jun} junior, {ncup} cup ties). Referee appointments follow on Thursday.')
+        FIX_TITLE="This week's fixtures"
+        FIX_NOTE=('Referee appointments are confirmed midweek and will appear on each fixture in '
+                  'Thursday&rsquo;s weekend bulletin.')
+        HEADLINE_NOTE=('These are the headline senior games for the week.')
+        FIX_ATTACH=('Reserves, 3rd&ndash;6th Divisions, Veterans, Women&rsquo;s football and all junior fixtures are on the '
+                    'website, and <b style="color:'+INK+';">every fixture this week is attached as a spreadsheet</b> '
+                    '&mdash; open it in Excel and filter to your club to see all your games, home and away.')
+        FIX_CTA='See the full week&rsquo;s fixtures on the website'
+        RES_TITLE="Last weekend's results & standings"
+        RES_HEAD='Last weekend&rsquo;s results &middot; Premier'
+    else:
+        KICKER='Weekly Club Bulletin'
+        EYEBROW='Match Week &middot; %s'%RANGE_LABEL
+        H1='Your weekend at a glance'
+        INTRO=('Dear Clubs, Life Members and Referees,<br><br>A quick reminder of this weekend\'s football across the '
+               'association. This is a summary &mdash; tap any section heading or fixture to open the full, live detail on '
+               f'<a href="{SITE}" target="_blank" style="color:{BLUE};font-weight:bold;text-decoration:none;">the website</a>, '
+               'which is always the main source. Every weekend fixture is also attached as a spreadsheet for easy reference.')
+        PREHEADER=(f'A quick reminder of this weekend\'s football — {sen} senior and {jun} junior fixtures '
+                   f'({ncup} cup ties). Tap any section for the live detail on the website; the full fixtures list is attached.')
+        FIX_TITLE="This weekend's fixtures"
+        FIX_NOTE='Appointed match officials are shown on each card below where confirmed.'
+        HEADLINE_NOTE='These are the headline games.'
+        FIX_ATTACH=(f'Reserves, 3rd–6th Divisions, Veterans, Women\'s football and all <b style="color:{INK};">{jun} junior fixtures</b> '
+                    f'are on the website, and <b style="color:{INK};">every weekend fixture is attached as a spreadsheet</b> '
+                    '&mdash; open it in Excel and filter to your club to see all your games, home and away.')
+        FIX_CTA='See all fixtures &amp; grounds on the website'
+        RES_TITLE='Results & Standings'
+        RES_HEAD='Latest results &middot; Premier'
+
+    # ---- reusable blocks ----
+    HEAD=f"""<!DOCTYPE html>
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only"><title>CTTLFA Weekly Club Bulletin</title>
+<meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light only"><title>CTTLFA {esc(KICKER)}</title>
 <!--[if mso]><noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript><![endif]-->
 <style>
  @media only screen and (max-width:1020px){{ .container{{width:100%!important}} }}
@@ -350,22 +415,22 @@ def page(crest):
  a{{color:{BLUE}}} body{{margin:0;padding:0;background:#e9edf5}}
 </style></head>
 <body style="margin:0;padding:0;background:#e9edf5;-webkit-font-smoothing:antialiased;font-family:Arial,Helvetica,sans-serif;">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#e9edf5;">A quick reminder of this weekend's football — {sen} senior and {jun} junior fixtures ({ncup} cup ties). Tap any section for the live detail on the website; the full fixtures list is attached.</div>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;font-size:1px;line-height:1px;color:#e9edf5;">{PREHEADER}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#e9edf5;"><tr><td align="center" style="padding:26px 10px;">
 <table role="presentation" class="container" width="1000" cellpadding="0" cellspacing="0" style="width:1000px;max-width:1000px;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 10px 34px rgba(7,26,74,.13);">
 
  <tr><td bgcolor="{NAVY}" style="background:{NAVY};padding:32px {PAD}px;" class="px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
    <td width="62" valign="middle" style="width:62px;"><img src="{crest}" width="58" height="58" alt="Cape Town Tygerberg LFA crest" style="display:block;border:0;width:58px;height:58px;"></td>
    <td valign="middle" style="padding-left:18px;"><div style="color:#ffffff;font-size:21px;font-weight:bold;letter-spacing:.3px;line-height:1.15;">Cape Town Tygerberg LFA</div>
-     <div style="color:{GOLD};font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:2.2px;padding-top:5px;">Weekly Club Bulletin</div></td>
+     <div style="color:{GOLD};font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:2.2px;padding-top:5px;">{esc(KICKER)}</div></td>
    <td valign="middle" align="right" style="color:#9fb0d8;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:.8px;line-height:1.6;">Issue<br><span style="color:#ffffff;font-size:13px;">{ISSUE_LABEL}</span></td>
  </tr></table></td></tr>
  <tr><td bgcolor="{GOLD}" style="height:5px;background:{GOLD};font-size:0;line-height:0;">&nbsp;</td></tr>
 
  <tr><td class="px" style="padding:34px {PAD}px 0;">
-   <div style="color:{MUT};font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;">Match Week &middot; {RANGE_LABEL}</div>
-   <div class="h1" style="color:{INK};font-size:32px;font-weight:bold;line-height:1.15;padding:10px 0 0;">Your weekend at a glance</div>
-   <p style="color:{MUT};font-size:15.5px;line-height:1.65;margin:14px 0 0;max-width:820px;">Dear Clubs, Life Members and Referees,<br><br>A quick reminder of this weekend's football across the association. This is a summary &mdash; tap any section heading or fixture to open the full, live detail on <a href="{SITE}" target="_blank" style="color:{BLUE};font-weight:bold;text-decoration:none;">the website</a>, which is always the main source. Every weekend fixture is also attached as a spreadsheet for easy reference.</p>
+   <div style="color:{MUT};font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;">{EYEBROW}</div>
+   <div class="h1" style="color:{INK};font-size:32px;font-weight:bold;line-height:1.15;padding:10px 0 0;">{H1}</div>
+   <p style="color:{MUT};font-size:15.5px;line-height:1.65;margin:14px 0 0;max-width:820px;">{INTRO}</p>
  </td></tr>
 
  <tr><td class="px" style="padding:18px {PAD}px 0;">
@@ -380,26 +445,38 @@ def page(crest):
      {stat(total,'Matches')}{stat(sen,'Senior')}{stat(jun,'Junior')}{stat(ncup,'Cup ties',True)}{stat(NCLUBS,'Clubs')}
    </tr></table>
  </td></tr>
+"""
 
- <tr><td class="px" style="padding:36px {PAD}px 0;">{section_banner("This weekend's fixtures", SITE+'/thisweekend')}
-   <div style="color:{MUT};font-size:12.5px;padding-top:12px;"><span style="display:inline-block;background:{BLUE};color:#fff;font-size:10px;font-weight:bold;padding:2px 8px;border-radius:4px;">LEAGUE</span> &nbsp; <span style="display:inline-block;background:{GOLD};color:{INK};font-size:10px;font-weight:bold;padding:2px 8px;border-radius:4px;">&#9733; CUP / KNOCKOUT</span> &nbsp; Appointed match officials are shown on each card below where confirmed.</div>
+    FIXTURES=f"""
+ <tr><td class="px" style="padding:36px {PAD}px 0;">{section_banner(FIX_TITLE, SITE+'/thisweekend')}
+   <div style="color:{MUT};font-size:12.5px;padding-top:12px;"><span style="display:inline-block;background:{BLUE};color:#fff;font-size:10px;font-weight:bold;padding:2px 8px;border-radius:4px;">LEAGUE</span> &nbsp; <span style="display:inline-block;background:{GOLD};color:{INK};font-size:10px;font-weight:bold;padding:2px 8px;border-radius:4px;">&#9733; CUP / KNOCKOUT</span> &nbsp; {FIX_NOTE}</div>
  </td></tr>
  {days_html}
  <tr><td class="px" style="padding:14px {PAD}px 0;">
    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{SOFT};border-radius:10px;"><tr><td style="padding:16px 18px;color:{MUT};font-size:13.5px;line-height:1.65;">
-     <b style="color:{INK};">These are the headline games.</b> Reserves, 3rd–6th Divisions, Veterans, Women's football and all <b style="color:{INK};">{jun} junior fixtures</b> are on the website, and <b style="color:{INK};">every weekend fixture is attached as a spreadsheet</b> &mdash; open it in Excel and filter to your club to see all your games, home and away.
+     <b style="color:{INK};">{HEADLINE_NOTE}</b> {FIX_ATTACH}
    </td></tr></table></td></tr>
  <tr><td class="px" style="padding:16px {PAD}px 0;" align="center">
-   <table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="{BLUE}" style="border-radius:10px;"><a href="{SITE}/thisweekend" target="_blank" style="display:inline-block;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;padding:13px 30px;border-radius:10px;">See all fixtures &amp; grounds on the website &rarr;</a></td></tr></table>
+   <table role="presentation" cellpadding="0" cellspacing="0"><tr><td bgcolor="{BLUE}" style="border-radius:10px;"><a href="{SITE}/thisweekend" target="_blank" style="display:inline-block;font-size:15px;font-weight:bold;color:#ffffff;text-decoration:none;padding:13px 30px;border-radius:10px;">{FIX_CTA} &rarr;</a></td></tr></table>
  </td></tr>
+"""
 
+    if MODE=='weekahead':
+        REFEREE=f"""
+ <tr><td class="px" style="padding:36px {PAD}px 0;">{section_banner('Referee Appointments, Announcements & Rulings', 'https://dash.cttlfa.com/', cta='Open the dashboard')}
+   <p style="color:{MUT};font-size:14.5px;line-height:1.65;margin:16px 0 0;">Referee appointments for this week&rsquo;s matches are confirmed midweek. They will appear on <b style="color:{INK};">every fixture in Thursday&rsquo;s weekend bulletin</b>, with the officials also carried in that bulletin&rsquo;s attached spreadsheet. The full appointment list for every division, along with association announcements and administrative rulings, is always live on the CTTLFA dashboard.</p></td></tr>
+"""
+    else:
+        REFEREE=f"""
  <tr><td class="px" style="padding:36px {PAD}px 0;">{section_banner('Referee Appointments, Announcements & Rulings', 'https://dash.cttlfa.com/', cta='Open the dashboard')}
    <p style="color:{MUT};font-size:14.5px;line-height:1.65;margin:16px 0 0;">The appointed referee for each headline game is shown on the fixture cards above, and <b style="color:{INK};">every fixture in the attached spreadsheet carries its referee and assistants</b> &mdash; filter to your club to see the officials for all your games. The full appointment list for every division, along with association announcements and administrative rulings, is on the CTTLFA dashboard. Appointments marked <b style="color:{INK};">TBA</b> are still to be confirmed, and officials can change &mdash; the dashboard is the live source.</p></td></tr>
+"""
 
- <tr><td class="px" style="padding:40px {PAD}px 0;">{section_banner('Results & Standings', SITE+'/matchcentre')}</td></tr>
+    RESULTS=f"""
+ <tr><td class="px" style="padding:40px {PAD}px 0;">{section_banner(RES_TITLE, SITE+'/matchcentre')}</td></tr>
  <tr><td class="px" style="padding:18px {PAD}px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
    <td class="stack" width="50%" valign="top" style="padding-right:18px;">
-     <div style="color:{NAVY};font-size:14px;font-weight:bold;padding-bottom:8px;">Latest results &middot; Premier</div>
+     <div style="color:{NAVY};font-size:14px;font-weight:bold;padding-bottom:8px;">{RES_HEAD}</div>
      <table role="presentation" width="100%" cellpadding="0" cellspacing="0">{results_html}</table></td>
    <td class="stack" width="50%" valign="top" style="padding-left:18px;">
      <div style="color:{NAVY};font-size:14px;font-weight:bold;padding-bottom:8px;">Standings &middot; Premier</div>
@@ -408,7 +485,9 @@ def page(crest):
      </table>
      <div style="color:{MUT};font-size:12.5px;padding-top:10px;">First Division leaders: <b style="color:{INK};">{esc(first_lead)}</b> &nbsp;&middot;&nbsp; Second Division leaders: <b style="color:{INK};">{esc(second_lead)}</b></div></td>
  </tr></table></td></tr>
+"""
 
+    JLOGS=f"""
  <tr><td class="px" style="padding:40px {PAD}px 0;">{section_banner('Junior Combined Logs', SITE+'/combinedlogs')}
    <div style="color:{MUT};font-size:13px;padding-top:12px;">Each club's Under-12 to Under-18 teams added together and ranked as one. <span style="color:{GNT};font-weight:bold;">&#9632; Promotion</span> &nbsp; <span style="color:{RDT};font-weight:bold;">&#9632; Relegation</span></div></td></tr>
  <tr><td class="px" style="padding:18px {PAD}px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
@@ -418,7 +497,9 @@ def page(crest):
    <td class="stack" width="50%" valign="top" style="padding-right:14px;">{logs_table(*TIERS[2])}</td>
    <td class="stack" width="50%" valign="top" style="padding-left:14px;">{logs_table(*TIERS[3])}</td></tr></table></td></tr>
  <tr><td class="px" style="padding:18px {PAD}px 0;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf7ec;border:1px solid #f0e2bf;border-radius:10px;"><tr><td style="padding:13px 16px;font-size:12px;color:{MUT};line-height:1.6;font-style:italic;">Disclaimer: standings are subject to change pending the outcomes of any outstanding Disciplinary Committee matters and decisions. Full Under-12 to Under-18 age-group breakdowns are on the website.</td></tr></table></td></tr>
+"""
 
+    SIGNOFF=f"""
  <tr><td class="px" style="padding:40px {PAD}px 0;">
    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid {LINE};border-left:5px solid {GOLD};border-radius:12px;background:#ffffff;"><tr><td style="padding:24px 28px;">
      <div style="color:{MUT};font-size:14px;">Kind regards,</div>
@@ -445,13 +526,28 @@ def page(crest):
 
 </table></td></tr></table></body></html>"""
 
+    if MODE=='weekahead':
+        body=RESULTS+FIXTURES+REFEREE+JLOGS
+    else:
+        body=FIXTURES+REFEREE+RESULTS+JLOGS
+    return HEAD+body+SIGNOFF
+
 def _textver():
-    L=['CAPE TOWN TYGERBERG LFA - WEEKLY CLUB BULLETIN','Match Week: %s'%RANGE_LABEL,'',
-       'Snapshot at %s. The website (%s) remains the authoritative source.'%(STAMP,SITE),'',
-       'This weekend: %d matches (%d senior, %d junior, %d cup ties) across %d clubs.'%(total,sen,jun,ncup,NCLUBS),'',
-       'Every weekend fixture (with referee & assistants where confirmed) is attached as a spreadsheet - filter to your club.',
-       'Fixtures: %s/thisweekend'%SITE,'Results & Tables: %s/matchcentre'%SITE,'Junior Logs: %s/combinedlogs'%SITE,'',
-       'Kind regards,','Barry Petersen - Operations Manager, Cape Town Tygerberg LFA','ops@cttlfa.com']
+    if MODE=='weekahead':
+        L=['CAPE TOWN TYGERBERG LFA - THE WEEK AHEAD','Week: %s'%RANGE_LABEL,'',
+           'Snapshot at %s. The website (%s) remains the authoritative source.'%(STAMP,SITE),'',
+           'This week: %d matches (%d senior, %d junior, %d cup ties) across %d clubs, Monday to Sunday.'%(total,sen,jun,ncup,NCLUBS),'',
+           'Every fixture this week is attached as a spreadsheet - filter to your club.',
+           'Referee appointments are confirmed midweek and will appear in Thursday\'s weekend bulletin.','',
+           'Fixtures: %s/thisweekend'%SITE,'Results & Tables: %s/matchcentre'%SITE,'Junior Logs: %s/combinedlogs'%SITE,'',
+           'Kind regards,','Barry Petersen - Operations Manager, Cape Town Tygerberg LFA','ops@cttlfa.com']
+    else:
+        L=['CAPE TOWN TYGERBERG LFA - WEEKLY CLUB BULLETIN','Match Week: %s'%RANGE_LABEL,'',
+           'Snapshot at %s. The website (%s) remains the authoritative source.'%(STAMP,SITE),'',
+           'This weekend: %d matches (%d senior, %d junior, %d cup ties) across %d clubs.'%(total,sen,jun,ncup,NCLUBS),'',
+           'Every weekend fixture (with referee & assistants where confirmed) is attached as a spreadsheet - filter to your club.',
+           'Fixtures: %s/thisweekend'%SITE,'Results & Tables: %s/matchcentre'%SITE,'Junior Logs: %s/combinedlogs'%SITE,'',
+           'Kind regards,','Barry Petersen - Operations Manager, Cape Town Tygerberg LFA','ops@cttlfa.com']
     return chr(10).join(L)
 
 def _send(html_out, xlsx_path):
@@ -461,8 +557,8 @@ def _send(html_out, xlsx_path):
     if not KEY or not TO:
         print('DRY RUN: RESEND_API_KEY/RESEND_TO not set - files built, no email sent.'); return 0
     with open(xlsx_path,'rb') as f: att=base64.b64encode(f.read()).decode()
-    subject='CTTLFA Weekly Club Bulletin - %s'%RANGE_LABEL
-    fname='CTTLFA Weekend Fixtures %s.xlsx'%RANGE_LABEL
+    subject=('CTTLFA The Week Ahead - %s' if MODE=='weekahead' else 'CTTLFA Weekly Club Bulletin - %s')%RANGE_LABEL
+    fname=('CTTLFA Week Ahead Fixtures %s.xlsx' if MODE=='weekahead' else 'CTTLFA Weekend Fixtures %s.xlsx')%RANGE_LABEL
     sent=0
     for rcpt in TO:  # one email per club: no address leakage between recipients
         payload={'from':FROM,'to':[rcpt],'reply_to':'ops@cttlfa.com','subject':subject,'html':html_out,'text':_textver(),
@@ -482,15 +578,18 @@ def _send(html_out, xlsx_path):
     return sent
 
 def main():
-    print('Run date %s | weekend %s | season %s | mapping %s'%(RUN,RANGE_LABEL,SEASON_SRC,MAP_SRC))
+    print('Mode %s | run %s | range %s | season %s | mapping %s'%(MODE,RUN,RANGE_LABEL,SEASON_SRC,MAP_SRC))
     if total==0:
-        print('No fixtures for the coming weekend - silent skip (off-season/bye).'); return
+        print('No fixtures for the %s - silent skip (off-season/bye).'%('week' if MODE=='weekahead' else 'coming weekend')); return
     outdir=os.environ.get('OUT_DIR','downloads'); os.makedirs(outdir,exist_ok=True)
-    xlsx_path=os.path.join(outdir,'weekend-fixtures.xlsx')
+    stem=('week-ahead-fixtures' if MODE=='weekahead' else 'weekend-fixtures')
+    htmlname=('week-ahead-bulletin.html' if MODE=='weekahead' else 'weekly-bulletin.html')
+    datestamp=(_WD[0] if MODE=='weekahead' else _SAT).isoformat()
+    xlsx_path=os.path.join(outdir,stem+'.xlsx')
     nx=make_xlsx(xlsx_path); print('xlsx: %d club-rows / %d matches'%nx)
-    shutil.copyfile(xlsx_path, os.path.join(outdir,'weekend-fixtures-%s.xlsx'%_SAT.isoformat()))
+    shutil.copyfile(xlsx_path, os.path.join(outdir,'%s-%s.xlsx'%(stem,datestamp)))
     html_out=page(SITE+'/assets/crest.png')
-    open(os.path.join(outdir,'weekly-bulletin.html'),'w',encoding='utf-8').write(html_out)
+    open(os.path.join(outdir,htmlname),'w',encoding='utf-8').write(html_out)
     print('built HTML (%d bytes) + Excel in %s/'%(len(html_out),outdir))
     n=_send(html_out, xlsx_path)
     print('emails sent: %d'%n)

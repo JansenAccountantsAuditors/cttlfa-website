@@ -1,0 +1,65 @@
+name: Week ahead bulletin
+
+# MONDAY edition (BULLETIN_MODE=weekahead): a recap of last weekend's results and
+# standings, followed by the whole week's fixtures (Monday to Sunday). Referee
+# appointments are NOT shown here — they are confirmed midweek and go out in the
+# Thursday weekend bulletin (weekly-bulletin.yml). Runs the same engine
+# (weekly_bulletin.py) off the repo's own committed data:
+#   - season.json  (fixtures + last weekend's results) — kept current by the
+#                   LeagueRepublic sync, which commits every 10 minutes, so
+#                   Monday-noon results are already in.
+# If there are no fixtures for the week (off-season), it sends nothing and exits.
+#
+# Emails only once RESEND_API_KEY / RESEND_TO / RESEND_FROM are set; otherwise it
+# builds the files as a dry run without sending.
+
+on:
+  schedule:
+    - cron: "0 10 * * 1"      # Monday 10:00 UTC = 12:00 SAST
+  workflow_dispatch:
+    inputs:
+      run_date:
+        description: "Override run date (YYYY-MM-DD) for a manual test send"
+        required: false
+        default: ""
+
+permissions:
+  contents: write              # allow committing the published spreadsheet
+
+concurrency:
+  group: week-ahead-bulletin
+  cancel-in-progress: false
+
+jobs:
+  bulletin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install openpyxl
+
+      - name: Build and send the week-ahead bulletin
+        env:
+          BULLETIN_MODE:  weekahead
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM:    ${{ secrets.RESEND_FROM }}
+          RESEND_TO:      ${{ secrets.RESEND_TO }}
+          RUN_DATE:       ${{ github.event.inputs.run_date }}
+        run: python3 weekly_bulletin.py
+
+      - name: Publish the week-ahead spreadsheet to the site (if built)
+        run: |
+          git config user.name  "cttlfa-bulletin-bot"
+          git config user.email "bulletin-bot@users.noreply.github.com"
+          git add downloads
+          if git diff --staged --quiet; then
+            echo "No spreadsheet change (off-season / nothing built)."
+          else
+            git commit -m "chore: week-ahead fixtures spreadsheet ($(date -u +%FT%TZ))"
+            git push
+          fi
