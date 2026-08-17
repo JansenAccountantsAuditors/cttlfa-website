@@ -473,7 +473,10 @@ def _send(html_out, xlsx_path):
             r=urllib.request.urlopen(req,timeout=60).read().decode(); sent+=1
             print('sent ->',rcpt,r[:80])
         except Exception as e:
-            print('FAILED ->',rcpt,e)
+            body=''
+            try: body=e.read().decode('utf-8','ignore')[:400]
+            except Exception: pass
+            print('FAILED ->',rcpt,e,'| FROM=',FROM,'| KEYTAIL=...'+KEY[-4:],'| BODY=',body)
     return sent
 
 def main():
