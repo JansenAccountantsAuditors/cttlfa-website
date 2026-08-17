@@ -456,7 +456,7 @@ def _textver():
 def _send(html_out, xlsx_path):
     KEY=os.environ.get('RESEND_API_KEY','').strip()
     TO=[x.strip() for x in re.split(r'[,;\s]+', os.environ.get('RESEND_TO','')) if x.strip()]
-    FROM=os.environ.get('RESEND_FROM','Cape Town Tygerberg LFA <bulletin@cttlfa.com>')
+    FROM=os.environ.get('RESEND_FROM') or 'Cape Town Tygerberg LFA <bulletin@cttlfa.com>'
     if not KEY or not TO:
         print('DRY RUN: RESEND_API_KEY/RESEND_TO not set - files built, no email sent.'); return 0
     with open(xlsx_path,'rb') as f: att=base64.b64encode(f.read()).decode()
@@ -468,7 +468,8 @@ def _send(html_out, xlsx_path):
                  'attachments':[{'filename':fname,'content':att}]}
         req=urllib.request.Request('https://api.resend.com/emails',
             data=json.dumps(payload).encode(),
-            headers={'Authorization':'Bearer '+KEY,'Content-Type':'application/json'})
+            headers={'Authorization':'Bearer '+KEY,'Content-Type':'application/json',
+                     'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
         try:
             r=urllib.request.urlopen(req,timeout=60).read().decode(); sent+=1
             print('sent ->',rcpt,r[:80])
