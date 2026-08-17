@@ -1,0 +1,69 @@
+name: Weekly club bulletin
+
+# Emails the weekend bulletin to all clubs every Thursday and publishes the
+# weekend fixtures spreadsheet to the site (downloads/). Runs entirely from the
+# repo's own committed data:
+#   - season.json       (fixtures)  — kept current by the LeagueRepublic sync
+#   - appointments.json (referees)  — kept current by the Referee appointments sync
+# Both files are the site's own published data, so the mailer no longer contacts
+# the dashboard / Supabase itself (single source of truth: the site). If there
+# are no fixtures for the coming weekend (off-season or a bye), it sends nothing
+# and exits.
+#
+# It only emails once the RESEND_API_KEY / RESEND_TO / RESEND_FROM repository
+# secrets are set (Settings -> Secrets and variables -> Actions). Until then it
+# builds the files as a dry run without sending.
+
+on:
+  schedule:
+    - cron: "0 10 * * 4"      # Thursday 10:00 UTC = 12:00 SAST
+  workflow_dispatch:
+    inputs:
+      run_date:
+        description: "Override run date (YYYY-MM-DD) for a manual test send"
+        required: false
+        default: ""
+
+permissions:
+  contents: write              # allow committing the published spreadsheet
+
+concurrency:
+  group: weekly-bulletin
+  cancel-in-progress: false
+
+jobs:
+  bulletin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install openpyxl
+
+      # Referees come from the repo's appointments.json (published on the site and
+      # refreshed every 2 hours by the Referee appointments sync) — no separate
+      # dashboard/Supabase pull here. season.json provides the fixtures. The mailer
+      # reads both committed files directly.
+      - name: Build and send the weekly bulletin
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM:    ${{ secrets.RESEND_FROM }}
+          RESEND_TO:      ${{ secrets.RESEND_TO }}
+          RUN_DATE:       ${{ github.event.inputs.run_date }}
+        run: python3 weekly_bulletin.py
+
+      - name: Publish the weekend spreadsheet to the site (if built)
+        run: |
+          git config user.name  "cttlfa-bulletin-bot"
+          git config user.email "bulletin-bot@users.noreply.github.com"
+          git add downloads
+          if git diff --staged --quiet; then
+            echo "No spreadsheet change (off-season / nothing built)."
+          else
+            git commit -m "chore: weekend fixtures spreadsheet ($(date -u +%FT%TZ))"
+            git push
+          fi
