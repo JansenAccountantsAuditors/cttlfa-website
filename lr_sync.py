@@ -118,22 +118,7 @@ def compute_form(table, allres):
             row[8] = "".join(f[-5:])
 
 
-def scrape_all_fixtures(soup):
-    """Full upcoming-fixtures list from LeagueRepublic's 'View All Matches' view.
-    The /fg/ page only shows the next fixture date or two, so the whole season's
-    later fixtures never reach us; this view lists the ENTIRE remaining programme.
-    Returns [[home, away, date, time, venue], ...] or [] if the view can't be read
-    (the caller then keeps the /fg/ list as a fallback, so it can never regress)."""
-    link = soup.find("a", href=re.compile(r"/matchHub/.+/1/true\.html"))
-    href = re.sub(r"\s+", "", (link.get("href") if link else "") or "")
-    if not href:
-        return []
-    url = href if href.startswith("http") else SITE + href
-    try:
-        fsoup = BeautifulSoup(get(url), "html.parser")
-    except Exception:
-        return []
-    out = []
+def _parse_fixture_rows(fsoup, out):
     for tb in fsoup.find_all("table"):
         for r in tb.find_all("tr"):
             td = r.find_all("td")
@@ -151,7 +136,36 @@ def scrape_all_fixtures(soup):
             ven = td[4].get_text(" ", strip=True)
             ven = ven.split("@", 1)[1].strip() if "@" in ven else ""
             out.append([hn, an, fdate(dt), ftime(dt), ven])
-    time.sleep(0.1)
+
+
+def scrape_all_fixtures(soup):
+    """Full upcoming-fixtures list from LeagueRepublic's 'View All Matches' view.
+    The /fg/ page only shows the next fixture date or two; this view lists the whole
+    remaining programme, but 20 per page — so we follow the 'Next' link to the end.
+    Returns [[home, away, date, time, venue], ...] or [] if the view can't be read
+    (the caller then keeps the /fg/ list as a fallback, so it can never regress)."""
+    link = soup.find("a", href=re.compile(r"/matchHub/.+/1/true\.html"))
+    href = re.sub(r"\s+", "", (link.get("href") if link else "") or "")
+    if not href:
+        return []
+    url = href if href.startswith("http") else SITE + href
+    out, seen = [], set()
+    for _ in range(80):                                         # page safety cap
+        if not url or url in seen:
+            break
+        seen.add(url)
+        try:
+            fsoup = BeautifulSoup(get(url), "html.parser")
+        except Exception:
+            break
+        _parse_fixture_rows(fsoup, out)
+        nxt = next((a for a in fsoup.find_all("a")
+                    if a.get_text(strip=True).lower() == "next"), None)
+        nhref = re.sub(r"\s+", "", (nxt.get("href") if nxt else "") or "")
+        if not nhref or "matchHub" not in nhref:
+            break
+        url = nhref if nhref.startswith("http") else SITE + nhref
+        time.sleep(0.1)
     return out
 
 
