@@ -269,7 +269,7 @@ def team_row(name, home=False):
       f'<td align="right" valign="middle">{tag}</td></tr></table>')
 def section_banner(title,url,cta='View on the website'):
     return (f'<a href="{url}" target="_blank" style="text-decoration:none;">'
-      f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{NAVY};border-radius:10px;"><tr><td style="padding:14px 20px;">'
+      f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="{NAVY}" style="background:{NAVY};border-radius:10px;"><tr><td bgcolor="{NAVY}" style="background:{NAVY};padding:14px 20px;">'
       f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'
       f'<td valign="middle" style="color:#ffffff;font-size:14px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;">'
       f'<span style="display:inline-block;width:4px;height:15px;background:{GOLD};border-radius:2px;vertical-align:middle;margin-right:12px;"></span>{esc(title)}</td>'
@@ -326,7 +326,7 @@ results_html=''.join(f'<tr><td style="padding:9px 0;border-bottom:1px solid {LIN
 ptable_html=''.join(f'<tr><td style="padding:8px 0;border-top:1px solid {LINE};{("font-weight:bold;" if i==0 else "")}">{i+1}</td><td style="padding:8px 0;border-top:1px solid {LINE};{("font-weight:bold;" if i==0 else "")}">{esc(c)}</td><td align="center" style="padding:8px 0;border-top:1px solid {LINE};">{gd:+d}</td><td align="right" style="padding:8px 0;border-top:1px solid {LINE};font-weight:bold;">{p}</td></tr>' for i,(c,gd,p) in enumerate(ptable))
 
 def stat(n,lab,gold=False):
-    return (f'<td width="20%" align="center" style="padding:22px 6px;{"" if lab=="Matches" else "border-left:1px solid rgba(255,255,255,.14);"}">'
+    return (f'<td width="20%" align="center" bgcolor="{NAVY}" style="background:{NAVY};padding:22px 6px;{"" if lab=="Matches" else "border-left:1px solid rgba(255,255,255,.14);"}">'
             f'<div class="stat-n" style="color:{GOLD if gold else "#fff"};font-size:34px;font-weight:bold;line-height:1;">{n}</div>'
             f'<div style="color:#9fb0d8;font-size:10.5px;font-weight:bold;text-transform:uppercase;letter-spacing:.7px;padding-top:6px;">{lab}</div></td>')
 
@@ -353,13 +353,13 @@ def page(crest):
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#e9edf5;"><tr><td align="center" style="padding:26px 10px;">
 <table role="presentation" class="container" width="1000" cellpadding="0" cellspacing="0" style="width:1000px;max-width:1000px;background:#ffffff;border-radius:18px;overflow:hidden;box-shadow:0 10px 34px rgba(7,26,74,.13);">
 
- <tr><td style="background:{NAVY};padding:32px {PAD}px;" class="px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+ <tr><td bgcolor="{NAVY}" style="background:{NAVY};padding:32px {PAD}px;" class="px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
    <td width="62" valign="middle" style="width:62px;"><img src="{crest}" width="58" height="58" alt="Cape Town Tygerberg LFA crest" style="display:block;border:0;width:58px;height:58px;"></td>
    <td valign="middle" style="padding-left:18px;"><div style="color:#ffffff;font-size:21px;font-weight:bold;letter-spacing:.3px;line-height:1.15;">Cape Town Tygerberg LFA</div>
      <div style="color:{GOLD};font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:2.2px;padding-top:5px;">Weekly Club Bulletin</div></td>
    <td valign="middle" align="right" style="color:#9fb0d8;font-size:11px;font-weight:bold;text-transform:uppercase;letter-spacing:.8px;line-height:1.6;">Issue<br><span style="color:#ffffff;font-size:13px;">{ISSUE_LABEL}</span></td>
  </tr></table></td></tr>
- <tr><td style="height:5px;background:{GOLD};font-size:0;line-height:0;">&nbsp;</td></tr>
+ <tr><td bgcolor="{GOLD}" style="height:5px;background:{GOLD};font-size:0;line-height:0;">&nbsp;</td></tr>
 
  <tr><td class="px" style="padding:34px {PAD}px 0;">
    <div style="color:{MUT};font-size:12px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;">Match Week &middot; {RANGE_LABEL}</div>
@@ -369,13 +369,13 @@ def page(crest):
 
  <tr><td class="px" style="padding:18px {PAD}px 0;">
    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fbf7ec;border:1px solid #f0e2bf;border-radius:10px;"><tr>
-     <td width="6" style="width:6px;background:{GOLD};font-size:0;line-height:0;">&nbsp;</td>
+     <td width="6" bgcolor="{GOLD}" style="width:6px;background:{GOLD};font-size:0;line-height:0;">&nbsp;</td>
      <td style="padding:13px 18px;font-size:12.5px;color:{INK};line-height:1.6;"><b style="color:{NAVY};">Snapshot notice.</b> This bulletin is a snapshot taken at <b>{STAMP}</b>. Fixtures, referee appointments and standings can change after it is sent. The website (<a href="{SITE}" target="_blank" style="color:{BLUE};font-weight:bold;text-decoration:none;">www.cttfa.co.za</a>) remains the single authoritative source &mdash; please confirm there before travelling.</td>
    </tr></table>
  </td></tr>
 
  <tr><td class="px" style="padding:24px {PAD}px 0;">
-   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:{NAVY};border-radius:14px;"><tr>
+   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="{NAVY}" style="background:{NAVY};border-radius:14px;"><tr>
      {stat(total,'Matches')}{stat(sen,'Senior')}{stat(jun,'Junior')}{stat(ncup,'Cup ties',True)}{stat(NCLUBS,'Clubs')}
    </tr></table>
  </td></tr>
@@ -436,7 +436,7 @@ def page(crest):
  <tr><td class="px" style="padding:26px {PAD}px 30px;" align="center"><div style="font-size:13px;color:{BLUE};line-height:2.2;">
    <a href="{SITE}/thisweekend" style="color:{BLUE};text-decoration:none;font-weight:bold;">Fixtures</a> &nbsp;&middot;&nbsp; <a href="{SITE}/matchcentre" style="color:{BLUE};text-decoration:none;font-weight:bold;">Results &amp; Tables</a> &nbsp;&middot;&nbsp; <a href="{SITE}/knockouts" style="color:{BLUE};text-decoration:none;font-weight:bold;">Knockout Cups</a> &nbsp;&middot;&nbsp; <a href="{SITE}/combinedlogs" style="color:{BLUE};text-decoration:none;font-weight:bold;">Junior Logs</a> &nbsp;&middot;&nbsp; <a href="{SITE}/grounds" style="color:{BLUE};text-decoration:none;font-weight:bold;">Grounds</a></div></td></tr>
 
- <tr><td style="background:{NAVY};padding:28px {PAD}px;" class="px" align="center">
+ <tr><td bgcolor="{NAVY}" style="background:{NAVY};padding:28px {PAD}px;" class="px" align="center">
    <div style="color:{GOLD};font-size:13px;font-weight:bold;letter-spacing:.4px;">Cape Town Tygerberg Local Football Association</div>
    <div style="color:#9fb0d8;font-size:11.5px;line-height:1.8;padding-top:8px;">Established 1993 &middot; Cape Town, South Africa<br>This weekly bulletin is generated automatically from the live association website.<br>You are receiving it as an affiliated club, life member or match official of the CTTLFA.</div>
    <div style="padding-top:10px;"><a href="mailto:ops@cttlfa.com" style="color:#fff;font-size:11.5px;text-decoration:underline;">Contact the office</a></div>
@@ -464,7 +464,7 @@ def _send(html_out, xlsx_path):
     fname='CTTLFA Weekend Fixtures %s.xlsx'%RANGE_LABEL
     sent=0
     for rcpt in TO:  # one email per club: no address leakage between recipients
-        payload={'from':FROM,'to':[rcpt],'subject':subject,'html':html_out,'text':_textver(),
+        payload={'from':FROM,'to':[rcpt],'reply_to':'ops@cttlfa.com','subject':subject,'html':html_out,'text':_textver(),
                  'attachments':[{'filename':fname,'content':att}]}
         req=urllib.request.Request('https://api.resend.com/emails',
             data=json.dumps(payload).encode(),
