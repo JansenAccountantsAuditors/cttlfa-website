@@ -268,13 +268,14 @@ def team_row(name, home=False):
       f'<td valign="middle" style="color:{INK};font-size:15px;font-weight:bold;line-height:1.25;">{esc(name)}</td>'
       f'<td align="right" valign="middle">{tag}</td></tr></table>')
 def section_banner(title,url,cta='View on the website'):
-    return (f'<a href="{url}" target="_blank" style="text-decoration:none;">'
-      f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="{NAVY}" style="background:{NAVY};border-radius:10px;"><tr><td bgcolor="{NAVY}" style="background:{NAVY};padding:14px 20px;">'
+    return (f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="{NAVY}" style="background:{NAVY};border-radius:10px;"><tr><td bgcolor="{NAVY}" style="background:{NAVY};padding:14px 20px;">'
       f'<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>'
       f'<td valign="middle" style="color:#ffffff;font-size:14px;font-weight:bold;text-transform:uppercase;letter-spacing:1.5px;">'
-      f'<span style="display:inline-block;width:4px;height:15px;background:{GOLD};border-radius:2px;vertical-align:middle;margin-right:12px;"></span>{esc(title)}</td>'
-      f'<td align="right" valign="middle" style="color:{GOLD};font-size:12px;font-weight:bold;white-space:nowrap;">{esc(cta)} &rarr;</td>'
-      f'</tr></table></td></tr></table></a>')
+      f'<span style="display:inline-block;width:4px;height:15px;background:{GOLD};border-radius:2px;vertical-align:middle;margin-right:12px;"></span>'
+      f'<a href="{url}" target="_blank" style="color:#ffffff;text-decoration:none;">{esc(title)}</a></td>'
+      f'<td align="right" valign="middle" style="white-space:nowrap;">'
+      f'<a href="{url}" target="_blank" style="color:{GOLD};font-size:12px;font-weight:bold;text-decoration:none;">{esc(cta)} &rarr;</a></td>'
+      f'</tr></table></td></tr></table>')
 def ref_html(ref,a1,a2):
     ref=clean_ref(ref)
     if not ref: return ''
