@@ -118,24 +118,43 @@ def compute_form(table, allres):
             row[8] = "".join(f[-5:])
 
 
-def _parse_fixture_rows(fsoup, out):
+def _parse_fixture_rows(fsoup, out, seen):
+    """Append upcoming fixtures from one matchHub page; de-dupe on (home,away,date,
+    time) so page-boundary overlaps don't double up, and drop stale past-dated rows
+    (the view lists old postponed matches too). Returns how many NEW rows it added."""
+    cutoff = datetime.date.today() - datetime.timedelta(days=1)
+    added = 0
     for tb in fsoup.find_all("table"):
         for r in tb.find_all("tr"):
             td = r.find_all("td")
             if len(td) < 5:
                 continue
-            dt = td[0].get_text(" ", strip=True)
-            if not re.search(r"\d{2}/\d{2}/\d{2}", dt):        # skip header / non-match rows
+            dtx = td[0].get_text(" ", strip=True)
+            m = re.search(r"(\d{2})/(\d{2})/(\d{2})", dtx)
+            if not m:                                           # header / non-match row
                 continue
             if re.search(r"\d+\s*-\s*\d+", td[2].get_text(" ", strip=True)):
                 continue                                        # already played (carries a score)
+            try:
+                d = datetime.date(2000 + int(m.group(3)), int(m.group(2)), int(m.group(1)))
+            except ValueError:
+                continue
+            if d < cutoff:                                      # drop stale / past-dated rows
+                continue
             hn = clean(td[1].get_text(" ", strip=True))
             an = clean(td[3].get_text(" ", strip=True))
             if not (hn and an):
                 continue
+            tm = ftime(dtx)
+            key = (hn, an, fdate(dtx), tm)
+            if key in seen:                                     # de-dupe page overlaps
+                continue
+            seen.add(key)
             ven = td[4].get_text(" ", strip=True)
             ven = ven.split("@", 1)[1].strip() if "@" in ven else ""
-            out.append([hn, an, fdate(dt), ftime(dt), ven])
+            out.append([hn, an, fdate(dtx), tm, ven])
+            added += 1
+    return added
 
 
 def scrape_all_fixtures(soup):
@@ -149,16 +168,17 @@ def scrape_all_fixtures(soup):
     if not href:
         return []
     url = href if href.startswith("http") else SITE + href
-    out, seen = [], set()
+    out, seen, seen_urls = [], set(), set()
     for _ in range(80):                                         # page safety cap
-        if not url or url in seen:
+        if not url or url in seen_urls:
             break
-        seen.add(url)
+        seen_urls.add(url)
         try:
             fsoup = BeautifulSoup(get(url), "html.parser")
         except Exception:
             break
-        _parse_fixture_rows(fsoup, out)
+        if _parse_fixture_rows(fsoup, out, seen) == 0:          # page added nothing new -> end/wrap
+            break
         nxt = next((a for a in fsoup.find_all("a")
                     if a.get_text(strip=True).lower() == "next"), None)
         nhref = re.sub(r"\s+", "", (nxt.get("href") if nxt else "") or "")
