@@ -111,6 +111,43 @@ def compute_form(table, allres):
             row[8] = "".join(f[-5:])
 
 
+def scrape_all_fixtures(soup):
+    """Full upcoming-fixtures list from LeagueRepublic's 'View All Matches' view.
+    The /fg/ page only shows the next fixture date or two, so the whole season's
+    later fixtures never reach us; this view lists the ENTIRE remaining programme.
+    Returns [[home, away, date, time, venue], ...] or [] if the view can't be read
+    (the caller then keeps the /fg/ list as a fallback, so it can never regress)."""
+    link = soup.find("a", href=re.compile(r"/matchHub/.+/1/true\.html"))
+    href = re.sub(r"\s+", "", (link.get("href") if link else "") or "")
+    if not href:
+        return []
+    url = href if href.startswith("http") else SITE + href
+    try:
+        fsoup = BeautifulSoup(get(url), "html.parser")
+    except Exception:
+        return []
+    out = []
+    for tb in fsoup.find_all("table"):
+        for r in tb.find_all("tr"):
+            td = r.find_all("td")
+            if len(td) < 5:
+                continue
+            dt = td[0].get_text(" ", strip=True)
+            if not re.search(r"\d{2}/\d{2}/\d{2}", dt):        # skip header / non-match rows
+                continue
+            if re.search(r"\d+\s*-\s*\d+", td[2].get_text(" ", strip=True)):
+                continue                                        # already played (carries a score)
+            hn = clean(td[1].get_text(" ", strip=True))
+            an = clean(td[3].get_text(" ", strip=True))
+            if not (hn and an):
+                continue
+            ven = td[4].get_text(" ", strip=True)
+            ven = ven.split("@", 1)[1].strip() if "@" in ven else ""
+            out.append([hn, an, fdate(dt), ftime(dt), ven])
+    time.sleep(0.1)
+    return out
+
+
 def scrape_division(fgkey, crests):
     soup = BeautifulSoup(get(f"{SITE}/fg/{fgkey}.html"), "html.parser")
     table, results, fixtures, allres = [], [], [], []
@@ -156,6 +193,11 @@ def scrape_division(fgkey, crests):
     # so the site can date-stamp and globally order the live news feed
     for hn, an, hs, as_, _dt in sorted(allres, key=lambda x: sortkey(x[4]), reverse=True)[:8]:
         results.append([hn, an, hs, as_, fdate(_dt)])
+    # Replace the windowed /fg/ fixtures with the FULL remaining programme from the
+    # 'View All Matches' view; fall back to the /fg/ list if that view is unreadable.
+    full = scrape_all_fixtures(soup)
+    if full:
+        fixtures = full
     return {"table": table, "results": results, "fixtures": fixtures}
 
 
