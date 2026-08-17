@@ -166,9 +166,10 @@ def scrape_all_fixtures(soup):
     link = soup.find("a", href=re.compile(r"/matchHub/.+/1/true\.html"))
     href = re.sub(r"\s+", "", (link.get("href") if link else "") or "")
     if not href:
-        return []
+        return None                                             # can't locate the view -> keep /fg/ list
     url = href if href.startswith("http") else SITE + href
     out, seen, seen_urls = [], set(), set()
+    got_page = False
     for _ in range(80):                                         # page safety cap
         if not url or url in seen_urls:
             break
@@ -177,6 +178,7 @@ def scrape_all_fixtures(soup):
             fsoup = BeautifulSoup(get(url), "html.parser")
         except Exception:
             break
+        got_page = True
         if _parse_fixture_rows(fsoup, out, seen) == 0:          # page added nothing new -> end/wrap
             break
         nxt = next((a for a in fsoup.find_all("a")
@@ -186,7 +188,11 @@ def scrape_all_fixtures(soup):
             break
         url = nhref if nhref.startswith("http") else SITE + nhref
         time.sleep(0.1)
-    return out
+    # Return None ONLY when the view couldn't be read at all (so the caller keeps the
+    # /fg/ list as protection). An empty list is a valid answer — a division whose
+    # league season is finished has no upcoming fixtures, and must NOT fall back to the
+    # /fg/ page (which for a finished division lists stale/knockout rows).
+    return out if got_page else None
 
 
 def scrape_division(fgkey, crests):
@@ -235,9 +241,10 @@ def scrape_division(fgkey, crests):
     for hn, an, hs, as_, _dt in sorted(allres, key=lambda x: sortkey(x[4]), reverse=True)[:8]:
         results.append([hn, an, hs, as_, fdate(_dt)])
     # Replace the windowed /fg/ fixtures with the FULL remaining programme from the
-    # 'View All Matches' view; fall back to the /fg/ list if that view is unreadable.
+    # 'View All Matches' view. Only keep the /fg/ list when that view is unreadable
+    # (None); an empty list is authoritative (a finished division has none upcoming).
     full = scrape_all_fixtures(soup)
-    if full:
+    if full is not None:
         fixtures = full
     return {"table": table, "results": results, "fixtures": fixtures}
 
