@@ -94,10 +94,14 @@ total=len(rows); sen=sum(1 for r in rows if r['senior']); jun=total-sen
 NCOMP=len({r['comp'] for r in rows}); ncup=sum(1 for r in rows if r['type']=='Cup')
 
 # ---------- featured (senior marquee competitions) ----------
-FEATURE={'Premier Division':('Premier Division',False),'Premier League Cup':('Premier League Cup',True),
-         'First Division':('First Division',False),'First Division Cup':('First Division Cup',True),
-         'Second Division':('Second Division',False),'Second Division Cup':('Second Division Cup',True),
-         'Womens Premier League':("Women's Premier",False),'Womens Premier League Cup':("Women's Premier Cup",True)}
+# Headline cards shown in the email body = Premier Division + ALL cup/knockout ties only.
+# First/Second Division and Women's Premier LEAGUE games are intentionally NOT carded here
+# (they stay in the attached spreadsheet + on the website) to keep the email short.
+FEATURE={'Premier Division':('Premier Division',False),
+         'Premier League Cup':('Premier League Cup',True),
+         'First Division Cup':('First Division Cup',True),
+         'Second Division Cup':('Second Division Cup',True),
+         'Womens Premier League Cup':("Women's Premier Cup",True)}
 feat={d:[] for d in WEEK.values()}  # populated after appointments load (needs find_appt)
 
 # ---------- results / standings / logs ----------
@@ -370,10 +374,10 @@ def page(crest):
         FIX_TITLE="This week's fixtures"
         FIX_NOTE=('Referee appointments are confirmed midweek and will appear on each fixture in '
                   'Thursday&rsquo;s weekend bulletin.')
-        HEADLINE_NOTE=('These are the headline senior games for the week.')
-        FIX_ATTACH=('Reserves, 3rd&ndash;6th Divisions, Veterans, Women&rsquo;s football and all junior fixtures are on the '
-                    'website, and <b style="color:'+INK+';">every fixture this week is attached as a spreadsheet</b> '
-                    '&mdash; open it in Excel and filter to your club to see all your games, home and away.')
+        HEADLINE_NOTE=('The email shows the Premier Division and cup ties.')
+        FIX_ATTACH=('First Division, Second Division and Women&rsquo;s Premier, along with Reserves, 3rd&ndash;6th Divisions, '
+                    'Veterans and all junior fixtures, are on the website and in the <b style="color:'+INK+';">attached '
+                    'spreadsheet</b> &mdash; open it in Excel and filter to your club to see all your games, home and away.')
         FIX_CTA='See the full week&rsquo;s fixtures on the website'
         RES_TITLE="Last weekend's results & standings"
         RES_HEAD='Last weekend&rsquo;s results &middot; Premier'
@@ -389,10 +393,10 @@ def page(crest):
                    f'({ncup} cup ties). Tap any section for the live detail on the website; the full fixtures list is attached.')
         FIX_TITLE="This weekend's fixtures"
         FIX_NOTE='Appointed match officials are shown on each card below where confirmed.'
-        HEADLINE_NOTE='These are the headline games.'
-        FIX_ATTACH=(f'Reserves, 3rd–6th Divisions, Veterans, Women\'s football and all <b style="color:{INK};">{jun} junior fixtures</b> '
-                    f'are on the website, and <b style="color:{INK};">every weekend fixture is attached as a spreadsheet</b> '
-                    '&mdash; open it in Excel and filter to your club to see all your games, home and away.')
+        HEADLINE_NOTE='The email shows the Premier Division and cup ties.'
+        FIX_ATTACH=(f'First Division, Second Division and Women\'s Premier, along with Reserves, 3rd–6th Divisions, Veterans and all '
+                    f'<b style="color:{INK};">{jun} junior fixtures</b>, are on the website and in the <b style="color:{INK};">attached '
+                    'spreadsheet</b> &mdash; open it in Excel and filter to your club to see all your games, home and away.')
         FIX_CTA='See all fixtures &amp; grounds on the website'
         RES_TITLE='Results & Standings'
         RES_HEAD='Latest results &middot; Premier'
@@ -562,6 +566,7 @@ def _send(html_out, xlsx_path):
     sent=0
     for rcpt in TO:  # one email per club: no address leakage between recipients
         payload={'from':FROM,'to':[rcpt],'reply_to':'ops@cttlfa.com','subject':subject,'html':html_out,'text':_textver(),
+                 'headers':{'List-Unsubscribe':'<mailto:ops@cttlfa.com?subject=Unsubscribe%20CTTLFA%20bulletin>'},
                  'attachments':[{'filename':fname,'content':att}]}
         req=urllib.request.Request('https://api.resend.com/emails',
             data=json.dumps(payload).encode(),
