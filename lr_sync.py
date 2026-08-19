@@ -266,6 +266,9 @@ def scrape_division(fgkey, crests):
             fixtures = keep
     else:
         fixtures = [f for f in fixtures if _belongs(f)]
+    # Drop "Bye" placeholders — a team with a bye has no opponent, so it is not a
+    # real fixture and must not appear on the site, in the mailer, or in the counts.
+    fixtures = [f for f in fixtures if _nrm(f[0]) != "bye" and _nrm(f[1]) != "bye"]
     return {"table": table, "results": results, "fixtures": fixtures}
 
 
