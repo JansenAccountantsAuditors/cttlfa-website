@@ -141,8 +141,9 @@ def _parse_fixture_rows(fsoup, out, seen):
                 continue
             if d < cutoff:                                      # drop stale / past-dated rows
                 continue
-            hn = clean(td[1].get_text(" ", strip=True))
-            an = clean(td[3].get_text(" ", strip=True))
+            hraw = td[1].get_text(" ", strip=True)
+            araw = td[3].get_text(" ", strip=True)
+            hn, an = clean(hraw), clean(araw)
             if not (hn and an):
                 continue
             tm = ftime(dtx)
@@ -152,7 +153,9 @@ def _parse_fixture_rows(fsoup, out, seen):
             seen.add(key)
             ven = td[4].get_text(" ", strip=True)
             ven = ven.split("@", 1)[1].strip() if "@" in ven else ""
-            out.append([hn, an, fdate(dtx), tm, ven])
+            # trailing full team codes (fullcode) let the caller attribute each match
+            # to its exact division and are stripped before the fixture is published.
+            out.append([hn, an, fdate(dtx), tm, ven, fullcode(hraw), fullcode(araw)])
             added += 1
     return added
 
@@ -195,9 +198,10 @@ def scrape_all_fixtures(soup):
     return out if got_page else None
 
 
-def scrape_division(fgkey, crests):
+def scrape_division(fgkey, crests, code=None):
     soup = BeautifulSoup(get(f"{SITE}/fg/{fgkey}.html"), "html.parser")
     table, results, fixtures, allres = [], [], [], []
+    live_codes = set()                           # full team codes seen on THIS division's page
     for t in soup.find_all("table"):
         first = t.find("tr")
         head = (first.get_text(" ", strip=True) if first else "").upper()
@@ -206,18 +210,24 @@ def scrape_division(fgkey, crests):
                 td = r.find_all("td")
                 if len(td) < 5:
                     continue
-                hn, an = clean(td[2].get_text(" ", strip=True)), clean(td[4].get_text(" ", strip=True))
+                hraw, araw = td[2].get_text(" ", strip=True), td[4].get_text(" ", strip=True)
+                hn, an = clean(hraw), clean(araw)
                 dt = td[1].get_text(" ", strip=True)
                 if hn and an:
-                    fixtures.append([hn, an, fdate(dt), ftime(dt), td[5].get_text(" ", strip=True) if len(td) > 5 else ""])
+                    hc, ac = fullcode(hraw), fullcode(araw)
+                    live_codes.update({hc, ac})
+                    fixtures.append([hn, an, fdate(dt), ftime(dt),
+                                     td[5].get_text(" ", strip=True) if len(td) > 5 else "", hc, ac])
         elif "SCORE" in head:                    # played results (has a header row)
             for r in t.find_all("tr")[1:]:
                 td = r.find_all("td")
                 if len(td) < 5:
                     continue
                 m = re.search(r"(\d+)\s*-\s*(\d+)", td[3].get_text())
-                hn, an = clean(td[2].get_text(" ", strip=True)), clean(td[4].get_text(" ", strip=True))
+                hraw, araw = td[2].get_text(" ", strip=True), td[4].get_text(" ", strip=True)
+                hn, an = clean(hraw), clean(araw)
                 if hn and an and m:
+                    live_codes.update({fullcode(hraw), fullcode(araw)})
                     allres.append([hn, an, m.group(1), m.group(2), td[1].get_text(" ", strip=True)])
         else:                                     # standings: LR renders NO header row
             for r in t.find_all("tr"):
@@ -226,9 +236,11 @@ def scrape_division(fgkey, crests):
                     continue
                 if not td[0].get_text(strip=True).isdigit():   # first cell = league position
                     continue
-                nm = clean(td[1].get_text(" ", strip=True))
+                raw = td[1].get_text(" ", strip=True)
+                nm = clean(raw)
                 if not nm:
                     continue
+                live_codes.add(fullcode(raw))
                 n = lambda i: int(re.sub(r"\D", "", td[i].get_text() or "0") or 0)
                 table.append([nm, n(2), n(3), n(4), n(5), n(6), n(7), n(len(td) - 1), ""])
                 c = crest_id(td[1])
@@ -241,34 +253,38 @@ def scrape_division(fgkey, crests):
     for hn, an, hs, as_, _dt in sorted(allres, key=lambda x: sortkey(x[4]), reverse=True)[:8]:
         results.append([hn, an, hs, as_, fdate(_dt)])
     # Replace the windowed /fg/ fixtures with the FULL remaining programme from the
-    # 'View All Matches' view. Only keep the /fg/ list when that view is unreadable
-    # (None); an empty list is authoritative (a finished division has none upcoming).
-    #
-    # GUARD against contaminated hubs: for most divisions the 'View All Matches' link
-    # is division-scoped, but for some (e.g. the U12/U14/U18 "Premier Three B" age
-    # groups) it points at a SHARED match-centre hub that ignores the fixtureGroup and
-    # returns a combined list of OTHER divisions' matches — which duplicated the same
-    # game across those three age groups and dragged in Vets/senior fixtures. A league
-    # fixture is only valid between two teams that BOTH appear in THIS division's
-    # standings table, so filter on that. If the hub returned rows but NONE belong to
-    # this division (fully contaminated), fall back to the division's own /fg fixtures.
+    # 'View All Matches' view, then attribute each match to THIS division by full team
+    # code. Every full code (e.g. 'O3-02') belongs to exactly one division, so a
+    # shared/contaminated hub is filtered down to only this division's own matches:
+    # O3-02 (Premier Three B) never leaks into O3 (Premier Three) or O3G (Premier 3
+    # A&B). Membership = this division's season-stable roster (from the committed LR
+    # export) plus any codes seen live on its own /fg page. An empty result is
+    # authoritative (a finished division has no upcoming fixtures) — we do NOT fall
+    # back to the /fg list, which for a finished division carries stale/other rows.
     def _nrm(s):
         return re.sub(r"[^a-z0-9]", "", (s or "").lower())
-    roster = {_nrm(t[0]) for t in table}
+    mine = {fc for fc, dc in roster_map().items() if code and dc == code}
+    mine |= {c for c in live_codes if c}
+    name_roster = {_nrm(t[0]) for t in table}
     def _belongs(f):
-        return (not roster) or (_nrm(f[0]) in roster and _nrm(f[1]) in roster)
+        hc, ac = (f[5] if len(f) > 5 else ""), (f[6] if len(f) > 6 else "")
+        if mine:                                  # attribute by full team code (reliable)
+            return bool(hc) and bool(ac) and hc in mine and ac in mine
+        # no codes available at all (no export, empty page) -> both-teams-in-standings
+        return (not name_roster) or (_nrm(f[0]) in name_roster and _nrm(f[1]) in name_roster)
     full = scrape_all_fixtures(soup)
     if full is not None:
         keep = [f for f in full if _belongs(f)]
-        if full and not keep:                 # hub returned matches, none are this division's
+        if full and not keep and not mine:    # only fall back when we truly can't attribute
             fixtures = [f for f in fixtures if _belongs(f)]
         else:
             fixtures = keep
     else:
         fixtures = [f for f in fixtures if _belongs(f)]
-    # Drop "Bye" placeholders — a team with a bye has no opponent, so it is not a
-    # real fixture and must not appear on the site, in the mailer, or in the counts.
-    fixtures = [f for f in fixtures if _nrm(f[0]) != "bye" and _nrm(f[1]) != "bye"]
+    # Drop "Bye" placeholders and strip the trailing full-code helpers so each
+    # published fixture is [home, away, date, time, venue].
+    fixtures = [f[:5] for f in fixtures
+                if _nrm(f[0]) != "bye" and _nrm(f[1]) != "bye"]
     return {"table": table, "results": results, "fixtures": fixtures}
 
 
@@ -453,112 +469,67 @@ def build_cups(seed, crests):
 
 
 # ---------------------------------------------------------------------------
-# CSV-AUTHORITATIVE FIXTURES
+# DIVISION-ACCURATE FIXTURES (live, self-correcting — no manual export needed)
 # ---------------------------------------------------------------------------
-# LeagueRepublic's own "View All Matches" hub is, for some divisions, a SHARED
-# match-centre that returns other divisions' games — which is what let the same
-# fixture leak across the U12/U14/U18 "Premier Three" age groups and produced the
-# duplicated-fixture complaint from clubs. The authoritative source is the fixture
-# export pulled straight out of LeagueRepublic (Fixtures -> Export), committed to
-# the repo as CSV_FIXTURES. It carries an explicit Division column ("O3B - Under 12
-# Premier Three B") whose leading code is the ONLY reliable division key — the team
-# code prefix (O3 vs O3B vs O3G) alone cannot separate divisions that share clubs.
+# LeagueRepublic's "View All Matches" hub is, for some divisions (the U12–U18
+# "Premier Three B" age groups), a SHARED match-centre that ignores the fixtureGroup
+# and returns other divisions' games — the cause of the duplicated / cross-division
+# fixtures clubs complained about. The reliable division key is the FULL team code LR
+# prints on every match ("O3-02- Bellville City"): each full code (prefix+number)
+# belongs to exactly ONE division, so O3-02 (Premier Three B) is cleanly separated
+# from O3-01 (Premier Three) and from O3G-01 (Premier 3 A&B) — which the team-code
+# prefix or the club name alone cannot do.
 #
-# When the CSV is present we REBUILD every league's remaining-fixtures list from it,
-# keyed strictly on that division code, and leave the live-scraped standings,
-# results, form and crests untouched. Each division therefore shows only its own
-# matches, the full remaining programme, with no cross-division bleed. If the CSV is
-# absent or unreadable the live-scraped fixtures are kept, so the site can never
-# regress to a blank fixtures list.
-CSV_FIXTURES = "fixtures_export.csv"
+# Fixtures therefore stay LIVE from the hub every run, but each match is attributed to
+# its division by full team code. The code->division roster is stable for the whole
+# season (teams do not change division mid-season), so it is read once from the
+# committed LeagueRepublic export (ROSTER_CSV) and augmented with codes learnt live
+# from each division's own /fg page. Result: fixtures stay current (reschedules, new
+# and played matches all reflected automatically every 10 min) with no cross-division
+# bleed and no duplication. The export never needs re-generating during the season.
+ROSTER_CSV = "fixtures_export.csv"
 
-_DIVCODE  = re.compile(r"^([A-Za-z0-9]{1,4})\s*-")     # "O3B - Under 12 ..." -> O3B
-_TEAMCODE = re.compile(r"^([A-Za-z0-9]{1,4})-")        # "O3B-05- Bellville"  -> O3B
+_DIVCODE  = re.compile(r"^([A-Za-z0-9]{1,4})\s*-")            # "O3B - Under 12 ..." -> O3B
+_FULLCODE = re.compile(r"^([A-Za-z0-9]{1,4}-\s*\d+)\s*-")     # "O3-02- Bellville"   -> O3-02
 
 
-def _csv_path():
-    """Locate the committed fixtures export next to this script (or in cwd)."""
+def fullcode(s):
+    """The full LeagueRepublic team code (prefix+number, e.g. 'O3-02') that uniquely
+    identifies which division a team plays in. '' if the cell carries no code."""
+    m = _FULLCODE.match((s or "").strip())
+    return re.sub(r"\s+", "", m.group(1)).upper() if m else ""
+
+
+_ROSTER = None
+def roster_map():
+    """{full team code -> division code} from the committed LR export. Stable for the
+    whole season, so it is loaded once. Empty {} if the export is unreadable (the
+    scraper then relies solely on codes learnt live from each division's /fg page)."""
+    global _ROSTER
+    if _ROSTER is not None:
+        return _ROSTER
+    _ROSTER = {}
     here = os.path.dirname(os.path.abspath(__file__))
-    for p in (os.path.join(here, CSV_FIXTURES), CSV_FIXTURES):
-        if os.path.exists(p):
-            return p
-    return None
-
-
-def load_csv_fixtures(path=None):
-    """Return {division_code: [[home, away, date, time, venue], ...]} of the FULL
-    remaining (unplayed, non-past, non-bye) league programme, read from the
-    LeagueRepublic fixtures export. Cup ties (no Division, separate team-code space)
-    are ignored here — the knockout brackets are built from LR directly. Returns {}
-    if the export can't be read, so the caller keeps the live-scraped fixtures."""
-    import csv
-    path = path or _csv_path()
+    path = next((p for p in (os.path.join(here, ROSTER_CSV), ROSTER_CSV) if os.path.exists(p)), None)
     if not path:
-        return {}
+        print("[lr_sync] no roster export found; attributing fixtures from live codes only")
+        return _ROSTER
     try:
-        rows = list(csv.DictReader(open(path, encoding="utf-8-sig")))
+        import csv
+        for r in csv.DictReader(open(path, encoding="utf-8-sig")):
+            m = _DIVCODE.match((r.get("Division") or "").strip())
+            dc = m.group(1) if m else ""
+            if not dc:
+                continue
+            for cell in (r.get("Home Team"), r.get("Away Team")):
+                fc = fullcode(cell)
+                if fc and fc.lower() != "bye":
+                    _ROSTER.setdefault(fc, dc)
+        print(f"[lr_sync] roster map: {len(_ROSTER)} team codes across "
+              f"{len(set(_ROSTER.values()))} divisions")
     except Exception as e:
-        print(f"[lr_sync] CSV fixtures unreadable ({e}); keeping live-scraped fixtures")
-        return {}
-
-    def divcode(s):
-        m = _DIVCODE.match((s or "").strip());  return m.group(1) if m else ""
-
-    def teamcode(s):
-        m = _TEAMCODE.match((s or "").strip()); return m.group(1) if m else ""
-
-    def nrm(s):
-        return re.sub(r"[^a-z0-9]", "", (s or "").lower())
-
-    # Known league division codes = every code that appears in a populated Division
-    # cell. A row with an empty Division (a handful of league rows do) is mapped by
-    # its team-code prefix only when that prefix is itself a known league code.
-    known = set()
-    for r in rows:
-        c = divcode(r.get("Division"))
-        if c:
-            known.add(c)
-
-    cutoff = datetime.date.today() - datetime.timedelta(days=1)
-    # Seed EVERY known league code, so a division that the CSV shows as finished
-    # (no remaining fixtures) is emptied rather than left to the live scraper — those
-    # "Premier Three B" age groups are exactly where the shared-hub contamination
-    # injected phantom fixtures. The CSV is authoritative for all of them.
-    per = {c: [] for c in known}
-    seen = set()
-    for r in rows:
-        code = divcode(r.get("Division"))
-        if not code:
-            tc = teamcode(r.get("Home Team")) or teamcode(r.get("Away Team"))
-            code = tc if tc in known else ""
-        if code not in known:                    # cup tie / unknown -> not a league fixture
-            continue
-        if (r.get("Home Score") or "").strip() or (r.get("Away Score") or "").strip():
-            continue                             # already played -> lives in results, not fixtures
-        m = re.search(r"(\d{2})/(\d{2})/(\d{2})", r.get("Date") or "")
-        if not m:
-            continue
-        try:
-            d = datetime.date(2000 + int(m.group(3)), int(m.group(2)), int(m.group(1)))
-        except ValueError:
-            continue
-        if d < cutoff:                           # stale / postponed past date
-            continue
-        hn, an = clean(r.get("Home Team")), clean(r.get("Away Team"))
-        if not (hn and an) or nrm(hn) == "bye" or nrm(an) == "bye":
-            continue
-        key = (code, nrm(hn), nrm(an), d.isoformat(), ftime(r.get("Time")))
-        if key in seen:                          # exact intra-division duplicate
-            continue
-        seen.add(key)
-        per.setdefault(code, []).append((d, [hn, an, fdate(r.get("Date")),
-                                             ftime(r.get("Time")), (r.get("Venue") or "").strip()]))
-    # chronological within each division, then drop the sort key
-    out = {}
-    for code, lst in per.items():
-        lst.sort(key=lambda x: (x[0], x[1][3]))
-        out[code] = [fx for _d, fx in lst]
-    return out
+        print(f"[lr_sync] roster export unreadable ({e}); attributing from live codes only")
+    return _ROSTER
 
 
 def build(season):
@@ -566,32 +537,20 @@ def build(season):
     print(f"[lr_sync] {cfg['label']}  (seed {cfg['seed']})")
     divs = discover(cfg["seed"])
     print(f"[lr_sync] discovered {len(divs)} competitions")
+    roster_map()                       # load the season-stable code->division roster once
     crests, leagues = {}, {}
     for code, name, fgkey in divs:
         try:
-            d = scrape_division(fgkey, crests)
+            d = scrape_division(fgkey, crests, code)
             d["name"], d["group"] = name, group_of(code)
             leagues[code] = d
             print(f"  ✓ {code:4} {name:26} {len(d['table'])} teams, {len(d['fixtures'])} fx")
         except Exception as e:
             print(f"  ✗ {code:4} {name:26} {e}")
         time.sleep(0.15)   # be gentle
-    # Reconcile fixtures to the committed LeagueRepublic export (authoritative source
-    # of the remaining programme, division-scoped by its Division code). Standings,
-    # results, form and crests stay live-scraped.
-    csv_fx = load_csv_fixtures()
-    if csv_fx:
-        matched = both = 0
-        for code, lg in leagues.items():
-            if code in csv_fx:
-                lg["fixtures"] = csv_fx[code]
-                matched += 1
-                both += len(csv_fx[code])
-        extra = sorted(set(csv_fx) - set(leagues))
-        print(f"[lr_sync] CSV fixtures: rebuilt {matched} leagues, {both} fixtures"
-              + (f"; CSV codes with no site league: {extra}" if extra else ""))
-    else:
-        print("[lr_sync] no CSV fixtures export found; using live-scraped fixtures")
+    total_fx = sum(len(l["fixtures"]) for l in leagues.values())
+    print(f"[lr_sync] live fixtures attributed by full team code: {total_fx} across "
+          f"{sum(1 for l in leagues.values() if l['fixtures'])} divisions")
     print("[lr_sync] scraping knockout cups")
     cups = build_cups(cfg["seed"], crests)
     print(f"[lr_sync] {len(cups)} cups")
