@@ -243,9 +243,29 @@ def scrape_division(fgkey, crests):
     # Replace the windowed /fg/ fixtures with the FULL remaining programme from the
     # 'View All Matches' view. Only keep the /fg/ list when that view is unreadable
     # (None); an empty list is authoritative (a finished division has none upcoming).
+    #
+    # GUARD against contaminated hubs: for most divisions the 'View All Matches' link
+    # is division-scoped, but for some (e.g. the U12/U14/U18 "Premier Three B" age
+    # groups) it points at a SHARED match-centre hub that ignores the fixtureGroup and
+    # returns a combined list of OTHER divisions' matches — which duplicated the same
+    # game across those three age groups and dragged in Vets/senior fixtures. A league
+    # fixture is only valid between two teams that BOTH appear in THIS division's
+    # standings table, so filter on that. If the hub returned rows but NONE belong to
+    # this division (fully contaminated), fall back to the division's own /fg fixtures.
+    def _nrm(s):
+        return re.sub(r"[^a-z0-9]", "", (s or "").lower())
+    roster = {_nrm(t[0]) for t in table}
+    def _belongs(f):
+        return (not roster) or (_nrm(f[0]) in roster and _nrm(f[1]) in roster)
     full = scrape_all_fixtures(soup)
     if full is not None:
-        fixtures = full
+        keep = [f for f in full if _belongs(f)]
+        if full and not keep:                 # hub returned matches, none are this division's
+            fixtures = [f for f in fixtures if _belongs(f)]
+        else:
+            fixtures = keep
+    else:
+        fixtures = [f for f in fixtures if _belongs(f)]
     return {"table": table, "results": results, "fixtures": fixtures}
 
 
