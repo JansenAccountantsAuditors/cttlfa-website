@@ -452,6 +452,115 @@ def build_cups(seed, crests):
     return cups
 
 
+# ---------------------------------------------------------------------------
+# CSV-AUTHORITATIVE FIXTURES
+# ---------------------------------------------------------------------------
+# LeagueRepublic's own "View All Matches" hub is, for some divisions, a SHARED
+# match-centre that returns other divisions' games — which is what let the same
+# fixture leak across the U12/U14/U18 "Premier Three" age groups and produced the
+# duplicated-fixture complaint from clubs. The authoritative source is the fixture
+# export pulled straight out of LeagueRepublic (Fixtures -> Export), committed to
+# the repo as CSV_FIXTURES. It carries an explicit Division column ("O3B - Under 12
+# Premier Three B") whose leading code is the ONLY reliable division key — the team
+# code prefix (O3 vs O3B vs O3G) alone cannot separate divisions that share clubs.
+#
+# When the CSV is present we REBUILD every league's remaining-fixtures list from it,
+# keyed strictly on that division code, and leave the live-scraped standings,
+# results, form and crests untouched. Each division therefore shows only its own
+# matches, the full remaining programme, with no cross-division bleed. If the CSV is
+# absent or unreadable the live-scraped fixtures are kept, so the site can never
+# regress to a blank fixtures list.
+CSV_FIXTURES = "fixtures_export.csv"
+
+_DIVCODE  = re.compile(r"^([A-Za-z0-9]{1,4})\s*-")     # "O3B - Under 12 ..." -> O3B
+_TEAMCODE = re.compile(r"^([A-Za-z0-9]{1,4})-")        # "O3B-05- Bellville"  -> O3B
+
+
+def _csv_path():
+    """Locate the committed fixtures export next to this script (or in cwd)."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    for p in (os.path.join(here, CSV_FIXTURES), CSV_FIXTURES):
+        if os.path.exists(p):
+            return p
+    return None
+
+
+def load_csv_fixtures(path=None):
+    """Return {division_code: [[home, away, date, time, venue], ...]} of the FULL
+    remaining (unplayed, non-past, non-bye) league programme, read from the
+    LeagueRepublic fixtures export. Cup ties (no Division, separate team-code space)
+    are ignored here — the knockout brackets are built from LR directly. Returns {}
+    if the export can't be read, so the caller keeps the live-scraped fixtures."""
+    import csv
+    path = path or _csv_path()
+    if not path:
+        return {}
+    try:
+        rows = list(csv.DictReader(open(path, encoding="utf-8-sig")))
+    except Exception as e:
+        print(f"[lr_sync] CSV fixtures unreadable ({e}); keeping live-scraped fixtures")
+        return {}
+
+    def divcode(s):
+        m = _DIVCODE.match((s or "").strip());  return m.group(1) if m else ""
+
+    def teamcode(s):
+        m = _TEAMCODE.match((s or "").strip()); return m.group(1) if m else ""
+
+    def nrm(s):
+        return re.sub(r"[^a-z0-9]", "", (s or "").lower())
+
+    # Known league division codes = every code that appears in a populated Division
+    # cell. A row with an empty Division (a handful of league rows do) is mapped by
+    # its team-code prefix only when that prefix is itself a known league code.
+    known = set()
+    for r in rows:
+        c = divcode(r.get("Division"))
+        if c:
+            known.add(c)
+
+    cutoff = datetime.date.today() - datetime.timedelta(days=1)
+    # Seed EVERY known league code, so a division that the CSV shows as finished
+    # (no remaining fixtures) is emptied rather than left to the live scraper — those
+    # "Premier Three B" age groups are exactly where the shared-hub contamination
+    # injected phantom fixtures. The CSV is authoritative for all of them.
+    per = {c: [] for c in known}
+    seen = set()
+    for r in rows:
+        code = divcode(r.get("Division"))
+        if not code:
+            tc = teamcode(r.get("Home Team")) or teamcode(r.get("Away Team"))
+            code = tc if tc in known else ""
+        if code not in known:                    # cup tie / unknown -> not a league fixture
+            continue
+        if (r.get("Home Score") or "").strip() or (r.get("Away Score") or "").strip():
+            continue                             # already played -> lives in results, not fixtures
+        m = re.search(r"(\d{2})/(\d{2})/(\d{2})", r.get("Date") or "")
+        if not m:
+            continue
+        try:
+            d = datetime.date(2000 + int(m.group(3)), int(m.group(2)), int(m.group(1)))
+        except ValueError:
+            continue
+        if d < cutoff:                           # stale / postponed past date
+            continue
+        hn, an = clean(r.get("Home Team")), clean(r.get("Away Team"))
+        if not (hn and an) or nrm(hn) == "bye" or nrm(an) == "bye":
+            continue
+        key = (code, nrm(hn), nrm(an), d.isoformat(), ftime(r.get("Time")))
+        if key in seen:                          # exact intra-division duplicate
+            continue
+        seen.add(key)
+        per.setdefault(code, []).append((d, [hn, an, fdate(r.get("Date")),
+                                             ftime(r.get("Time")), (r.get("Venue") or "").strip()]))
+    # chronological within each division, then drop the sort key
+    out = {}
+    for code, lst in per.items():
+        lst.sort(key=lambda x: (x[0], x[1][3]))
+        out[code] = [fx for _d, fx in lst]
+    return out
+
+
 def build(season):
     cfg = SEASONS[season]
     print(f"[lr_sync] {cfg['label']}  (seed {cfg['seed']})")
@@ -467,6 +576,22 @@ def build(season):
         except Exception as e:
             print(f"  ✗ {code:4} {name:26} {e}")
         time.sleep(0.15)   # be gentle
+    # Reconcile fixtures to the committed LeagueRepublic export (authoritative source
+    # of the remaining programme, division-scoped by its Division code). Standings,
+    # results, form and crests stay live-scraped.
+    csv_fx = load_csv_fixtures()
+    if csv_fx:
+        matched = both = 0
+        for code, lg in leagues.items():
+            if code in csv_fx:
+                lg["fixtures"] = csv_fx[code]
+                matched += 1
+                both += len(csv_fx[code])
+        extra = sorted(set(csv_fx) - set(leagues))
+        print(f"[lr_sync] CSV fixtures: rebuilt {matched} leagues, {both} fixtures"
+              + (f"; CSV codes with no site league: {extra}" if extra else ""))
+    else:
+        print("[lr_sync] no CSV fixtures export found; using live-scraped fixtures")
     print("[lr_sync] scraping knockout cups")
     cups = build_cups(cfg["seed"], crests)
     print(f"[lr_sync] {len(cups)} cups")
