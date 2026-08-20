@@ -16,7 +16,7 @@ name: Weekly club bulletin
 
 on:
   schedule:
-    - cron: "0 10 * * 4"      # Thursday 10:00 UTC = 12:00 SAST
+    - cron: "0 14 * * 4"      # Thursday 14:00 UTC = 16:00 SAST (gives referee appointments time to finalise)
   workflow_dispatch:
     inputs:
       run_date:
