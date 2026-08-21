@@ -13,56 +13,6 @@
  "senior": [
   [
    "A1 - Premier League",
-   "2026-08-18",
-   "20:30",
-   "Rygersdal",
-   "U C T",
-   "J Damon",
-   "Atupele Refilwe Schoeman",
-   "R Kalamdien"
-  ],
-  [
-   "A1 - Premier League",
-   "2026-08-18",
-   "20:00",
-   "Durbanville",
-   "Wynberg st Johns",
-   "L De Klerk",
-   "M Swartz",
-   "Club Ref"
-  ],
-  [
-   "A1 - Premier League",
-   "2026-08-18",
-   "20:45",
-   "Green Point",
-   "Saxon Rovers",
-   "A Brown",
-   "A Richards",
-   "Club Ref"
-  ],
-  [
-   "C1 - Second Division",
-   "2026-08-18",
-   "20:30",
-   "Camps Bay",
-   "Barmsley Spurs",
-   "D Grant",
-   "Club Ref",
-   "Club Ref"
-  ],
-  [
-   "A1 - Premier League",
-   "2026-08-20",
-   "20:30",
-   "C.R Vasco da Gama",
-   "Edgemead G/W",
-   "L Montanus",
-   "J Absalon",
-   "Club Ref"
-  ],
-  [
-   "A1 - Premier League",
    "2026-08-21",
    "20:30",
    "Hanover Park",
@@ -100,16 +50,6 @@
    "L De Klerk",
    "S Bhali",
    "Club Ref"
-  ],
-  [
-   "A1 - Premier League",
-   "2026-08-22",
-   "15:45",
-   "U C T",
-   "Holy Cross",
-   "J Paulse",
-   "J Absalon",
-   "S Maphempeni"
   ],
   [
    "A2 - Premier Reserve",
@@ -310,6 +250,16 @@
    "D Motseo",
    "Club Ref",
    "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-08-22",
+   "15:45",
+   "U C T",
+   "Holy Cross",
+   "R Arendse",
+   "J Absalon",
+   "S Maphempeni"
   ]
  ],
  "junior": [
@@ -916,5 +866,5 @@
    "Club Ref"
   ]
  ],
- "week_label": "2026-08-18 to 2026-08-23"
+ "week_label": "2026-08-21 to 2026-08-23"
 }
