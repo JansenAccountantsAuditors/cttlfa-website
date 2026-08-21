@@ -5540,15 +5540,24 @@ function buildApptIdx(j){try{
   if(!j)return;var rows=[].concat(j.senior||[],j.junior||[],j.ladies||[]);if(!rows.length)return;
   var idx={};rows.forEach(function(r){
     var ref=String(r[5]||'').trim();if(!ref||ref.toUpperCase()==='TBA')return;
+    var cc=(String(r[0]||'').match(/^([A-Za-z0-9]{1,4})\s*-/)||[])[1]||'';
     var dk=_apDate(r[1]),tk=String(r[2]||'').slice(0,5),h=_apCanon(r[3]),a=_apCanon(r[4]);
-    if(!h||!a)return;var v={ref:ref,a1:String(r[6]||'').trim(),a2:String(r[7]||'').trim()};
-    idx[dk+'|'+tk+'|'+h+'|'+a]=v;idx[dk+'|'+tk+'|'+a+'|'+h]=v;
+    if(!h||!a)return;var v={ref:ref,a1:String(r[6]||'').trim(),a2:String(r[7]||'').trim(),code:cc};
+    /* division-scoped keys: an appointment belongs to ONE division, so a reserve or a
+       youth age-group game can never borrow another division's referee. Used by the
+       upcoming-fixtures lookup (twRef), keyed on the fixture's own division code. */
+    idx[cc+'|'+dk+'|'+tk+'|'+h+'|'+a]=v;idx[cc+'|'+dk+'|'+tk+'|'+a+'|'+h]=v;
+    if(!idx[cc+'|'+dk+'||'+h+'|'+a])idx[cc+'|'+dk+'||'+h+'|'+a]=v;if(!idx[cc+'|'+dk+'||'+a+'|'+h])idx[cc+'|'+dk+'||'+a+'|'+h]=v;
+    /* legacy un-scoped keys retained for the played-result lookup (_apResV), which has
+       no division context. */
     if(!idx[dk+'||'+h+'|'+a])idx[dk+'||'+h+'|'+a]=v;if(!idx[dk+'||'+a+'|'+h])idx[dk+'||'+a+'|'+h]=v;
   });APPTIDX=idx;
 }catch(e){}}
 function twRef(r){try{
-  if(!APPTIDX)return '';var dk=_apDate(r.date),tk=String(r.time||'').slice(0,5),h=_apCanon(r.home),a=_apCanon(r.away);
-  var v=APPTIDX[dk+'|'+tk+'|'+h+'|'+a]||APPTIDX[dk+'||'+h+'|'+a];if(!v)return '';
+  if(!APPTIDX)return '';var cc=r.key||'',dk=_apDate(r.date),tk=String(r.time||'').slice(0,5),h=_apCanon(r.home),a=_apCanon(r.away);
+  /* match strictly within the fixture's own division (r.key = division code), so a
+     reserve/youth game never shows a referee appointed to a different division */
+  var v=APPTIDX[cc+'|'+dk+'|'+tk+'|'+h+'|'+a]||APPTIDX[cc+'|'+dk+'||'+h+'|'+a];if(!v)return '';
   var as=[v.a1,v.a2].filter(function(x){return x&&x.toUpperCase()!=='TBA';});
   return '<span class="twf-ref" style="display:inline-flex;align-items:center;gap:6px;font-weight:600">'
     +'<span style="font-size:11px;text-transform:uppercase;letter-spacing:.4px;background:#eef2fb;color:#123FB5;padding:1px 7px;border-radius:4px">Referee</span>'
