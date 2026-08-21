@@ -596,6 +596,60 @@ def _send(html_out, xlsx_path):
             print('FAILED ->',rcpt,e,'| FROM=',FROM,'| BODY=',body)
     return sent
 
+# ---------- PRE-SEND INTEGRITY CHECK ----------
+# Reconciles the assembled bulletin against season.json for the send window and
+# validates referee attribution BEFORE anything is emailed. A critical failure — a
+# fixture in season.json that the bulletin dropped, a duplicated match, or a referee
+# that does not belong to the fixture's division — blocks the send (the workflow run
+# fails and alerts the admin) so clubs never receive a broken bulletin. Warnings
+# (appointments that tie to no fixture — a moved game or a name that needs aligning)
+# are surfaced but do not block. Set BULLETIN_PRECHECK=warn to log without blocking,
+# or =off to skip. Same engine guards the weekend and week-ahead editions and every
+# weekend through the rest of the season.
+def precheck():
+    crit=[]; warn=[]
+    def _lbl(dt): return WEEK.get(dt, dt)
+    # 1) COMPLETENESS — every league fixture in the window must appear in the bulletin
+    emitted={(r['home'],r['away'],r['dt'],(r['time'] if r['time']!='TBC' else ''),r.get('code'))
+             for r in rows if r['type']=='League'}
+    for code,L in LG.items():
+        for f in L.get('fixtures',[]):
+            dt=d2(f[2] or '')
+            if dt in WEEK and f[0] and f[1]:
+                if (f[0],f[1],dt,f[3] or '',code) not in emitted:
+                    crit.append('MISSING FIXTURE: %s v %s, %s %s [%s] is in season.json but not in the bulletin'
+                                %(f[0],f[1],_lbl(dt),f[3] or 'TBC',L.get('name',code)))
+    # 2) DUPLICATES — the same match must not appear twice
+    seen=set()
+    for r in rows:
+        k=(r['home'],r['away'],r['dt'],r['time'],r.get('code') or r['comp'])
+        if k in seen:
+            crit.append('DUPLICATE ROW: %s v %s, %s %s [%s]'%(r['home'],r['away'],_lbl(r['dt']),r['time'],r['comp']))
+        seen.add(k)
+    # 3) REFEREE ATTRIBUTION — a shown official must be appointed to THIS division's game
+    if SHOW_REFS:
+        for r in rows:
+            if not r.get('code'): continue
+            ref,_,_=find_appt(r)
+            if not clean_ref(ref): continue
+            ok=any(p.get('code')==r['code'] and p['dt']==r['dt'] and
+                   ((_tm(p['home'],r['home']) and _tm(p['away'],r['away'])) or
+                    (_tm(p['home'],r['away']) and _tm(p['away'],r['home']))) for p in APPTS)
+            if not ok:
+                crit.append('CROSS-DIVISION REFEREE: %s shown on %s v %s [%s] but not appointed to that division'
+                            %(ref,r['home'],r['away'],r['comp']))
+        # 4) ORPHAN APPOINTMENTS (warn) — a named appt in the window that ties to no fixture
+        fixkeys={(r.get('code'),r['dt']) for r in rows}
+        for p in APPTS:
+            if p['dt'] not in WEEK or not clean_ref(p.get('ref')): continue
+            tied=any(p.get('code')==r.get('code') and p['dt']==r['dt'] and
+                     ((_tm(p['home'],r['home']) and _tm(p['away'],r['away'])) or
+                      (_tm(p['home'],r['away']) and _tm(p['away'],r['home']))) for r in rows)
+            if not tied:
+                warn.append('APPOINTMENT NOT ON ANY FIXTURE: %s for %s v %s [%s %s] — moved game or a name to align'
+                            %(clean_ref(p.get('ref')),p['home'],p['away'],p.get('code'),_lbl(p['dt'])))
+    return crit,warn
+
 def main():
     print('Mode %s | run %s | range %s | season %s | mapping %s'%(MODE,RUN,RANGE_LABEL,SEASON_SRC,MAP_SRC))
     if total==0:
@@ -610,6 +664,16 @@ def main():
     html_out=page(SITE+'/assets/crest.png')
     open(os.path.join(outdir,htmlname),'w',encoding='utf-8').write(html_out)
     print('built HTML (%d bytes) + Excel in %s/'%(len(html_out),outdir))
+    mode=os.environ.get('BULLETIN_PRECHECK','block').lower()
+    if mode!='off':
+        crit,warn=precheck()
+        print('PRECHECK: %d critical, %d warning(s)'%(len(crit),len(warn)))
+        for w in warn: print('  ⚠ '+w)
+        for c in crit: print('  ✗ '+c)
+        if not crit: print('  ✓ fixtures reconcile to season.json; referees all in-division')
+        if crit and mode=='block':
+            print('PRECHECK FAILED — bulletin NOT sent. Files built in %s/ for inspection; fix and re-run.'%outdir)
+            sys.exit(3)
     n=_send(html_out, xlsx_path)
     print('emails sent: %d'%n)
 

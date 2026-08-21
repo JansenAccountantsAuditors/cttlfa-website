@@ -1,0 +1,47 @@
+name: Season bulletin pre-check
+
+# Integrity audit for the balance of the season. Reproduces the bulletin's
+# division-keyed fixture assembly for every remaining match weekend (to 30 Sep 2026)
+# and confirms nothing is dropped or duplicated, and that every published referee
+# belongs to its own division. Prints a full report to the run log every time.
+#
+# It FAILS (and emails the admin via GitHub's run-failure notice) only on a structural
+# regression — a fixture that would drop, or a duplicate — which must never happen with
+# the division-keyed build. Orphan appointments (a moved game, or a club name to align
+# on the dashboard) are listed in the report but keep the run green: a moved game is a
+# follow-up, not a broken bulletin.
+
+on:
+  schedule:
+    - cron: "0 5 * * *"       # 05:00 UTC = 07:00 SAST, daily
+  workflow_dispatch:
+    inputs:
+      season_end:
+        description: "Audit end date (YYYY-MM-DD)"
+        required: false
+        default: "2026-09-30"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: season-precheck
+  cancel-in-progress: false
+
+jobs:
+  precheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Reads the repo's own committed season.json + appointments.json (kept current by
+      # the LeagueRepublic and Referee appointments syncs). No dependencies beyond the
+      # Python standard library.
+      - name: Run season pre-check
+        env:
+          SEASON_END: ${{ github.event.inputs.season_end || '2026-09-30' }}
+        run: python3 season_precheck.py
