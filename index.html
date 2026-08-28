@@ -11,12 +11,14 @@
 <meta name="theme-color" content="#071A4A">
 <meta name="robots" content="index,follow">
 <link rel="manifest" href="/manifest.json">
+<link rel="stylesheet" href="/snapshot.css">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="CTTLFA">
 <script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
+<script defer src="/snapshot.js"></script>
 <!-- OpenGraph / social cards (updated per page at runtime) -->
 <meta property="og:site_name" content="Cape Town Tygerberg LFA">
 <meta property="og:type" content="website">
@@ -2361,6 +2363,7 @@ body .card-f{background:#FBF7F0}
         <div class="tile"><h4>Clubs</h4><p>Find a senior club, see how its teams are performing and follow it through the season.</p><a class="tlink" data-nav="clubs">Browse clubs →</a></div>
       </div>
 
+      <div id="seniorSnapshot" class="snapmount"></div>
       <div class="cta-band" style="margin-top:30px"><div><h2>Entering senior teams</h2><p>Team entries and fees for the season are handled through your club and the association office. Speak to us about entering your senior sides.</p></div><a class="btn btn-gold" data-nav="register">Fees &amp; how to join →</a></div>
     </div>
   </section>
@@ -2433,7 +2436,8 @@ body .card-f{background:#FBF7F0}
         <div class="tile"><h4>Clubs</h4><p>Find a club that runs junior teams in your area and get your child into the game.</p><a class="tlink" data-nav="clubs">Browse clubs →</a></div>
       </div>
 
-      <div class="cta-band" style="margin-top:30px"><div><h2>Getting your child into football</h2><p>Junior registration and team entries are handled through affiliated clubs and the association office. Speak to us or find a club near you.</p></div><a class="btn btn-gold" data-nav="clubs">Find a club →</a></div>
+      <div id="juniorSnapshot" class="snapmount"></div>
+       <div class="cta-band" style="margin-top:30px"><div><h2>Getting your child into football</h2><p>Junior registration and team entries are handled through affiliated clubs and the association office. Speak to us or find a club near you.</p></div><a class="btn btn-gold" data-nav="clubs">Find a club →</a></div>
     </div>
   </section>
 </div>
