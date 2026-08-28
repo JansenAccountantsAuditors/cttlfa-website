@@ -5575,13 +5575,21 @@ function _apResV(home,away,dateStr){try{
   return v||null;
 }catch(e){return null;}}
 try{if(window.__apptP){window.__apptP.then(buildApptIdx).then(function(){try{if(typeof renderThisWeekend==='function')renderThisWeekend();}catch(e){}try{if(typeof mcRender==='function')mcRender();}catch(e){}});}}catch(e){}
-/* Export the currently filtered fixtures to CSV (Excel-friendly, BOM + CRLF). */
+/* Full LR team codes (division-scoped, e.g. "PD-02- Edgemead G/W") for the CSV
+   export, so clubs can sort by the codes they are used to. Loaded once from
+   team_codes.json; the club name is used where no code exists (e.g. cup ties). */
+var __TEAMCODES=null;
+function _tcNorm(s){return String(s==null?'':s).toLowerCase().replace(/[^a-z0-9]/g,'');}
+function _teamCode(div,team){if(!__TEAMCODES)return '';return __TEAMCODES[_tcNorm(div)+'||'+_tcNorm(team)]||'';}
+(function(){try{fetch('team_codes.json').then(function(r){return r.ok?r.json():null;}).then(function(j){__TEAMCODES=(j&&j.codes)||{};}).catch(function(){});}catch(e){}})();
+/* Export the currently filtered fixtures to CSV (Excel-friendly, BOM + CRLF).
+   Each side gives the club name and, next to it, the full LR team code. */
 function twExportCSV(){
   const rows=(TW_FILTERED&&TW_FILTERED.length)?TW_FILTERED:twAllFixtures();
   if(!rows.length)return;
   const esc=v=>{v=(v==null?'':String(v));return /[",\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
-  const head=['Date','Kick-off','Competition','Home','Away','Venue','Type'];
-  const lines=[head.join(',')].concat(rows.map(r=>[r.date,r.time,r.div,r.home,r.away,(r.venue||''),r.cup?'Cup':'League'].map(esc).join(',')));
+  const head=['Date','Kick-off','Competition','Home Club','Home Team','Away Club','Away Team','Venue','Type'];
+  const lines=[head.join(',')].concat(rows.map(function(r){var hc=_teamCode(r.div,r.home)||r.home,ac=_teamCode(r.div,r.away)||r.away;return [r.date,r.time,r.div,r.home,hc,r.away,ac,(r.venue||''),r.cup?'Cup':'League'].map(esc).join(',');}));
   const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});
   const url=URL.createObjectURL(blob);const a=document.createElement('a');
   a.href=url;a.download='CTTLFA-fixtures.csv';document.body.appendChild(a);a.click();
