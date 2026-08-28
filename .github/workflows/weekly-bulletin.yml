@@ -15,8 +15,9 @@ name: Weekly club bulletin
 # builds the files as a dry run without sending.
 
 on:
-  schedule:
-    - cron: "0 14 * * 4"      # Thursday 14:00 UTC = 16:00 SAST (gives referee appointments time to finalise)
+  # Trigger: Xneelo cron (create.xneelo.com Cronjob Manager) calls workflow_dispatch
+  # at 16:00 SAST every Thursday. GitHub's own scheduled cron was removed because it
+  # ran hours late (it fired ~9h late on 27 Aug 2026); the external cron is on time.
   workflow_dispatch:
     inputs:
       run_date:

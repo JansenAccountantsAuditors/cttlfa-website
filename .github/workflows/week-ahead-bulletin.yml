@@ -14,8 +14,9 @@ name: Week ahead bulletin
 # builds the files as a dry run without sending.
 
 on:
-  schedule:
-    - cron: "0 10 * * 1"      # Monday 10:00 UTC = 12:00 SAST
+  # Trigger: Xneelo cron (create.xneelo.com Cronjob Manager) calls workflow_dispatch
+  # at 12:00 SAST every Monday. GitHub's own scheduled cron was removed because it
+  # ran hours late; the external cron is on time.
   workflow_dispatch:
     inputs:
       run_date:
