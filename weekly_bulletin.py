@@ -572,28 +572,36 @@ def _textver():
 def _send(html_out, xlsx_path):
     KEY=os.environ.get('RESEND_API_KEY','').strip()
     TO=[x.strip() for x in re.split(r'[,;\s]+', os.environ.get('RESEND_TO','')) if x.strip()]
-    FROM=os.environ.get('RESEND_FROM') or 'Cape Town Tygerberg LFA <bulletin@cttlfa.com>'
+    # Sender: ops@cttlfa.com is the confirmed From (18 Aug config). RESEND_FROM secret
+    # overrides if set, and pins it so the default can never silently drift again.
+    FROM=os.environ.get('RESEND_FROM') or 'Cape Town Tygerberg LFA <ops@cttlfa.com>'
+    # Single visible recipient; every club address and mancom go in BCC so no recipient
+    # sees another's address. RESEND_VISIBLE_TO overrides the visible To if ever needed.
+    VISIBLE_TO=(os.environ.get('RESEND_VISIBLE_TO') or 'ops@cttlfa.com').strip()
     if not KEY or not TO:
         print('DRY RUN: RESEND_API_KEY/RESEND_TO not set - files built, no email sent.'); return 0
     with open(xlsx_path,'rb') as f: att=base64.b64encode(f.read()).decode()
     subject=('CTTLFA The Week Ahead - %s' if MODE=='weekahead' else 'CTTLFA Weekly Club Bulletin - %s')%RANGE_LABEL
     fname=('CTTLFA Week Ahead Fixtures %s.xlsx' if MODE=='weekahead' else 'CTTLFA Weekend Fixtures %s.xlsx')%RANGE_LABEL
     sent=0
-    for rcpt in TO:  # one email per club: no address leakage between recipients
-        payload={'from':FROM,'to':[rcpt],'reply_to':'ops@cttlfa.com','subject':subject,'html':html_out,'text':_textver(),
+    CHUNK=45  # BCC chunk size so it scales to a large list without leaking addresses
+    for i in range(0, len(TO), CHUNK):
+        bcc=TO[i:i+CHUNK]
+        payload={'from':FROM,'to':[VISIBLE_TO],'bcc':bcc,'reply_to':'ops@cttlfa.com',
+                 'subject':subject,'html':html_out,'text':_textver(),
                  'attachments':[{'filename':fname,'content':att}]}
         req=urllib.request.Request('https://api.resend.com/emails',
             data=json.dumps(payload).encode(),
             headers={'Authorization':'Bearer '+KEY,'Content-Type':'application/json',
                      'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'})
         try:
-            r=urllib.request.urlopen(req,timeout=60).read().decode(); sent+=1
-            print('sent ->',rcpt,r[:80])
+            r=urllib.request.urlopen(req,timeout=60).read().decode(); sent+=len(bcc)
+            print('sent (BCC %d, To %s) -> %s | %s'%(len(bcc),VISIBLE_TO,', '.join(bcc),r[:80]))
         except Exception as e:
             body=''
             try: body=e.read().decode('utf-8','ignore')[:400]
             except Exception: pass
-            print('FAILED ->',rcpt,e,'| FROM=',FROM,'| BODY=',body)
+            print('FAILED (BCC) ->',', '.join(bcc),e,'| FROM=',FROM,'| BODY=',body)
     return sent
 
 # ---------- PRE-SEND INTEGRITY CHECK ----------
