@@ -10,6 +10,13 @@
 <link rel="canonical" href="https://www.cttfa.co.za/">
 <meta name="theme-color" content="#071A4A">
 <meta name="robots" content="index,follow">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="CTTLFA">
+<script>if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('/sw.js').catch(function(){});});}</script>
 <!-- OpenGraph / social cards (updated per page at runtime) -->
 <meta property="og:site_name" content="Cape Town Tygerberg LFA">
 <meta property="og:type" content="website">
@@ -1169,14 +1176,14 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,te
 .srch-foot{border-top:1px solid var(--line);padding:9px 16px;display:flex;gap:16px;font-size:11.5px;color:var(--muted)}
 .srch-foot kbd{background:#F0F4FE;border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:11px}
 /* floating quick actions */
-.fab{position:fixed;right:22px;bottom:22px;z-index:95;display:flex;flex-direction:column;align-items:flex-end;gap:12px}
+.fab{position:fixed;right:22px;bottom:22px;z-index:95;display:flex;flex-direction:column;align-items:flex-end;gap:12px;pointer-events:none}
 .fab-menu{display:flex;flex-direction:column;gap:10px;opacity:0;transform:translateY(12px) scale(.96);pointer-events:none;transition:.22s}
 .fab.open .fab-menu{opacity:1;transform:none;pointer-events:auto}
 .fab-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:30px;padding:9px 16px 9px 12px;box-shadow:0 8px 24px rgba(7,26,74,.14);cursor:pointer;font-weight:600;font-size:14px;color:var(--ink);white-space:nowrap;text-align:left}
 .fab-item:hover{border-color:var(--blue);color:var(--blue);transform:translateX(-3px)}
 .fab-item .fi-ic{width:30px;height:30px;border-radius:50%;background:#E7EDFC;color:var(--blue);display:flex;align-items:center;justify-content:center;flex:none}
 .fab-item .fi-ic svg{width:16px;height:16px}
-.fab-toggle{width:60px;height:60px;border-radius:50%;background:var(--gold);color:var(--navy);border:0;box-shadow:0 12px 30px rgba(244,180,26,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.25s;align-self:flex-end}
+.fab-toggle{width:60px;height:60px;border-radius:50%;background:var(--gold);color:var(--navy);border:0;box-shadow:0 12px 30px rgba(244,180,26,.5);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.25s;align-self:flex-end;pointer-events:auto}
 .fab-toggle svg{width:26px;height:26px;transition:.25s}
 .fab.open .fab-toggle{transform:rotate(45deg);background:var(--navy);color:#fff}
 .fab-toggle:hover{transform:scale(1.05)}
@@ -4007,7 +4014,7 @@ body .card-f{background:#FBF7F0}
 
 <!-- FLOATING QUICK ACTIONS -->
 <div class="fab" id="fab">
-  <div class="fab-menu" id="fabMenu">
+  <div class="fab-menu" id="fabMenu"><a class="fab-item" href="https://dash.cttlfa.com/" target="_blank" rel="noopener" onclick="document.getElementById('fab').classList.remove('open')"><span class="fi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg></span>Dashboard</a>
     <button class="fab-item" data-nav="thisweekend"><span class="fi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span>All fixtures</button>
     <button class="fab-item" id="fabFind"><span class="fi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>Find my club</button>
     <button class="fab-item" data-nav="register"><span class="fi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span>Fees &amp; how to join</button>
