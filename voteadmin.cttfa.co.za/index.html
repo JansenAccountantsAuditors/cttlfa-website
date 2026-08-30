@@ -57,16 +57,24 @@
   .msg.ok{background:var(--good-bg);color:var(--good);border:1px solid var(--good-ln)}
 
   /* shell */
-  .top{background:var(--navy);color:#fff;display:flex;align-items:center;gap:14px;padding:12px 20px}
-  .top .logo{width:34px;height:34px;border-radius:9px;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-family:var(--head);font-weight:800;font-size:15px}
-  .top .ttl{font-family:var(--head);font-weight:800;font-size:16px}
+  .top{background:linear-gradient(180deg,var(--navy),#0a2359);color:#fff}
+  .topbar{max-width:1560px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:16px 32px}
+  .top .logo{width:52px;height:52px;border-radius:13px;background:#fff;padding:4px;overflow:hidden;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--navy);font-family:var(--head);font-weight:800}
+  .top .logo img{width:100%;height:100%;object-fit:contain;border-radius:9px;display:block}
+  .brandwrap{display:flex;flex-direction:column;line-height:1.12}
+  .brandwrap .bt{font-family:var(--head);font-weight:800;font-size:22px;letter-spacing:.01em}
+  .brandwrap .bs{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#9fb0d8;margin-top:2px}
   .top .who{margin-left:auto;font-size:12.5px;color:#c9d4ee;text-align:right}
-  .top .who b{color:#fff;display:block}
-  .rolechip{display:inline-block;font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10.5px;background:rgba(244,180,26,.15);color:#ffe6a6;border:1px solid rgba(244,180,26,.3);padding:2px 8px;border-radius:999px;margin-top:3px}
-  .wrap{max-width:1120px;margin:0 auto;padding:20px}
-  .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
-  .tab{font-family:var(--cond);font-weight:700;letter-spacing:.03em;text-transform:uppercase;font-size:14px;border:1px solid var(--line);background:#fff;color:var(--muted);padding:9px 15px;border-radius:10px;cursor:pointer}
-  .tab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .top .who b{color:#fff}
+  .rolechip{display:inline-block;font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10.5px;background:rgba(244,180,26,.15);color:#ffe6a6;border:1px solid rgba(244,180,26,.3);padding:2px 8px;border-radius:999px}
+  .topnav{background:rgba(0,0,0,.16);border-top:1px solid rgba(255,255,255,.07)}
+  .topnav-inner{max-width:1560px;margin:0 auto;display:flex;gap:2px;padding:0 24px;flex-wrap:wrap}
+  .wrap{max-width:1560px;margin:0 auto;padding:24px 32px}
+  .tab{font-family:var(--cond);font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13.5px;border:0;background:transparent;color:#9fb0d8;padding:14px 20px;cursor:pointer;border-bottom:3px solid transparent}
+  .tab:hover{color:#fff}
+  .tab.on{color:#fff;border-bottom-color:var(--gold)}
+  .comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px 28px}
+  .comp-summary{display:flex;gap:16px;margin:2px 0 16px;flex-wrap:wrap}
   .card{background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:0 6px 20px rgba(9,20,48,.05);padding:20px;margin-bottom:16px}
   .card h3{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);font-size:16px;margin-bottom:4px}
   .hint{color:var(--muted);font-size:12.5px;margin:2px 0 14px}
@@ -120,20 +128,23 @@
 
 <!-- APP -->
 <div id="appView" class="hidden">
-  <div class="top">
-    <div class="logo" id="topLogo">CT</div>
-    <div class="ttl">CTTLFA Voting Admin</div>
-    <div class="who"><b id="whoName">-</b><span id="whoEmail" class="kv"></span><br><span class="rolechip" id="whoRole">-</span></div>
-    <button class="btn ghost sm" id="signOut" style="margin-left:14px;color:#fff;background:transparent;border-color:rgba(255,255,255,.3)">Sign out</button>
-  </div>
-  <div class="wrap">
-    <div class="tabs" id="mainTabs">
+  <header class="top">
+    <div class="topbar">
+      <div class="logo" id="topLogo">CT</div>
+      <div class="brandwrap"><span class="bt">CTTLFA</span><span class="bs">Voting Administration</span></div>
+      <div class="who"><b id="whoName">-</b> <span class="rolechip" id="whoRole">-</span><br><span id="whoEmail" class="kv" style="color:#9fb0d8"></span></div>
+      <button class="btn ghost sm" id="signOut" style="margin-left:6px;color:#fff;background:transparent;border-color:rgba(255,255,255,.3)">Sign out</button>
+    </div>
+    <nav class="topnav"><div class="topnav-inner" id="mainTabs">
       <button class="tab on" data-tab="meetings">Meetings</button>
       <button class="tab" data-tab="accredit">Accreditation</button>
+      <button class="tab" data-tab="compliance">Compliance</button>
       <button class="tab" data-tab="motions">Motions</button>
       <button class="tab" data-tab="live">Live &amp; results</button>
       <button class="tab" data-tab="users">Mancom users</button>
-    </div>
+    </div></nav>
+  </header>
+  <div class="wrap">
 
     <div class="meeting-pick" id="meetingPick">
       <span class="kv">Working meeting</span> <b id="curMeetingName">None selected</b>
@@ -169,12 +180,6 @@
     <section id="tab-accredit" class="hidden">
       <div id="accreditNeedsMeeting" class="banner">Select or create a meeting on the Meetings tab first.</div>
       <div id="accreditBody" class="hidden">
-        <div class="card" id="complianceCard">
-          <h3>Club compliance</h3>
-          <p class="hint">A non-compliant club cannot be accredited and does not form part of the voting strength. Set this before the first vote is started. It locks once voting begins.</p>
-          <div id="complianceList"><p class="hint">Loading...</p></div>
-          <div class="btnrow"><button class="btn gold" id="saveCompliance">Save compliance</button><button class="btn ghost" id="reloadCompliance">Reload</button><span class="kv" id="compMsg" style="align-self:center"></span></div>
-        </div>
         <div class="card">
           <h3>Accredit a delegate</h3>
           <p class="hint">Search the whole registered roll by SAFA number or surname, the club fills in automatically. To narrow the search to one club, type its name in the club filter first. Or type a name to add someone manually. Capture a cell number and consent, then check them in. Two people can accredit at the same time on separate laptops.</p>
@@ -196,6 +201,24 @@
           <h3>Checked in <span id="ciCount" class="kv"></span></h3>
           <div style="margin:6px 0 12px"><span class="stat"><b id="ciClubs">0</b><span>clubs present</span></span><span class="stat"><b id="ciWeight">0</b><span>eligible votes</span></span></div>
           <div id="ciList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPLIANCE -->
+    <section id="tab-compliance" class="hidden">
+      <div id="complianceNeedsMeeting" class="banner">Select or create a meeting on the Meetings tab first.</div>
+      <div id="complianceBody" class="hidden">
+        <div class="card">
+          <h3>Club compliance <span id="compLockTag"></span></h3>
+          <p class="hint">Mark each club compliant or not for this meeting. A non-compliant club cannot be accredited and is excluded from the voting strength. Set this before the first vote is started; it locks once voting begins.</p>
+          <div class="comp-summary">
+            <span class="stat"><b id="compYes">0</b><span>compliant</span></span>
+            <span class="stat"><b id="compNo">0</b><span>not compliant</span></span>
+            <span class="stat"><b id="compTot">0</b><span>clubs</span></span>
+          </div>
+          <div id="complianceList" class="comp-grid"><p class="hint">Loading...</p></div>
+          <div class="btnrow" style="margin-top:16px"><button class="btn gold" id="saveCompliance">Save compliance</button><button class="btn ghost" id="reloadCompliance">Reload</button><span class="kv" id="compMsg" style="align-self:center"></span></div>
         </div>
       </div>
     </section>
@@ -312,10 +335,11 @@
   Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(t){
     t.onclick=function(){
       Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(x){x.classList.toggle("on",x===t);});
-      ["meetings","accredit","motions","live","users"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
+      ["meetings","accredit","compliance","motions","live","users"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
       if(t.dataset.tab!=="accredit") stopCiTimer();
       if(t.dataset.tab!=="live" && liveTimer){ clearTimeout(liveTimer); liveTimer=null; }
       if(t.dataset.tab==="accredit") renderAccredit();
+      if(t.dataset.tab==="compliance") renderCompliancePage();
       if(t.dataset.tab==="motions") renderMotions();
       if(t.dataset.tab==="live") renderLive();
     };
@@ -385,7 +409,7 @@
     $("acAlloc").innerHTML = alloc+' of '+c.weight+' allocated'+(rem<=0?', club full':', '+rem+' left');
   }
   function stopCiTimer(){ if(ciTimer){ clearInterval(ciTimer); ciTimer=null; } }
-  async function loadCompliance(){
+  async function loadComplianceMap(){
     if(!curMeeting) return;
     var mo=await sb.from("motions").select("status").eq("meeting_id",curMeeting.id);
     compLocked=(mo.data||[]).some(function(m){return m.status!=="draft";});
@@ -396,11 +420,19 @@
       await sb.from("meeting_clubs").insert(missing.map(function(c){return {meeting_id:curMeeting.id,club_id:c.id,compliant:true};}));
     }
     missing.forEach(function(c){ have[c.id]=true; });
-    complianceMap=have; renderCompliance(); refreshVotesOptions();
+    complianceMap=have;
+  }
+  function renderCompliancePage(){
+    var need=!curMeeting;
+    $("complianceNeedsMeeting").classList.toggle("hidden",!need);
+    $("complianceBody").classList.toggle("hidden",need);
+    if(need) return;
+    loadComplianceMap().then(renderCompliance);
   }
   function renderCompliance(){
     var l=$("complianceList");
-    l.innerHTML=clubs.map(function(c){
+    var byName=clubs.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
+    l.innerHTML=byName.map(function(c){
       var comp=(complianceMap[c.id]!==false);
       return '<div class="comp-row"><span><b>'+esc(c.name)+'</b> <span class="tag '+(c.type==="full"?"full":"assoc")+'">'+c.type+'</span></span>'+
         '<select data-comp="'+c.id+'" class="'+(comp?"comp-yes":"comp-no")+'"'+(compLocked?' disabled':'')+'>'+
@@ -408,20 +440,26 @@
         '<option value="no"'+(!comp?' selected':'')+'>Not compliant</option></select></div>';
     }).join("");
     Array.prototype.forEach.call(l.querySelectorAll("[data-comp]"),function(s){
-      s.onchange=function(){ this.className=(this.value==="yes")?"comp-yes":"comp-no"; complianceMap[this.dataset.comp]=(this.value==="yes"); refreshVotesOptions(); };
+      s.onchange=function(){ this.className=(this.value==="yes")?"comp-yes":"comp-no"; complianceMap[this.dataset.comp]=(this.value==="yes"); updateCompCounts(); };
     });
     $("saveCompliance").disabled=compLocked;
+    $("compLockTag").innerHTML=compLocked?'<span class="tag closed">locked</span>':'';
     $("compMsg").textContent=compLocked?"Locked, a vote has been started.":"";
+    updateCompCounts();
+  }
+  function updateCompCounts(){
+    var yes=0; clubs.forEach(function(c){ if(complianceMap[c.id]!==false) yes++; });
+    $("compYes").textContent=yes; $("compNo").textContent=clubs.length-yes; $("compTot").textContent=clubs.length;
   }
   async function saveCompliance(){
     if(!curMeeting||compLocked) return;
     var rows=clubs.map(function(c){ return {meeting_id:curMeeting.id,club_id:c.id,compliant:(complianceMap[c.id]!==false)}; });
     var r=await sb.from("meeting_clubs").upsert(rows,{onConflict:"meeting_id,club_id"});
     if(r.error){ $("compMsg").textContent=r.error.message; return; }
-    $("compMsg").textContent="Saved."; refreshVotesOptions();
+    $("compMsg").textContent="Saved."; updateCompCounts();
   }
   $("saveCompliance") && ($("saveCompliance").onclick=saveCompliance);
-  $("reloadCompliance") && ($("reloadCompliance").onclick=loadCompliance);
+  $("reloadCompliance") && ($("reloadCompliance").onclick=renderCompliancePage);
   function renderAccredit(){
     var need=!curMeeting;
     $("accreditNeedsMeeting").classList.toggle("hidden",!need);
@@ -431,7 +469,7 @@
     selectedPerson=null; $("acName").value="";$("acSafa").value="";$("acCell").value="";$("acConsent").checked=false;$("acSearch").value="";
     $("acClubSearch").value="";$("acClub").value="";$("acClubResults").classList.add("hidden");
     $("acResults").classList.add("hidden");
-    loadCompliance();
+    loadComplianceMap().then(refreshVotesOptions);
     loadCheckedIn().then(function(){ refreshVotesOptions(); });
     try{ $("acSearch").focus(); }catch(e){}
     ciTimer=setInterval(function(){ loadCheckedIn(); },12000);
