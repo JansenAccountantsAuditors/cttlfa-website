@@ -272,7 +272,7 @@
       <div id="liveNeedsMeeting" class="banner">Select a meeting first.</div>
       <div id="liveBody" class="hidden">
         <div class="card" id="liveControl"></div>
-        <div class="card" id="liveResults"><h3>Results <button class="btn ghost sm" id="dlResults" style="float:right">Results PDF</button></h3><div id="resultsList"><p class="hint">Results appear here as motions close.</p></div></div>
+        <div class="card" id="liveResults"><h3>Results <button class="btn ghost sm" id="dlResults" style="float:right">Results PDF</button><button class="btn ghost sm" id="openRoom" style="float:right;margin-right:8px">Open room view</button></h3><div id="resultsList"><p class="hint">Results appear here as motions close.</p></div></div>
       </div>
     </section>
 
@@ -649,6 +649,7 @@
   }
   $("dlAttendance") && ($("dlAttendance").onclick=dlAttendancePDF);
   $("dlResults") && ($("dlResults").onclick=dlResultsPDF);
+  $("openRoom") && ($("openRoom").onclick=function(){ if(!curMeeting){alert("Select a meeting first.");return;} window.open("room.html?m="+curMeeting.id,"_blank"); });
   async function removeReg(regId){
     var rg=activeRegs.filter(function(x){return x.id===regId;})[0]; if(!rg) return;
     if(!window.confirm("Remove this delegate and re-split the club's votes? Their code will stop working.")) return;
