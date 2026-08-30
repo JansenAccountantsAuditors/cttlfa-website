@@ -7,6 +7,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
   :root{
     --navy:#071A4A;--navy2:#0C2461;--blue:#123FB5;--blue5:#2E63F6;--gold:#F4B41A;--gold-d:#9a7213;
@@ -75,6 +77,17 @@
   .tab.on{color:#fff;border-bottom-color:var(--gold)}
   .comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px 28px}
   .comp-summary{display:flex;gap:16px;margin:2px 0 16px;flex-wrap:wrap}
+  .quorum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:6px}
+  .qlimb{border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+  .qlimb .qh{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .qlimb .qt{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:12.5px;color:var(--navy)}
+  .qbar{height:9px;background:#E7EBF3;border-radius:999px;overflow:hidden;margin:8px 0}
+  .qbar > i{display:block;height:100%;background:var(--good);transition:width .3s}
+  .qbar.short > i{background:var(--gold)}
+  .qnum{font-family:var(--cond);font-weight:700;font-size:22px;color:var(--navy)} .qnum small{font-size:13px;color:var(--muted);font-weight:400}
+  .qmet{font-family:var(--cond);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.04em;padding:3px 9px;border-radius:999px}
+  .qmet.ok{background:var(--good-bg);color:var(--good)} .qmet.no{background:var(--bad-bg);color:var(--bad)}
+  .qmini{width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;font-size:14px;text-align:center}
   .card{background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:0 6px 20px rgba(9,20,48,.05);padding:20px;margin-bottom:16px}
   .card h3{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);font-size:16px;margin-bottom:4px}
   .hint{color:var(--muted);font-size:12.5px;margin:2px 0 14px}
@@ -197,8 +210,13 @@
           <div class="btnrow"><button class="btn gold" id="checkInBtn">Check in and issue code</button><button class="btn ghost" id="refreshCi">Refresh list</button><span class="kv" id="acHint" style="align-self:center"></span></div>
           <div id="acMsg"></div>
         </div>
+        <div class="card" id="quorumCard">
+          <h3>Quorum <span id="quorumOverall"></span></h3>
+          <p class="hint">Two limbs, both required (Constitution Art 6.2.5 / 6.3.3): more than half of the clubs, and more than half of Mancom.</p>
+          <div id="quorumPanel" class="quorum-grid"></div>
+        </div>
         <div class="card">
-          <h3>Checked in <span id="ciCount" class="kv"></span></h3>
+          <h3>Checked in <span id="ciCount" class="kv"></span> <button class="btn ghost sm" id="dlAttendance" style="float:right">Attendance PDF</button></h3>
           <div style="margin:6px 0 12px"><span class="stat"><b id="ciClubs">0</b><span>clubs present</span></span><span class="stat"><b id="ciWeight">0</b><span>eligible votes</span></span></div>
           <div id="ciList"></div>
         </div>
@@ -254,7 +272,7 @@
       <div id="liveNeedsMeeting" class="banner">Select a meeting first.</div>
       <div id="liveBody" class="hidden">
         <div class="card" id="liveControl"></div>
-        <div class="card" id="liveResults"><h3>Results</h3><div id="resultsList"><p class="hint">Results appear here as motions close.</p></div></div>
+        <div class="card" id="liveResults"><h3>Results <button class="btn ghost sm" id="dlResults" style="float:right">Results PDF</button></h3><div id="resultsList"><p class="hint">Results appear here as motions close.</p></div></div>
       </div>
     </section>
 
@@ -544,6 +562,7 @@
     activeRegs=r.data||[];
     var present={},weight=0; activeRegs.forEach(function(rg){ present[rg.club_id]=true; weight+=(rg.vote_weight||1); });
     $("ciClubs").textContent=Object.keys(present).length; $("ciWeight").textContent=weight; $("ciCount").textContent="("+activeRegs.length+")";
+    renderQuorum(Object.keys(present).length);
     if(!activeRegs.length){ l.innerHTML='<p class="hint">No one checked in yet.</p>'; return activeRegs; }
     var h='<table><thead><tr><th>Delegate</th><th>Club</th><th class="num">Votes</th><th>Cell</th><th>Code</th><th></th></tr></thead><tbody>';
     activeRegs.forEach(function(rg){ var c=clubById(rg.club_id); var d=rg.delegates||{};
@@ -556,6 +575,80 @@
     Array.prototype.forEach.call(l.querySelectorAll("[data-showcode]"),function(b){ b.onclick=function(){ var rg=activeRegs.filter(function(x){return x.id===b.dataset.showcode;})[0]; if(rg) showQR(clubById(rg.club_id),rg.code,rg.vote_weight); }; });
     return activeRegs;
   }
+  function mkey(){ return curMeeting?("cttlfa_mancom_"+curMeeting.id):"cttlfa_mancom"; }
+  function getMancom(){ try{ var v=JSON.parse(localStorage.getItem(mkey())||"{}"); return {p:parseInt(v.p,10)||0,t:parseInt(v.t,10)||0}; }catch(e){ return {p:0,t:0}; } }
+  function setMancom(p,t){ try{ localStorage.setItem(mkey(),JSON.stringify({p:p,t:t})); }catch(e){} }
+  function limbHTML(title,present,total,need){
+    var met=(total>0 && present>=need), pct=total>0?Math.min(100,Math.round(present/total*100)):0;
+    return '<div class="qlimb"><div class="qh"><span class="qt">'+title+'</span><span class="qmet '+(met?"ok":"no")+'">'+(met?"met":"short")+'</span></div>'+
+      '<div class="qnum">'+present+' <small>of '+total+' present</small></div>'+
+      '<div class="qbar '+(met?"":"short")+'"><i style="width:'+pct+'%"></i></div>'+
+      '<div class="kv">Needs '+need+' (more than half)</div></div>';
+  }
+  function renderQuorum(clubsPresent){
+    var panel=$("quorumPanel"); if(!panel) return;
+    var totalClubs=clubs.length||0, clubsNeed=Math.floor(totalClubs/2)+1;
+    var mc=getMancom(), mancomNeed=mc.t>0?Math.floor(mc.t/2)+1:1;
+    panel.innerHTML=limbHTML("Clubs present",clubsPresent||0,totalClubs,clubsNeed)+
+      '<div class="qlimb"><div class="qh"><span class="qt">Mancom present</span><span class="qmet '+((mc.t>0&&mc.p>=mancomNeed)?"ok":"no")+'" id="qMancomMet">'+((mc.t>0&&mc.p>=mancomNeed)?"met":"short")+'</span></div>'+
+      '<div style="display:flex;align-items:center;gap:8px;margin:6px 0"><input class="qmini" id="qMancomP" type="number" min="0" value="'+mc.p+'"> <span class="kv">present of</span> <input class="qmini" id="qMancomT" type="number" min="0" value="'+mc.t+'"> <span class="kv">Mancom</span></div>'+
+      '<div class="kv">Needs more than half of Mancom</div></div>';
+    var clubsMet=(totalClubs>0 && (clubsPresent||0)>=clubsNeed);
+    function recompute(){
+      var p=parseInt($("qMancomP").value,10)||0, t=parseInt($("qMancomT").value,10)||0; setMancom(p,t);
+      var need=t>0?Math.floor(t/2)+1:1, mm=(t>0&&p>=need);
+      $("qMancomMet").className="qmet "+(mm?"ok":"no"); $("qMancomMet").textContent=mm?"met":"short";
+      var overall=clubsMet&&mm;
+      $("quorumOverall").innerHTML='<span class="qmet '+(overall?"ok":"no")+'">'+(overall?"QUORATE":"NOT QUORATE")+'</span>';
+    }
+    $("qMancomP").oninput=recompute; $("qMancomT").oninput=recompute; recompute();
+  }
+  function pdfHead(doc,title){
+    doc.setFillColor(7,26,74); doc.rect(0,0,doc.internal.pageSize.getWidth(),64,"F");
+    doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.text("CTTLFA",40,30);
+    doc.setFontSize(10); doc.setTextColor(200,210,235); doc.text("Cape Town Tygerberg Local Football Association",40,46);
+    doc.setTextColor(20,30,50); doc.setFont("helvetica","bold"); doc.setFontSize(13); doc.text(title,40,92);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(90,101,119);
+    var meta=(curMeeting?curMeeting.name:"")+"  |  "+(curMeeting&&curMeeting.kind?curMeeting.kind.toUpperCase():"")+"  |  Generated "+new Date().toLocaleString("en-ZA");
+    doc.text(meta,40,108);
+  }
+  function dlAttendancePDF(){
+    if(!window.jspdf){ alert("PDF library still loading, try again."); return; }
+    var doc=new window.jspdf.jsPDF({unit:"pt",format:"a4"});
+    pdfHead(doc,"Attendance and voting register");
+    var body=activeRegs.slice().sort(function(a,b){var ca=clubById(a.club_id),cb=clubById(b.club_id);return (ca?ca.name:"").localeCompare(cb?cb.name:"");}).map(function(rg){
+      var c=clubById(rg.club_id), d=rg.delegates||{};
+      return [c?c.name:"", (c?c.type:""), (d.full_name||""), (d.cell||""), String(rg.vote_weight||1), rg.code];
+    });
+    var present={}; var weight=0; activeRegs.forEach(function(rg){present[rg.club_id]=1;weight+=(rg.vote_weight||1);});
+    doc.autoTable({ startY:122, head:[["Club","Type","Delegate","Cell","Votes","Code"]], body:body,
+      styles:{fontSize:9,cellPadding:4}, headStyles:{fillColor:[24,64,80],textColor:255},
+      alternateRowStyles:{fillColor:[244,246,251]}, columnStyles:{4:{halign:"center"}} });
+    var y=doc.lastAutoTable.finalY+18; doc.setFontSize(10); doc.setTextColor(20,30,50); doc.setFont("helvetica","bold");
+    doc.text("Clubs present: "+Object.keys(present).length+" of "+clubs.length+"       Total voting strength accredited: "+weight,40,y);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9); doc.setTextColor(90,101,119);
+    doc.text("Prepared by the Treasurer via the CTTLFA voting system. Delegate personal data held under POPIA (Act 4 of 2013).",40,y+16);
+    doc.save("CTTLFA attendance "+(curMeeting?curMeeting.name:"")+".pdf");
+  }
+  async function dlResultsPDF(){
+    if(!window.jspdf){ alert("PDF library still loading, try again."); return; }
+    var r=await sb.from("motions").select("*").eq("meeting_id",curMeeting.id).eq("status","closed").order("seq");
+    var ms=r.data||[]; if(!ms.length){ alert("No closed motions yet."); return; }
+    var tallies=await Promise.all(ms.map(function(m){ return sb.rpc("motion_tally",{p_motion:m.id}).then(function(x){return {m:m,t:(x.data&&!x.data.error)?x.data:{}};}); }));
+    var doc=new window.jspdf.jsPDF({unit:"pt",format:"a4"});
+    pdfHead(doc,"Motion results");
+    var body=tallies.map(function(o){ var t=o.t;
+      return [String(o.m.seq||""), o.m.title, ruleLabel(o.m), String(t.yes_w||0), String(t.no_w||0), String(t.abstain_w||0), (t.passed?"CARRIED":"NOT CARRIED")];
+    });
+    doc.autoTable({ startY:122, head:[["#","Motion","Rule","For","Against","Abstain","Outcome"]], body:body,
+      styles:{fontSize:9,cellPadding:4}, headStyles:{fillColor:[24,64,80],textColor:255},
+      alternateRowStyles:{fillColor:[244,246,251]}, columnStyles:{0:{halign:"center",cellWidth:24},3:{halign:"center"},4:{halign:"center"},5:{halign:"center"}} });
+    var y=doc.lastAutoTable.finalY+18; doc.setFontSize(9); doc.setTextColor(90,101,119);
+    doc.text("Abstain includes accredited voting strength that did not vote. Prepared via the CTTLFA voting system.",40,y);
+    doc.save("CTTLFA results "+(curMeeting?curMeeting.name:"")+".pdf");
+  }
+  $("dlAttendance") && ($("dlAttendance").onclick=dlAttendancePDF);
+  $("dlResults") && ($("dlResults").onclick=dlResultsPDF);
   async function removeReg(regId){
     var rg=activeRegs.filter(function(x){return x.id===regId;})[0]; if(!rg) return;
     if(!window.confirm("Remove this delegate and re-split the club's votes? Their code will stop working.")) return;
