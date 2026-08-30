@@ -159,12 +159,11 @@
       <div id="accreditBody" class="hidden">
         <div class="card">
           <h3>Accredit a delegate</h3>
-          <p class="hint">Search the whole registered roll by SAFA number or surname, the club fills in automatically. Or type a name to add someone manually. Capture a cell number and consent, then check them in. Two people can accredit at the same time on separate laptops.</p>
+          <p class="hint">Search the whole registered roll by SAFA number or surname, the club fills in automatically. To narrow the search to one club, type its name in the club filter first. Or type a name to add someone manually. Capture a cell number and consent, then check them in. Two people can accredit at the same time on separate laptops.</p>
           <div class="row">
-            <div style="flex:2"><label class="f">Find by SAFA number or surname (whole roll)</label><input type="text" id="acSearch" placeholder="SAFA number, or surname" autocomplete="off"></div>
-            <div><label class="f">Club</label><select id="acClub"></select><div class="kv" id="acAlloc" style="margin-top:5px"></div></div>
+            <div style="flex:2"><label class="f">Find by SAFA number or surname</label><input type="text" id="acSearch" placeholder="SAFA number, or surname" autocomplete="off"><div class="search-list hidden" id="acResults"></div></div>
+            <div style="flex:1;position:relative"><label class="f">Club filter (optional)</label><input type="text" id="acClubSearch" placeholder="All clubs, type to narrow" autocomplete="off"><input type="hidden" id="acClub"><div class="search-list hidden" id="acClubResults"></div><div class="kv" id="acAlloc" style="margin-top:5px"></div></div>
           </div>
-          <div class="search-list hidden" id="acResults"></div>
           <div class="row" style="margin-top:12px">
             <div><label class="f">Delegate name</label><input type="text" id="acName" placeholder="Selected, or type to add manually"></div>
             <div style="max-width:150px"><label class="f">Votes this delegate</label><select id="acVotes"></select></div>
@@ -306,7 +305,21 @@
   async function loadClubs(){
     var r=await sb.from("clubs").select("id,name,type,weight").order("name");
     clubs=r.data||[];
-    var sel=$("acClub"); if(sel){ sel.innerHTML=clubs.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+' ('+c.type+', '+c.weight+')</option>';}).join(""); }
+  }
+  function setClubFilter(id){
+    $("acClub").value=id||"";
+    var c=id?clubById(id):null;
+    $("acClubSearch").value=c?c.name:"";
+    $("acClubResults").classList.add("hidden");
+    refreshVotesOptions();
+  }
+  function doClubSearch(q){
+    var box=$("acClubResults"), ql=q.toLowerCase();
+    var hits=clubs.filter(function(c){return c.name.toLowerCase().indexOf(ql)>-1;}).slice(0,30);
+    if(!hits.length){ box.innerHTML='<div class="sub">No matching club.</div>'; box.classList.remove("hidden"); return; }
+    box.innerHTML=hits.map(function(c){return '<div data-cid="'+c.id+'"><span class="nm">'+esc(c.name)+'</span> <span class="sub">'+esc(c.type)+' · '+c.weight+' vote'+(c.weight>1?'s':'')+'</span></div>';}).join("");
+    box.classList.remove("hidden");
+    Array.prototype.forEach.call(box.querySelectorAll("[data-cid]"),function(d){ d.onclick=function(){ setClubFilter(d.dataset.cid); try{$("acSearch").focus();}catch(e){} }; });
   }
 
   /* ---------- meetings ---------- */
@@ -359,12 +372,18 @@
     stopCiTimer();
     if(need) return;
     selectedPerson=null; $("acName").value="";$("acSafa").value="";$("acCell").value="";$("acConsent").checked=false;$("acSearch").value="";
+    $("acClubSearch").value="";$("acClub").value="";$("acClubResults").classList.add("hidden");
     $("acResults").classList.add("hidden");
     loadCheckedIn().then(function(){ refreshVotesOptions(); });
     try{ $("acSearch").focus(); }catch(e){}
     ciTimer=setInterval(function(){ loadCheckedIn(); },12000);
   }
-  $("acClub") && ($("acClub").onchange=refreshVotesOptions);
+  var clubTimer=null;
+  $("acClubSearch") && ($("acClubSearch").oninput=function(){
+    clearTimeout(clubTimer); var q=this.value.trim();
+    if(!q){ setClubFilter(""); return; }
+    clubTimer=setTimeout(function(){ doClubSearch(q); },150);
+  });
   $("refreshCi") && ($("refreshCi").onclick=function(){ loadCheckedIn().then(refreshVotesOptions); });
   var searchTimer=null;
   $("acSearch") && ($("acSearch").oninput=function(){
@@ -373,8 +392,9 @@
     searchTimer=setTimeout(function(){ doPersonSearch(q); },220);
   });
   async function doPersonSearch(q){
-    var box=$("acResults"), isNum=/\d/.test(q);
+    var box=$("acResults"), isNum=/\d/.test(q), cid=$("acClub").value;
     var query=sb.from("people").select("id,first_name,surname,category,club_id,safa_reg_no");
+    if(cid){ query=query.eq("club_id",cid); }
     if(isNum){ query=query.ilike("safa_reg_no",q+"%").order("safa_reg_no").limit(30); }
     else { query=query.ilike("surname",q+"%").order("surname").limit(30); }
     var r=await query;
@@ -389,7 +409,7 @@
     box.classList.remove("hidden");
     Array.prototype.forEach.call(box.querySelectorAll("[data-pid]"),function(d){
       d.onclick=function(){ var p=ppl.filter(function(x){return x.id===d.dataset.pid;})[0]; selectedPerson=p;
-        if(p.club_id){ $("acClub").value=p.club_id; }
+        if(p.club_id){ setClubFilter(p.club_id); }
         $("acName").value=((p.first_name||"")+" "+(p.surname||"")).trim(); $("acSafa").value=p.safa_reg_no||"";
         box.classList.add("hidden"); refreshVotesOptions(); $("acCell").focus(); };
     });
@@ -399,6 +419,7 @@
     if(!curMeeting) return;
     var name=$("acName").value.trim(), cell=$("acCell").value.trim(), cid=$("acClub").value, votes=parseInt($("acVotes").value,10)||0;
     if(!name){msg($("acMsg"),"Enter or select a delegate name.","err");return;}
+    if(!cid){msg($("acMsg"),"Choose the delegate's club in the club filter.","err");return;}
     if(votes<=0 || votes>remainingForClub(cid)){msg($("acMsg"),"Only "+remainingForClub(cid)+" vote(s) left for this club. Remove a delegate to free one.","err");return;}
     if(!$("acConsent").checked){msg($("acMsg"),"Please capture the delegate's consent.","err");return;}
     $("checkInBtn").disabled=true;
