@@ -1,0 +1,542 @@
+<!-- CTTLFA Voting - Mancom admin console. Standalone, wired to Supabase (cttlfa-voting). -->
+<meta charset="utf-8">
+<title>CTTLFA Voting Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Barlow+Condensed:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root{
+    --navy:#071A4A;--navy2:#0C2461;--blue:#123FB5;--blue5:#2E63F6;--gold:#F4B41A;--gold-d:#9a7213;
+    --ink:#0B1220;--muted:#5A667C;--line:#E6EAF3;--line2:#F0F3F9;--bg:#EEF2FA;--white:#fff;
+    --good:#1C7C4A;--good-bg:#E7F5EC;--good-ln:#BFE4CC;--bad:#B23A32;--bad-bg:#FBECEA;--bad-ln:#F1CFCB;--warn:#9F6621;--warn-bg:#FCF3D8;--warn-ln:#F1E2AE;
+    --head:'Archivo',system-ui,sans-serif;--cond:'Barlow Condensed',sans-serif;--body:'Inter',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}html,body{margin:0}
+  body{font-family:var(--body);color:var(--ink);background:var(--bg);line-height:1.5}
+  h1,h2,h3,h4{margin:0}
+  button{font-family:inherit}
+  input,select,textarea{font-family:inherit}
+  .hidden{display:none!important}
+
+  /* login */
+  #loginLogo,#topLogo{background:#fff!important;padding:3px;overflow:hidden}#loginLogo img,#topLogo img{width:100%;height:100%;object-fit:contain;display:block;border-radius:8px}
+  .login{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,var(--navy),#0b2a63)}
+  .lcard{background:#fff;border-radius:20px;max-width:420px;width:100%;padding:32px;box-shadow:0 30px 70px rgba(0,0,0,.3)}
+  .lcard .logo{width:52px;height:52px;border-radius:13px;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-family:var(--head);font-weight:800;font-size:22px}
+  .lcard h1{font-family:var(--head);font-weight:800;color:var(--navy);font-size:22px;margin:16px 0 2px}
+  .lcard p{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+  .seg{display:flex;background:#EEF1F8;border-radius:10px;padding:3px;margin-bottom:16px}
+  .seg button{flex:1;border:0;background:transparent;padding:8px;border-radius:8px;font-weight:600;font-size:13px;color:var(--muted);cursor:pointer}
+  .seg button.on{background:#fff;color:var(--navy);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+
+  label.f{display:block;font-size:12.5px;font-weight:600;color:var(--muted);margin:12px 0 5px}
+  input[type=text],input[type=email],input[type=password],input[type=date],input[type=tel],textarea,select{width:100%;font-size:14px;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:11px 12px;background:#FBFCFF}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--blue5);box-shadow:0 0 0 3px rgba(46,99,246,.15)}
+  .btn{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:15px;border:0;border-radius:11px;padding:12px 18px;cursor:pointer;color:#fff;background:var(--navy);min-height:44px}
+  .btn:hover{background:var(--navy2)} .btn.gold{background:var(--gold);color:var(--navy)} .btn.gold:hover{background:#e0a411}
+  .btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)} .btn.ghost:hover{background:#F6F8FD}
+  .btn.red{background:var(--bad)} .btn.sm{padding:8px 12px;font-size:13px;min-height:36px}
+  .btn:disabled{opacity:.45;cursor:not-allowed} .btn.full{width:100%}
+  .msg{font-size:13px;margin-top:12px;padding:10px 12px;border-radius:9px}
+  .msg.err{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-ln)}
+  .msg.ok{background:var(--good-bg);color:var(--good);border:1px solid var(--good-ln)}
+
+  /* shell */
+  .top{background:var(--navy);color:#fff;display:flex;align-items:center;gap:14px;padding:12px 20px}
+  .top .logo{width:34px;height:34px;border-radius:9px;background:var(--gold);color:var(--navy);display:flex;align-items:center;justify-content:center;font-family:var(--head);font-weight:800;font-size:15px}
+  .top .ttl{font-family:var(--head);font-weight:800;font-size:16px}
+  .top .who{margin-left:auto;font-size:12.5px;color:#c9d4ee;text-align:right}
+  .top .who b{color:#fff;display:block}
+  .rolechip{display:inline-block;font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:10.5px;background:rgba(244,180,26,.15);color:#ffe6a6;border:1px solid rgba(244,180,26,.3);padding:2px 8px;border-radius:999px;margin-top:3px}
+  .wrap{max-width:1120px;margin:0 auto;padding:20px}
+  .tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+  .tab{font-family:var(--cond);font-weight:700;letter-spacing:.03em;text-transform:uppercase;font-size:14px;border:1px solid var(--line);background:#fff;color:var(--muted);padding:9px 15px;border-radius:10px;cursor:pointer}
+  .tab.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+  .card{background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:0 6px 20px rgba(9,20,48,.05);padding:20px;margin-bottom:16px}
+  .card h3{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--navy);font-size:16px;margin-bottom:4px}
+  .hint{color:var(--muted);font-size:12.5px;margin:2px 0 14px}
+  .row{display:flex;gap:12px;flex-wrap:wrap}.row>div{flex:1;min-width:150px}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  thead th{background:#F4F6FB;color:var(--navy);font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:11.5px;text-align:left;padding:9px 12px;border-bottom:1px solid var(--line)}
+  tbody td{padding:9px 12px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  .tag{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:2px 8px;border-radius:5px}
+  .tag.full{background:#E7ECFA;color:var(--blue)} .tag.assoc{background:#FCF3D8;color:var(--gold-d)}
+  .tag.in{background:var(--good-bg);color:var(--good)} .tag.draft{background:#EEF1F8;color:var(--muted)}
+  .tag.open{background:var(--good-bg);color:var(--good)} .tag.closed{background:var(--bad-bg);color:var(--bad)}
+  .p+.p{margin-top:8px}
+  .meeting-pick{display:flex;align-items:center;gap:12px;background:#FBFCFF;border:1px solid var(--line);border-radius:12px;padding:12px 16px;margin-bottom:16px;flex-wrap:wrap}
+  .meeting-pick b{color:var(--navy)}
+  .kv{font-size:12px;color:var(--muted)}
+  .search-list{border:1px solid var(--line);border-radius:10px;max-height:230px;overflow:auto;margin-top:6px}
+  .search-list div{padding:9px 12px;border-bottom:1px solid var(--line2);cursor:pointer;font-size:13px}
+  .search-list div:hover{background:#F4F6FB} .search-list div:last-child{border-bottom:0}
+  .search-list .nm{font-weight:600;color:var(--ink)} .search-list .sub{color:var(--muted);font-size:11.5px}
+  .scrim{position:fixed;inset:0;background:rgba(7,26,74,.55);display:none;align-items:center;justify-content:center;padding:20px;z-index:40}
+  .scrim.on{display:flex}
+  .modal{background:#fff;border-radius:18px;max-width:400px;width:100%;padding:24px;text-align:center}
+  .modal h3{font-family:var(--head);font-weight:800;color:var(--navy);font-size:20px;text-transform:none;letter-spacing:0}
+  .qrbox{width:200px;height:200px;margin:14px auto;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:12px}
+  .bigcode{font-family:var(--cond);font-weight:700;letter-spacing:.18em;font-size:26px;color:var(--navy)}
+  .stat{display:inline-flex;flex-direction:column;background:#FBFCFF;border:1px solid var(--line);border-radius:12px;padding:12px 18px;margin-right:12px}
+  .stat b{font-family:var(--cond);font-weight:700;font-size:26px;color:var(--navy);line-height:1}
+  .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
+  .banner{background:var(--warn-bg);border:1px solid var(--warn-ln);color:var(--warn);border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:14px}
+</style>
+
+<!-- LOGIN -->
+<div class="login" id="loginView">
+  <div class="lcard">
+    <div class="logo" id="loginLogo">CT</div>
+    <h1>CTTLFA Voting Admin</h1>
+    <p>Management Committee access only.</p>
+    <div class="seg" id="authSeg">
+      <button data-mode="signin" class="on">Sign in</button>
+      <button data-mode="signup">First time, set password</button>
+    </div>
+    <label class="f" for="email">Your Mancom email</label>
+    <input type="email" id="email" placeholder="you@cttfa.co.za" autocomplete="username">
+    <label class="f" for="pw" id="pwLabel">Password</label>
+    <input type="password" id="pw" placeholder="Your password" autocomplete="current-password">
+    <div class="btnrow"><button class="btn gold full" id="authBtn">Sign in</button></div>
+    <div id="authMsg"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appView" class="hidden">
+  <div class="top">
+    <div class="logo" id="topLogo">CT</div>
+    <div class="ttl">CTTLFA Voting Admin</div>
+    <div class="who"><b id="whoName">-</b><span id="whoEmail" class="kv"></span><br><span class="rolechip" id="whoRole">-</span></div>
+    <button class="btn ghost sm" id="signOut" style="margin-left:14px;color:#fff;background:transparent;border-color:rgba(255,255,255,.3)">Sign out</button>
+  </div>
+  <div class="wrap">
+    <div class="tabs" id="mainTabs">
+      <button class="tab on" data-tab="meetings">Meetings</button>
+      <button class="tab" data-tab="accredit">Accreditation</button>
+      <button class="tab" data-tab="motions">Motions</button>
+      <button class="tab" data-tab="live">Live &amp; results</button>
+      <button class="tab" data-tab="users">Mancom users</button>
+    </div>
+
+    <div class="meeting-pick" id="meetingPick">
+      <span class="kv">Working meeting</span> <b id="curMeetingName">None selected</b>
+      <span class="kv" id="curMeetingMeta"></span>
+      <span style="flex:1"></span>
+      <span class="kv">Pick on the Meetings tab</span>
+    </div>
+
+    <!-- MEETINGS -->
+    <section id="tab-meetings">
+      <div class="card">
+        <h3>Create a meeting</h3>
+        <p class="hint">An AGM, SGM or Mancom meeting. Everything else, accreditation and motions, hangs off the meeting you select.</p>
+        <div class="row">
+          <div><label class="f">Name</label><input type="text" id="mName" placeholder="e.g. Special General Meeting"></div>
+          <div style="max-width:150px"><label class="f">Type</label><select id="mKind"><option value="general">General Meeting</option><option value="sgm">SGM</option><option value="agm">AGM</option><option value="mancom">Mancom</option></select></div>
+          <div style="max-width:170px"><label class="f">Date</label><input type="date" id="mDate"></div>
+        </div>
+        <div class="row">
+          <div><label class="f">Venue</label><input type="text" id="mVenue" placeholder="Venue"></div>
+          <div><label class="f">Google Drive link (documents)</label><input type="text" id="mDrive" placeholder="https://drive.google.com/..."></div>
+        </div>
+        <div class="btnrow"><button class="btn gold" id="createMeeting">Create meeting</button></div>
+        <div id="meetingMsg"></div>
+      </div>
+      <div class="card">
+        <h3>Meetings</h3>
+        <div id="meetingList"><p class="hint">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- ACCREDITATION -->
+    <section id="tab-accredit" class="hidden">
+      <div id="accreditNeedsMeeting" class="banner">Select or create a meeting on the Meetings tab first.</div>
+      <div id="accreditBody" class="hidden">
+        <div class="card">
+          <h3>Accredit a delegate</h3>
+          <p class="hint">Search the whole registered roll by SAFA number or surname, the club fills in automatically. Or type a name to add someone manually. Capture a cell number and consent, then check them in. Two people can accredit at the same time on separate laptops.</p>
+          <div class="row">
+            <div style="flex:2"><label class="f">Find by SAFA number or surname (whole roll)</label><input type="text" id="acSearch" placeholder="SAFA number, or surname" autocomplete="off"></div>
+            <div><label class="f">Club</label><select id="acClub"></select><div class="kv" id="acAlloc" style="margin-top:5px"></div></div>
+          </div>
+          <div class="search-list hidden" id="acResults"></div>
+          <div class="row" style="margin-top:12px">
+            <div><label class="f">Delegate name</label><input type="text" id="acName" placeholder="Selected, or type to add manually"></div>
+            <div style="max-width:150px"><label class="f">Votes this delegate</label><select id="acVotes"></select></div>
+            <div style="max-width:180px"><label class="f">SAFA number (optional)</label><input type="text" id="acSafa" placeholder="Leave blank if unknown"></div>
+            <div style="max-width:170px"><label class="f">Cell number</label><input type="tel" id="acCell" placeholder="072 000 0000"></div>
+          </div>
+          <label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px;color:var(--ink)"><input type="checkbox" id="acConsent" style="width:auto;margin-top:3px"> <span>The delegate consents to CTTLFA holding their name and cell number for this meeting's attendance and voting record, under the Protection of Personal Information Act 4 of 2013.</span></label>
+          <div class="btnrow"><button class="btn gold" id="checkInBtn">Check in and issue code</button><button class="btn ghost" id="refreshCi">Refresh list</button><span class="kv" id="acHint" style="align-self:center"></span></div>
+          <div id="acMsg"></div>
+        </div>
+        <div class="card">
+          <h3>Checked in <span id="ciCount" class="kv"></span></h3>
+          <div style="margin:6px 0 12px"><span class="stat"><b id="ciClubs">0</b><span>clubs present</span></span><span class="stat"><b id="ciWeight">0</b><span>eligible votes</span></span></div>
+          <div id="ciList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MOTIONS -->
+    <section id="tab-motions" class="hidden">
+      <div id="motionsNeedsMeeting" class="banner">Select a meeting first.</div>
+      <div id="motionsBody" class="hidden">
+        <div class="card">
+          <h3>Prepare a motion</h3>
+          <p class="hint">Mancom decides the wording and the majority. The app records it.</p>
+          <label class="f">Motion title</label><input type="text" id="moTitle" placeholder="e.g. Adoption of the 2026 budget">
+          <label class="f">Plain instruction shown on each phone</label><textarea id="moInstr" placeholder="In favour means... Against means..."></textarea>
+          <div class="row">
+            <div style="max-width:190px"><label class="f">Pass rule</label><select id="moRule"><option value="simple">Simple majority</option><option value="two_thirds">Two-thirds</option><option value="custom">Custom %</option></select></div>
+            <div style="max-width:120px" id="moCustomWrap" class="hidden"><label class="f">Custom %</label><input type="text" id="moCustom" value="75"></div>
+            <div style="max-width:190px"><label class="f">Who may vote</label><select id="moElig"><option value="all">Full + Associate</option><option value="full_only">Full only</option></select></div>
+            <div style="max-width:170px"><label class="f">Abstentions</label><select id="moAbs"><option value="set_aside">Set aside</option><option value="in_base">Count in base</option></select></div>
+            <div style="max-width:130px"><label class="f">Timer (sec)</label><input type="text" id="moTimer" value="45"></div>
+          </div>
+          <div class="btnrow"><button class="btn gold" id="addMotion">Add motion</button></div>
+          <div id="moMsg"></div>
+        </div>
+        <div class="card">
+          <h3>Motions for this meeting</h3>
+          <div id="motionList"><p class="hint">None yet.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE -->
+    <section id="tab-live" class="hidden">
+      <div id="liveNeedsMeeting" class="banner">Select a meeting first.</div>
+      <div id="liveBody" class="hidden">
+        <div class="card" id="liveControl"></div>
+        <div class="card" id="liveResults"><h3>Results</h3><div id="resultsList"><p class="hint">Results appear here as motions close.</p></div></div>
+      </div>
+    </section>
+
+    <!-- USERS -->
+    <section id="tab-users" class="hidden">
+      <div class="card">
+        <h3>Mancom users</h3>
+        <p class="hint">The allow-list. Only these people can access the admin, and each sets their own password the first time. Administrators can change roles.</p>
+        <div id="usersList"><p class="hint">Loading...</p></div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div class="scrim" id="qrScrim"><div class="modal"><h3 id="qrTitle">Delegate code</h3><p class="hint" id="qrSub" style="text-align:center"></p><div class="qrbox" id="qrBox"></div><p class="hint" style="text-align:center;margin:0">Or type this code<br><span class="bigcode" id="qrCode"></span></p><div class="btnrow" style="justify-content:center"><button class="btn" id="qrDone">Done</button></div></div></div>
+
+<script>
+(function(){
+  "use strict";
+  var LOGO="data:image/jpeg;base64,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";
+  var SB_URL="https://fbbbsvkshajollduapaw.supabase.co";
+  var SB_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiYmJzdmtzaGFqb2xsZHVhcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODYyODgsImV4cCI6MjEwMzY2MjI4OH0.8heeqe-03Mji2NgHt17ZOCoctijRhF78cHvSQkrUUi0";
+  var sb = window.supabase.createClient(SB_URL, SB_KEY);
+  var $=function(id){return document.getElementById(id);};
+  function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
+  function msg(el,t,cls){el.innerHTML='<div class="msg '+cls+'">'+esc(t)+'</div>';}
+  function code(){var A="ABCDEFGHJKMNPQRSTUVWXYZ23456789",s="";for(var i=0;i<6;i++)s+=A[Math.floor(Math.random()*A.length)];return s;}
+
+  try{document.getElementById("loginLogo").innerHTML='<img alt="CTTFA" src="'+LOGO+'">';document.getElementById("topLogo").innerHTML='<img alt="CTTFA" src="'+LOGO+'">';}catch(e){}
+  var me=null, meRole=null, clubs=[], curMeeting=null, selectedPerson=null;
+
+  /* ---------- auth ---------- */
+  var authMode="signin";
+  Array.prototype.forEach.call($("authSeg").querySelectorAll("button"),function(b){
+    b.onclick=function(){authMode=b.dataset.mode;Array.prototype.forEach.call($("authSeg").querySelectorAll("button"),function(x){x.classList.toggle("on",x===b);});
+      $("authBtn").textContent = authMode==="signup"?"Set password":"Sign in";
+      $("pwLabel").textContent = authMode==="signup"?"Choose a password (min 8 characters)":"Password";
+      $("pw").setAttribute("autocomplete", authMode==="signup"?"new-password":"current-password");};
+  });
+  $("authBtn").onclick=async function(){
+    var email=$("email").value.trim().toLowerCase(), pw=$("pw").value;
+    if(!email||!pw){msg($("authMsg"),"Enter your email and password.","err");return;}
+    $("authBtn").disabled=true;
+    try{
+      if(authMode==="signup"){
+        if(pw.length<8){msg($("authMsg"),"Password must be at least 8 characters.","err");$("authBtn").disabled=false;return;}
+        var r=await sb.auth.signUp({email:email,password:pw});
+        if(r.error) throw r.error;
+        if(r.data && r.data.session){ await afterLogin(); }
+        else { msg($("authMsg"),"Account created. If email confirmation is on, confirm via the email, then sign in.","ok"); }
+      } else {
+        var s=await sb.auth.signInWithPassword({email:email,password:pw});
+        if(s.error) throw s.error;
+        await afterLogin();
+      }
+    }catch(e){ msg($("authMsg"), e.message||"Could not sign in.","err"); }
+    $("authBtn").disabled=false;
+  };
+  $("signOut").onclick=async function(){ await sb.auth.signOut(); location.reload(); };
+
+  async function afterLogin(){
+    var u=(await sb.auth.getUser()).data.user;
+    if(!u) return;
+    var r=await sb.from("admin_users").select("full_name,email,role,active").eq("auth_id",u.id).maybeSingle();
+    if(r.error||!r.data||!r.data.active){
+      msg($("authMsg"),"This email is not on the Mancom allow-list, or is not active. Contact an administrator.","err");
+      await sb.auth.signOut(); return;
+    }
+    me=r.data; meRole=r.data.role;
+    $("whoName").textContent=me.full_name; $("whoEmail").textContent=me.email;
+    $("whoRole").textContent=meRole;
+    $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden");
+    if(meRole==="viewer"){ /* viewers: read only - hide write controls */ document.body.classList.add("viewer"); }
+    await loadClubs(); await loadMeetings(); await loadUsers();
+  }
+
+  /* ---------- tabs ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(t){
+    t.onclick=function(){
+      Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(x){x.classList.toggle("on",x===t);});
+      ["meetings","accredit","motions","live","users"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
+      if(t.dataset.tab==="accredit") renderAccredit();
+      if(t.dataset.tab==="motions") renderMotions();
+      if(t.dataset.tab==="live") renderLive();
+    };
+  });
+
+  /* ---------- clubs ---------- */
+  async function loadClubs(){
+    var r=await sb.from("clubs").select("id,name,type,weight").order("name");
+    clubs=r.data||[];
+    var sel=$("acClub"); if(sel){ sel.innerHTML=clubs.map(function(c){return '<option value="'+c.id+'">'+esc(c.name)+' ('+c.type+', '+c.weight+')</option>';}).join(""); }
+  }
+
+  /* ---------- meetings ---------- */
+  $("createMeeting").onclick=async function(){
+    var name=$("mName").value.trim(); if(!name){msg($("meetingMsg"),"Enter a meeting name.","err");return;}
+    var rec={name:name,kind:$("mKind").value,meeting_date:$("mDate").value||null,venue:$("mVenue").value.trim()||null,drive_url:$("mDrive").value.trim()||null,status:"setup",created_by:null};
+    var r=await sb.from("meetings").insert(rec).select().single();
+    if(r.error){msg($("meetingMsg"),r.error.message,"err");return;}
+    msg($("meetingMsg"),"Meeting created.","ok"); $("mName").value="";$("mVenue").value="";$("mDrive").value="";
+    await loadMeetings(); selectMeeting(r.data);
+  };
+  async function loadMeetings(){
+    var r=await sb.from("meetings").select("*").order("created_at",{ascending:false});
+    var l=$("meetingList");
+    if(r.error){l.innerHTML='<p class="hint">'+esc(r.error.message)+'</p>';return;}
+    var ms=r.data||[];
+    if(!ms.length){l.innerHTML='<p class="hint">No meetings yet.</p>';return;}
+    var h='<table><thead><tr><th>Meeting</th><th>Type</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>';
+    ms.forEach(function(m){
+      h+='<tr><td><b>'+esc(m.name)+'</b></td><td>'+esc((m.kind||"").toUpperCase())+'</td><td>'+esc(m.meeting_date||"-")+'</td><td><span class="tag draft">'+esc(m.status)+'</span></td><td><button class="btn ghost sm" data-pick="'+m.id+'">Select</button></td></tr>';
+    });
+    h+='</tbody></table>'; l.innerHTML=h;
+    Array.prototype.forEach.call(l.querySelectorAll("[data-pick]"),function(b){ b.onclick=function(){ selectMeeting(ms.filter(function(x){return x.id===b.dataset.pick;})[0]); }; });
+  }
+  function selectMeeting(m){
+    curMeeting=m;
+    $("curMeetingName").textContent=m.name;
+    $("curMeetingMeta").textContent=(m.kind||"").toUpperCase()+(m.meeting_date?(" · "+m.meeting_date):"")+(m.venue?(" · "+m.venue):"");
+  }
+
+  /* ---------- accreditation ---------- */
+  var activeRegs=[], ciTimer=null;
+  function clubById(id){ return clubs.filter(function(c){return c.id===id;})[0]; }
+  function allocatedForClub(cid){ return activeRegs.filter(function(r){return r.club_id===cid;}).reduce(function(a,r){return a+(r.vote_weight||1);},0); }
+  function remainingForClub(cid){ var c=clubById(cid); return c ? Math.max(0, c.weight - allocatedForClub(cid)) : 0; }
+  function refreshVotesOptions(){
+    var cid=$("acClub").value, rem=remainingForClub(cid), c=clubById(cid), sel=$("acVotes");
+    sel.innerHTML="";
+    if(rem<=0){ sel.innerHTML='<option value="0">None left</option>'; }
+    else { for(var i=1;i<=rem;i++){ sel.innerHTML+='<option value="'+i+'"'+(i===rem?' selected':'')+'>'+i+(i>1?' votes':' vote')+'</option>'; } }
+    var alloc=allocatedForClub(cid);
+    $("acAlloc").innerHTML = c ? (alloc+' of '+c.weight+' allocated'+(rem<=0?', club full':', '+rem+' left')) : '';
+    $("checkInBtn").disabled = (rem<=0);
+  }
+  function stopCiTimer(){ if(ciTimer){ clearInterval(ciTimer); ciTimer=null; } }
+  function renderAccredit(){
+    var need=!curMeeting;
+    $("accreditNeedsMeeting").classList.toggle("hidden",!need);
+    $("accreditBody").classList.toggle("hidden",need);
+    stopCiTimer();
+    if(need) return;
+    selectedPerson=null; $("acName").value="";$("acSafa").value="";$("acCell").value="";$("acConsent").checked=false;$("acSearch").value="";
+    $("acResults").classList.add("hidden");
+    loadCheckedIn().then(function(){ refreshVotesOptions(); });
+    try{ $("acSearch").focus(); }catch(e){}
+    ciTimer=setInterval(function(){ loadCheckedIn(); },12000);
+  }
+  $("acClub") && ($("acClub").onchange=refreshVotesOptions);
+  $("refreshCi") && ($("refreshCi").onclick=function(){ loadCheckedIn().then(refreshVotesOptions); });
+  var searchTimer=null;
+  $("acSearch") && ($("acSearch").oninput=function(){
+    clearTimeout(searchTimer); var q=this.value.trim();
+    if(q.length<2){$("acResults").classList.add("hidden");return;}
+    searchTimer=setTimeout(function(){ doPersonSearch(q); },220);
+  });
+  async function doPersonSearch(q){
+    var box=$("acResults"), isNum=/\d/.test(q);
+    var query=sb.from("people").select("id,first_name,surname,category,club_id");
+    if(isNum){ query=query.ilike("id_number",q+"%").limit(30); }
+    else { query=query.ilike("surname",q+"%").order("surname").limit(30); }
+    var r=await query;
+    if(r.error){ box.innerHTML='<div>'+esc(r.error.message)+'</div>'; box.classList.remove("hidden"); return; }
+    var ppl=r.data||[];
+    if(!ppl.length){ box.innerHTML='<div class="sub">No match. Type the name above to add manually.</div>'; box.classList.remove("hidden"); return; }
+    box.innerHTML=ppl.map(function(p){
+      var nm=esc(((p.first_name||"")+" "+(p.surname||"")).trim()); var club=clubById(p.club_id);
+      return '<div data-pid="'+p.id+'"><span class="nm">'+nm+'</span> <span class="sub">'+(club?esc(club.name):'no member club')+(p.category?' \u00b7 '+esc(p.category):'')+'</span></div>';
+    }).join("");
+    box.classList.remove("hidden");
+    Array.prototype.forEach.call(box.querySelectorAll("[data-pid]"),function(d){
+      d.onclick=function(){ var p=ppl.filter(function(x){return x.id===d.dataset.pid;})[0]; selectedPerson=p;
+        if(p.club_id){ $("acClub").value=p.club_id; }
+        $("acName").value=((p.first_name||"")+" "+(p.surname||"")).trim(); $("acSafa").value="";
+        box.classList.add("hidden"); refreshVotesOptions(); $("acCell").focus(); };
+    });
+  }
+  $("acCell") && ($("acCell").onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); $("checkInBtn").click(); } });
+  $("checkInBtn").onclick=async function(){
+    if(!curMeeting) return;
+    var name=$("acName").value.trim(), cell=$("acCell").value.trim(), cid=$("acClub").value, votes=parseInt($("acVotes").value,10)||0;
+    if(!name){msg($("acMsg"),"Enter or select a delegate name.","err");return;}
+    if(votes<=0 || votes>remainingForClub(cid)){msg($("acMsg"),"Only "+remainingForClub(cid)+" vote(s) left for this club. Remove a delegate to free one.","err");return;}
+    if(!$("acConsent").checked){msg($("acMsg"),"Please capture the delegate's consent.","err");return;}
+    $("checkInBtn").disabled=true;
+    try{
+      var del=await sb.from("delegates").insert({meeting_id:curMeeting.id,club_id:cid,full_name:name,cell:cell||null,person_id:selectedPerson?selectedPerson.id:null,safa_no:$("acSafa").value.trim()||null,consent:true,consent_at:new Date().toISOString(),checked_in_at:new Date().toISOString()}).select().single();
+      if(del.error) throw del.error;
+      var c=code();
+      var reg=await sb.from("registrations").insert({meeting_id:curMeeting.id,club_id:cid,delegate_id:del.data.id,code:c,vote_weight:votes}).select().single();
+      if(reg.error) throw reg.error;
+      showQR(clubById(cid), c, votes);
+      msg($("acMsg"),"Checked in.","ok");
+      $("acName").value="";$("acSafa").value="";$("acCell").value="";$("acConsent").checked=false;$("acSearch").value="";selectedPerson=null;
+      await loadCheckedIn(); refreshVotesOptions(); try{ $("acSearch").focus(); }catch(e){}
+    }catch(e){ msg($("acMsg"), e.message||"Could not check in.","err"); }
+    $("checkInBtn").disabled=false;
+  };
+  async function loadCheckedIn(){
+    var r=await sb.from("registrations").select("id,club_id,code,vote_weight,delegate_id,delegates(full_name,cell)").eq("meeting_id",curMeeting.id).eq("revoked",false).order("registered_at",{ascending:false});
+    var l=$("ciList"); if(r.error){ l.innerHTML='<p class="hint">'+esc(r.error.message)+'</p>'; return; }
+    activeRegs=r.data||[];
+    var present={},weight=0; activeRegs.forEach(function(rg){ present[rg.club_id]=true; weight+=(rg.vote_weight||1); });
+    $("ciClubs").textContent=Object.keys(present).length; $("ciWeight").textContent=weight; $("ciCount").textContent="("+activeRegs.length+")";
+    if(!activeRegs.length){ l.innerHTML='<p class="hint">No one checked in yet.</p>'; return activeRegs; }
+    var h='<table><thead><tr><th>Delegate</th><th>Club</th><th class="num">Votes</th><th>Cell</th><th>Code</th><th></th></tr></thead><tbody>';
+    activeRegs.forEach(function(rg){ var c=clubById(rg.club_id); var d=rg.delegates||{};
+      h+='<tr><td><b>'+esc(d.full_name||"")+'</b></td><td>'+esc(c?c.name:"")+' <span class="tag '+(c&&c.type==="full"?"full":"assoc")+'">'+(c?c.type:"")+'</span></td><td class="num">'+(rg.vote_weight||1)+'</td><td>'+esc(d.cell||"-")+'</td><td><span class="bigcode" style="font-size:14px">'+esc(rg.code)+'</span></td>'+
+        '<td style="white-space:nowrap"><button class="btn ghost sm" data-showcode="'+rg.id+'">QR</button> <button class="btn ghost sm" data-newcode="'+rg.id+'">New code</button> <button class="btn red sm" data-remove="'+rg.id+'">Remove</button></td></tr>';
+    });
+    h+='</tbody></table>'; l.innerHTML=h;
+    Array.prototype.forEach.call(l.querySelectorAll("[data-remove]"),function(b){ b.onclick=function(){ removeReg(b.dataset.remove); }; });
+    Array.prototype.forEach.call(l.querySelectorAll("[data-newcode]"),function(b){ b.onclick=function(){ newCode(b.dataset.newcode); }; });
+    Array.prototype.forEach.call(l.querySelectorAll("[data-showcode]"),function(b){ b.onclick=function(){ var rg=activeRegs.filter(function(x){return x.id===b.dataset.showcode;})[0]; if(rg) showQR(clubById(rg.club_id),rg.code,rg.vote_weight); }; });
+    return activeRegs;
+  }
+  async function removeReg(regId){
+    var rg=activeRegs.filter(function(x){return x.id===regId;})[0]; if(!rg) return;
+    if(!window.confirm("Remove this delegate and free their vote? Their code will stop working.")) return;
+    await sb.from("registrations").update({revoked:true}).eq("id",regId);
+    if(rg.delegate_id){ await sb.from("delegates").delete().eq("id",rg.delegate_id); }
+    await loadCheckedIn(); refreshVotesOptions();
+  }
+  async function newCode(regId){
+    var rg=activeRegs.filter(function(x){return x.id===regId;})[0]; if(!rg) return;
+    var nc=code();
+    await sb.from("registrations").update({revoked:true}).eq("id",regId);
+    var ins=await sb.from("registrations").insert({meeting_id:curMeeting.id,club_id:rg.club_id,delegate_id:rg.delegate_id,code:nc,vote_weight:rg.vote_weight}).select().single();
+    if(ins.error){ await sb.from("registrations").update({revoked:false}).eq("id",regId); msg($("acMsg"),ins.error.message,"err"); return; }
+    showQR(clubById(rg.club_id), nc, rg.vote_weight);
+    await loadCheckedIn(); refreshVotesOptions();
+  }
+  function showQR(club,c,votes){
+    $("qrTitle").textContent="Register "+(club?club.name:"");
+    $("qrSub").textContent="The delegate scans this to register their phone."+(votes?(" This code carries "+votes+" vote"+(votes>1?"s":"")+"."):"");
+    $("qrCode").textContent=c; var box=$("qrBox"); box.innerHTML="";
+    var url="https://vote.cttfa.co.za/?c="+c;
+    if(window.QRCode){ try{ new QRCode(box,{text:url,width:180,height:180,colorDark:"#071A4A",colorLight:"#fff"}); }catch(e){ box.textContent=c; } } else box.textContent=c;
+    $("qrScrim").classList.add("on");
+  }
+  $("qrDone").onclick=function(){ $("qrScrim").classList.remove("on"); };
+
+  /* ---------- motions ---------- */
+  $("moRule").onchange=function(){ $("moCustomWrap").classList.toggle("hidden", this.value!=="custom"); };
+  function renderMotions(){
+    var need=!curMeeting; $("motionsNeedsMeeting").classList.toggle("hidden",!need); $("motionsBody").classList.toggle("hidden",need);
+    if(!need) loadMotions();
+  }
+  $("addMotion").onclick=async function(){
+    if(!curMeeting) return;
+    var t=$("moTitle").value.trim(); if(!t){msg($("moMsg"),"Enter a motion title.","err");return;}
+    var seq=(window._motionCount||0)+1;
+    var rec={meeting_id:curMeeting.id,seq:seq,title:t,instruction:$("moInstr").value.trim()||null,rule:$("moRule").value,custom_pct:$("moRule").value==="custom"?parseFloat($("moCustom").value)||75:null,eligibility:$("moElig").value,abstain:$("moAbs").value,timer_seconds:parseInt($("moTimer").value,10)||45,status:"draft"};
+    var r=await sb.from("motions").insert(rec).select().single();
+    if(r.error){msg($("moMsg"),r.error.message,"err");return;}
+    msg($("moMsg"),"Motion added.","ok"); $("moTitle").value="";$("moInstr").value="";
+    loadMotions();
+  };
+  async function loadMotions(){
+    var r=await sb.from("motions").select("*").eq("meeting_id",curMeeting.id).order("seq");
+    var l=$("motionList"); var ms=r.data||[]; window._motionCount=ms.length;
+    if(!ms.length){l.innerHTML='<p class="hint">None yet.</p>';return;}
+    var h='<table><thead><tr><th>#</th><th>Motion</th><th>Rule</th><th>Status</th><th></th></tr></thead><tbody>';
+    ms.forEach(function(m){
+      var act = m.status==="draft" ? '<button class="btn gold sm" data-open="'+m.id+'">Open</button>' : (m.status==="open" ? '<button class="btn red sm" data-close="'+m.id+'">Close</button>' : '<span class="kv">closed</span>');
+      h+='<tr><td>'+m.seq+'</td><td><b>'+esc(m.title)+'</b></td><td class="kv">'+esc(ruleLabel(m))+'</td><td><span class="tag '+m.status+'">'+m.status+'</span></td><td>'+act+'</td></tr>';
+    });
+    h+='</tbody></table>'; l.innerHTML=h;
+    Array.prototype.forEach.call(l.querySelectorAll("[data-open]"),function(b){b.onclick=function(){openMotion(b.dataset.open);};});
+    Array.prototype.forEach.call(l.querySelectorAll("[data-close]"),function(b){b.onclick=function(){closeMotion(b.dataset.close);};});
+  }
+  function ruleLabel(m){return m.rule==="two_thirds"?"Two-thirds":(m.rule==="custom"?((m.custom_pct||0)+"%"):"Simple majority");}
+  async function openMotion(id){ await sb.from("motions").update({status:"open",opened_at:new Date().toISOString()}).eq("id",id); loadMotions(); }
+  async function closeMotion(id){ await sb.from("motions").update({status:"closed",closed_at:new Date().toISOString()}).eq("id",id); loadMotions(); renderLive(); }
+
+  /* ---------- live & results ---------- */
+  async function renderLive(){
+    var need=!curMeeting; $("liveNeedsMeeting").classList.toggle("hidden",!need); $("liveBody").classList.toggle("hidden",need);
+    if(need) return;
+    var r=await sb.from("motions").select("*").eq("meeting_id",curMeeting.id).order("seq");
+    var ms=r.data||[]; var open=ms.filter(function(m){return m.status==="open";})[0];
+    var c=$("liveControl");
+    if(open){
+      var tr=await sb.from("motion_turnout").select("votes_in").eq("motion_id",open.id).maybeSingle();
+      c.innerHTML='<h3>Voting open</h3><p class="hint">'+esc(open.title)+'</p><div style="margin:8px 0"><span class="stat"><b>'+((tr.data&&tr.data.votes_in)||0)+'</b><span>votes in</span></span></div><div class="btnrow"><button class="btn red" id="liveClose">Close voting</button><button class="btn ghost" id="liveRefresh">Refresh turnout</button></div>';
+      $("liveClose").onclick=function(){closeMotion(open.id);};
+      $("liveRefresh").onclick=renderLive;
+    } else {
+      c.innerHTML='<h3>No motion open</h3><p class="hint">Open a motion on the Motions tab. Live turnout and the close control appear here.</p>';
+    }
+    // results
+    var closed=ms.filter(function(m){return m.status==="closed";});
+    var rl=$("resultsList");
+    if(!closed.length){ rl.innerHTML='<p class="hint">No closed motions yet.</p>'; return; }
+    var rows=await Promise.all(closed.map(function(m){ return sb.from("motion_results").select("*").eq("motion_id",m.id).maybeSingle().then(function(x){return {m:m,r:x.data};}); }));
+    var h='<table><thead><tr><th>Motion</th><th>For</th><th>Against</th><th>Abstain</th><th>Outcome</th></tr></thead><tbody>';
+    rows.forEach(function(o){ var r=o.r||{yes_weight:0,no_weight:0,abstain_weight:0}; var res=decide(o.m,r);
+      h+='<tr><td><b>'+esc(o.m.title)+'</b><br><span class="kv">'+esc(ruleLabel(o.m))+'</span></td><td>'+r.yes_weight+'</td><td>'+r.no_weight+'</td><td>'+r.abstain_weight+'</td><td><span class="tag '+(res?"open":"closed")+'">'+(res?"CARRIED":"NOT CARRIED")+'</span></td></tr>';
+    });
+    h+='</tbody></table>'; rl.innerHTML=h;
+  }
+  function decide(m,r){
+    var y=r.yes_weight||0,n=r.no_weight||0,a=r.abstain_weight||0;
+    var base=m.abstain==="in_base"?(y+n+a):(y+n);
+    if(m.rule==="simple") return y>n;
+    var need=m.rule==="two_thirds"?2/3:((m.custom_pct||50)/100);
+    return base>0 && (y/base)>=need-1e-9;
+  }
+
+  /* ---------- users ---------- */
+  async function loadUsers(){
+    var r=await sb.from("admin_users").select("full_name,email,title,role,active,auth_id").order("role").order("full_name");
+    var l=$("usersList"); if(!l) return;
+    if(r.error){l.innerHTML='<p class="hint">'+esc(r.error.message)+'</p>';return;}
+    var us=r.data||[];
+    var h='<table><thead><tr><th>Name</th><th>Email</th><th>Title</th><th>Role</th><th>Registered</th></tr></thead><tbody>';
+    us.forEach(function(u){ h+='<tr><td><b>'+esc(u.full_name)+'</b></td><td>'+esc(u.email)+'</td><td class="kv">'+esc(u.title||"")+'</td><td><span class="tag '+(u.role==="administrator"?"open":(u.role==="secretary"?"full":"draft"))+'">'+esc(u.role)+'</span></td><td>'+(u.auth_id?'<span class="tag in">yes</span>':'<span class="kv">not yet</span>')+'</td></tr>'; });
+    h+='</tbody></table>'; l.innerHTML=h;
+  }
+
+  /* ---------- boot ---------- */
+  (async function(){ var s=await sb.auth.getSession(); if(s.data && s.data.session){ await afterLogin(); } })();
+})();
+</script>
