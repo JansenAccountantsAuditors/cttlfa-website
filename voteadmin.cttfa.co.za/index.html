@@ -39,7 +39,19 @@
   .btn:hover{background:var(--navy2)} .btn.gold{background:var(--gold);color:var(--navy)} .btn.gold:hover{background:#e0a411}
   .btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--line)} .btn.ghost:hover{background:#F6F8FD}
   .btn.red{background:var(--bad)} .btn.sm{padding:8px 12px;font-size:13px;min-height:36px}
+  .btn.green{background:#1E7A46} .btn.green:hover{background:#186138}
   .btn:disabled{opacity:.45;cursor:not-allowed} .btn.full{width:100%}
+  .allocbox{padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:13px;background:#F7F9FC;color:var(--ink);min-height:40px;display:flex;align-items:center}
+  .allocbox.full{background:var(--bad-bg);color:var(--bad);border-color:#EEC4C4}
+  .allocbox.ok{background:var(--good-bg);color:var(--good);border-color:#BCE0C9}
+  .comp-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line2);font-size:13.5px}
+  .comp-row:last-child{border-bottom:0}
+  select.comp-yes{color:var(--good);font-weight:700;border:1px solid #BCE0C9;background:var(--good-bg);border-radius:8px;padding:6px 8px}
+  select.comp-no{color:var(--bad);font-weight:700;border:1px solid #EEC4C4;background:var(--bad-bg);border-radius:8px;padding:6px 8px}
+  .timer-badge{font-variant-numeric:tabular-nums;font-weight:800;font-size:20px;padding:8px 14px;border-radius:10px;background:#EEF1F8;color:var(--navy);display:inline-block;min-width:74px;text-align:center}
+  .timer-badge.low{background:var(--bad-bg);color:var(--bad)}
+  .live-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:7px;vertical-align:middle}
+  .live-dot.on{background:var(--good)} .live-dot.off{background:var(--bad)}
   .msg{font-size:13px;margin-top:12px;padding:10px 12px;border-radius:9px}
   .msg.err{background:var(--bad-bg);color:var(--bad);border:1px solid var(--bad-ln)}
   .msg.ok{background:var(--good-bg);color:var(--good);border:1px solid var(--good-ln)}
@@ -157,6 +169,12 @@
     <section id="tab-accredit" class="hidden">
       <div id="accreditNeedsMeeting" class="banner">Select or create a meeting on the Meetings tab first.</div>
       <div id="accreditBody" class="hidden">
+        <div class="card" id="complianceCard">
+          <h3>Club compliance</h3>
+          <p class="hint">A non-compliant club cannot be accredited and does not form part of the voting strength. Set this before the first vote is started. It locks once voting begins.</p>
+          <div id="complianceList"><p class="hint">Loading...</p></div>
+          <div class="btnrow"><button class="btn gold" id="saveCompliance">Save compliance</button><button class="btn ghost" id="reloadCompliance">Reload</button><span class="kv" id="compMsg" style="align-self:center"></span></div>
+        </div>
         <div class="card">
           <h3>Accredit a delegate</h3>
           <p class="hint">Search the whole registered roll by SAFA number or surname, the club fills in automatically. To narrow the search to one club, type its name in the club filter first. Or type a name to add someone manually. Capture a cell number and consent, then check them in. Two people can accredit at the same time on separate laptops.</p>
@@ -166,7 +184,7 @@
           </div>
           <div class="row" style="margin-top:12px">
             <div><label class="f">Delegate name</label><input type="text" id="acName" placeholder="Selected, or type to add manually"></div>
-            <div style="max-width:150px"><label class="f">Votes this delegate</label><select id="acVotes"></select></div>
+            <div style="max-width:210px"><label class="f">Votes allocated</label><div id="acAllocInfo" class="allocbox">Select a club</div></div>
             <div style="max-width:180px"><label class="f">SAFA number</label><input type="text" id="acSafa" placeholder="Auto-filled from roll"></div>
             <div style="max-width:170px"><label class="f">Cell number</label><input type="tel" id="acCell" placeholder="072 000 0000"></div>
           </div>
@@ -295,6 +313,8 @@
     t.onclick=function(){
       Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(x){x.classList.toggle("on",x===t);});
       ["meetings","accredit","motions","live","users"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
+      if(t.dataset.tab!=="accredit") stopCiTimer();
+      if(t.dataset.tab!=="live" && liveTimer){ clearTimeout(liveTimer); liveTimer=null; }
       if(t.dataset.tab==="accredit") renderAccredit();
       if(t.dataset.tab==="motions") renderMotions();
       if(t.dataset.tab==="live") renderLive();
@@ -351,20 +371,57 @@
   }
 
   /* ---------- accreditation ---------- */
-  var activeRegs=[], ciTimer=null;
+  var activeRegs=[], ciTimer=null, complianceMap={}, compLocked=false, liveTimer=null, _closing={};
   function clubById(id){ return clubs.filter(function(c){return c.id===id;})[0]; }
   function allocatedForClub(cid){ return activeRegs.filter(function(r){return r.club_id===cid;}).reduce(function(a,r){return a+(r.vote_weight||1);},0); }
   function remainingForClub(cid){ var c=clubById(cid); return c ? Math.max(0, c.weight - allocatedForClub(cid)) : 0; }
   function refreshVotesOptions(){
-    var cid=$("acClub").value, rem=remainingForClub(cid), c=clubById(cid), sel=$("acVotes");
-    sel.innerHTML="";
-    if(rem<=0){ sel.innerHTML='<option value="0">None left</option>'; }
-    else { for(var i=1;i<=rem;i++){ sel.innerHTML+='<option value="'+i+'"'+(i===rem?' selected':'')+'>'+i+(i>1?' votes':' vote')+'</option>'; } }
-    var alloc=allocatedForClub(cid);
-    $("acAlloc").innerHTML = c ? (alloc+' of '+c.weight+' allocated'+(rem<=0?', club full':', '+rem+' left')) : '';
-    $("checkInBtn").disabled = (rem<=0);
+    var cid=$("acClub").value, c=clubById(cid), box=$("acAllocInfo");
+    if(!c){ box.className="allocbox"; box.textContent="Select a club"; $("acAlloc").innerHTML=""; $("checkInBtn").disabled=true; return; }
+    var alloc=allocatedForClub(cid), rem=Math.max(0, c.weight-alloc), comp=(complianceMap[cid]!==false);
+    if(!comp){ box.className="allocbox full"; box.textContent="Club non-compliant, cannot be accredited"; $("checkInBtn").disabled=true; }
+    else if(rem<=0){ box.className="allocbox full"; box.textContent="Subscribed: "+alloc+" of "+c.weight+" vote"+(c.weight>1?"s":"")+" used"; $("checkInBtn").disabled=true; }
+    else { var give=(c.weight===2 && alloc===0)?2:1; box.className="allocbox ok"; box.textContent="This delegate gets "+give+" vote"+(give>1?"s":"")+" ("+alloc+" of "+c.weight+" used)"; $("checkInBtn").disabled=false; }
+    $("acAlloc").innerHTML = alloc+' of '+c.weight+' allocated'+(rem<=0?', club full':', '+rem+' left');
   }
   function stopCiTimer(){ if(ciTimer){ clearInterval(ciTimer); ciTimer=null; } }
+  async function loadCompliance(){
+    if(!curMeeting) return;
+    var mo=await sb.from("motions").select("status").eq("meeting_id",curMeeting.id);
+    compLocked=(mo.data||[]).some(function(m){return m.status!=="draft";});
+    var ex=await sb.from("meeting_clubs").select("club_id,compliant").eq("meeting_id",curMeeting.id);
+    var have={}; (ex.data||[]).forEach(function(x){ have[x.club_id]=x.compliant; });
+    var missing=clubs.filter(function(c){ return !(c.id in have); });
+    if(missing.length && !compLocked){
+      await sb.from("meeting_clubs").insert(missing.map(function(c){return {meeting_id:curMeeting.id,club_id:c.id,compliant:true};}));
+    }
+    missing.forEach(function(c){ have[c.id]=true; });
+    complianceMap=have; renderCompliance(); refreshVotesOptions();
+  }
+  function renderCompliance(){
+    var l=$("complianceList");
+    l.innerHTML=clubs.map(function(c){
+      var comp=(complianceMap[c.id]!==false);
+      return '<div class="comp-row"><span><b>'+esc(c.name)+'</b> <span class="tag '+(c.type==="full"?"full":"assoc")+'">'+c.type+'</span></span>'+
+        '<select data-comp="'+c.id+'" class="'+(comp?"comp-yes":"comp-no")+'"'+(compLocked?' disabled':'')+'>'+
+        '<option value="yes"'+(comp?' selected':'')+'>Compliant</option>'+
+        '<option value="no"'+(!comp?' selected':'')+'>Not compliant</option></select></div>';
+    }).join("");
+    Array.prototype.forEach.call(l.querySelectorAll("[data-comp]"),function(s){
+      s.onchange=function(){ this.className=(this.value==="yes")?"comp-yes":"comp-no"; complianceMap[this.dataset.comp]=(this.value==="yes"); refreshVotesOptions(); };
+    });
+    $("saveCompliance").disabled=compLocked;
+    $("compMsg").textContent=compLocked?"Locked, a vote has been started.":"";
+  }
+  async function saveCompliance(){
+    if(!curMeeting||compLocked) return;
+    var rows=clubs.map(function(c){ return {meeting_id:curMeeting.id,club_id:c.id,compliant:(complianceMap[c.id]!==false)}; });
+    var r=await sb.from("meeting_clubs").upsert(rows,{onConflict:"meeting_id,club_id"});
+    if(r.error){ $("compMsg").textContent=r.error.message; return; }
+    $("compMsg").textContent="Saved."; refreshVotesOptions();
+  }
+  $("saveCompliance") && ($("saveCompliance").onclick=saveCompliance);
+  $("reloadCompliance") && ($("reloadCompliance").onclick=loadCompliance);
   function renderAccredit(){
     var need=!curMeeting;
     $("accreditNeedsMeeting").classList.toggle("hidden",!need);
@@ -374,6 +431,7 @@
     selectedPerson=null; $("acName").value="";$("acSafa").value="";$("acCell").value="";$("acConsent").checked=false;$("acSearch").value="";
     $("acClubSearch").value="";$("acClub").value="";$("acClubResults").classList.add("hidden");
     $("acResults").classList.add("hidden");
+    loadCompliance();
     loadCheckedIn().then(function(){ refreshVotesOptions(); });
     try{ $("acSearch").focus(); }catch(e){}
     ciTimer=setInterval(function(){ loadCheckedIn(); },12000);
@@ -415,25 +473,31 @@
     });
   }
   $("acCell") && ($("acCell").onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); $("checkInBtn").click(); } });
+  function accErr(res){
+    if(res.error==="subscribed") return "This club is fully accredited (maximum "+(res.max||"")+" vote"+((res.max||2)>1?"s":"")+"). Remove a delegate first to change it.";
+    if(res.error==="already_accredited") return "This person is already accredited for this meeting.";
+    if(res.error==="non_compliant") return "This club is non-compliant and cannot be accredited.";
+    if(res.error==="no_name") return "Enter a delegate name.";
+    if(res.error==="forbidden") return "You are not permitted to accredit delegates.";
+    return "Could not accredit ("+(res.error||"unknown")+").";
+  }
   $("checkInBtn").onclick=async function(){
     if(!curMeeting) return;
-    var name=$("acName").value.trim(), cell=$("acCell").value.trim(), cid=$("acClub").value, votes=parseInt($("acVotes").value,10)||0;
+    var name=$("acName").value.trim(), cell=$("acCell").value.trim(), cid=$("acClub").value;
     if(!name){msg($("acMsg"),"Enter or select a delegate name.","err");return;}
     if(!cid){msg($("acMsg"),"Choose the delegate's club in the club filter.","err");return;}
-    if(votes<=0 || votes>remainingForClub(cid)){msg($("acMsg"),"Only "+remainingForClub(cid)+" vote(s) left for this club. Remove a delegate to free one.","err");return;}
     if(!$("acConsent").checked){msg($("acMsg"),"Please capture the delegate's consent.","err");return;}
     $("checkInBtn").disabled=true;
     try{
-      var del=await sb.from("delegates").insert({meeting_id:curMeeting.id,club_id:cid,full_name:name,cell:cell||null,person_id:selectedPerson?selectedPerson.id:null,safa_no:$("acSafa").value.trim()||null,consent:true,consent_at:new Date().toISOString(),checked_in_at:new Date().toISOString()}).select().single();
-      if(del.error) throw del.error;
-      var c=code();
-      var reg=await sb.from("registrations").insert({meeting_id:curMeeting.id,club_id:cid,delegate_id:del.data.id,code:c,vote_weight:votes}).select().single();
-      if(reg.error) throw reg.error;
-      showQR(clubById(cid), c, votes);
-      msg($("acMsg"),"Checked in.","ok");
+      var r=await sb.rpc("accredit_delegate",{p_meeting:curMeeting.id,p_club:cid,p_person:selectedPerson?selectedPerson.id:null,p_name:name,p_cell:cell||null,p_safa:$("acSafa").value.trim()||null});
+      if(r.error) throw r.error;
+      var res=r.data||{};
+      if(!res.ok){ msg($("acMsg"), accErr(res),"err"); $("checkInBtn").disabled=false; return; }
+      showQR(clubById(cid), res.code, res.weight);
+      msg($("acMsg"),"Accredited"+(res.count>1?", club now split "+res.count+" ways":"")+".","ok");
       $("acName").value="";$("acSafa").value="";$("acCell").value="";$("acConsent").checked=false;$("acSearch").value="";selectedPerson=null;
       await loadCheckedIn(); refreshVotesOptions(); try{ $("acSearch").focus(); }catch(e){}
-    }catch(e){ msg($("acMsg"), e.message||"Could not check in.","err"); }
+    }catch(e){ msg($("acMsg"), e.message||"Could not accredit.","err"); }
     $("checkInBtn").disabled=false;
   };
   async function loadCheckedIn(){
@@ -456,18 +520,16 @@
   }
   async function removeReg(regId){
     var rg=activeRegs.filter(function(x){return x.id===regId;})[0]; if(!rg) return;
-    if(!window.confirm("Remove this delegate and free their vote? Their code will stop working.")) return;
-    await sb.from("registrations").update({revoked:true}).eq("id",regId);
-    if(rg.delegate_id){ await sb.from("delegates").delete().eq("id",rg.delegate_id); }
+    if(!window.confirm("Remove this delegate and re-split the club's votes? Their code will stop working.")) return;
+    var r=await sb.rpc("remove_registration",{p_reg:regId});
+    if(r.error||(r.data&&!r.data.ok)){ msg($("acMsg"),(r.error&&r.error.message)||"Could not remove.","err"); }
     await loadCheckedIn(); refreshVotesOptions();
   }
   async function newCode(regId){
     var rg=activeRegs.filter(function(x){return x.id===regId;})[0]; if(!rg) return;
-    var nc=code();
-    await sb.from("registrations").update({revoked:true}).eq("id",regId);
-    var ins=await sb.from("registrations").insert({meeting_id:curMeeting.id,club_id:rg.club_id,delegate_id:rg.delegate_id,code:nc,vote_weight:rg.vote_weight}).select().single();
-    if(ins.error){ await sb.from("registrations").update({revoked:false}).eq("id",regId); msg($("acMsg"),ins.error.message,"err"); return; }
-    showQR(clubById(rg.club_id), nc, rg.vote_weight);
+    var r=await sb.rpc("reissue_code",{p_reg:regId});
+    if(r.error||(r.data&&!r.data.ok)){ msg($("acMsg"),(r.error&&r.error.message)||"Could not reissue.","err"); return; }
+    showQR(clubById(rg.club_id), r.data.code, rg.vote_weight);
     await loadCheckedIn(); refreshVotesOptions();
   }
   function showQR(club,c,votes){
@@ -502,49 +564,69 @@
     if(!ms.length){l.innerHTML='<p class="hint">None yet.</p>';return;}
     var h='<table><thead><tr><th>#</th><th>Motion</th><th>Rule</th><th>Status</th><th></th></tr></thead><tbody>';
     ms.forEach(function(m){
-      var act = m.status==="draft" ? '<button class="btn gold sm" data-open="'+m.id+'">Open</button>' : (m.status==="open" ? '<button class="btn red sm" data-close="'+m.id+'">Close</button>' : '<span class="kv">closed</span>');
-      h+='<tr><td>'+m.seq+'</td><td><b>'+esc(m.title)+'</b></td><td class="kv">'+esc(ruleLabel(m))+'</td><td><span class="tag '+m.status+'">'+m.status+'</span></td><td>'+act+'</td></tr>';
+      var act = m.status==="draft" ? '<button class="btn green sm" data-open="'+m.id+'">Start</button>'
+        : (m.status==="open" ? '<span class="timer-badge" data-tmr="'+m.id+'" data-opened="'+(m.opened_at||"")+'" data-secs="'+(m.timer_seconds||0)+'">--</span> <button class="btn red sm" data-close="'+m.id+'">Close</button>'
+        : '<span class="tag closed">closed</span>');
+      h+='<tr><td>'+m.seq+'</td><td><b>'+esc(m.title)+'</b></td><td class="kv">'+esc(ruleLabel(m))+'</td><td><span class="tag '+m.status+'">'+m.status+'</span></td><td style="white-space:nowrap">'+act+'</td></tr>';
     });
     h+='</tbody></table>'; l.innerHTML=h;
     Array.prototype.forEach.call(l.querySelectorAll("[data-open]"),function(b){b.onclick=function(){openMotion(b.dataset.open);};});
     Array.prototype.forEach.call(l.querySelectorAll("[data-close]"),function(b){b.onclick=function(){closeMotion(b.dataset.close);};});
   }
   function ruleLabel(m){return m.rule==="two_thirds"?"Two-thirds":(m.rule==="custom"?((m.custom_pct||0)+"%"):"Simple majority");}
-  async function openMotion(id){ await sb.from("motions").update({status:"open",opened_at:new Date().toISOString()}).eq("id",id); loadMotions(); }
+  async function openMotion(id){ delete _closing[id]; await sb.from("motions").update({status:"open",opened_at:new Date().toISOString()}).eq("id",id); loadMotions(); renderLive(); }
   async function closeMotion(id){ await sb.from("motions").update({status:"closed",closed_at:new Date().toISOString()}).eq("id",id); loadMotions(); renderLive(); }
+  /* global countdown ticker: updates timer badges and auto-closes at zero */
+  setInterval(function(){
+    var els=document.querySelectorAll('[data-tmr]');
+    Array.prototype.forEach.call(els,function(el){
+      var opened=el.getAttribute('data-opened'), secs=parseInt(el.getAttribute('data-secs'),10)||0;
+      if(!opened||!secs){ el.textContent='--'; return; }
+      var rem=Math.max(0, Math.ceil((new Date(opened).getTime()+secs*1000-Date.now())/1000));
+      var mm=Math.floor(rem/60), ss=rem%60; el.textContent=mm+':'+(ss<10?'0':'')+ss;
+      el.classList.toggle('low', rem<=10);
+      if(rem<=0){ var id=el.getAttribute('data-tmr'); if(id && !_closing[id]){ _closing[id]=1; closeMotion(id); } }
+    });
+  },1000);
 
   /* ---------- live & results ---------- */
   async function renderLive(){
     var need=!curMeeting; $("liveNeedsMeeting").classList.toggle("hidden",!need); $("liveBody").classList.toggle("hidden",need);
+    if(liveTimer){ clearTimeout(liveTimer); liveTimer=null; }
     if(need) return;
     var r=await sb.from("motions").select("*").eq("meeting_id",curMeeting.id).order("seq");
     var ms=r.data||[]; var open=ms.filter(function(m){return m.status==="open";})[0];
+    var drafts=ms.filter(function(m){return m.status==="draft";});
     var c=$("liveControl");
     if(open){
-      var tr=await sb.from("motion_turnout").select("votes_in").eq("motion_id",open.id).maybeSingle();
-      c.innerHTML='<h3>Voting open</h3><p class="hint">'+esc(open.title)+'</p><div style="margin:8px 0"><span class="stat"><b>'+((tr.data&&tr.data.votes_in)||0)+'</b><span>votes in</span></span></div><div class="btnrow"><button class="btn red" id="liveClose">Close voting</button><button class="btn ghost" id="liveRefresh">Refresh turnout</button></div>';
+      var t=await sb.rpc("motion_tally",{p_motion:open.id}); var tal=(t.data&&!t.data.error)?t.data:{};
+      c.innerHTML='<h3><span class="live-dot on"></span>Voting open</h3><p class="hint">Motion '+(open.seq||"")+': '+esc(open.title)+'</p>'+
+        '<div style="display:flex;align-items:center;gap:16px;margin:14px 0;flex-wrap:wrap">'+
+        '<span class="timer-badge" data-tmr="'+open.id+'" data-opened="'+(open.opened_at||"")+'" data-secs="'+(open.timer_seconds||0)+'">--</span>'+
+        '<span class="stat"><b>'+(tal.cast_weight||0)+' / '+(tal.voting_strength||0)+'</b><span>votes in / strength</span></span></div>'+
+        '<div class="btnrow"><button class="btn red" id="liveClose">Close voting now</button><button class="btn ghost" id="liveRefresh">Refresh</button></div>'+
+        '<p class="hint">The vote closes on its own when the timer reaches zero. Anyone accredited who has not voted is counted as an abstain.</p>';
       $("liveClose").onclick=function(){closeMotion(open.id);};
       $("liveRefresh").onclick=renderLive;
+      liveTimer=setTimeout(renderLive,8000);
     } else {
-      c.innerHTML='<h3>No motion open</h3><p class="hint">Open a motion on the Motions tab. Live turnout and the close control appear here.</p>';
+      var db='';
+      if(drafts.length){ db='<div class="btnrow" style="flex-wrap:wrap;gap:8px">'+drafts.map(function(m){return '<button class="btn green sm" data-start="'+m.id+'">Start motion '+(m.seq||"")+'</button>';}).join("")+'</div>'; }
+      c.innerHTML='<h3><span class="live-dot off"></span>No motion open</h3><p class="hint">Start a motion below or on the Motions tab. The timer, live count and close control appear here.</p>'+db;
+      Array.prototype.forEach.call(c.querySelectorAll("[data-start]"),function(b){ b.onclick=function(){ openMotion(b.dataset.start); }; });
     }
-    // results
     var closed=ms.filter(function(m){return m.status==="closed";});
     var rl=$("resultsList");
     if(!closed.length){ rl.innerHTML='<p class="hint">No closed motions yet.</p>'; return; }
-    var rows=await Promise.all(closed.map(function(m){ return sb.from("motion_results").select("*").eq("motion_id",m.id).maybeSingle().then(function(x){return {m:m,r:x.data};}); }));
-    var h='<table><thead><tr><th>Motion</th><th>For</th><th>Against</th><th>Abstain</th><th>Outcome</th></tr></thead><tbody>';
-    rows.forEach(function(o){ var r=o.r||{yes_weight:0,no_weight:0,abstain_weight:0}; var res=decide(o.m,r);
-      h+='<tr><td><b>'+esc(o.m.title)+'</b><br><span class="kv">'+esc(ruleLabel(o.m))+'</span></td><td>'+r.yes_weight+'</td><td>'+r.no_weight+'</td><td>'+r.abstain_weight+'</td><td><span class="tag '+(res?"open":"closed")+'">'+(res?"CARRIED":"NOT CARRIED")+'</span></td></tr>';
+    var rows=await Promise.all(closed.map(function(m){ return sb.rpc("motion_tally",{p_motion:m.id}).then(function(x){ return {m:m,t:(x.data&&!x.data.error)?x.data:{}}; }); }));
+    var h='<table><thead><tr><th>Motion</th><th class="num">For</th><th class="num">Against</th><th class="num">Abstain</th><th>Outcome</th></tr></thead><tbody>';
+    rows.forEach(function(o){ var t=o.t||{}; var carried=!!t.passed;
+      h+='<tr><td><b>'+esc(o.m.title)+'</b><br><span class="kv">'+esc(ruleLabel(o.m))+' · strength '+(t.voting_strength||0)+'</span></td>'+
+        '<td class="num">'+(t.yes_w||0)+'</td><td class="num">'+(t.no_w||0)+'</td>'+
+        '<td class="num">'+(t.abstain_w||0)+(t.abstain_implied?' <span class="kv">('+t.abstain_implied+' no-show)</span>':'')+'</td>'+
+        '<td><span class="tag '+(carried?"open":"closed")+'">'+(carried?"CARRIED":"NOT CARRIED")+'</span></td></tr>';
     });
     h+='</tbody></table>'; rl.innerHTML=h;
-  }
-  function decide(m,r){
-    var y=r.yes_weight||0,n=r.no_weight||0,a=r.abstain_weight||0;
-    var base=m.abstain==="in_base"?(y+n+a):(y+n);
-    if(m.rule==="simple") return y>n;
-    var need=m.rule==="two_thirds"?2/3:((m.custom_pct||50)/100);
-    return base>0 && (y/base)>=need-1e-9;
   }
 
   /* ---------- users ---------- */
