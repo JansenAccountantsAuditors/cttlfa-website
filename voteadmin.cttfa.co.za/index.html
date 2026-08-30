@@ -118,6 +118,25 @@
   .stat b{font-family:var(--cond);font-weight:700;font-size:26px;color:var(--navy);line-height:1}
   .stat span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:4px}
   .banner{background:var(--warn-bg);border:1px solid var(--warn-ln);color:var(--warn);border-radius:10px;padding:10px 14px;font-size:12.5px;margin-bottom:14px}
+  /* help */
+  .help-lead{font-size:14px;color:var(--ink);max-width:70ch;line-height:1.6;margin:2px 0 6px}
+  .help-toc{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 4px}
+  .help-toc a{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:12px;color:var(--navy);background:#EEF1F8;border:1px solid var(--line);border-radius:999px;padding:6px 13px;text-decoration:none}
+  .help-toc a:hover{background:var(--gold);border-color:var(--gold)}
+  .help-card h3 .step-n{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:var(--gold);color:var(--navy);font-family:var(--head);font-weight:800;font-size:14px;margin-right:9px;vertical-align:middle}
+  .help-card p{font-size:13.5px;line-height:1.6;color:var(--ink);max-width:74ch;margin:0 0 10px}
+  .help-card p.sub{color:var(--muted);font-size:12.5px}
+  .steps{counter-reset:st;margin:6px 0 4px;padding:0;list-style:none}
+  .steps>li{position:relative;padding:2px 0 12px 34px;font-size:13.5px;line-height:1.55;max-width:72ch}
+  .steps>li:before{counter-increment:st;content:counter(st);position:absolute;left:0;top:0;width:24px;height:24px;border-radius:50%;background:var(--navy);color:#fff;font-family:var(--cond);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center}
+  .kk{display:inline-block;font-family:var(--cond);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;padding:1px 7px;border-radius:5px;background:#EEF1F8;color:var(--navy);border:1px solid var(--line)}
+  .kk.gold{background:var(--gold);border-color:var(--gold)} .kk.green{background:var(--good-bg);color:var(--good);border-color:var(--good-ln)} .kk.red{background:var(--bad-bg);color:var(--bad);border-color:var(--bad-ln)}
+  .callout{border-left:4px solid var(--gold);background:#FCF7E7;border-radius:0 10px 10px 0;padding:11px 15px;font-size:13px;line-height:1.55;color:var(--ink);margin:10px 0;max-width:74ch}
+  .callout.warn{border-left-color:var(--bad);background:var(--bad-bg)}
+  .callout b{color:var(--navy)}
+  .faq{border-top:1px solid var(--line2);padding:11px 0}
+  .faq b{display:block;color:var(--navy);font-size:13.5px;margin-bottom:3px}
+  .faq span{font-size:13px;color:var(--ink);line-height:1.55}
 </style>
 
 <!-- LOGIN -->
@@ -149,13 +168,14 @@
       <button class="btn ghost sm" id="signOut" style="margin-left:6px;color:#fff;background:transparent;border-color:rgba(255,255,255,.3)">Sign out</button>
     </div>
     <nav class="topnav"><div class="topnav-inner" id="mainTabs">
-      <button class="tab on" data-tab="meetings">Meetings</button>
-      <button class="tab" data-tab="accredit">Accreditation</button>
-      <button class="tab" data-tab="compliance">Compliance</button>
-      <button class="tab" data-tab="motions">Motions</button>
-      <button class="tab" data-tab="live">Live &amp; results</button>
-      <button class="tab" data-tab="audit">Audit</button>
-      <button class="tab" data-tab="users">Mancom users</button>
+      <button class="tab on" data-tab="meetings" title="Create the meeting (AGM, SGM, General or Mancom) and pick the one you are working on. Everything else hangs off the selected meeting.">Meetings</button>
+      <button class="tab" data-tab="accredit" title="Check delegates in at the door, capture their cell number and consent, and issue their voting code. Votes are allocated to the club automatically.">Accreditation</button>
+      <button class="tab" data-tab="compliance" title="Mark each club compliant or not for this meeting. Do this before the first vote is started. A non-compliant club cannot be accredited or vote.">Compliance</button>
+      <button class="tab" data-tab="motions" title="Write up each motion for the meeting, its wording, who may vote, the majority needed and the timer. You can prepare several motions in advance.">Motions</button>
+      <button class="tab" data-tab="live" title="Run the vote on the day: start a motion, watch the timer and count, close it, see results and open the projector room view.">Live &amp; results</button>
+      <button class="tab" data-tab="audit" title="A read-only record of every accreditation, removal, compliance change and motion start or close, with who did it and when.">Audit</button>
+      <button class="tab" data-tab="users" title="The Mancom allow-list. Only these people can sign in. Each sets their own password the first time.">Mancom users</button>
+      <button class="tab" data-tab="help" title="Full how-to guide: the running order for a meeting day, every screen explained, and how delegates vote from their phones.">Help</button>
     </div></nav>
   </header>
   <div class="wrap">
@@ -181,7 +201,7 @@
           <div><label class="f">Venue</label><input type="text" id="mVenue" placeholder="Venue"></div>
           <div><label class="f">Google Drive link (documents)</label><input type="text" id="mDrive" placeholder="https://drive.google.com/..."></div>
         </div>
-        <div class="btnrow"><button class="btn gold" id="createMeeting">Create meeting</button></div>
+        <div class="btnrow"><button class="btn gold" id="createMeeting" title="Save this meeting and make it the working meeting. You can create it days ahead and set it up before the delegates arrive.">Create meeting</button></div>
         <div id="meetingMsg"></div>
       </div>
       <div class="card">
@@ -208,7 +228,7 @@
             <div style="max-width:170px"><label class="f">Cell number</label><input type="tel" id="acCell" placeholder="072 000 0000"></div>
           </div>
           <label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px;color:var(--ink)"><input type="checkbox" id="acConsent" style="width:auto;margin-top:3px"> <span>The delegate consents to CTTLFA holding their name and cell number for this meeting's attendance and voting record, under the Protection of Personal Information Act 4 of 2013.</span></label>
-          <div class="btnrow"><button class="btn gold" id="checkInBtn">Check in and issue code</button><button class="btn ghost" id="refreshCi">Refresh list</button><span class="kv" id="acHint" style="align-self:center"></span></div>
+          <div class="btnrow"><button class="btn gold" id="checkInBtn" title="Accredit this delegate: record their attendance, allocate the club's vote(s) and generate their voting code. The QR and code pop up straight after.">Check in and issue code</button><button class="btn ghost" id="refreshCi" title="Reload the checked-in list. It also refreshes on its own every few seconds.">Refresh list</button><span class="kv" id="acHint" style="align-self:center"></span></div>
           <div id="acMsg"></div>
         </div>
         <div class="card" id="quorumCard">
@@ -217,7 +237,7 @@
           <div id="quorumPanel" class="quorum-grid"></div>
         </div>
         <div class="card">
-          <h3>Checked in <span id="ciCount" class="kv"></span> <button class="btn ghost sm" id="dlAttendance" style="float:right">Attendance PDF</button></h3>
+          <h3>Checked in <span id="ciCount" class="kv"></span> <button class="btn ghost sm" id="dlAttendance" style="float:right" title="Download a PDF attendance and voting register: every delegate, club, votes carried and code. Keep it in the meeting file.">Attendance PDF</button></h3>
           <div style="margin:6px 0 12px"><span class="stat"><b id="ciClubs">0</b><span>clubs present</span></span><span class="stat"><b id="ciWeight">0</b><span>eligible votes</span></span></div>
           <div id="ciList"></div>
         </div>
@@ -237,7 +257,7 @@
             <span class="stat"><b id="compTot">0</b><span>clubs</span></span>
           </div>
           <div id="complianceList" class="comp-grid"><p class="hint">Loading...</p></div>
-          <div class="btnrow" style="margin-top:16px"><button class="btn gold" id="saveCompliance">Save compliance</button><button class="btn ghost" id="reloadCompliance">Reload</button><span class="kv" id="compMsg" style="align-self:center"></span></div>
+          <div class="btnrow" style="margin-top:16px"><button class="btn gold" id="saveCompliance" title="Confirm and save the compliance list for this meeting. Once the first vote is started this list locks and cannot be changed.">Save compliance</button><button class="btn ghost" id="reloadCompliance" title="Discard unsaved changes and reload the saved compliance list.">Reload</button><span class="kv" id="compMsg" style="align-self:center"></span></div>
         </div>
       </div>
     </section>
@@ -252,13 +272,13 @@
           <label class="f">Motion title</label><input type="text" id="moTitle" placeholder="e.g. Adoption of the 2026 budget">
           <label class="f">Plain instruction shown on each phone</label><textarea id="moInstr" placeholder="In favour means... Against means..."></textarea>
           <div class="row">
-            <div style="max-width:190px"><label class="f">Pass rule</label><select id="moRule"><option value="simple">Simple majority</option><option value="two_thirds">Two-thirds</option><option value="custom">Custom %</option></select></div>
+            <div style="max-width:190px" title="Simple majority: more For than Against. Two-thirds: needed for constitutional amendments. Custom: set your own percentage."><label class="f">Pass rule</label><select id="moRule"><option value="simple">Simple majority</option><option value="two_thirds">Two-thirds</option><option value="custom">Custom %</option></select></div>
             <div style="max-width:120px" id="moCustomWrap" class="hidden"><label class="f">Custom %</label><input type="text" id="moCustom" value="75"></div>
-            <div style="max-width:190px"><label class="f">Who may vote</label><select id="moElig"><option value="all">Full + Associate</option><option value="full_only">Full only</option></select></div>
-            <div style="max-width:170px"><label class="f">Abstentions</label><select id="moAbs"><option value="set_aside">Set aside</option><option value="in_base">Count in base</option></select></div>
-            <div style="max-width:130px"><label class="f">Timer (sec)</label><input type="text" id="moTimer" value="45"></div>
+            <div style="max-width:190px" title="Full + Associate lets every accredited club vote. Full only restricts the vote to full member clubs, for matters reserved to them."><label class="f">Who may vote</label><select id="moElig"><option value="all">Full + Associate</option><option value="full_only">Full only</option></select></div>
+            <div style="max-width:170px" title="Set aside: abstentions are ignored, the majority is worked out on For and Against only. Count in base: abstentions count in the total the majority is measured against, so an abstain effectively counts against."><label class="f">Abstentions</label><select id="moAbs"><option value="set_aside">Set aside</option><option value="in_base">Count in base</option></select></div>
+            <div style="max-width:130px" title="How many seconds the vote stays open. When it reaches zero the motion closes on its own and anyone who has not voted is counted as an abstain. 45 to 60 seconds works well in the room."><label class="f">Timer (sec)</label><input type="text" id="moTimer" value="45"></div>
           </div>
-          <div class="btnrow"><button class="btn gold" id="addMotion">Add motion</button></div>
+          <div class="btnrow"><button class="btn gold" id="addMotion" title="Save this motion as a draft. It is not open for voting yet, you start it from the Live tab on the day. Prepare all your motions (up to ten for an AGM) in advance.">Add motion</button></div>
           <div id="moMsg"></div>
         </div>
         <div class="card">
@@ -273,7 +293,7 @@
       <div id="liveNeedsMeeting" class="banner">Select a meeting first.</div>
       <div id="liveBody" class="hidden">
         <div class="card" id="liveControl"></div>
-        <div class="card" id="liveResults"><h3>Results <button class="btn ghost sm" id="dlResults" style="float:right">Results PDF</button><button class="btn ghost sm" id="openRoom" style="float:right;margin-right:8px">Open room view</button></h3><div id="resultsList"><p class="hint">Results appear here as motions close.</p></div></div>
+        <div class="card" id="liveResults"><h3>Results <button class="btn ghost sm" id="dlResults" style="float:right" title="Download a PDF of every closed motion with the For, Against and Abstain totals and the outcome. This is the formal voting record for the minutes.">Results PDF</button><button class="btn ghost sm" id="openRoom" style="float:right;margin-right:8px" title="Open the big-screen room view in a new tab for the hall projector. It shows the motion and countdown while open, and CARRIED or NOT CARRIED with the totals once closed. Never the running tally, the ballot stays secret.">Open room view</button></h3><div id="resultsList"><p class="hint">Results appear here as motions close.</p></div></div>
       </div>
     </section>
 
@@ -292,6 +312,164 @@
         <h3>Mancom users</h3>
         <p class="hint">The allow-list. Only these people can access the admin, and each sets their own password the first time. Administrators can change roles.</p>
         <div id="usersList"><p class="hint">Loading...</p></div>
+      </div>
+    </section>
+
+    <!-- HELP -->
+    <section id="tab-help" class="hidden">
+      <div class="card">
+        <h3>How the voting system works</h3>
+        <p class="help-lead">This is the full guide for the people running a meeting. Delegates vote from their own phones using a code you give them at the door. Nothing is installed, they just open a link. The steps below follow the order you actually work in on the day. Hover over any button on the other tabs to see a short reminder of what it does.</p>
+        <div class="help-toc">
+          <a href="#h-day">The day at a glance</a>
+          <a href="#h-before">Before the meeting</a>
+          <a href="#h-compliance">Compliance</a>
+          <a href="#h-accredit">Accreditation</a>
+          <a href="#h-codes">Codes: QR and SMS</a>
+          <a href="#h-quorum">Quorum</a>
+          <a href="#h-motions">Motions</a>
+          <a href="#h-live">Running a vote</a>
+          <a href="#h-projector">Projector</a>
+          <a href="#h-results">Results and records</a>
+          <a href="#h-club">How delegates vote</a>
+          <a href="#h-faq">Common questions</a>
+        </div>
+      </div>
+
+      <div class="card help-card" id="h-day">
+        <h3><span class="step-n">1</span>The day at a glance</h3>
+        <p>A meeting runs in the same order every time. Do the first three before delegates start voting, then repeat the vote step for each motion.</p>
+        <ol class="steps">
+          <li><b>Pick the meeting.</b> On the <span class="kk">Meetings</span> tab, select the meeting you are running. Its name shows in the grey bar at the top of every tab so you always know which one you are on.</li>
+          <li><b>Set compliance.</b> On the <span class="kk">Compliance</span> tab, confirm which clubs are compliant and press <span class="kk gold">Save compliance</span>. Do this before you start accrediting.</li>
+          <li><b>Accredit delegates at the door.</b> On the <span class="kk">Accreditation</span> tab, find each delegate, capture their cell and consent, and press <span class="kk gold">Check in and issue code</span>. Hand them their QR or send the code by SMS.</li>
+          <li><b>Prepare the motions.</b> On the <span class="kk">Motions</span> tab, type up each motion. You can do this days ahead.</li>
+          <li><b>Run each vote.</b> On the <span class="kk">Live &amp; results</span> tab, press <span class="kk green">Start</span> on a motion, let the timer run, then read the result. Repeat for the next motion.</li>
+          <li><b>Keep the records.</b> Download the attendance PDF and the results PDF for the minutes.</li>
+        </ol>
+        <div class="callout"><b>Two laptops is fine.</b> Two people can accredit at the same time on separate laptops. Only the chairperson's laptop should start and close the actual votes, to keep control in one place.</div>
+      </div>
+
+      <div class="card help-card" id="h-before">
+        <h3><span class="step-n">2</span>Before the meeting: create it</h3>
+        <p>On the <span class="kk">Meetings</span> tab, fill in the name, type (AGM, SGM, General or Mancom), date and venue, then press <span class="kk gold">Create meeting</span>. You can add a Google Drive link so delegates can reach the meeting documents. The meeting you create becomes the working meeting straight away.</p>
+        <p class="sub">You can create the meeting well in advance and set everything up quietly before the doors open. Come back on the day, select it from the list, and carry on.</p>
+      </div>
+
+      <div class="card help-card" id="h-compliance">
+        <h3><span class="step-n">3</span>Compliance: who is allowed to vote</h3>
+        <p>A club must be in good standing to be accredited and to vote. The <span class="kk">Compliance</span> tab is where you record that for this meeting.</p>
+        <ol class="steps">
+          <li>Open the <span class="kk">Compliance</span> tab. Every club is listed and starts as <span class="kk green">Compliant</span>.</li>
+          <li>For any club that is not in good standing, change its dropdown to <span class="kk red">Not compliant</span>. The row turns red.</li>
+          <li>Press <span class="kk gold">Save compliance</span> to confirm.</li>
+        </ol>
+        <p>A club marked not compliant cannot be checked in on the Accreditation tab, and its votes are left out of the voting strength. You can change the list and save again as many times as you need <b>up to the moment the first motion is started</b>.</p>
+        <div class="callout warn"><b>It locks once voting begins.</b> The instant you start the first motion, the compliance list locks so the basis of the vote cannot be changed underneath a result. If you need to fix compliance after that, it can only be done before any vote is opened, so check it carefully first. A locked list shows a small <span class="kk red">locked</span> tag.</div>
+      </div>
+
+      <div class="card help-card" id="h-accredit">
+        <h3><span class="step-n">4</span>Accreditation: checking delegates in</h3>
+        <p>This is the busy part at the door. For each delegate:</p>
+        <ol class="steps">
+          <li><b>Find the person.</b> In the big search box, type their <b>SAFA number</b> or <b>surname</b>. Pick them from the list and their club and SAFA number fill in on their own. If they are not on the roll, just type their name in the delegate name field to add them by hand.</li>
+          <li><b>Narrow to a club (optional).</b> If two people share a surname, type the club name in the <b>Club filter</b> first to search inside that club only. Leave it blank to search everyone.</li>
+          <li><b>Capture the cell number</b> so you can SMS the code, and tick the <b>consent</b> box. The consent line covers holding the name and cell under POPIA.</li>
+          <li>Press <span class="kk gold">Check in and issue code</span>. The QR code and six-character code pop up.</li>
+        </ol>
+        <div class="callout"><b>Votes are worked out for you.</b> A full member club has two votes. The first delegate from that club is given both votes. If a second delegate from the same club checks in, the system automatically splits it to one vote each. A third is blocked and shows <span class="kk">Subscribed</span>. An associate club has one vote and one delegate only. You never add or split votes by hand, the box under "Votes allocated" tells you exactly what this delegate will carry.</div>
+        <p class="sub">Made a mistake? Use <span class="kk">Remove</span> on the checked-in list to take a delegate out and return their vote to the club. Use <span class="kk">New code</span> to cancel a code and issue a fresh one, for example if someone changes phones.</p>
+      </div>
+
+      <div class="card help-card" id="h-codes">
+        <h3><span class="step-n">5</span>Getting the code to the delegate</h3>
+        <p>Each delegate needs their own code on their own phone. You have two ways to give it to them, and you can use both.</p>
+        <ol class="steps">
+          <li><b>QR code.</b> When you check someone in, a QR shows on screen. They open their phone camera, point it at the QR, and tap the link. It opens the vote site with their code already filled in. You can show it again any time with the <span class="kk">QR</span> button.</li>
+          <li><b>SMS.</b> Press the <span class="kk gold">SMS</span> button on their row and the system texts them the code and the link. This needs a cell number captured. Good for delegates who are not standing at the desk.</li>
+        </ol>
+        <div class="callout warn"><b>One phone per code.</b> A code locks to the first phone that opens it. It cannot be used on a second phone, which stops one code being passed around to vote twice. If a delegate genuinely needs to move to a new phone, issue a <span class="kk">New code</span>.</div>
+      </div>
+
+      <div class="card help-card" id="h-quorum">
+        <h3><span class="step-n">6</span>Quorum</h3>
+        <p>The live quorum panel on the Accreditation tab checks both limbs the Constitution requires (Articles 6.2.5 and 6.3.3): more than half of the clubs present, <b>and</b> more than half of Mancom present. Clubs present is counted for you as delegates check in. Type the Mancom numbers into the two small boxes. When both limbs are met the panel reads <span class="kk green">QUORATE</span>. Do not open a vote until it does.</p>
+      </div>
+
+      <div class="card help-card" id="h-motions">
+        <h3><span class="step-n">7</span>Motions: preparing the questions</h3>
+        <p>On the <span class="kk">Motions</span> tab you write up each thing the meeting will vote on. A motion has a title, a plain instruction shown on every phone, a pass rule, who may vote, how abstentions are treated, and a timer. Press <span class="kk gold">Add motion</span> to save it as a draft. It is not open for voting yet.</p>
+        <div class="callout"><b>You can have many motions in one day.</b> An AGM or a set of constitutional amendments may have several, up to about ten. Prepare them all in advance so you are not typing while the room waits. On the day you simply start them one after another. Keep the number sensible, a long list of votes tires the room and the wording of each must be clear on its own.</div>
+        <p><b>Choosing the pass rule.</b> Use <b>Simple majority</b> for ordinary business (more For than Against). Use <b>Two-thirds</b> for constitutional amendments and anything the Constitution reserves to a special majority. Use <b>Custom %</b> only when a specific threshold is required. For <b>Who may vote</b>, leave it on Full + Associate unless the matter is reserved to full member clubs. For <b>Abstentions</b>, "Set aside" ignores them; "Count in base" makes an abstention effectively count against the motion, so choose deliberately.</p>
+      </div>
+
+      <div class="card help-card" id="h-live">
+        <h3><span class="step-n">8</span>Running a vote on the day</h3>
+        <p>Everything for the live vote is on the <span class="kk">Live &amp; results</span> tab, and the Start and Close buttons also sit on the Motions tab.</p>
+        <ol class="steps">
+          <li>When the chairperson calls the motion, press <span class="kk green">Start</span>. Every delegate's phone switches to the ballot for that motion, and the countdown begins.</li>
+          <li>Watch the timer and the live count of votes in. The running For/Against split is never shown, the ballot is secret.</li>
+          <li>The vote <b>closes on its own</b> when the timer hits zero. You can also press <span class="kk red">Close</span> to end it early once everyone has voted.</li>
+          <li>Anyone accredited who did not vote is counted as an <b>abstain</b>. This is deliberate, silence is recorded, not ignored.</li>
+          <li>Start the next motion and repeat. Only one motion is ever open at a time.</li>
+        </ol>
+      </div>
+
+      <div class="card help-card" id="h-projector">
+        <h3><span class="step-n">9</span>The projector (room view)</h3>
+        <p>The room view is a big screen for the hall so everyone can follow the vote without looking at a laptop. It is a separate page you open when you need it.</p>
+        <ol class="steps">
+          <li>On the <span class="kk">Live &amp; results</span> tab, press <span class="kk">Open room view</span>. It opens in a new browser tab.</li>
+          <li>Drag that tab onto the projector screen, then press <span class="kk">Full screen</span> at the top right of the room view to fill the whole screen.</li>
+          <li>While a vote is open the screen shows the motion and a large countdown. It never shows the running tally, so the ballot stays secret.</li>
+          <li>When the vote closes the screen shows <b>CARRIED</b> or <b>NOT CARRIED</b> with the For, Against and Abstain totals.</li>
+          <li>To take it down, press <span class="kk">Full screen</span> again (or <span class="kk">Esc</span>) to leave full screen, then <span class="kk">Close</span> to end the room view, and close the browser tab.</li>
+        </ol>
+        <p class="sub">The room view updates on its own every few seconds. You control the vote from the admin laptop as usual, the projector just mirrors the state.</p>
+      </div>
+
+      <div class="card help-card" id="h-results">
+        <h3><span class="step-n">10</span>Results and records for the minutes</h3>
+        <p>As each motion closes, its result appears in the results table on the <span class="kk">Live &amp; results</span> tab with For, Against, Abstain and the outcome. For the meeting file:</p>
+        <ol class="steps">
+          <li><span class="kk">Attendance PDF</span> on the Accreditation tab gives the full attendance and voting register: every delegate, club, votes carried and code.</li>
+          <li><span class="kk">Results PDF</span> on the Live tab gives every closed motion with its totals and outcome. This is the formal voting record.</li>
+          <li>The <span class="kk">Audit</span> tab keeps a read-only trail of every accreditation, removal, compliance change and motion start or close, with who did it and when. It is your evidence if a result is ever questioned.</li>
+        </ol>
+      </div>
+
+      <div class="card help-card" id="h-club">
+        <h3><span class="step-n">11</span>What the delegate does on their phone</h3>
+        <p>This is the whole delegate experience, so you can explain it to a club in one breath: <b>open the link, vote when it opens, done.</b> There is nothing to install and no account to create.</p>
+        <ol class="steps">
+          <li>They scan the QR you show them, or tap the link in the SMS, or go to <b>vote.cttfa.co.za</b> and type their six-character code.</li>
+          <li>Their name and club show, so they can check it is right. Then they wait, the phone says voting has not opened yet.</li>
+          <li>When you start a motion, their phone shows the motion and three buttons: <b>In favour</b>, <b>Against</b>, <b>Abstain</b>. They tap one and confirm.</li>
+          <li>Once the vote closes, their phone shows whether it was carried. That is it.</li>
+        </ol>
+        <div class="callout"><b>Share it with a club ahead of time.</b> On the club's row you can send a short SMS that explains, in plain language, how their delegate votes on the day. It is the same simple steps as above. Send it a day or two before so clubs arrive knowing what to do.</div>
+      </div>
+
+      <div class="card help-card" id="h-faq">
+        <h3>Common questions</h3>
+        <div class="faq"><b>A delegate says their code will not work.</b><span>Check they are using it on the first phone that opened it, codes lock to one phone. If they changed phones, press New code on their row to issue a fresh one. The old one then stops working.</span></div>
+        <div class="faq"><b>We accredited the wrong person.</b><span>Press Remove on their row. Their vote goes back to the club and, if the club was split, it re-combines. Then accredit the correct delegate.</span></div>
+        <div class="faq"><b>A club is short and shows "Subscribed".</b><span>That club has already used all its votes (two for a full club, one for an associate). Remove a delegate first if you need to swap who holds the vote.</span></div>
+        <div class="faq"><b>Can we change compliance after starting a vote?</b><span>No. It locks at the first Start to protect the result. Set it correctly before the first motion opens.</span></div>
+        <div class="faq"><b>The vote closed before everyone voted.</b><span>The timer closes it automatically. Anyone who did not vote is recorded as an abstain, which is the correct treatment. Set a longer timer on the motion if the room needs more time.</span></div>
+        <div class="faq"><b>Why can I not see who is winning while the vote is open?</b><span>The ballot is secret. Only the count of votes cast is shown live, never the For/Against split. The result appears when the vote closes.</span></div>
+      </div>
+
+      <div class="card help-card" id="h-share">
+        <h3>Send the guide to a club by SMS</h3>
+        <p>Text a club's secretary a short plain-English guide on how their delegate votes, so they arrive on the day knowing what to do. Send it a day or two before the meeting.</p>
+        <div class="row" style="align-items:flex-end">
+          <div style="flex:2;position:relative"><label class="f">Club (optional, personalises the message)</label><input type="text" id="shClubSearch" placeholder="Type to find a club, or leave blank" autocomplete="off"><input type="hidden" id="shClub"><div class="search-list hidden" id="shClubResults"></div></div>
+          <div style="flex:1"><label class="f">Send to cell number</label><input type="tel" id="shCell" placeholder="072 000 0000"></div>
+          <div style="flex:0 0 auto"><button class="btn gold" id="shSend" title="Text the how-to-vote guide and the vote link to this number.">Send guide</button></div>
+        </div>
+        <div id="shMsg"></div>
+        <p class="sub" style="margin-top:12px">The message reads: "CTTLFA voting guide[for the club]. Voting is on your delegate's phone at the meeting. At the desk they get a QR code or a 6-character code. Open it, wait for a vote to open, then tap For, Against or Abstain and confirm. One phone per code, secret ballot. Full guide: https://vote.cttfa.co.za"</p>
       </div>
     </section>
   </div>
@@ -363,7 +541,7 @@
   Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(t){
     t.onclick=function(){
       Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(x){x.classList.toggle("on",x===t);});
-      ["meetings","accredit","compliance","motions","live","audit","users"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
+      ["meetings","accredit","compliance","motions","live","audit","users","help"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
       if(t.dataset.tab!=="accredit") stopCiTimer();
       if(t.dataset.tab!=="live" && liveTimer){ clearTimeout(liveTimer); liveTimer=null; }
       if(t.dataset.tab==="accredit") renderAccredit();
@@ -578,7 +756,7 @@
     var h='<table><thead><tr><th>Delegate</th><th>Club</th><th class="num">Votes</th><th>Cell</th><th>Code</th><th></th></tr></thead><tbody>';
     activeRegs.forEach(function(rg){ var c=clubById(rg.club_id); var d=rg.delegates||{};
       h+='<tr><td><b>'+esc(d.full_name||"")+'</b></td><td>'+esc(c?c.name:"")+' <span class="tag '+(c&&c.type==="full"?"full":"assoc")+'">'+(c?c.type:"")+'</span></td><td class="num">'+(rg.vote_weight||1)+'</td><td>'+esc(d.cell||"-")+'</td><td><span class="bigcode" style="font-size:14px">'+esc(rg.code)+'</span></td>'+
-        '<td style="white-space:nowrap"><button class="btn gold sm" data-sms="'+rg.id+'">SMS</button> <button class="btn ghost sm" data-showcode="'+rg.id+'">QR</button> <button class="btn ghost sm" data-newcode="'+rg.id+'">New code</button> <button class="btn red sm" data-remove="'+rg.id+'">Remove</button></td></tr>';
+        '<td style="white-space:nowrap"><button class="btn gold sm" data-sms="'+rg.id+'" title="Text this delegate their voting code and the vote link. Needs a cell number captured.">SMS</button> <button class="btn ghost sm" data-showcode="'+rg.id+'" title="Show the QR code and voting code again so the delegate can scan it on their phone.">QR</button> <button class="btn ghost sm" data-newcode="'+rg.id+'" title="Cancel this code and issue a fresh one, for example if the delegate changed phones. The old code stops working.">New code</button> <button class="btn red sm" data-remove="'+rg.id+'" title="Remove this delegate and give their vote(s) back to the club. Use it if someone was checked in by mistake. Their code stops working.">Remove</button></td></tr>';
     });
     h+='</tbody></table>'; l.innerHTML=h;
     Array.prototype.forEach.call(l.querySelectorAll("[data-remove]"),function(b){ b.onclick=function(){ removeReg(b.dataset.remove); }; });
@@ -722,9 +900,9 @@
     if(!ms.length){l.innerHTML='<p class="hint">None yet.</p>';return;}
     var h='<table><thead><tr><th>#</th><th>Motion</th><th>Rule</th><th>Status</th><th></th></tr></thead><tbody>';
     ms.forEach(function(m){
-      var act = m.status==="draft" ? '<button class="btn green sm" data-open="'+m.id+'">Start</button>'
-        : (m.status==="open" ? '<span class="timer-badge" data-tmr="'+m.id+'" data-opened="'+(m.opened_at||"")+'" data-secs="'+(m.timer_seconds||0)+'">--</span> <button class="btn red sm" data-close="'+m.id+'">Close</button>'
-        : '<span class="tag closed">closed</span>');
+      var act = m.status==="draft" ? '<button class="btn green sm" data-open="'+m.id+'" title="Open this motion for voting now. Delegates’ phones switch to the ballot and the countdown starts. Only one motion is open at a time.">Start</button>'
+        : (m.status==="open" ? '<span class="timer-badge" data-tmr="'+m.id+'" data-opened="'+(m.opened_at||"")+'" data-secs="'+(m.timer_seconds||0)+'" title="Time left before the vote closes on its own.">--</span> <button class="btn red sm" data-close="'+m.id+'" title="Close the vote now, before the timer runs out. No more votes are accepted and the result is worked out.">Close</button>'
+        : '<span class="tag closed" title="This motion is closed. See the result on the Live &amp; results tab.">closed</span>');
       h+='<tr><td>'+m.seq+'</td><td><b>'+esc(m.title)+'</b></td><td class="kv">'+esc(ruleLabel(m))+'</td><td><span class="tag '+m.status+'">'+m.status+'</span></td><td style="white-space:nowrap">'+act+'</td></tr>';
     });
     h+='</tbody></table>'; l.innerHTML=h;
@@ -818,6 +996,42 @@
     h+='</tbody></table>'; l.innerHTML=h;
   }
   $("reloadAudit") && ($("reloadAudit").onclick=loadAudit);
+
+  /* ---------- share guide to a club ---------- */
+  var shTimer=null;
+  function setShClub(id){
+    $("shClub").value=id||"";
+    var c=id?clubById(id):null;
+    $("shClubSearch").value=c?c.name:"";
+    $("shClubResults").classList.add("hidden");
+  }
+  $("shClubSearch") && ($("shClubSearch").oninput=function(){
+    clearTimeout(shTimer); var q=this.value.trim();
+    $("shClub").value="";
+    if(!q){ $("shClubResults").classList.add("hidden"); return; }
+    shTimer=setTimeout(function(){
+      var ql=q.toLowerCase(), box=$("shClubResults");
+      var hits=clubs.filter(function(c){return c.name.toLowerCase().indexOf(ql)>-1;}).slice(0,30);
+      if(!hits.length){ box.innerHTML='<div class="sub">No matching club.</div>'; box.classList.remove("hidden"); return; }
+      box.innerHTML=hits.map(function(c){return '<div data-shc="'+c.id+'"><span class="nm">'+esc(c.name)+'</span> <span class="sub">'+esc(c.type)+'</span></div>';}).join("");
+      box.classList.remove("hidden");
+      Array.prototype.forEach.call(box.querySelectorAll("[data-shc]"),function(d){ d.onclick=function(){ setShClub(d.dataset.shc); }; });
+    },150);
+  });
+  $("shSend") && ($("shSend").onclick=async function(){
+    var cell=$("shCell").value.trim();
+    if(!cell){ msg($("shMsg"),"Enter the cell number to send to.","err"); return; }
+    var cid=$("shClub").value, c=cid?clubById(cid):null;
+    var btn=$("shSend"); btn.disabled=true; btn.textContent="Sending";
+    try{
+      var r=await sb.functions.invoke("send-help",{body:{cell:cell,club:c?c.name:""}});
+      var res=r.data;
+      if((!res||res.ok===undefined) && r.error && r.error.context && typeof r.error.context.json==="function"){ try{ res=await r.error.context.json(); }catch(e){} }
+      if(res && res.ok){ msg($("shMsg"),"Guide sent to "+(res.to||cell)+".","ok"); $("shCell").value=""; }
+      else { var e=(res&&res.error)||(r.error&&r.error.message)||"failed"; var t=(e==="bad_cell")?"That cell number does not look right.":(e==="no_config")?"SMS is not configured yet.":e; msg($("shMsg"),"Not sent ("+t+")"+((res&&res.detail)?": "+res.detail:""),"err"); }
+    }catch(e){ msg($("shMsg"),"SMS error: "+(e.message||e),"err"); }
+    btn.disabled=false; btn.textContent="Send guide";
+  });
 
   /* ---------- boot ---------- */
   (async function(){ var s=await sb.auth.getSession(); if(s.data && s.data.session){ await afterLogin(); } })();

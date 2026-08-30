@@ -133,12 +133,32 @@ function screenEntry(err){
     '<input id="code" maxlength="6" autocomplete="one-time-code" autocapitalize="characters" inputmode="text" placeholder="------"></div>'+
     (err?'<div class="msg err">'+esc(err)+'</div>':'')+
     '<div style="margin-top:14px"><button class="btn btn-primary" id="go">Continue</button></div>'+
+    '<div style="text-align:center;margin-top:14px"><a href="#" id="helpLink" style="font-size:13.5px;color:var(--navy);font-weight:600;text-decoration:underline">How does voting work?</a></div>'+
     '</div>';
   var inp=document.getElementById("code");
   inp.addEventListener("input",function(){ this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,""); });
   document.getElementById("go").onclick=submitCode;
   inp.addEventListener("keydown",function(e){ if(e.key==="Enter") submitCode(); });
+  document.getElementById("helpLink").onclick=function(e){ e.preventDefault(); screenHelp(); };
   setTimeout(function(){ try{inp.focus();}catch(e){} },100);
+}
+
+function screenHelp(){
+  M.innerHTML='<div class="card">'+
+    '<span class="pill gold">Delegate guide</span>'+
+    '<h1 style="margin-top:10px">How you vote</h1>'+
+    '<p class="hint">Voting is on your own phone. Nothing to install, no sign-up. It takes a few seconds.</p>'+
+    '<ol style="margin:14px 0 4px;padding-left:22px;font-size:14.5px;line-height:1.6">'+
+      '<li style="margin-bottom:9px"><b>Get in.</b> Scan the QR code from the desk, tap the link in your SMS, or type your 6-character code above.</li>'+
+      '<li style="margin-bottom:9px"><b>Check it is you.</b> Your club and number of votes show at the top. If it is wrong, tell the desk.</li>'+
+      '<li style="margin-bottom:9px"><b>Wait for the vote.</b> The screen says you are checked in. It changes on its own when the chairperson opens a vote.</li>'+
+      '<li style="margin-bottom:9px"><b>Vote.</b> Tap <b style="color:var(--for)">For</b>, <b style="color:var(--against)">Against</b> or <b style="color:var(--abstain)">Abstain</b>, then confirm. A timer counts down, so do not wait too long.</li>'+
+      '<li><b>Done.</b> Your vote is locked in. When the vote closes you see whether it was carried.</li>'+
+    '</ol>'+
+    '<div class="weightnote" style="margin-top:14px">Good to know: your code works on <b>one phone only</b>, your vote is <b>secret</b>, and if your club carries two votes they are both recorded together, one way. If a vote opens and you do not vote in time, it counts as an abstain.</div>'+
+    '<div style="margin-top:16px"><button class="btn btn-ghost" id="helpBack">'+(state&&state.ok?"Back":"Back to my code")+'</button></div>'+
+    '</div>';
+  document.getElementById("helpBack").onclick=function(){ if(state&&state.ok){ render(); } else { screenEntry(); } };
 }
 function submitCode(){
   var v=(document.getElementById("code").value||"").trim().toUpperCase();
@@ -174,7 +194,9 @@ function render(){
   var m=state.motion;
   if(!m){
     M.innerHTML=head+'<div class="card big-state"><div class="ic wait">⏳</div>'+
-      '<h1>You are checked in</h1><p>Waiting for the chairperson to open the next vote. This screen will update on its own.</p></div>';
+      '<h1>You are checked in</h1><p>Waiting for the chairperson to open the next vote. This screen will update on its own.</p>'+
+      '<div style="margin-top:16px"><a href="#" id="waitHelp" style="font-size:13.5px;color:var(--navy);font-weight:600;text-decoration:underline">How does voting work?</a></div></div>';
+    var wh=document.getElementById("waitHelp"); if(wh){ wh.onclick=function(e){ e.preventDefault(); screenHelp(); }; }
     return;
   }
   if(m.status==="closed"){ renderClosed(head,m); return; }
