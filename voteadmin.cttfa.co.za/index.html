@@ -168,7 +168,7 @@
           <div class="row" style="margin-top:12px">
             <div><label class="f">Delegate name</label><input type="text" id="acName" placeholder="Selected, or type to add manually"></div>
             <div style="max-width:150px"><label class="f">Votes this delegate</label><select id="acVotes"></select></div>
-            <div style="max-width:180px"><label class="f">SAFA number (optional)</label><input type="text" id="acSafa" placeholder="Leave blank if unknown"></div>
+            <div style="max-width:180px"><label class="f">SAFA number</label><input type="text" id="acSafa" placeholder="Auto-filled from roll"></div>
             <div style="max-width:170px"><label class="f">Cell number</label><input type="tel" id="acCell" placeholder="072 000 0000"></div>
           </div>
           <label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px;color:var(--ink)"><input type="checkbox" id="acConsent" style="width:auto;margin-top:3px"> <span>The delegate consents to CTTLFA holding their name and cell number for this meeting's attendance and voting record, under the Protection of Personal Information Act 4 of 2013.</span></label>
@@ -374,8 +374,8 @@
   });
   async function doPersonSearch(q){
     var box=$("acResults"), isNum=/\d/.test(q);
-    var query=sb.from("people").select("id,first_name,surname,category,club_id");
-    if(isNum){ query=query.ilike("id_number",q+"%").limit(30); }
+    var query=sb.from("people").select("id,first_name,surname,category,club_id,safa_reg_no");
+    if(isNum){ query=query.ilike("safa_reg_no",q+"%").order("safa_reg_no").limit(30); }
     else { query=query.ilike("surname",q+"%").order("surname").limit(30); }
     var r=await query;
     if(r.error){ box.innerHTML='<div>'+esc(r.error.message)+'</div>'; box.classList.remove("hidden"); return; }
@@ -383,13 +383,14 @@
     if(!ppl.length){ box.innerHTML='<div class="sub">No match. Type the name above to add manually.</div>'; box.classList.remove("hidden"); return; }
     box.innerHTML=ppl.map(function(p){
       var nm=esc(((p.first_name||"")+" "+(p.surname||"")).trim()); var club=clubById(p.club_id);
-      return '<div data-pid="'+p.id+'"><span class="nm">'+nm+'</span> <span class="sub">'+(club?esc(club.name):'no member club')+(p.category?' \u00b7 '+esc(p.category):'')+'</span></div>';
+      var safa=p.safa_reg_no?'SAFA '+esc(p.safa_reg_no)+' \u00b7 ':'';
+      return '<div data-pid="'+p.id+'"><span class="nm">'+nm+'</span> <span class="sub">'+safa+(club?esc(club.name):'no member club')+(p.category?' \u00b7 '+esc(p.category):'')+'</span></div>';
     }).join("");
     box.classList.remove("hidden");
     Array.prototype.forEach.call(box.querySelectorAll("[data-pid]"),function(d){
       d.onclick=function(){ var p=ppl.filter(function(x){return x.id===d.dataset.pid;})[0]; selectedPerson=p;
         if(p.club_id){ $("acClub").value=p.club_id; }
-        $("acName").value=((p.first_name||"")+" "+(p.surname||"")).trim(); $("acSafa").value="";
+        $("acName").value=((p.first_name||"")+" "+(p.surname||"")).trim(); $("acSafa").value=p.safa_reg_no||"";
         box.classList.add("hidden"); refreshVotesOptions(); $("acCell").focus(); };
     });
   }
