@@ -154,6 +154,7 @@
       <button class="tab" data-tab="compliance">Compliance</button>
       <button class="tab" data-tab="motions">Motions</button>
       <button class="tab" data-tab="live">Live &amp; results</button>
+      <button class="tab" data-tab="audit">Audit</button>
       <button class="tab" data-tab="users">Mancom users</button>
     </div></nav>
   </header>
@@ -276,6 +277,15 @@
       </div>
     </section>
 
+    <!-- AUDIT -->
+    <section id="tab-audit" class="hidden">
+      <div class="card">
+        <h3>Audit log <button class="btn ghost sm" id="reloadAudit" style="float:right">Refresh</button></h3>
+        <p class="hint">Every accreditation, removal, compliance change and motion start/close, with who did it and when. Read-only.</p>
+        <div id="auditList"><p class="hint">Loading...</p></div>
+      </div>
+    </section>
+
     <!-- USERS -->
     <section id="tab-users" class="hidden">
       <div class="card">
@@ -353,13 +363,14 @@
   Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(t){
     t.onclick=function(){
       Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(x){x.classList.toggle("on",x===t);});
-      ["meetings","accredit","compliance","motions","live","users"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
+      ["meetings","accredit","compliance","motions","live","audit","users"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
       if(t.dataset.tab!=="accredit") stopCiTimer();
       if(t.dataset.tab!=="live" && liveTimer){ clearTimeout(liveTimer); liveTimer=null; }
       if(t.dataset.tab==="accredit") renderAccredit();
       if(t.dataset.tab==="compliance") renderCompliancePage();
       if(t.dataset.tab==="motions") renderMotions();
       if(t.dataset.tab==="live") renderLive();
+      if(t.dataset.tab==="audit") loadAudit();
     };
   });
 
@@ -567,11 +578,12 @@
     var h='<table><thead><tr><th>Delegate</th><th>Club</th><th class="num">Votes</th><th>Cell</th><th>Code</th><th></th></tr></thead><tbody>';
     activeRegs.forEach(function(rg){ var c=clubById(rg.club_id); var d=rg.delegates||{};
       h+='<tr><td><b>'+esc(d.full_name||"")+'</b></td><td>'+esc(c?c.name:"")+' <span class="tag '+(c&&c.type==="full"?"full":"assoc")+'">'+(c?c.type:"")+'</span></td><td class="num">'+(rg.vote_weight||1)+'</td><td>'+esc(d.cell||"-")+'</td><td><span class="bigcode" style="font-size:14px">'+esc(rg.code)+'</span></td>'+
-        '<td style="white-space:nowrap"><button class="btn ghost sm" data-showcode="'+rg.id+'">QR</button> <button class="btn ghost sm" data-newcode="'+rg.id+'">New code</button> <button class="btn red sm" data-remove="'+rg.id+'">Remove</button></td></tr>';
+        '<td style="white-space:nowrap"><button class="btn gold sm" data-sms="'+rg.id+'">SMS</button> <button class="btn ghost sm" data-showcode="'+rg.id+'">QR</button> <button class="btn ghost sm" data-newcode="'+rg.id+'">New code</button> <button class="btn red sm" data-remove="'+rg.id+'">Remove</button></td></tr>';
     });
     h+='</tbody></table>'; l.innerHTML=h;
     Array.prototype.forEach.call(l.querySelectorAll("[data-remove]"),function(b){ b.onclick=function(){ removeReg(b.dataset.remove); }; });
     Array.prototype.forEach.call(l.querySelectorAll("[data-newcode]"),function(b){ b.onclick=function(){ newCode(b.dataset.newcode); }; });
+    Array.prototype.forEach.call(l.querySelectorAll("[data-sms]"),function(b){ b.onclick=function(){ sendSMS(b.dataset.sms, b); }; });
     Array.prototype.forEach.call(l.querySelectorAll("[data-showcode]"),function(b){ b.onclick=function(){ var rg=activeRegs.filter(function(x){return x.id===b.dataset.showcode;})[0]; if(rg) showQR(clubById(rg.club_id),rg.code,rg.vote_weight); }; });
     return activeRegs;
   }
@@ -650,6 +662,20 @@
   $("dlAttendance") && ($("dlAttendance").onclick=dlAttendancePDF);
   $("dlResults") && ($("dlResults").onclick=dlResultsPDF);
   $("openRoom") && ($("openRoom").onclick=function(){ if(!curMeeting){alert("Select a meeting first.");return;} window.open("room.html?m="+curMeeting.id,"_blank"); });
+  async function sendSMS(regId, btn){
+    var rg=activeRegs.filter(function(x){return x.id===regId;})[0]; if(!rg) return;
+    var d=rg.delegates||{};
+    if(!d.cell){ msg($("acMsg"),"No cell number captured for this delegate.","err"); return; }
+    if(btn){ btn.disabled=true; btn.textContent="Sending"; }
+    try{
+      var r=await sb.functions.invoke("send-code",{body:{code:rg.code}});
+      var res=r.data;
+      if((!res||res.ok===undefined) && r.error && r.error.context && typeof r.error.context.json==="function"){ try{ res=await r.error.context.json(); }catch(e){} }
+      if(res && res.ok){ msg($("acMsg"),"SMS sent to "+(res.to||d.cell)+".","ok"); }
+      else { var e=(res&&res.error)||(r.error&&r.error.message)||"failed"; msg($("acMsg"),"SMS not sent ("+e+")"+((res&&res.detail)?": "+res.detail:""),"err"); }
+    }catch(e){ msg($("acMsg"),"SMS error: "+(e.message||e),"err"); }
+    if(btn){ btn.disabled=false; btn.textContent="SMS"; }
+  }
   async function removeReg(regId){
     var rg=activeRegs.filter(function(x){return x.id===regId;})[0]; if(!rg) return;
     if(!window.confirm("Remove this delegate and re-split the club's votes? Their code will stop working.")) return;
@@ -771,6 +797,27 @@
     us.forEach(function(u){ h+='<tr><td><b>'+esc(u.full_name)+'</b></td><td>'+esc(u.email)+'</td><td class="kv">'+esc(u.title||"")+'</td><td><span class="tag '+(u.role==="administrator"?"open":(u.role==="secretary"?"full":"draft"))+'">'+esc(u.role)+'</span></td><td>'+(u.auth_id?'<span class="tag in">yes</span>':'<span class="kv">not yet</span>')+'</td></tr>'; });
     h+='</tbody></table>'; l.innerHTML=h;
   }
+
+  /* ---------- audit ---------- */
+  async function loadAudit(){
+    var l=$("auditList");
+    var q=sb.from("audit_log").select("at,actor,action,detail,meeting_id").order("at",{ascending:false}).limit(300);
+    if(curMeeting) q=q.eq("meeting_id",curMeeting.id);
+    var r=await q;
+    if(r.error){ l.innerHTML='<p class="hint">'+esc(r.error.message)+'</p>'; return; }
+    var rows=r.data||[];
+    if(!rows.length){ l.innerHTML='<p class="hint">No audit entries'+(curMeeting?" for this meeting":"")+" yet.</p>"; return; }
+    var lab={accredit:"Accredited",remove_delegate:"Removed delegate",compliance:"Compliance change",motion_open:"Started motion",motion_closed:"Closed motion",motion_draft:"Reset motion"};
+    var h='<table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>';
+    rows.forEach(function(x){
+      var det=x.detail||{}, extra="";
+      if(det.club_id){ var c=clubById(det.club_id); extra=(c?c.name:"")+(det.code?(" · "+det.code):"")+(det.compliant!==undefined?(" · "+(det.compliant?"compliant":"not compliant")):"")+(det.weight?(" · "+det.weight+" vote"+(det.weight>1?"s":"")):""); }
+      else if(det.title){ extra="Motion "+(det.seq||"")+": "+det.title; }
+      h+='<tr><td class="kv" style="white-space:nowrap">'+esc(new Date(x.at).toLocaleString("en-ZA"))+'</td><td>'+esc(x.actor||"")+'</td><td>'+esc(lab[x.action]||x.action)+'</td><td>'+esc(extra)+'</td></tr>';
+    });
+    h+='</tbody></table>'; l.innerHTML=h;
+  }
+  $("reloadAudit") && ($("reloadAudit").onclick=loadAudit);
 
   /* ---------- boot ---------- */
   (async function(){ var s=await sb.auth.getSession(); if(s.data && s.data.session){ await afterLogin(); } })();
