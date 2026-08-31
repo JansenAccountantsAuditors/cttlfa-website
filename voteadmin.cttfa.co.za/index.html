@@ -137,6 +137,20 @@
   .faq{border-top:1px solid var(--line2);padding:11px 0}
   .faq b{display:block;color:var(--navy);font-size:13.5px;margin-bottom:3px}
   .faq span{font-size:13px;color:var(--ink);line-height:1.55}
+  /* contextual help markers + toggle */
+  .help-q{display:none;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--gold);color:var(--navy);font-family:var(--head);font-weight:800;font-size:11px;line-height:1;margin-left:8px;padding:0;cursor:help;vertical-align:middle;border:0;flex:0 0 auto}
+  body.help-on .help-q{display:inline-flex}
+  .help-q:hover{background:#e0a411}
+  .help-q:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+  .help-bubble{position:fixed;z-index:70;max-width:300px;background:#0b1830;color:#fff;font-size:12.5px;line-height:1.5;padding:10px 13px;border-radius:11px;box-shadow:0 14px 34px rgba(7,26,74,.4);opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;pointer-events:none}
+  .help-bubble.on{opacity:1;transform:translateY(0)}
+  .help-bubble b{color:var(--gold)}
+  .helptoggle{display:inline-flex;align-items:center;gap:8px;margin-left:10px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.24);color:#fff;border-radius:999px;padding:7px 13px;font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11.5px;cursor:pointer;min-height:36px;white-space:nowrap}
+  .helptoggle:hover{background:rgba(255,255,255,.16)}
+  .helptoggle .ht-track{width:30px;height:16px;border-radius:999px;background:rgba(255,255,255,.28);position:relative;transition:background .15s;flex:0 0 auto}
+  .helptoggle .ht-track:after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s}
+  .helptoggle.on .ht-track{background:var(--gold)}
+  .helptoggle.on .ht-track:after{left:16px}
 </style>
 
 <!-- LOGIN -->
@@ -165,6 +179,7 @@
       <div class="logo" id="topLogo">CT</div>
       <div class="brandwrap"><span class="bt">CTTLFA</span><span class="bs">Voting Administration</span></div>
       <div class="who"><b id="whoName">-</b> <span class="rolechip" id="whoRole">-</span><br><span id="whoEmail" class="kv" style="color:#9fb0d8"></span></div>
+      <button class="helptoggle on" id="helpToggle" title="Show or hide the little ? help tips across the admin. Turn them off once your team knows the system." aria-pressed="true"><span class="ht-track"></span><span id="helpToggleLbl">Help tips: on</span></button>
       <button class="btn ghost sm" id="signOut" style="margin-left:6px;color:#fff;background:transparent;border-color:rgba(255,255,255,.3)">Sign out</button>
     </div>
     <nav class="topnav"><div class="topnav-inner" id="mainTabs">
@@ -190,7 +205,7 @@
     <!-- MEETINGS -->
     <section id="tab-meetings">
       <div class="card">
-        <h3>Create a meeting</h3>
+        <h3 data-help="Start here for every meeting. Fill in the name, type, date and venue and press Create meeting. It becomes the working meeting straight away, shown in the grey bar at the top of every tab. You can set it up days in advance.">Create a meeting</h3>
         <p class="hint">An AGM, SGM or Mancom meeting. Everything else, accreditation and motions, hangs off the meeting you select.</p>
         <div class="row">
           <div><label class="f">Name</label><input type="text" id="mName" placeholder="e.g. Special General Meeting"></div>
@@ -205,7 +220,7 @@
         <div id="meetingMsg"></div>
       </div>
       <div class="card">
-        <h3>Meetings</h3>
+        <h3 data-help="Every meeting you have created. Press Select on the one you are running so accreditation, compliance and motions all apply to it. You can switch back to an old meeting any time to view its record.">Meetings</h3>
         <div id="meetingList"><p class="hint">Loading...</p></div>
       </div>
     </section>
@@ -215,15 +230,15 @@
       <div id="accreditNeedsMeeting" class="banner">Select or create a meeting on the Meetings tab first.</div>
       <div id="accreditBody" class="hidden">
         <div class="card">
-          <h3>Accredit a delegate</h3>
+          <h3 data-help="Check delegates in at the door. Search by SAFA number or surname, capture their cell and consent, then press Check in and issue code. Votes are worked out for you: a full club's first delegate gets both votes; a second delegate splits it to one each; a third is blocked. Give them the QR or SMS the code.">Accredit a delegate</h3>
           <p class="hint">Search the whole registered roll by SAFA number or surname, the club fills in automatically. To narrow the search to one club, type its name in the club filter first. Or type a name to add someone manually. Capture a cell number and consent, then check them in. Two people can accredit at the same time on separate laptops.</p>
           <div class="row">
             <div style="flex:2"><label class="f">Find by SAFA number or surname</label><input type="text" id="acSearch" placeholder="SAFA number, or surname" autocomplete="off"><div class="search-list hidden" id="acResults"></div></div>
-            <div style="flex:1;position:relative"><label class="f">Club filter (optional)</label><input type="text" id="acClubSearch" placeholder="All clubs, type to narrow" autocomplete="off"><input type="hidden" id="acClub"><div class="search-list hidden" id="acClubResults"></div><div class="kv" id="acAlloc" style="margin-top:5px"></div></div>
+            <div style="flex:1;position:relative"><label class="f" data-help="Leave blank to search the whole registered roll. If two people share a surname, type a club name here first to search inside that one club only.">Club filter (optional)</label><input type="text" id="acClubSearch" placeholder="All clubs, type to narrow" autocomplete="off"><input type="hidden" id="acClub"><div class="search-list hidden" id="acClubResults"></div><div class="kv" id="acAlloc" style="margin-top:5px"></div></div>
           </div>
           <div class="row" style="margin-top:12px">
             <div><label class="f">Delegate name</label><input type="text" id="acName" placeholder="Selected, or type to add manually"></div>
-            <div style="max-width:210px"><label class="f">Votes allocated</label><div id="acAllocInfo" class="allocbox">Select a club</div></div>
+            <div style="max-width:210px"><label class="f" data-help="Worked out automatically from the club and who is already checked in. A full club's first delegate carries both votes; a second splits it to one each; a third, or a second associate delegate, is blocked as Subscribed. You never set this by hand.">Votes allocated</label><div id="acAllocInfo" class="allocbox">Select a club</div></div>
             <div style="max-width:180px"><label class="f">SAFA number</label><input type="text" id="acSafa" placeholder="Auto-filled from roll"></div>
             <div style="max-width:170px"><label class="f">Cell number</label><input type="tel" id="acCell" placeholder="072 000 0000"></div>
           </div>
@@ -232,12 +247,12 @@
           <div id="acMsg"></div>
         </div>
         <div class="card" id="quorumCard">
-          <h3>Quorum <span id="quorumOverall"></span></h3>
+          <h3 data-help="Both limbs the Constitution requires must be green before you open a vote: more than half of the clubs present (counted for you as delegates check in) and more than half of Mancom present (type the two Mancom numbers in). The panel reads QUORATE when both are met.">Quorum <span id="quorumOverall"></span></h3>
           <p class="hint">Two limbs, both required (Constitution Art 6.2.5 / 6.3.3): more than half of the clubs, and more than half of Mancom.</p>
           <div id="quorumPanel" class="quorum-grid"></div>
         </div>
         <div class="card">
-          <h3>Checked in <span id="ciCount" class="kv"></span> <button class="btn ghost sm" id="dlAttendance" style="float:right" title="Download a PDF attendance and voting register: every delegate, club, votes carried and code. Keep it in the meeting file.">Attendance PDF</button></h3>
+          <h3 data-help="Everyone accredited so far, with their club, votes and code. Use SMS to text a code, QR to show it again, New code to reissue on a new phone, or Remove to take someone out and return their vote to the club. Attendance PDF gives you the register for the meeting file.">Checked in <span id="ciCount" class="kv"></span> <button class="btn ghost sm" id="dlAttendance" style="float:right" title="Download a PDF attendance and voting register: every delegate, club, votes carried and code. Keep it in the meeting file.">Attendance PDF</button></h3>
           <div style="margin:6px 0 12px"><span class="stat"><b id="ciClubs">0</b><span>clubs present</span></span><span class="stat"><b id="ciWeight">0</b><span>eligible votes</span></span></div>
           <div id="ciList"></div>
         </div>
@@ -249,7 +264,7 @@
       <div id="complianceNeedsMeeting" class="banner">Select or create a meeting on the Meetings tab first.</div>
       <div id="complianceBody" class="hidden">
         <div class="card">
-          <h3>Club compliance <span id="compLockTag"></span></h3>
+          <h3 data-help="Record which clubs are in good standing for this meeting. Every club starts Compliant. Set any that are not to Not compliant and press Save compliance. A non-compliant club cannot be accredited and is left out of the voting strength. It locks the moment the first vote is started, so set it before then." data-help-first>Club compliance <span id="compLockTag"></span></h3>
           <p class="hint">Mark each club compliant or not for this meeting. A non-compliant club cannot be accredited and is excluded from the voting strength. Set this before the first vote is started; it locks once voting begins.</p>
           <div class="comp-summary">
             <span class="stat"><b id="compYes">0</b><span>compliant</span></span>
@@ -267,7 +282,7 @@
       <div id="motionsNeedsMeeting" class="banner">Select a meeting first.</div>
       <div id="motionsBody" class="hidden">
         <div class="card">
-          <h3>Prepare a motion</h3>
+          <h3 data-help="Write up each thing the meeting will vote on: title, plain instruction shown on every phone, the majority needed, who may vote, how abstentions count and a timer. Add motion saves it as a draft. Prepare them all in advance (an AGM may have up to about ten), then start them one at a time on the Live tab.">Prepare a motion</h3>
           <p class="hint">Mancom decides the wording and the majority. The app records it.</p>
           <label class="f">Motion title</label><input type="text" id="moTitle" placeholder="e.g. Adoption of the 2026 budget">
           <label class="f">Plain instruction shown on each phone</label><textarea id="moInstr" placeholder="In favour means... Against means..."></textarea>
@@ -282,7 +297,7 @@
           <div id="moMsg"></div>
         </div>
         <div class="card">
-          <h3>Motions for this meeting</h3>
+          <h3 data-help="Your draft, open and closed motions. Press Start (green) to open one for voting: delegates' phones switch to the ballot and the countdown begins. The timer badge counts down and closes the vote on its own at zero. Only one motion is open at a time.">Motions for this meeting</h3>
           <div id="motionList"><p class="hint">None yet.</p></div>
         </div>
       </div>
@@ -293,14 +308,14 @@
       <div id="liveNeedsMeeting" class="banner">Select a meeting first.</div>
       <div id="liveBody" class="hidden">
         <div class="card" id="liveControl"></div>
-        <div class="card" id="liveResults"><h3>Results <button class="btn ghost sm" id="dlResults" style="float:right" title="Download a PDF of every closed motion with the For, Against and Abstain totals and the outcome. This is the formal voting record for the minutes.">Results PDF</button><button class="btn ghost sm" id="openRoom" style="float:right;margin-right:8px" title="Open the big-screen room view in a new tab for the hall projector. It shows the motion and countdown while open, and CARRIED or NOT CARRIED with the totals once closed. Never the running tally, the ballot stays secret.">Open room view</button></h3><div id="resultsList"><p class="hint">Results appear here as motions close.</p></div></div>
+        <div class="card" id="liveResults"><h3 data-help="Results appear here as each motion closes: For, Against, Abstain and whether it was carried. The running split is never shown while a vote is open, the ballot is secret. Open room view puts a big screen up for the hall. Results PDF is the formal voting record for the minutes.">Results <button class="btn ghost sm" id="dlResults" style="float:right" title="Download a PDF of every closed motion with the For, Against and Abstain totals and the outcome. This is the formal voting record for the minutes.">Results PDF</button><button class="btn ghost sm" id="openRoom" style="float:right;margin-right:8px" title="Open the big-screen room view in a new tab for the hall projector. It shows the motion and countdown while open, and CARRIED or NOT CARRIED with the totals once closed. Never the running tally, the ballot stays secret.">Open room view</button></h3><div id="resultsList"><p class="hint">Results appear here as motions close.</p></div></div>
       </div>
     </section>
 
     <!-- AUDIT -->
     <section id="tab-audit" class="hidden">
       <div class="card">
-        <h3>Audit log <button class="btn ghost sm" id="reloadAudit" style="float:right">Refresh</button></h3>
+        <h3 data-help="A read-only trail of every accreditation, removal, compliance change and motion start or close, with who did it and when. This is your evidence if a result is ever questioned. It cannot be edited." data-help-first>Audit log <button class="btn ghost sm" id="reloadAudit" style="float:right">Refresh</button></h3>
         <p class="hint">Every accreditation, removal, compliance change and motion start/close, with who did it and when. Read-only.</p>
         <div id="auditList"><p class="hint">Loading...</p></div>
       </div>
@@ -309,7 +324,7 @@
     <!-- USERS -->
     <section id="tab-users" class="hidden">
       <div class="card">
-        <h3>Mancom users</h3>
+        <h3 data-help="The allow-list of people who may sign in to this admin. Each person sets their own password the first time they sign in with an approved email. Only administrators can change roles.">Mancom users</h3>
         <p class="hint">The allow-list. Only these people can access the admin, and each sets their own password the first time. Administrators can change roles.</p>
         <div id="usersList"><p class="hint">Loading...</p></div>
       </div>
@@ -461,7 +476,7 @@
       </div>
 
       <div class="card help-card" id="h-share">
-        <h3>Send the guide to a club by SMS</h3>
+        <h3 data-help="Text a club secretary a short plain-English guide on how their delegate votes, a day or two before the meeting. Pick the club to personalise it, enter the cell number and press Send guide. It also sends the vote link.">Send the guide to a club by SMS</h3>
         <p>Text a club's secretary a short plain-English guide on how their delegate votes, so they arrive on the day knowing what to do. Send it a day or two before the meeting.</p>
         <div class="row" style="align-items:flex-end">
           <div style="flex:2;position:relative"><label class="f">Club (optional, personalises the message)</label><input type="text" id="shClubSearch" placeholder="Type to find a club, or leave blank" autocomplete="off"><input type="hidden" id="shClub"><div class="search-list hidden" id="shClubResults"></div></div>
@@ -1032,6 +1047,46 @@
     }catch(e){ msg($("shMsg"),"SMS error: "+(e.message||e),"err"); }
     btn.disabled=false; btn.textContent="Send guide";
   });
+
+  /* ---------- contextual help (? markers + on/off toggle) ---------- */
+  (function(){
+    var body=document.body, toggle=$("helpToggle"), lbl=$("helpToggleLbl"), KEY="cttlfa_help_on";
+    function pref(){ try{ var v=localStorage.getItem(KEY); return v===null?true:v==="1"; }catch(e){ return true; } }
+    function setPref(on){ try{ localStorage.setItem(KEY,on?"1":"0"); }catch(e){} }
+    var bubble=document.createElement("div"); bubble.className="help-bubble"; document.body.appendChild(bubble);
+    var curr=null;
+    function show(q){
+      curr=q; bubble.textContent=q.getAttribute("data-help")||""; bubble.classList.add("on");
+      var r=q.getBoundingClientRect(), bw=bubble.offsetWidth, bh=bubble.offsetHeight, gap=8, vw=window.innerWidth, vh=window.innerHeight;
+      var left=r.left+r.width/2-bw/2; left=Math.max(10,Math.min(left,vw-bw-10));
+      var top=r.bottom+gap; if(top+bh>vh-10) top=r.top-bh-gap; if(top<10) top=10;
+      bubble.style.left=left+"px"; bubble.style.top=top+"px";
+    }
+    function hide(){ curr=null; bubble.classList.remove("on"); }
+    function apply(on){
+      body.classList.toggle("help-on",on);
+      if(toggle){ toggle.classList.toggle("on",on); toggle.setAttribute("aria-pressed",on?"true":"false"); }
+      if(lbl) lbl.textContent="Help tips: "+(on?"on":"off");
+      if(!on) hide();
+    }
+    function attach(q){
+      q.addEventListener("mouseenter",function(){ if(body.classList.contains("help-on")) show(q); });
+      q.addEventListener("mouseleave",hide);
+      q.addEventListener("focus",function(){ if(body.classList.contains("help-on")) show(q); });
+      q.addEventListener("blur",hide);
+      q.addEventListener("click",function(e){ e.preventDefault(); e.stopPropagation(); if(curr===q) hide(); else show(q); });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll("[data-help]"),function(el){
+      if(el.querySelector(".help-q")) return;
+      var q=document.createElement("button"); q.type="button"; q.className="help-q"; q.textContent="?"; q.setAttribute("aria-label","Help");
+      el.insertBefore(q, el.childNodes[1]||null); attach(q);
+    });
+    window.addEventListener("scroll",hide,true);
+    window.addEventListener("resize",hide);
+    document.addEventListener("click",function(){ if(curr) hide(); });
+    if(toggle){ toggle.onclick=function(){ var on=!body.classList.contains("help-on"); setPref(on); apply(on); }; }
+    apply(pref());
+  })();
 
   /* ---------- boot ---------- */
   (async function(){ var s=await sb.auth.getSession(); if(s.data && s.data.session){ await afterLogin(); } })();
