@@ -106,10 +106,10 @@ function fmt(sec){sec=Math.max(0,Math.floor(sec));var m=Math.floor(sec/60),s=sec
 /* ---- demo data: a delegate and four motions, like a real AGM ---- */
 var DEL={meeting:"CTTLFA General Meeting", date:"15 Sep 2025", venue:"Parow Civic Centre", club:"Tableview FC", weight:2};
 var MOTIONS=[
-  {seq:1,title:"Adoption of the 2026 budget",instr:"In favour: the meeting adopts the 2026 budget as presented by the Treasurer.\nAgainst: the budget is not adopted.",rule:"Simple majority",tally:{yes:34,no:8,ab:3}},
-  {seq:2,title:"Constitutional amendment: Article 6 (quorum)",instr:"This changes the Constitution, so it needs a two-thirds majority to pass.\nIn favour: adopt the amended quorum rule.",rule:"Two-thirds majority",tally:{yes:31,no:12,ab:2}},
-  {seq:3,title:"Approval of the audited 2025 financial statements",instr:"In favour: the meeting approves the 2025 audited financial statements.",rule:"Simple majority",tally:{yes:40,no:3,ab:2}},
-  {seq:4,title:"Election of the Vice-Chairperson",instr:"In favour: elect the nominated candidate as Vice-Chairperson.",rule:"Simple majority",tally:{yes:22,no:20,ab:3}}
+  {seq:1,title:"Adoption of the 2026 budget",instr:"Vote Yes to adopt the 2026 budget as presented by the Treasurer.\nVote No to reject it.",rule:"Simple majority",tally:{yes:34,no:8,ab:3}},
+  {seq:2,title:"Constitutional amendment: Article 6 (quorum)",instr:"This changes the Constitution, so it needs a two-thirds majority to pass.\nVote Yes to adopt the amended quorum rule, No to keep the current one.",rule:"Two-thirds majority",tally:{yes:31,no:12,ab:2}},
+  {seq:3,title:"Approval of the audited 2025 financial statements",instr:"Vote Yes to approve the 2025 audited financial statements, No to reject them.",rule:"Simple majority",tally:{yes:40,no:3,ab:2}},
+  {seq:4,title:"Election of the Vice-Chairperson",instr:"Vote Yes to elect the nominated candidate as Vice-Chairperson, No to reject the nomination.",rule:"Simple majority",tally:{yes:22,no:20,ab:3}}
 ];
 var idx=0, choice=null, myChoice=null;
 
@@ -133,7 +133,7 @@ function screenIntro(){
     '<p class="hint">This is a safe practice. It works exactly like the real thing, but nothing is recorded. There are four things to vote on, just like a real meeting.</p>'+
     '<ol class="steps">'+
       '<li>You are already signed in as a delegate for <b>'+esc(DEL.club)+'</b>. On the day you get here by tapping the link in your SMS, so there is nothing to type.</li>'+
-      '<li>When the chairperson opens a vote, three big buttons appear: <b style="color:var(--for)">For</b>, <b style="color:var(--against)">Against</b>, <b style="color:var(--abstain)">Abstain</b>.</li>'+
+      '<li>When the chairperson opens a vote, three big buttons appear: <b style="color:var(--for)">Yes</b>, <b style="color:var(--against)">No</b>, <b style="color:var(--abstain)">Abstain</b>.</li>'+
       '<li>Tap one, then tap confirm. That is it.</li>'+
     '</ol>'+
     '<div class="choices"><button class="btn btn-primary" id="start">Start the practice</button></div>'+
@@ -158,8 +158,8 @@ function screenBallot(){
     '<div class="timer" id="tbar"><i id="tfill"></i></div><div class="tcount" id="tcount"></div>'+
     '<div class="weightnote">Your vote will be recorded as your full '+DEL.weight+' votes, all one way.</div>'+
     '<div class="choices">'+
-      '<button class="btn ch ch-for" data-c="yes">For</button>'+
-      '<button class="btn ch ch-against" data-c="no">Against</button>'+
+      '<button class="btn ch ch-for" data-c="yes">Yes</button>'+
+      '<button class="btn ch ch-against" data-c="no">No</button>'+
       '<button class="btn ch ch-abstain" data-c="abstain">Abstain</button>'+
     '</div></div>'+progressCard();
   Array.prototype.forEach.call(M.querySelectorAll("[data-c]"),function(b){ b.onclick=function(){ choice=b.getAttribute("data-c"); screenConfirm(); }; });
@@ -180,7 +180,7 @@ function runTimer(secs){
   }
   up(); tick=setInterval(up,1000);
 }
-function labelOf(c){ return c==="yes"?"For":(c==="no"?"Against":"Abstain"); }
+function labelOf(c){ return c==="yes"?"Yes":(c==="no"?"No":"Abstain"); }
 function classOf(c){ return c==="yes"?"ch-for":(c==="no"?"ch-against":"ch-abstain"); }
 
 function screenConfirm(){
@@ -217,8 +217,8 @@ function screenResult(){
     '<span class="pill">Motion '+m.seq+' &middot; closed</span>'+
     '<h2 style="margin-top:10px">'+esc(m.title)+'</h2>'+
     '<div class="outcome '+(carried?"carried":"failed")+'" style="margin-top:12px">'+(carried?"Motion carried":"Motion not carried")+'</div>'+
-    '<div class="result-row rfor"><span>For</span><b>'+t.yes+'</b></div>'+
-    '<div class="result-row ragainst"><span>Against</span><b>'+t.no+'</b></div>'+
+    '<div class="result-row rfor"><span>Yes</span><b>'+t.yes+'</b></div>'+
+    '<div class="result-row ragainst"><span>No</span><b>'+t.no+'</b></div>'+
     '<div class="result-row rabstain"><span>Abstain</span><b>'+t.ab+'</b></div>'+
     (myChoice?'<p class="hint">You voted '+esc(labelOf(myChoice))+'.</p>':'')+
     '<p class="hint">'+esc(m.rule)+'. These are sample numbers for the practice.</p>'+

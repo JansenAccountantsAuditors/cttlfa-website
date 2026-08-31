@@ -174,7 +174,7 @@ function screenHelp(){
       '<li style="margin-bottom:9px"><b>Get in.</b> Scan the QR code from the desk, tap the link in your SMS, or type your 6-character code above.</li>'+
       '<li style="margin-bottom:9px"><b>Check it is you.</b> Your club and number of votes show at the top. If it is wrong, tell the desk.</li>'+
       '<li style="margin-bottom:9px"><b>Wait for the vote.</b> The screen says you are checked in. It changes on its own when the chairperson opens a vote.</li>'+
-      '<li style="margin-bottom:9px"><b>Vote.</b> Tap <b style="color:var(--for)">For</b>, <b style="color:var(--against)">Against</b> or <b style="color:var(--abstain)">Abstain</b>, then confirm. A timer counts down, so do not wait too long.</li>'+
+      '<li style="margin-bottom:9px"><b>Vote.</b> Tap <b style="color:var(--for)">Yes</b>, <b style="color:var(--against)">No</b> or <b style="color:var(--abstain)">Abstain</b>, then confirm. A timer counts down, so do not wait too long.</li>'+
       '<li><b>Done.</b> Your vote is locked in. When the vote closes you see whether it was carried.</li>'+
     '</ol>'+
     '<div class="weightnote" style="margin-top:14px">Good to know: your code works on <b>one phone only</b>, your vote is <b>secret</b>, and if your club carries two votes they are both recorded together, one way. If a vote opens and you do not vote in time, it counts as an abstain.</div>'+
@@ -265,8 +265,8 @@ function renderBallot(head,m){
     timerHTML(m)+
     '<div class="weightnote">Your vote will be recorded as your full '+state.weight+' vote'+(state.weight>1?'s':'')+', all one way.</div>'+
     '<div class="choices">'+
-      '<button class="btn ch ch-for" data-c="yes">For</button>'+
-      '<button class="btn ch ch-against" data-c="no">Against</button>'+
+      '<button class="btn ch ch-for" data-c="yes">Yes</button>'+
+      '<button class="btn ch ch-against" data-c="no">No</button>'+
       '<button class="btn ch ch-abstain" data-c="abstain">Abstain</button>'+
     '</div></div>';
   Array.prototype.forEach.call(M.querySelectorAll("[data-c]"),function(b){
@@ -275,7 +275,7 @@ function renderBallot(head,m){
   runTimer(m);
 }
 
-function choiceLabel(c){ return c==="yes"?"For":(c==="no"?"Against":"Abstain"); }
+function choiceLabel(c){ return c==="yes"?"Yes":(c==="no"?"No":"Abstain"); }
 function choiceClass(c){ return c==="yes"?"ch-for":(c==="no"?"ch-against":"ch-abstain"); }
 
 function renderConfirm(head,m){
@@ -330,8 +330,8 @@ function renderClosed(head,m){
     '<span class="pill">Motion '+(m.seq||"")+' · closed</span>'+
     '<h2 style="margin-top:10px">'+esc(m.title)+'</h2>'+
     '<div class="outcome '+(carried?"carried":"failed")+'" style="margin-top:12px">'+(carried?"Motion carried":"Motion not carried")+'</div>'+
-    '<div class="result-row rfor"><span>For</span><b>'+(t.yes_w||0)+'</b></div>'+
-    '<div class="result-row ragainst"><span>Against</span><b>'+(t.no_w||0)+'</b></div>'+
+    '<div class="result-row rfor"><span>Yes</span><b>'+(t.yes_w||0)+'</b></div>'+
+    '<div class="result-row ragainst"><span>No</span><b>'+(t.no_w||0)+'</b></div>'+
     '<div class="result-row rabstain"><span>Abstain</span><b>'+(t.abstain_w||0)+'</b></div>';
   if(m.my_choice){ html+='<p class="hint">You voted '+esc(choiceLabel(m.my_choice))+'.</p>'; }
   html+='<p class="hint">'+esc(ruleText(t))+'</p></div>';

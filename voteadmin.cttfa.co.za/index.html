@@ -285,12 +285,12 @@
           <h3 data-help="Write up each thing the meeting will vote on: title, plain instruction shown on every phone, the majority needed, who may vote, how abstentions count and a timer. Add motion saves it as a draft. Prepare them all in advance (an AGM may have up to about ten), then start them one at a time on the Live tab.">Prepare a motion</h3>
           <p class="hint">Mancom decides the wording and the majority. The app records it.</p>
           <label class="f">Motion title</label><input type="text" id="moTitle" placeholder="e.g. Adoption of the 2026 budget">
-          <label class="f">Plain instruction shown on each phone</label><textarea id="moInstr" placeholder="In favour means... Against means..."></textarea>
+          <label class="f">Plain instruction shown on each phone</label><textarea id="moInstr" placeholder="Vote Yes to... Vote No to..."></textarea>
           <div class="row">
-            <div style="max-width:190px" title="Simple majority: more For than Against. Two-thirds: needed for constitutional amendments. Custom: set your own percentage."><label class="f">Pass rule</label><select id="moRule"><option value="simple">Simple majority</option><option value="two_thirds">Two-thirds</option><option value="custom">Custom %</option></select></div>
+            <div style="max-width:190px" title="Simple majority: more Yes than No. Two-thirds: needed for constitutional amendments. Custom: set your own percentage."><label class="f">Pass rule</label><select id="moRule"><option value="simple">Simple majority</option><option value="two_thirds">Two-thirds</option><option value="custom">Custom %</option></select></div>
             <div style="max-width:120px" id="moCustomWrap" class="hidden"><label class="f">Custom %</label><input type="text" id="moCustom" value="75"></div>
             <div style="max-width:190px" title="Full + Associate lets every accredited club vote. Full only restricts the vote to full member clubs, for matters reserved to them."><label class="f">Who may vote</label><select id="moElig"><option value="all">Full + Associate</option><option value="full_only">Full only</option></select></div>
-            <div style="max-width:170px" title="Set aside: abstentions are ignored, the majority is worked out on For and Against only. Count in base: abstentions count in the total the majority is measured against, so an abstain effectively counts against."><label class="f">Abstentions</label><select id="moAbs"><option value="set_aside">Set aside</option><option value="in_base">Count in base</option></select></div>
+            <div style="max-width:170px" title="Set aside: abstentions are ignored, the majority is worked out on Yes and No only. Count in base: abstentions count in the total the majority is measured against, so an abstain effectively counts against."><label class="f">Abstentions</label><select id="moAbs"><option value="set_aside">Set aside</option><option value="in_base">Count in base</option></select></div>
             <div style="max-width:130px" title="How many seconds the vote stays open. When it reaches zero the motion closes on its own and anyone who has not voted is counted as an abstain. 45 to 60 seconds works well in the room."><label class="f">Timer (sec)</label><input type="text" id="moTimer" value="45"></div>
           </div>
           <div class="btnrow"><button class="btn gold" id="addMotion" title="Save this motion as a draft. It is not open for voting yet, you start it from the Live tab on the day. Prepare all your motions (up to ten for an AGM) in advance.">Add motion</button></div>
@@ -423,7 +423,7 @@
         <p>Everything for the live vote is on the <span class="kk">Live &amp; results</span> tab, and the Start and Close buttons also sit on the Motions tab.</p>
         <ol class="steps">
           <li>When the chairperson calls the motion, press <span class="kk green">Start</span>. Every delegate's phone switches to the ballot for that motion, and the countdown begins.</li>
-          <li>Watch the timer and the live count of votes in. The running For/Against split is never shown, the ballot is secret.</li>
+          <li>Watch the timer and the live count of votes in. The running Yes/No split is never shown, the ballot is secret.</li>
           <li>The vote <b>closes on its own</b> when the timer hits zero. You can also press <span class="kk red">Close</span> to end it early once everyone has voted.</li>
           <li>Anyone accredited who did not vote is counted as an <b>abstain</b>. This is deliberate, silence is recorded, not ignored.</li>
           <li>Start the next motion and repeat. Only one motion is ever open at a time.</li>
@@ -437,7 +437,7 @@
           <li>On the <span class="kk">Live &amp; results</span> tab, press <span class="kk">Open room view</span>. It opens in a new browser tab.</li>
           <li>Drag that tab onto the projector screen, then press <span class="kk">Full screen</span> at the top right of the room view to fill the whole screen.</li>
           <li>While a vote is open the screen shows the motion and a large countdown. It never shows the running tally, so the ballot stays secret.</li>
-          <li>When the vote closes the screen shows <b>CARRIED</b> or <b>NOT CARRIED</b> with the For, Against and Abstain totals.</li>
+          <li>When the vote closes the screen shows <b>CARRIED</b> or <b>NOT CARRIED</b> with the Yes, No and Abstain totals.</li>
           <li>To take it down, press <span class="kk">Full screen</span> again (or <span class="kk">Esc</span>) to leave full screen, then <span class="kk">Close</span> to end the room view, and close the browser tab.</li>
         </ol>
         <p class="sub">The room view updates on its own every few seconds. You control the vote from the admin laptop as usual, the projector just mirrors the state.</p>
@@ -445,7 +445,7 @@
 
       <div class="card help-card" id="h-results">
         <h3><span class="step-n">10</span>Results and records for the minutes</h3>
-        <p>As each motion closes, its result appears in the results table on the <span class="kk">Live &amp; results</span> tab with For, Against, Abstain and the outcome. For the meeting file:</p>
+        <p>As each motion closes, its result appears in the results table on the <span class="kk">Live &amp; results</span> tab with Yes, No, Abstain and the outcome. For the meeting file:</p>
         <ol class="steps">
           <li><span class="kk">Attendance PDF</span> on the Accreditation tab gives the full attendance and voting register: every delegate, club, votes carried and code.</li>
           <li><span class="kk">Results PDF</span> on the Live tab gives every closed motion with its totals and outcome. This is the formal voting record.</li>
@@ -459,7 +459,7 @@
         <ol class="steps">
           <li>They scan the QR you show them, or tap the link in the SMS, or go to <b>vote.cttfa.co.za</b> and type their six-character code.</li>
           <li>Their name and club show, so they can check it is right. Then they wait, the phone says voting has not opened yet.</li>
-          <li>When you start a motion, their phone shows the motion and three buttons: <b>In favour</b>, <b>Against</b>, <b>Abstain</b>. They tap one and confirm.</li>
+          <li>When you start a motion, their phone shows the motion and three buttons: <b>Yes</b>, <b>No</b>, <b>Abstain</b>. They tap one and confirm.</li>
           <li>Once the vote closes, their phone shows whether it was carried. That is it.</li>
         </ol>
         <div class="callout"><b>Share it with a club ahead of time.</b> On the club's row you can send a short SMS that explains, in plain language, how their delegate votes on the day. It is the same simple steps as above. Send it a day or two before so clubs arrive knowing what to do.</div>
@@ -472,7 +472,7 @@
         <div class="faq"><b>A club is short and shows "Subscribed".</b><span>That club has already used all its votes (two for a full club, one for an associate). Remove a delegate first if you need to swap who holds the vote.</span></div>
         <div class="faq"><b>Can we change compliance after starting a vote?</b><span>No. It locks at the first Start to protect the result. Set it correctly before the first motion opens.</span></div>
         <div class="faq"><b>The vote closed before everyone voted.</b><span>The timer closes it automatically. Anyone who did not vote is recorded as an abstain, which is the correct treatment. Set a longer timer on the motion if the room needs more time.</span></div>
-        <div class="faq"><b>Why can I not see who is winning while the vote is open?</b><span>The ballot is secret. Only the count of votes cast is shown live, never the For/Against split. The result appears when the vote closes.</span></div>
+        <div class="faq"><b>Why can I not see who is winning while the vote is open?</b><span>The ballot is secret. Only the count of votes cast is shown live, never the Yes/No split. The result appears when the vote closes.</span></div>
       </div>
 
       <div class="card help-card" id="h-share">
@@ -484,7 +484,7 @@
           <div style="flex:0 0 auto"><button class="btn gold" id="shSend" title="Text the how-to-vote guide and the vote link to this number.">Send guide</button></div>
         </div>
         <div id="shMsg"></div>
-        <p class="sub" style="margin-top:12px">The message reads: "CTTLFA voting guide for [club]: your delegate votes on their own phone at the meeting. At the desk we give them a QR or 6-character code. When a motion opens they tap For, Against or Abstain and confirm. One phone per code, secret ballot. More: https://vote.cttfa.co.za"</p>
+        <p class="sub" style="margin-top:12px">The message reads: "CTTLFA voting guide for [club]: your delegate votes on their own phone at the meeting. At the desk we give them a QR or 6-character code. When a motion opens they tap Yes, No or Abstain and confirm. One phone per code, secret ballot. More: https://vote.cttfa.co.za"</p>
       </div>
     </section>
   </div>
@@ -845,7 +845,7 @@
     var body=tallies.map(function(o){ var t=o.t;
       return [String(o.m.seq||""), o.m.title, ruleLabel(o.m), String(t.yes_w||0), String(t.no_w||0), String(t.abstain_w||0), (t.passed?"CARRIED":"NOT CARRIED")];
     });
-    doc.autoTable({ startY:122, head:[["#","Motion","Rule","For","Against","Abstain","Outcome"]], body:body,
+    doc.autoTable({ startY:122, head:[["#","Motion","Rule","Yes","No","Abstain","Outcome"]], body:body,
       styles:{fontSize:9,cellPadding:4}, headStyles:{fillColor:[24,64,80],textColor:255},
       alternateRowStyles:{fillColor:[244,246,251]}, columnStyles:{0:{halign:"center",cellWidth:24},3:{halign:"center"},4:{halign:"center"},5:{halign:"center"}} });
     var y=doc.lastAutoTable.finalY+18; doc.setFontSize(9); doc.setTextColor(90,101,119);
@@ -970,7 +970,7 @@
     var rl=$("resultsList");
     if(!closed.length){ rl.innerHTML='<p class="hint">No closed motions yet.</p>'; return; }
     var rows=await Promise.all(closed.map(function(m){ return sb.rpc("motion_tally",{p_motion:m.id}).then(function(x){ return {m:m,t:(x.data&&!x.data.error)?x.data:{}}; }); }));
-    var h='<table><thead><tr><th>Motion</th><th class="num">For</th><th class="num">Against</th><th class="num">Abstain</th><th>Outcome</th></tr></thead><tbody>';
+    var h='<table><thead><tr><th>Motion</th><th class="num">Yes</th><th class="num">No</th><th class="num">Abstain</th><th>Outcome</th></tr></thead><tbody>';
     rows.forEach(function(o){ var t=o.t||{}; var carried=!!t.passed;
       h+='<tr><td><b>'+esc(o.m.title)+'</b><br><span class="kv">'+esc(ruleLabel(o.m))+' · strength '+(t.voting_strength||0)+'</span></td>'+
         '<td class="num">'+(t.yes_w||0)+'</td><td class="num">'+(t.no_w||0)+'</td>'+

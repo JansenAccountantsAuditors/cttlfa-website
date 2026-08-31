@@ -86,8 +86,8 @@ function render(s){
     var t=m.tally||{}, carried=!!t.passed;
     M.innerHTML='<div class="seq">Motion '+(m.seq||"")+' · closed</div><h1 style="font-size:clamp(28px,4vw,52px)">'+esc(m.title)+'</h1>'+
       '<div class="outcome '+(carried?"carried":"failed")+'">'+(carried?"CARRIED":"NOT CARRIED")+'</div>'+
-      '<div class="tally"><div class="tcell tfor"><div class="n">'+(t.yes_w||0)+'</div><div class="l">For</div></div>'+
-      '<div class="tcell tagainst"><div class="n">'+(t.no_w||0)+'</div><div class="l">Against</div></div>'+
+      '<div class="tally"><div class="tcell tfor"><div class="n">'+(t.yes_w||0)+'</div><div class="l">Yes</div></div>'+
+      '<div class="tcell tagainst"><div class="n">'+(t.no_w||0)+'</div><div class="l">No</div></div>'+
       '<div class="tcell tabs"><div class="n">'+(t.abstain_w||0)+'</div><div class="l">Abstain</div></div></div>';
   }
 }
