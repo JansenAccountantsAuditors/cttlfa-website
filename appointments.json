@@ -40,9 +40,160 @@
    "P Arendse",
    "",
    ""
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-02",
+   "20:30",
+   "Saxon Rovers",
+   "Wynberg st Johns",
+   "S Makinana",
+   "W Engelbrecht",
+   "Club Ref"
   ]
  ],
  "junior": [],
- "ladies": [],
- "week_label": "2026-09-01 to 2026-09-02"
+ "ladies": [
+  [
+   "H1 - Womans Premier League",
+   "2026-09-04",
+   "19:00",
+   "U C T",
+   "Fish Hoek",
+   "D Motseo",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-01",
+   "19:00",
+   "Saxon Rovers",
+   "Green Point",
+   "D Vaughan",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-02",
+   "19:00",
+   "U C T",
+   "Hout Bay (Guest)",
+   "A Adams",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-03",
+   "19:00",
+   "Stephanian Ottery",
+   "Green Point",
+   "A Richards",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-03",
+   "19:00",
+   "Hanover Park",
+   "U C T",
+   "R Kalamdien",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-03",
+   "19:00",
+   "Bellville City",
+   "Clyde Pinelands",
+   "F Nel",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-04",
+   "19:00",
+   "FN Rangers",
+   "Green Point",
+   "A Brown",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-04",
+   "19:00",
+   "Kensington",
+   "Bothasig",
+   "L Montanus",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-04",
+   "19:00",
+   "Meadowridge",
+   "Magic Ladies",
+   "A Adams",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-04",
+   "19:00",
+   "Hout Bay (Guest)",
+   "Badgers FC",
+   "M Swartz",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-05",
+   "14:00",
+   "Kuilsriver",
+   "Norway Parks",
+   "F Nel",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-06",
+   "14:00",
+   "Kuilsriver",
+   "Stephanian Ottery",
+   "H Dresselhaus",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-06",
+   "14:00",
+   "Magic Ladies",
+   "Badgers FC",
+   "R Arendse",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-06",
+   "12:00",
+   "Magic Ladies",
+   "U C T",
+   "E Piet",
+   "",
+   ""
+  ]
+ ],
+ "week_label": "2026-09-01 to 2026-09-06"
 }
