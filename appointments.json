@@ -10,49 +10,409 @@
   "asst1",
   "asst2"
  ],
- "senior": [
+ "senior": [],
+ "junior": [
   [
-   "A1 - Premier League",
-   "2026-09-01",
-   "20:30",
+   "O5 - Under 12 Division Five",
+   "2026-09-05",
+   "08:15",
+   "Bellville City",
+   "Goodwood",
+   "C Richards",
+   "",
+   ""
+  ],
+  [
+   "O4 - Under 12 Division Four",
+   "2026-09-05",
+   "08:15",
+   "FN Rangers",
    "C.R Vasco da Gama",
+   "B Arendse",
+   "",
+   ""
+  ],
+  [
+   "O3 - Under 12 Premier Three",
+   "2026-09-05",
+   "08:15",
    "Green Point",
-   "N Dunshire",
-   "J Absalon",
-   "Club Ref"
+   "Chelsea Bridgetown",
+   "B Mlimisi",
+   "",
+   ""
   ],
   [
-   "C1 - Second Division",
-   "2026-09-02",
-   "19:30",
-   "Clyde Pinelands",
-   "FC Kapstadt",
-   "T Daames",
-   "A Richards",
-   "M Swartz"
+   "O2 - Under 12 Premier Two",
+   "2026-09-05",
+   "08:15",
+   "Kensington",
+   "Meadowridge",
+   "D  Lockman",
+   "",
+   ""
   ],
   [
-   "B1 - First Division",
-   "2026-09-01",
-   "20:00",
-   "Garden Village",
+   "O1 - Under 12 Premier One",
+   "2026-09-05",
+   "08:15",
+   "Norway Parks",
+   "C.R Vasco da Gama",
+   "A Williams",
+   "",
+   ""
+  ],
+  [
+   "O1 - Under 12 Premier One",
+   "2026-09-05",
+   "08:15",
+   "Cape Town Spurs",
+   "Hanover Park",
+   "F Nel",
+   "",
+   ""
+  ],
+  [
+   "O1 - Under 12 Premier One",
+   "2026-09-05",
+   "08:15",
+   "Hellenic",
    "Northpine United",
+   "M Matiwana",
+   "",
+   ""
+  ],
+  [
+   "O1 - Under 12 Premier One",
+   "2026-09-05",
+   "08:15",
+   "Wynberg st Johns",
+   "FC Kapstadt",
+   "N Dunshire",
+   "",
+   ""
+  ],
+  [
+   "M9 - Under 14 Division Eight",
+   "2026-09-05",
+   "09:30",
+   "Bellville City",
+   "Garlandale FC",
+   "C Richards",
+   "",
+   ""
+  ],
+  [
+   "M5 - Under 14 Division Five",
+   "2026-09-05",
+   "09:30",
+   "Bellville City",
+   "Goodwood",
+   "Hugo Bailey",
+   "",
+   ""
+  ],
+  [
+   "M4 - Under 14 Division Four",
+   "2026-09-05",
+   "09:30",
+   "FN Rangers",
+   "C.R Vasco da Gama",
+   "E Piet",
+   "",
+   ""
+  ],
+  [
+   "M3 - Under 14 Premier Three",
+   "2026-09-05",
+   "09:30",
+   "Green Point",
+   "Chelsea Bridgetown",
+   "L Montanus",
+   "",
+   ""
+  ],
+  [
+   "M2 - Under 14 Premier Two",
+   "2026-09-05",
+   "09:30",
+   "Edgemead G/W",
+   "Kuilsriver",
+   "A Abrahams",
+   "",
+   ""
+  ],
+  [
+   "M2 - Under 14 Premier Two",
+   "2026-09-05",
+   "09:30",
+   "Sunningdale City",
+   "Durbanville",
+   "A De Freitas",
+   "",
+   ""
+  ],
+  [
+   "M2 - Under 14 Premier Two",
+   "2026-09-05",
+   "09:30",
+   "Kensington",
+   "Meadowridge",
+   "D Vaughan",
+   "",
+   ""
+  ],
+  [
+   "M1 - Under 14 Premier One",
+   "2026-09-05",
+   "09:30",
+   "Cape Town Spurs",
+   "Hanover Park",
+   "C Jagers",
+   "",
+   ""
+  ],
+  [
+   "M1 - Under 14 Premier One",
+   "2026-09-05",
+   "09:30",
+   "Camps Bay",
+   "FN Rangers",
+   "D Motseo",
+   "",
+   ""
+  ],
+  [
+   "M1 - Under 14 Premier One",
+   "2026-09-05",
+   "09:30",
+   "Wynberg st Johns",
+   "FC Kapstadt",
+   "J Absalon",
+   "",
+   ""
+  ],
+  [
+   "M1 - Under 14 Premier One",
+   "2026-09-05",
+   "09:30",
+   "Wynberg st Johns",
+   "FC Kapstadt",
+   "J Absalon",
+   "",
+   ""
+  ],
+  [
+   "M1 - Under 14 Premier One",
+   "2026-09-05",
+   "09:30",
+   "Norway Parks",
+   "C.R Vasco da Gama",
    "P Arendse",
    "",
    ""
   ],
   [
-   "A1 - Premier League",
-   "2026-09-02",
-   "20:30",
-   "Saxon Rovers",
+   "M1 - Under 14 Premier One",
+   "2026-09-05",
+   "09:30",
+   "Hellenic",
+   "Northpine United",
+   "S Loqo",
+   "",
+   ""
+  ],
+  [
+   "K7 - Under 16 Girls Premier One",
+   "2026-09-05",
+   "10:50",
+   "Bellville City",
+   "Clyde Pinelands",
+   "Chadley Williams",
+   "",
+   ""
+  ],
+  [
+   "K5 - Under 16 Division Five",
+   "2026-09-05",
+   "10:50",
+   "Bellville City",
+   "Goodwood",
+   "Hugo Bailey",
+   "",
+   ""
+  ],
+  [
+   "K4 - Under 16 Division Four",
+   "2026-09-05",
+   "10:50",
+   "FN Rangers",
+   "C.R Vasco da Gama",
+   "B Arendse",
+   "",
+   ""
+  ],
+  [
+   "K3 - Under 16 Premier Three",
+   "2026-09-05",
+   "10:50",
+   "Green Point",
+   "Chelsea Bridgetown",
+   "B Mlimisi",
+   "",
+   ""
+  ],
+  [
+   "K2 - Under 16 Premier Two",
+   "2026-09-05",
+   "10:50",
+   "Sunningdale City",
+   "Durbanville",
+   "A De Freitas",
+   "",
+   ""
+  ],
+  [
+   "K2 - Under 16 Premier Two",
+   "2026-09-05",
+   "10:50",
+   "Kensington",
+   "Meadowridge",
+   "D  Lockman",
+   "",
+   ""
+  ],
+  [
+   "K1 - Under 16 Premier One",
+   "2026-09-05",
+   "10:50",
+   "Norway Parks",
+   "C.R Vasco da Gama",
+   "A Williams",
+   "",
+   ""
+  ],
+  [
+   "K1 - Under 16 Premier One",
+   "2026-09-05",
+   "10:50",
+   "Camps Bay",
+   "FN Rangers",
+   "D Motseo",
+   "",
+   ""
+  ],
+  [
+   "K1 - Under 16 Premier One",
+   "2026-09-05",
+   "10:50",
+   "Cape Town Spurs",
+   "Hanover Park",
+   "F Nel",
+   "",
+   ""
+  ],
+  [
+   "K1 - Under 16 Premier One",
+   "2026-09-05",
+   "10:50",
    "Wynberg st Johns",
+   "FC Kapstadt",
+   "N Dunshire",
+   "",
+   ""
+  ],
+  [
+   "K1 - Under 16 Premier One",
+   "2026-09-05",
+   "10:50",
+   "Hellenic",
+   "Northpine United",
+   "Y Mpelane",
+   "",
+   ""
+  ],
+  [
+   "I4 - Under 18 Division Four",
+   "2026-09-05",
+   "12:30",
+   "FN Rangers",
+   "C.R Vasco da Gama",
+   "E Piet",
+   "",
+   ""
+  ],
+  [
+   "I3 - Under 18 Premier Three",
+   "2026-09-05",
+   "12:30",
+   "Green Point",
+   "Chelsea Bridgetown",
+   "L Montanus",
+   "",
+   ""
+  ],
+  [
+   "I2 - Under 18 Premier Two",
+   "2026-09-05",
+   "12:30",
+   "Edgemead G/W",
+   "Kuilsriver",
+   "A Abrahams",
+   "",
+   ""
+  ],
+  [
+   "I2 - Under 18 Premier Two",
+   "2026-09-05",
+   "12:30",
+   "Kensington",
+   "Meadowridge",
+   "D Vaughan",
+   "",
+   ""
+  ],
+  [
+   "I1 - Under 18 Premier One",
+   "2026-09-05",
+   "12:30",
+   "Cape Town Spurs",
+   "Hanover Park",
+   "C Jagers",
+   "",
+   ""
+  ],
+  [
+   "I1 - Under 18 Premier One",
+   "2026-09-05",
+   "12:30",
+   "Wynberg st Johns",
+   "FC Kapstadt",
+   "J Absalon",
+   "",
+   ""
+  ],
+  [
+   "I1 - Under 18 Premier One",
+   "2026-09-05",
+   "12:30",
+   "Norway Parks",
+   "C.R Vasco da Gama",
+   "P Arendse",
+   "",
+   ""
+  ],
+  [
+   "I1 - Under 18 Premier One",
+   "2026-09-05",
+   "12:30",
+   "Hellenic",
+   "Northpine United",
    "S Makinana",
-   "W Engelbrecht",
-   "Club Ref"
+   "",
+   ""
   ]
  ],
- "junior": [],
  "ladies": [
   [
    "H1 - Womans Premier League",
@@ -151,26 +511,6 @@
    "Hout Bay (Guest)",
    "Badgers FC",
    "M Swartz",
-   "",
-   ""
-  ],
-  [
-   "H2 - Womans First Division",
-   "2026-09-05",
-   "14:00",
-   "Kuilsriver",
-   "Norway Parks",
-   "F Nel",
-   "",
-   ""
-  ],
-  [
-   "H2 - Womans First Division",
-   "2026-09-06",
-   "14:00",
-   "Kuilsriver",
-   "Stephanian Ottery",
-   "H Dresselhaus",
    "",
    ""
   ],
