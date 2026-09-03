@@ -2130,7 +2130,6 @@ body .card-f{background:#FBF7F0}
       <div class="ko-finals">
         <div class="ko-finals-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4a2 2 0 0 1-2-2V5h4M18 9h2a2 2 0 0 0 2-2V5h-4M6 3h12v6a6 6 0 0 1-12 0zM12 15v4M8 21h8"/></svg>2026 Finals &amp; Venues</div>
         <div class="ko-finals-grid">
-          <div class="kof"><span class="kof-t">Semi-Finals</span><b>Neutral venue</b><small>De Beers AFC · for all clubs</small></div>
           <div class="kof"><span class="kof-t">Junior Knockout Finals</span><b>Norway Parks FC</b><small>26–27 September 2026</small></div>
           <div class="kof"><span class="kof-t">Senior Knockout Final</span><b>Cape Town Spurs FC</b><small>3 October 2026</small></div>
         </div>
@@ -4754,12 +4753,10 @@ const clkSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-
      {date:"YYYY-MM-DD", title:"...", venue:"...", time:"15:00", tag:"Final", cls:"tag-gold"}
    tag classes: tag-gold, tag-blue, tag-green. Events sort by date and each drops off
    this list automatically once its date has passed. Empty list = placeholder shown. */
-/* 2026 cup climax — semi-final venue is confirmed (neutral) but the date is not
-   yet posted, so it shows as a "TBC" lead card and is not date-filtered. The two
-   finals carry firm dates and drop off automatically once they have been played.
-   dateEnd keeps a multi-day event on the list until the last day has passed. */
+/* 2026 cup climax — the semi-finals have been played. The two finals carry firm
+   dates and drop off automatically once they have been played. dateEnd keeps a
+   multi-day event on the list until the last day has passed. */
 const EVENTS=[
-  {tbc:true, title:"Knockout Semi-Finals", venue:"De Beers AFC — neutral venue for all clubs", time:"Fixtures & dates to be confirmed", tag:"Semi-Finals", cls:"tag-blue", spot:true},
   {date:"2026-09-26", dateEnd:"2026-09-27", title:"Junior Knockout Finals", venue:"Norway Parks FC", time:"26–27 September 2026", tag:"Junior Finals", cls:"tag-green"},
   {date:"2026-10-03", title:"Senior Knockout Final", venue:"Cape Town Spurs FC", time:"Saturday 3 October 2026", tag:"Senior Final", cls:"tag-gold", gold:true}
 ];
