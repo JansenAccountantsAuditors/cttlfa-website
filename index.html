@@ -5347,6 +5347,10 @@ window.addEventListener('popstate',()=>routePath(true));
      } */
 let CURRENT_PAGE='home';
 const ADMIN_BASE='https://www.websiteadmin.cttfa.co.za';
+/* Content now served from the CTTLFA Admin Centre's in-house store (Supabase), read-only public content. */
+const SUPA='https://fbbbsvkshajollduapaw.supabase.co';
+const SUPA_ANON='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiYmJzdmtzaGFqb2xsZHVhcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODYyODgsImV4cCI6MjEwMzY2MjI4OH0.8heeqe-03Mji2NgHt17ZOCoctijRhF78cHvSQkrUUi0';
+window.siteContent=function(section){return fetch(SUPA+'/rest/v1/site_content?section=eq.'+encodeURIComponent(section)+'&select=data',{headers:{apikey:SUPA_ANON,Authorization:'Bearer '+SUPA_ANON},cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).then(function(rows){return (rows&&rows[0])?rows[0].data:null;}).catch(function(){return null;});};
 let NOTICES=[];                 /* list of notices from the admin; empty until loaded */
 let noticeDismissed={};         /* signatures of notices dismissed this visit */
 function nbToday(){const d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
@@ -5392,10 +5396,9 @@ function applyNotice(page){
 }
 function loadNotice(){
   try{
-    fetch(ADMIN_BASE+'/data/notice.json?ts='+Date.now(),{cache:'no-store'})
-      .then(r=>r.ok?r.json():null)
+    window.siteContent('notice')
       .then(d=>{if(d&&Array.isArray(d.notices)){NOTICES=d.notices;applyNotice(CURRENT_PAGE);}})
-      .catch(()=>{});   /* offline / CORS / bad JSON => no notices, page unaffected */
+      .catch(()=>{});   /* offline / bad JSON => no notices, page unaffected */
   }catch(e){}
 }
 loadNotice();
@@ -5816,7 +5819,7 @@ loadSeason('season.json');
   function xesc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
   function xatt(s){return String(s==null?'':s).replace(/"/g,'%22');}
   function today(){var d=new Date();return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2);}
-  function getJSON(f){return fetch(AB+'/data/'+f+'.json?ts='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null;});}
+  function getJSON(f){return (typeof window.siteContent==='function')?window.siteContent(f):fetch(AB+'/data/'+f+'.json?ts='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null;});}
 
   /* one-time CSS for the news blocks — home row balances news | feed | news (mockup) */
   try{var st=document.createElement('style');st.textContent=
