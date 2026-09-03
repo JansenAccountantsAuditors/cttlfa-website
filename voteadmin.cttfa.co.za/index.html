@@ -188,6 +188,7 @@
       <button class="tab" data-tab="compliance" title="Mark each club compliant or not for this meeting. Do this before the first vote is started. A non-compliant club cannot be accredited or vote.">Compliance</button>
       <button class="tab" data-tab="motions" title="Write up each motion for the meeting, its wording, who may vote, the majority needed and the timer. You can prepare several motions in advance.">Motions</button>
       <button class="tab" data-tab="live" title="Run the vote on the day: start a motion, watch the timer and count, close it, see results and open the projector room view.">Live &amp; results</button>
+      <button class="tab" data-tab="registrations" title="Association-wide registration analytics: the SAFA two-year card cycle, current registered members, the monthly trend by type and a per-club breakdown. Read-only, admin only.">Registrations</button>
       <button class="tab" data-tab="audit" title="A read-only record of every accreditation, removal, compliance change and motion start or close, with who did it and when.">Audit</button>
       <button class="tab" data-tab="users" title="The Mancom allow-list. Only these people can sign in. Each sets their own password the first time.">Mancom users</button>
       <button class="tab" data-tab="help" title="Full how-to guide: the running order for a meeting day, every screen explained, and how delegates vote from their phones.">Help</button>
@@ -310,6 +311,40 @@
         <div class="card" id="liveControl"></div>
         <div class="card" id="liveResults"><h3 data-help="Results appear here as each motion closes: For, Against, Abstain and whether it was carried. The running split is never shown while a vote is open, the ballot is secret. Open room view puts a big screen up for the hall. Results PDF is the formal voting record for the minutes.">Results <button class="btn ghost sm" id="dlResults" style="float:right" title="Download a PDF of every closed motion with the For, Against and Abstain totals and the outcome. This is the formal voting record for the minutes.">Results PDF</button><button class="btn ghost sm" id="openRoom" style="float:right;margin-right:8px" title="Open the big-screen room view in a new tab for the hall projector. It shows the motion and countdown while open, and CARRIED or NOT CARRIED with the totals once closed. Never the running tally, the ballot stays secret.">Open room view</button></h3><div id="resultsList"><p class="hint">Results appear here as motions close.</p></div></div>
       </div>
+    </section>
+
+    <style>
+#tab-registrations .reg-cycles{display:grid;grid-template-columns:1fr 1.1fr 1fr;gap:12px;margin-top:14px}
+#tab-registrations .reg-cyc{border:1px solid var(--line);border-radius:12px;padding:14px;position:relative;background:#FBFCFF}
+#tab-registrations .reg-cyc.cur{border:2px solid var(--navy);background:#fff}
+#tab-registrations .reg-cyc.next{border-style:dashed;border-color:var(--gold)}
+#tab-registrations .reg-cyc .rt{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+#tab-registrations .reg-cyc.cur .rt{color:var(--navy)}
+#tab-registrations .reg-cyc .ry{font-family:var(--cond);font-size:22px;font-weight:700;color:var(--navy2);margin:1px 0 4px}
+#tab-registrations .reg-cyc .rp{font-family:var(--cond);font-size:30px;font-weight:700;color:var(--navy);line-height:1}
+#tab-registrations .reg-cyc .rc{font-size:11px;color:var(--muted)}
+#tab-registrations .reg-cyc .rs{font-size:12px;color:var(--ink);margin-top:8px}
+#tab-registrations .reg-cyc.next .rp{color:var(--gold)}
+#tab-registrations .reg-here{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;padding:2px 9px;border-radius:20px}
+#tab-registrations .reg-countdown{margin-top:14px;background:var(--navy);color:#fff;border-radius:12px;padding:14px 18px;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+#tab-registrations .reg-countdown .d{font-family:var(--cond);font-size:30px;font-weight:700;line-height:1;white-space:nowrap}
+#tab-registrations .reg-countdown .d span{display:block;color:var(--gold);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-top:2px}
+#tab-registrations .reg-countdown p{margin:0;font-size:13px;color:#D9E1F2;max-width:62ch}
+#tab-registrations .reg-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+#tab-registrations .reg-stat{background:#FBFCFF;border:1px solid var(--line);border-radius:12px;padding:12px}
+#tab-registrations .reg-stat .v{font-family:var(--cond);font-size:26px;font-weight:700;color:var(--navy);line-height:1}
+#tab-registrations .reg-stat .l{font-size:12px;color:var(--ink);margin-top:3px;font-weight:600}
+#tab-registrations .reg-stat .sub{font-size:11px;color:var(--muted);margin-top:1px}
+#tab-registrations .reg-legend{display:flex;gap:16px;font-size:12px;margin-bottom:8px;flex-wrap:wrap}
+#tab-registrations .reg-legend i.rsw{width:12px;height:12px;border-radius:3px;display:inline-block;margin-right:5px;vertical-align:middle}
+#tab-registrations .reg-msbar{height:34px;border-radius:8px;overflow:hidden;display:flex;border:1px solid var(--line)}
+#tab-registrations .reg-msbar i{display:flex;align-items:center;padding:0 10px;color:#fff;font-size:12px;font-weight:600;white-space:nowrap}
+#tab-registrations svg{width:100%;height:auto;display:block}
+</style>
+
+    <!-- REGISTRATIONS (analytics, admin only) -->
+    <section id="tab-registrations" class="hidden">
+      <div id="regRoot"><div class="card"><p class="hint">Loading registration analytics...</p></div></div>
     </section>
 
     <!-- AUDIT -->
@@ -556,7 +591,7 @@
   Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(t){
     t.onclick=function(){
       Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(x){x.classList.toggle("on",x===t);});
-      ["meetings","accredit","compliance","motions","live","audit","users","help"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
+      ["meetings","accredit","compliance","motions","live","registrations","audit","users","help"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
       if(t.dataset.tab!=="accredit") stopCiTimer();
       if(t.dataset.tab!=="live" && liveTimer){ clearTimeout(liveTimer); liveTimer=null; }
       if(t.dataset.tab==="accredit") renderAccredit();
@@ -564,6 +599,7 @@
       if(t.dataset.tab==="motions") renderMotions();
       if(t.dataset.tab==="live") renderLive();
       if(t.dataset.tab==="audit") loadAudit();
+      if(t.dataset.tab==="registrations") renderRegistrations();
     };
   });
 
@@ -989,6 +1025,73 @@
     var h='<table><thead><tr><th>Name</th><th>Email</th><th>Title</th><th>Role</th><th>Registered</th></tr></thead><tbody>';
     us.forEach(function(u){ h+='<tr><td><b>'+esc(u.full_name)+'</b></td><td>'+esc(u.email)+'</td><td class="kv">'+esc(u.title||"")+'</td><td><span class="tag '+(u.role==="administrator"?"open":(u.role==="secretary"?"full":"draft"))+'">'+esc(u.role)+'</span></td><td>'+(u.auth_id?'<span class="tag in">yes</span>':'<span class="kv">not yet</span>')+'</td></tr>'; });
     h+='</tbody></table>'; l.innerHTML=h;
+  }
+
+  /* ---------- registrations (analytics, admin only) ---------- */
+  var _reg=null;
+  function regFmt(n){ return (n==null?"–":Number(n).toLocaleString("en-ZA").replace(/,/g," ")); }
+  function regDate(iso){ if(!iso) return ""; var M=["January","February","March","April","May","June","July","August","September","October","November","December"]; var a=String(iso).split("-"); return parseInt(a[2],10)+" "+M[parseInt(a[1],10)-1]+" "+a[0]; }
+  async function renderRegistrations(){
+    var root=$("regRoot"); if(!root) return;
+    root.innerHTML='<div class="card"><p class="hint">Loading registration analytics...</p></div>';
+    try{
+      var r=await sb.rpc("reg_analytics");
+      if(r.error) throw r.error;
+      _reg=r.data; regDraw();
+    }catch(e){ root.innerHTML='<div class="card"><p class="hint">Could not load analytics: '+esc(e.message||e)+'</p></div>'; }
+  }
+  function regStat(v,l,sub){ return '<div class="reg-stat"><div class="v">'+regFmt(v)+'</div><div class="l">'+l+'</div><div class="sub">'+sub+'</div></div>'; }
+  function regCyc(tag,yrs,persons,snr,jnr,cls){ return '<div class="reg-cyc '+cls+'">'+(cls==="cur"?'<span class="reg-here">You are here</span>':'')+'<div class="rt">'+tag+'</div><div class="ry">'+yrs+'</div><div class="rp">'+regFmt(persons)+'</div><div class="rc">registered members</div><div class="rs">Snr '+regFmt(snr)+' · Jnr '+regFmt(jnr)+'</div></div>'; }
+  function regDraw(){
+    var d=_reg, c=d.current, root=$("regRoot");
+    var cs=d.cur_start.slice(0,4), ce=d.cur_end.slice(0,4), ps=d.prev_start.slice(0,4), ne=String(Number(ce)+2);
+    var snrPc=c.persons?Math.round(c.seniors/c.persons*100):0, jnrPc=c.persons?Math.round(c.juniors/c.persons*100):0;
+    var retPc=c.persons?Math.round(c.returning/c.persons*100):0, newPc=c.persons?Math.round(c.new_in_cycle/c.persons*100):0;
+    var h='';
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">Registration analytics</h3><p class="hint" style="margin:2px 0 0">SAFA two-year card cycle · live from the registration database · as at '+esc(regDate(d.as_at))+'</p></div><button class="btn ghost sm" id="regRefresh">Refresh</button></div>';
+    h+='<div class="reg-cycles">'+regCyc("Previous cycle",ps+" – "+cs,d.prev.persons,d.prev.seniors,d.prev.juniors,"past")+regCyc("Current cycle",cs+" – "+ce,c.persons,c.seniors,c.juniors,"cur")+'<div class="reg-cyc next"><div class="rt">Next cycle</div><div class="ry">'+ce+' – '+ne+'</div><div class="rp">—</div><div class="rc">opens '+regDate(d.new_cycle_start)+'</div><div class="rs">Re-card base '+regFmt(c.persons)+'</div></div></div>';
+    h+='<div class="reg-countdown"><div class="d">'+regFmt(d.days_to_new_cycle)+'<span>days to new cycle</span></div><p>The '+ce+'–'+ne+' cycle opens '+regDate(d.new_cycle_start)+'. Every current member must be re-carded; the re-card base is the '+regFmt(c.persons)+' members registered this cycle, of whom '+regFmt(c.returning)+' carried over from the previous cycle.</p></div></div>';
+    h+='<div class="card"><h3 style="margin:0 0 4px">Current cycle registered members</h3><p class="hint" style="margin:0 0 12px">Cards valid to '+regDate(d.cur_end)+' · unique SAFA numbers</p><div class="reg-stats">'+regStat(c.persons,"Registered members","this cycle")+regStat(c.seniors,"Seniors",snrPc+"% of members")+regStat(c.juniors,"Juniors",jnrPc+"% of members")+regStat(c.returning,"Returning","from previous cycle")+regStat(c.new_in_cycle,"New entrants","first cycle with CTTLFA")+regStat(c.referees,"Referees & officials","carded this cycle")+'</div></div>';
+    h+='<div class="card"><h3 style="margin:0 0 4px">When registrations happen</h3><p class="hint" style="margin:0 0 10px">Monthly, by type, across the current cycle — resource-planning view. Busy window is February to May.</p><div class="reg-legend"><span><i class="rsw" style="background:var(--navy)"></i>New (first card)</span><span><i class="rsw" style="background:var(--blue)"></i>Renewal</span><span><i class="rsw" style="background:var(--gold)"></i>Transfer</span></div><div id="regChart"></div></div>';
+    h+='<div class="card"><h3 style="margin:0 0 4px">Growth vs retention</h3><div class="reg-msbar"><i style="background:var(--navy);width:'+retPc+'%">Returning '+regFmt(c.returning)+'</i><i style="background:var(--gold);color:var(--ink);width:'+newPc+'%">New '+regFmt(c.new_in_cycle)+'</i></div><p class="hint" style="margin:8px 0 0">Retention '+retPc+'% · new-entrant share '+newPc+'%. The re-card base cannot be assumed to renew in full.</p></div>';
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h3 style="margin:0">Registered members by club</h3><input id="regSearch" type="search" placeholder="Search club..." style="max-width:220px;width:auto" autocomplete="off" aria-label="Search club"></div><div id="regClubWrap" style="overflow-x:auto;margin-top:10px"></div></div>';
+    root.innerHTML=h;
+    var rb=$("regRefresh"); if(rb) rb.onclick=renderRegistrations;
+    regChart(d.monthly);
+    regClubTable(d.clubs,c.persons,"");
+    var srch=$("regSearch"); if(srch) srch.oninput=function(){ regClubTable(_reg.clubs,_reg.current.persons,this.value.trim().toLowerCase()); };
+  }
+  function regChart(m){
+    if(!m||!m.length){ $("regChart").innerHTML='<p class="hint">No data.</p>'; return; }
+    var W=920,H=300,pl=42,pr=8,pt=20,pb=48, iw=W-pl-pr, ih=H-pt-pb;
+    var max=Math.max.apply(null,m.map(function(x){return x.total;}))||1, nice=Math.ceil(max/1000)*1000||1000;
+    var slot=iw/m.length, bw=slot*0.7;
+    function y(v){return pt+ih-(v/nice)*ih;}
+    var cols={"new":"var(--navy)","renewal":"var(--blue)","transfer":"var(--gold)"};
+    var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Monthly card registrations stacked by New, Renewal and Transfer across the current cycle.">';
+    for(var g=0;g<=nice;g+=1000){var yy=y(g);s+='<line x1="'+pl+'" y1="'+yy+'" x2="'+(W-pr)+'" y2="'+yy+'" stroke="var(--line)"/><text x="'+(pl-5)+'" y="'+(yy+3)+'" text-anchor="end" font-size="9" fill="var(--muted)">'+g.toLocaleString("en-ZA").replace(/,/g," ")+'</text>';}
+    m.forEach(function(r,i){
+      var x=pl+i*slot+slot*0.15, yb=y(0);
+      [["new",r["new"]],["renewal",r.renewal],["transfer",r.transfer]].forEach(function(seg){ var v=seg[1]; if(v>0){var hh=(v/nice)*ih; yb-=hh; s+='<rect x="'+x+'" y="'+yb+'" width="'+bw+'" height="'+hh+'" fill="'+cols[seg[0]]+'"><title>'+r.ym+' '+seg[0]+': '+v+'</title></rect>';} });
+      if(r.total>0) s+='<text x="'+(x+bw/2)+'" y="'+(yb-3)+'" text-anchor="middle" font-size="8.5" fill="var(--muted)">'+r.total.toLocaleString("en-ZA").replace(/,/g," ")+'</text>';
+      s+='<text x="'+(x+bw/2)+'" y="'+(pt+ih+14)+'" text-anchor="end" font-size="9" fill="var(--muted)" transform="rotate(-90 '+(x+bw/2)+' '+(pt+ih+14)+')">'+r.ym.slice(2)+'</text>';
+    });
+    s+='</svg>';
+    $("regChart").innerHTML=s;
+  }
+  function regClubTable(clubs,total,q){
+    q=q||""; var grouped={"Non current":1,"Referees & Officials":1};
+    var rows=clubs.filter(function(c){return c.club.toLowerCase().indexOf(q)>=0;});
+    var maxT=Math.max.apply(null,clubs.map(function(c){return c.total;}))||1;
+    var h='<table><thead><tr><th style="text-align:left">Club</th><th class="num">Seniors</th><th class="num">Juniors</th><th class="num">Unclass.</th><th class="num">Total</th></tr></thead><tbody>';
+    rows.forEach(function(c){
+      var w=Math.max(2,Math.round(c.total/maxT*70));
+      var tg=grouped[c.club]?' <span class="tag" style="background:#EEF2FA;color:var(--muted)">grouped</span>':'';
+      h+='<tr><th scope="row" style="text-align:left;font-weight:600">'+esc(c.club)+tg+'<span style="display:inline-block;height:7px;width:'+w+'px;background:var(--blue5);border-radius:2px;margin-left:8px;vertical-align:middle"></span></th><td class="num">'+regFmt(c.seniors)+'</td><td class="num">'+regFmt(c.juniors)+'</td><td class="num">'+regFmt(c.unclassified)+'</td><td class="num"><b>'+regFmt(c.total)+'</b></td></tr>';
+    });
+    var S=rows.reduce(function(a,c){return {s:a.s+c.seniors,j:a.j+c.juniors,u:a.u+c.unclassified,t:a.t+c.total};},{s:0,j:0,u:0,t:0});
+    h+='</tbody><tfoot><tr><th style="text-align:left">'+(q?"Filtered":"All clubs")+' ('+rows.length+')</th><td class="num">'+regFmt(S.s)+'</td><td class="num">'+regFmt(S.j)+'</td><td class="num">'+regFmt(S.u)+'</td><td class="num"><b>'+regFmt(S.t)+'</b></td></tr></tfoot></table>';
+    $("regClubWrap").innerHTML=h;
   }
 
   /* ---------- audit ---------- */
