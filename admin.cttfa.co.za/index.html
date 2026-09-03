@@ -79,12 +79,34 @@
   .tab{font-family:var(--cond);font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13.5px;border:0;background:transparent;color:#9fb0d8;padding:14px 20px;cursor:pointer;border-bottom:3px solid transparent}
   .tab:hover{color:#fff}
   .tab.on{color:#fff;border-bottom-color:var(--gold)}
-  .subnav{background:#0a2258;border-top:1px solid rgba(255,255,255,.06)}
-  .subnav-inner{max-width:1560px;margin:0 auto;display:flex;align-items:center;gap:2px;padding:0 24px;flex-wrap:wrap}
-  .subnav-lbl{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:11px;color:#7f93c4;padding-right:14px;margin-right:6px;border-right:1px solid rgba(255,255,255,.12)}
-  .subtab{font-family:var(--cond);font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:12.5px;border:0;background:transparent;color:#9fb0d8;padding:11px 16px;cursor:pointer;border-bottom:3px solid transparent}
-  .subtab:hover{color:#fff}
-  .subtab.on{color:#fff;border-bottom-color:var(--gold)}
+  /* app shell: left sidebar + main */
+  .shell{display:flex;align-items:stretch;min-height:calc(100vh - 78px)}
+  .side{flex:0 0 216px;background:linear-gradient(180deg,#0a2258,#081b46);border-right:1px solid rgba(255,255,255,.06);padding:18px 12px}
+  .side .side-lbl{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.14em;font-size:10.5px;color:#6f83b8;padding:6px 12px 8px}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column}
+  .main .wrap{max-width:1400px;width:100%;margin:0;padding:22px 28px}
+  .snav{display:flex;align-items:center;gap:11px;width:100%;text-align:left;font-family:var(--cond);font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:13.5px;color:#9fb0d8;background:transparent;border:0;border-radius:10px;padding:12px 14px;cursor:pointer;margin-bottom:4px;min-height:44px}
+  .snav:hover{color:#fff;background:rgba(255,255,255,.06)}
+  .snav.on{color:#fff;background:rgba(244,180,26,.13);box-shadow:inset 3px 0 0 var(--gold)}
+  .snav .ic{width:18px;height:18px;flex:0 0 auto}
+  .subnav{background:#fff;border-bottom:1px solid var(--line)}
+  .subnav-inner{margin:0;display:flex;align-items:center;gap:2px;padding:0 28px;flex-wrap:wrap}
+  .subnav-lbl{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:11px;color:var(--muted);padding-right:14px;margin-right:6px;border-right:1px solid var(--line)}
+  .subtab{font-family:var(--cond);font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:12.5px;border:0;background:transparent;color:var(--muted);padding:12px 15px;cursor:pointer;border-bottom:3px solid transparent;min-height:44px}
+  .subtab:hover{color:var(--navy)}
+  .subtab.on{color:var(--navy);border-bottom-color:var(--gold)}
+  @media(max-width:820px){
+    .shell{flex-direction:column;min-height:0}
+    .side{flex:none;display:flex;flex-direction:row;gap:6px;overflow-x:auto;padding:8px 10px;border-right:0;border-bottom:1px solid rgba(255,255,255,.08)}
+    .side .side-lbl{display:none}
+    .snav{width:auto;margin-bottom:0;white-space:nowrap}
+    .snav.on{box-shadow:inset 0 -3px 0 var(--gold)}
+    .main .wrap{padding:16px 16px}
+  }
+  .uadd{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+  .uadd input,.uadd select{width:auto;flex:1 1 160px;min-width:140px}
+  .uadd .btn{flex:0 0 auto}
+  .urole{padding:6px 8px;border-radius:8px;font-size:13px;width:auto}
   .comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px 28px}
   .comp-summary{display:flex;gap:16px;margin:2px 0 16px;flex-wrap:wrap}
   .quorum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:6px}
@@ -192,13 +214,15 @@
       <button class="helptoggle on" id="helpToggle" title="Show or hide the little ? help tips across the admin. Turn them off once your team knows the system." aria-pressed="true"><span class="ht-track"></span><span id="helpToggleLbl">Help tips: on</span></button>
       <button class="btn ghost sm" id="signOut" style="margin-left:6px;color:#fff;background:transparent;border-color:rgba(255,255,255,.3)">Sign out</button>
     </div>
-    <nav class="topnav"><div class="topnav-inner" id="mainTabs">
-      <button class="tab on" data-top="home" data-tab="home" title="The CTTLFA Admin Centre home — jump to any function.">Home</button>
-      <button class="tab" data-top="voting" data-tab="meetings" title="Meetings and voting: create the meeting, accredit delegates, set compliance, prepare motions, run live secret ballots and view the audit trail. Its screens open on the bar below.">Voting &amp; Meetings</button>
-      <button class="tab" data-top="registrations" data-tab="registrations" title="Association-wide registration analytics: the SAFA two-year card cycle, current registered members, the monthly trend by type and a per-club breakdown. Read-only, admin only.">Registrations</button>
-      <button class="tab" data-top="users" data-tab="users" title="The Mancom allow-list. Only these people can sign in. Each sets their own password the first time.">Mancom users</button>
-      <button class="tab" data-top="help" data-tab="help" title="Full how-to guide: the running order for a meeting day, every screen explained, and how delegates vote from their phones.">Help</button>
-    </div></nav>
+  </header>
+  <div class="shell">
+    <aside class="side" id="sideNav">
+      <div class="side-lbl">Admin Centre</div>
+      <button class="snav on" data-tab="home" title="The Admin Centre home — launch any module from here."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>Home</button>
+      <button class="snav" data-tab="users" title="The Mancom allow-list — who may sign in, and their access level. Administrators manage this."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Mancom users</button>
+      <button class="snav" data-tab="help" title="Full how-to guidance for every part of the Admin Centre."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help</button>
+    </aside>
+    <main class="main">
     <nav class="subnav" id="votingSubnav" style="display:none"><div class="subnav-inner">
       <span class="subnav-lbl">Voting &amp; Meetings</span>
       <button class="subtab on" data-top="voting" data-tab="meetings" title="Create the meeting (AGM, SGM, General or Mancom) and pick the one you are working on.">Meetings</button>
@@ -208,8 +232,7 @@
       <button class="subtab" data-top="voting" data-tab="live" title="Run the vote on the day: start a motion, watch the timer and count, close it and open the projector view.">Live &amp; results</button>
       <button class="subtab" data-top="voting" data-tab="audit" title="A read-only record of every accreditation, removal, compliance change and motion start or close.">Audit</button>
     </div></nav>
-  </header>
-  <div class="wrap">
+    <div class="wrap">
 
     <div class="meeting-pick" id="meetingPick">
       <span class="kv">Working meeting</span> <b id="curMeetingName">None selected</b>
@@ -451,7 +474,103 @@
     <!-- HELP -->
     <section id="tab-help" class="hidden">
       <div class="card">
-        <h3>How the voting system works</h3>
+        <h3>CTTLFA Admin Centre &mdash; full guide</h3>
+        <p class="help-lead">This is the single guide to everything in the Admin Centre. It explains what each module does, how to reach it, who may use it, and where the external tools sit. The Admin Centre is the association's one online workspace for the Management Committee and office. You launch each function from a card on the Home page; the left sidebar always gives you Home, Mancom users and Help.</p>
+        <div class="help-toc">
+          <a href="#h-nav">Getting around</a>
+          <a href="#h-signin">Signing in</a>
+          <a href="#h-access">Access levels</a>
+          <a href="#h-mod-voting">Voting &amp; Meetings</a>
+          <a href="#h-mod-reg">Registrations &amp; Clubs</a>
+          <a href="#h-mod-web">Website Admin</a>
+          <a href="#h-mod-disc">Discipline, Referees &amp; Cards</a>
+          <a href="#h-mod-fincom">Fincom Dashboard</a>
+          <a href="#h-mod-fixtures">Fixtures &amp; Results</a>
+          <a href="#h-mod-site">Live Website</a>
+          <a href="#h-users">Managing Mancom users</a>
+          <a href="#h-voting">Voting: full meeting-day guide</a>
+        </div>
+      </div>
+
+      <div class="card help-card" id="h-nav">
+        <h3>Getting around</h3>
+        <p>The <span class="kk">Home</span> page is the launcher. Each function is a card; press <span class="kk gold">Open</span> to go into it. The left sidebar stays with you throughout and holds three links: <span class="kk">Home</span> (back to the launcher), <span class="kk">Mancom users</span> (who may sign in) and <span class="kk">Help</span> (this page).</p>
+        <p>When you open <span class="kk">Voting &amp; Meetings</span>, a second row of tabs appears at the top of that page (Meetings, Accreditation, Compliance, Motions, Live &amp; results, Audit). Those screens belong to voting only and show only while you are in that module. The same pattern will apply to Website Admin once it is brought fully in-house.</p>
+        <div class="callout"><b>External tools open in a new browser tab.</b> Fixtures, the Fincom dashboard, the discipline dashboard and the live public website open separately, so the Admin Centre stays open behind them for you to come back to.</div>
+      </div>
+
+      <div class="card help-card" id="h-signin">
+        <h3>Signing in</h3>
+        <p>Only people on the Mancom allow-list can sign in. The first time, choose <span class="kk">First time, set password</span>, enter your approved email and set your own password (at least eight characters). After that, sign in with the same email and password. If you forget it, an administrator can confirm your email is on the list; a password reset can then be arranged. Never share a login. Each person uses their own so the record shows who did what.</p>
+      </div>
+
+      <div class="card help-card" id="h-access">
+        <h3>Access levels</h3>
+        <p>There are two levels, set per person on the Mancom users page:</p>
+        <ol class="steps">
+          <li><b>Administrator.</b> Full control of every module (voting and meetings, registrations, website admin) and of the Mancom users list. Administrators can change other people's access.</li>
+          <li><b>Viewer.</b> Can open and read every module but cannot change anything. Use this for members who need sight of the information without editing rights.</li>
+        </ol>
+        <p class="sub">A change to someone's access takes effect the next time they sign in. An administrator cannot remove their own administrator rights or deactivate their own account, which prevents an accidental lock-out.</p>
+      </div>
+
+      <div class="card help-card" id="h-mod-voting">
+        <h3>Voting &amp; Meetings</h3>
+        <p><b>What it is:</b> the tool that runs AGMs, SGMs, General and Mancom meetings. It handles delegate accreditation, club compliance, motions, live secret ballots on delegates' own phones, quorum, results and the formal record.</p>
+        <p><b>Where:</b> Home &rarr; Voting &amp; Meetings. <b>Who:</b> administrators run it; viewers can watch. The full meeting-day walkthrough is further down this page under <a href="#h-voting">Voting: full meeting-day guide</a>.</p>
+        <p><b>Note:</b> delegates themselves vote on the separate public site <span class="kk">vote.cttfa.co.za</span>, using a QR or six-character code issued at the door. That delegate site is the only place voting still appears; the old voteadmin site is retired and now redirects to this Admin Centre.</p>
+      </div>
+
+      <div class="card help-card" id="h-mod-reg">
+        <h3>Registrations &amp; Clubs</h3>
+        <p><b>What it is:</b> the association-wide registration analytics built on the SAFA two-year card cycle. It shows which cycle we are in, current registered members, the monthly trend by type (senior, junior, foreign), a per-club breakdown, and per-club profiles that pull in live teams, fixtures, results and form from the public website.</p>
+        <p><b>Where:</b> Home &rarr; Registrations &amp; Clubs. <b>Who:</b> read-only analytics, administrators only, because it holds member-level data.</p>
+        <p><b>How to use it:</b> the headline figures are clickable. Click any number to list the members behind it, then export that list to CSV or PDF. Use the cycle selector to compare the current 2024&ndash;2026 cycle against 2022&ndash;2024. Search a club to open its profile; from there you can open a member's full card history. Identity numbers are never shown or exported, in line with the Protection of Personal Information Act 4 of 2013.</p>
+      </div>
+
+      <div class="card help-card" id="h-mod-web">
+        <h3>Website Admin</h3>
+        <p><b>What it is:</b> where the office edits the content of the public site (www.cttfa.co.za) without touching code: clubs, committee and key contacts, sponsors, downloads, news graphics, notices, key dates and events, and the photo gallery. The public site reads these and updates on the next page load, so there is no redeploy.</p>
+        <p><b>Where:</b> Home &rarr; Website Admin. <b>Who:</b> administrators. <b>Status:</b> this is being brought fully inside the Admin Centre so there is one place to work from. Until that move is complete, the card opens the existing website admin; once in-house, it becomes a page here with its own set of sub-pages, and the separate websiteadmin site falls away.</p>
+      </div>
+
+      <div class="card help-card" id="h-mod-disc">
+        <h3>Discipline, Referees &amp; Cards</h3>
+        <p><b>What it is:</b> the yellow and red card tracker, suspensions, referee appointments and administrative rulings.</p>
+        <p><b>Where:</b> Home &rarr; Discipline. This opens the existing dashboard at <span class="kk">dash.cttlfa.com</span> in a new tab. <b>Who:</b> administrators. A rebuild into the Admin Centre look and feel is planned, starting with read-only views.</p>
+      </div>
+
+      <div class="card help-card" id="h-mod-fincom">
+        <h3>Fincom Dashboard</h3>
+        <p><b>What it is:</b> the Finance Committee view of the budget, cash position and finance reporting at a glance.</p>
+        <p><b>Where:</b> Home &rarr; Fincom Dashboard, which opens <span class="kk">cttfafincom.tiiny.site</span> in a new tab. <b>Who:</b> Fincom and administrators.</p>
+      </div>
+
+      <div class="card help-card" id="h-mod-fixtures">
+        <h3>Fixtures &amp; Results</h3>
+        <p><b>What it is:</b> live league tables, fixtures and results across every division, run on LeagueRepublic.</p>
+        <p><b>Where:</b> Home &rarr; Fixtures &amp; Results. The <span class="kk">Open</span> link goes to the public LeagueRepublic site (<span class="kk">cttfass.leaguerepublic.com</span>), which needs no login for viewing. The <span class="kk">LR admin login</span> link goes to the LeagueRepublic sign-in page for managing fixtures, results and referee appointments.</p>
+        <div class="callout"><b>On passwords:</b> no LeagueRepublic password is stored in the Admin Centre. On the office machine, save the LeagueRepublic login in the browser's own password manager once, and it fills in on the sign-in page from then on. For accountability, prefer separate LeagueRepublic logins per person over one shared login.</div>
+      </div>
+
+      <div class="card help-card" id="h-mod-site">
+        <h3>Live Website</h3>
+        <p><b>What it is:</b> the public site (www.cttfa.co.za) exactly as members and the public see it: fixtures, clubs, news and more. Use it to check how a change looks once it is live. <b>Where:</b> Home &rarr; Live Website, opens in a new tab.</p>
+      </div>
+
+      <div class="card help-card" id="h-users">
+        <h3>Managing Mancom users</h3>
+        <p>Open <span class="kk">Mancom users</span> from the sidebar. Administrators see a management view; viewers see the list only.</p>
+        <ol class="steps">
+          <li><b>Add a person.</b> Fill in their name, email and (optionally) title, choose Viewer or Administrator, and press <span class="kk gold">Add to allow-list</span>. They then sign in with that email and set their own password.</li>
+          <li><b>Change access.</b> Use the drop-down in the Access level column to switch a person between Viewer and Administrator.</li>
+          <li><b>Suspend or restore.</b> Use <span class="kk">Deactivate</span> to stop someone signing in without deleting their record, and <span class="kk green">Activate</span> to restore them.</li>
+        </ol>
+        <p class="sub">All changes apply the next time that person signs in. You cannot deactivate or demote your own administrator account.</p>
+      </div>
+
+      <div class="card" id="h-voting">
+        <h3>Voting &amp; Meetings: full meeting-day guide</h3>
         <p class="help-lead">This is the full guide for the people running a meeting. Delegates vote from their own phones using a code you give them at the door. Nothing is installed, they just open a link. The steps below follow the order you actually work in on the day. Hover over any button on the other tabs to see a short reminder of what it does.</p>
         <div class="help-toc">
           <a href="#h-day">The day at a glance</a>
@@ -606,6 +725,8 @@
       </div>
     </section>
   </div>
+    </main>
+  </div>
 </div>
 
 <div class="scrim" id="qrScrim"><div class="modal"><h3 id="qrTitle">Delegate code</h3><p class="hint" id="qrSub" style="text-align:center"></p><div class="qrbox" id="qrBox"></div><p class="hint" style="text-align:center;margin:0">Or type this code<br><span class="bigcode" id="qrCode"></span></p><div class="btnrow" style="justify-content:center"><button class="btn" id="qrDone">Done</button></div></div></div>
@@ -674,10 +795,10 @@
   /* ---------- tabs ---------- */
   function goTab(name){
     var votingSubs=["meetings","accredit","compliance","motions","live","audit"];
-    var top=(votingSubs.indexOf(name)>=0)?"voting":name;
-    Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(x){x.classList.toggle("on",x.dataset.top===top);});
-    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==name); });
-    var sub=$("votingSubnav"); if(sub){ sub.style.display=(top==="voting")?"":"none"; Array.prototype.forEach.call(sub.querySelectorAll(".subtab"),function(x){x.classList.toggle("on",x.dataset.tab===name);}); }
+    var sideActive=(name==="users")?"users":(name==="help")?"help":"home";
+    Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav"),function(x){x.classList.toggle("on",x.dataset.tab===sideActive);});
+    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
+    var sub=$("votingSubnav"); if(sub){ var inV=votingSubs.indexOf(name)>=0; sub.style.display=inV?"":"none"; Array.prototype.forEach.call(sub.querySelectorAll(".subtab"),function(x){x.classList.toggle("on",x.dataset.tab===name);}); }
     var _mp=$("meetingPick"); if(_mp) _mp.style.display=(["meetings","accredit","compliance","motions","live"].indexOf(name)>=0)?"":"none";
     if(name!=="accredit") stopCiTimer();
     if(name!=="live" && liveTimer){ clearTimeout(liveTimer); liveTimer=null; }
@@ -688,8 +809,11 @@
     if(name==="audit") loadAudit();
     if(name==="home") renderHome();
     if(name==="registrations") renderRegistrations();
+    if(name==="users") loadUsers();
+    if(name==="webadmin" && typeof renderWebadmin==="function") renderWebadmin();
+    try{ window.scrollTo(0,0); }catch(e){}
   }
-  Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab, #votingSubnav .subtab"),function(t){
+  Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav, #votingSubnav .subtab"),function(t){
     t.onclick=function(){ goTab(t.dataset.tab); };
   });
 
@@ -1108,13 +1232,72 @@
 
   /* ---------- users ---------- */
   async function loadUsers(){
-    var r=await sb.from("admin_users").select("full_name,email,title,role,active,auth_id").order("role").order("full_name");
     var l=$("usersList"); if(!l) return;
+    var r=await sb.from("admin_users").select("full_name,email,title,role,active,auth_id").order("role").order("full_name");
     if(r.error){l.innerHTML='<p class="hint">'+esc(r.error.message)+'</p>';return;}
     var us=r.data||[];
-    var h='<table><thead><tr><th>Name</th><th>Email</th><th>Title</th><th>Role</th><th>Registered</th></tr></thead><tbody>';
-    us.forEach(function(u){ h+='<tr><td><b>'+esc(u.full_name)+'</b></td><td>'+esc(u.email)+'</td><td class="kv">'+esc(u.title||"")+'</td><td><span class="tag '+(u.role==="administrator"?"open":(u.role==="secretary"?"full":"draft"))+'">'+esc(u.role)+'</span></td><td>'+(u.auth_id?'<span class="tag in">yes</span>':'<span class="kv">not yet</span>')+'</td></tr>'; });
-    h+='</tbody></table>'; l.innerHTML=h;
+    var isAdmin=(meRole==="administrator");
+    var h='';
+    if(isAdmin){
+      h+='<div class="uadd">'+
+         '<input type="text" id="uaName" placeholder="Full name">'+
+         '<input type="email" id="uaEmail" placeholder="email@cttfa.co.za">'+
+         '<input type="text" id="uaTitle" placeholder="Title on Mancom (optional)">'+
+         '<select id="uaRole"><option value="viewer">Viewer</option><option value="administrator">Administrator</option></select>'+
+         '<button class="btn gold sm" id="uaBtn" title="Add this person to the allow-list. They sign in with this email and set their own password the first time.">Add to allow-list</button>'+
+         '</div>';
+    }
+    h+='<div id="usersMsg"></div>';
+    h+='<table><thead><tr><th>Name</th><th>Email</th><th>Title</th><th>Access level</th><th>Sign-in</th>'+(isAdmin?'<th>Manage</th>':'')+'</tr></thead><tbody>';
+    us.forEach(function(u){
+      var isMe=(me && u.email && me.email && u.email.toLowerCase()===me.email.toLowerCase());
+      var roleCell = isAdmin
+        ? '<select class="urole" data-email="'+esc(u.email)+'"><option value="viewer"'+(u.role==="viewer"?" selected":"")+'>Viewer</option><option value="administrator"'+(u.role==="administrator"?" selected":"")+'>Administrator</option></select>'
+        : '<span class="tag '+(u.role==="administrator"?"open":"draft")+'">'+esc(u.role)+'</span>';
+      var signin = (u.auth_id?'<span class="tag in">registered</span>':'<span class="kv">not yet</span>')+(u.active?'':' <span class="tag closed">inactive</span>');
+      var manage='';
+      if(isAdmin){
+        manage = u.active
+          ? '<button class="btn ghost sm uact" data-email="'+esc(u.email)+'" data-active="0"'+(isMe?' disabled title="You cannot deactivate your own access"':'')+'>Deactivate</button>'
+          : '<button class="btn green sm uact" data-email="'+esc(u.email)+'" data-active="1">Activate</button>';
+      }
+      h+='<tr'+(u.active?'':' style="opacity:.55"')+'><td><b>'+esc(u.full_name)+'</b>'+(isMe?' <span class="kv">(you)</span>':'')+'</td><td>'+esc(u.email)+'</td><td class="kv">'+esc(u.title||"")+'</td><td>'+roleCell+'</td><td>'+signin+'</td>'+(isAdmin?'<td>'+manage+'</td>':'')+'</tr>';
+    });
+    h+='</tbody></table>';
+    h+='<p class="hint" style="margin-top:10px"><b>Administrator</b> — full control of every module (voting, registrations, website admin) and of this allow-list. <b>Viewer</b> — can open and read every module but cannot change anything. A change takes effect the next time that person signs in.'+(isAdmin?'':' Only administrators can change access.')+'</p>';
+    l.innerHTML=h;
+    if(isAdmin) wireUsers();
+  }
+  function wireUsers(){
+    var add=$("uaBtn"); if(add) add.onclick=async function(){
+      var email=($("uaEmail").value||"").trim(), name=($("uaName").value||"").trim(), title=($("uaTitle").value||"").trim(), role=$("uaRole").value;
+      if(!email){ msg($("usersMsg"),"Enter an email address for the new user.","err"); return; }
+      add.disabled=true;
+      var r=await sb.rpc("add_user",{p_email:email,p_full_name:name,p_title:title,p_role:role});
+      add.disabled=false;
+      if(r.error){ msg($("usersMsg"),r.error.message,"err"); return; }
+      msg($("usersMsg"),"Added "+esc(email)+". They can now sign in with this email and set their own password.","ok");
+      loadUsers();
+    };
+    Array.prototype.forEach.call(document.querySelectorAll("#usersList .urole"),function(sel){
+      var prev=sel.value;
+      sel.onchange=async function(){
+        sel.disabled=true;
+        var r=await sb.rpc("set_user_role",{p_email:sel.dataset.email,p_role:sel.value});
+        sel.disabled=false;
+        if(r.error){ msg($("usersMsg"),r.error.message,"err"); sel.value=prev; return; }
+        msg($("usersMsg"),"Access level updated for "+esc(sel.dataset.email)+".","ok"); loadUsers();
+      };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("#usersList .uact"),function(b){
+      b.onclick=async function(){
+        b.disabled=true;
+        var r=await sb.rpc("set_user_active",{p_email:b.dataset.email,p_active:(b.dataset.active==="1")});
+        b.disabled=false;
+        if(r.error){ msg($("usersMsg"),r.error.message,"err"); return; }
+        loadUsers();
+      };
+    });
   }
 
   /* ---------- home (admin centre hub) ---------- */
