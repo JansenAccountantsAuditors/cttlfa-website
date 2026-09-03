@@ -207,32 +207,42 @@
     <!-- HOME (Admin Centre hub) -->
     <section id="tab-home">
       <style>
-      #tab-home .homegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+      #tab-home .homehero{background:linear-gradient(180deg,#fff,#FBFCFF);text-align:center;padding:28px 20px}
+      #tab-home .homecrest img{width:78px;height:78px;object-fit:contain}
+      #tab-home .homehero h1{margin:10px 0 2px;font-family:var(--head);color:var(--navy);font-size:31px;letter-spacing:-.01em}
+      #tab-home .homehero .assoc{color:#9f6621;font-weight:700;letter-spacing:.15em;text-transform:uppercase;font-size:11.5px}
+      #tab-home .homehero p.desc{max-width:74ch;margin:14px auto 0;color:var(--muted);font-size:14px;line-height:1.6}
+      #tab-home .homegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px}
       #tab-home .hmod{background:#fff;border:1px solid var(--line);border-radius:15px;padding:18px;display:flex;flex-direction:column;box-shadow:0 6px 20px rgba(9,20,48,.05)}
       #tab-home .hmod.muted{opacity:.72}
-      #tab-home .hmod h3{margin:10px 0 4px;font-family:var(--head);color:var(--navy)}
+      #tab-home .hmod h3{margin:10px 0 4px;font-family:var(--head);color:var(--navy);font-size:16px}
       #tab-home .hmod p{margin:0;color:var(--muted);font-size:13px;flex:1}
       #tab-home .hic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff}
       #tab-home .hic svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2}
-      #tab-home .hic.voting{background:var(--navy)} #tab-home .hic.reg{background:var(--blue)} #tab-home .hic.web{background:#2f7d57} #tab-home .hic.disc{background:#9a3130} #tab-home .hic.fin{background:#6b5b2a}
+      #tab-home .hic.voting{background:#071A4A} #tab-home .hic.reg{background:#123FB5} #tab-home .hic.fix{background:#4F6D7F} #tab-home .hic.web{background:#2f7d57}
+      #tab-home .hic.disc{background:#9a3130} #tab-home .hic.fincom{background:#9f6621} #tab-home .hic.fin{background:#6b5b2a} #tab-home .hic.site{background:#0C2461}
       #tab-home .hfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
       #tab-home .hchip{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:3px 8px;border-radius:20px}
       #tab-home .hchip.live{background:#e6efe9;color:#1c7c4a} #tab-home .hchip.ext{background:#EEF2FA;color:var(--muted)} #tab-home .hchip.soon{background:#FBF0D8;color:#9f6621}
-      #tab-home .homehero{background:linear-gradient(180deg,#fff,#FBFCFF)}
       </style>
       <div class="card homehero">
-        <h2 style="margin:0;font-family:var(--head);color:var(--navy)">CTTLFA Admin Centre</h2>
-        <p class="hint" style="margin:4px 0 0">One workspace for the Management Committee and LFA staff — voting, registrations, the website, discipline, and (soon) finance. Pick a function below or from the top menu.</p>
-        <div class="kpis" id="homeKpi" style="margin-top:14px;display:none"></div>
+        <div class="homecrest" id="homeCrest"></div>
+        <h1>CTTLFA Admin Centre</h1>
+        <div class="assoc">Cape Town Tygerberg Local Football Association</div>
+        <p class="desc">The CTTLFA Admin Centre is the association&rsquo;s single online workspace for the Management Committee and staff. From one place you run meetings and voting, manage player registrations and club profiles, reach the website and discipline systems, follow fixtures and finances, and open the public site. Each function is its own module, brought together here so the whole association is administered from a single, secure home.</p>
+        <div class="kpis" id="homeKpi" style="margin-top:16px;display:none"></div>
       </div>
       <div class="homegrid">
         <div class="hmod"><div class="hic voting"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Voting &amp; Meetings</h3><p>Run AGMs, SGMs and Mancom meetings — accreditation, motions, live secret ballots and the formal record.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="meetings">Open</button></div></div>
-        <div class="hmod"><div class="hic reg"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></div><h3>Registrations &amp; Clubs</h3><p>The SAFA card-cycle analytics and per-club profiles, with live teams, fixtures, results and CSV/PDF exports.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="registrations">Open</button></div></div>
-        <div class="hmod"><div class="hic web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Website Admin</h3><p>Manage the public cttfa.co.za site — content, notices, committee, downloads and pages.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.websiteadmin.cttfa.co.za/?p=dashboard" target="_blank" rel="noopener">Open</a></div></div>
+        <div class="hmod"><div class="hic reg"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></div><h3>Registrations &amp; Clubs</h3><p>The full SAFA card-cycle analytics and per-club profiles, with live teams, fixtures, results and CSV/PDF exports.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="registrations">Open</button></div></div>
+        <div class="hmod"><div class="hic fix"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Fixtures &amp; Results</h3><p>Live league tables, fixtures and results across every division, on the CTTLFA LeagueRepublic site.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://cttfass.leaguerepublic.com" target="_blank" rel="noopener">Open</a></div></div>
+        <div class="hmod"><div class="hic web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Website Admin</h3><p>Manage the public cttfa.co.za site — content, notices, committee, downloads and pages. This is now the live admin.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.websiteadmin.cttfa.co.za/?p=dashboard" target="_blank" rel="noopener">Open</a></div></div>
         <div class="hmod"><div class="hic disc"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="14" rx="1"/><path d="M9 21h6M12 17v4"/></svg></div><h3>Discipline, Referees &amp; Cards</h3><p>Yellow-card tracker, suspensions, referee appointments and administrative rulings.</p><div class="hfoot"><span class="hchip ext">External · rebuild planned</span><a class="btn ghost sm" href="https://dash.cttlfa.com" target="_blank" rel="noopener">Open</a></div></div>
+        <div class="hmod"><div class="hic fincom"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div><h3>Fincom Dashboard</h3><p>The Finance Committee dashboard — budget, cash position and finance reporting at a glance.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://cttfafincom.tiiny.site/" target="_blank" rel="noopener">Open</a></div></div>
         <div class="hmod muted"><div class="hic fin"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Finance</h3><p>Club levies, billing and financial standing — linked to the registration base, so money and members sit on one screen.</p><div class="hfoot"><span class="hchip soon">Coming soon</span><button class="btn ghost sm" disabled>Phase 4</button></div></div>
+        <div class="hmod"><div class="hic site"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg></div><h3>Live Website</h3><p>Open the public cttfa.co.za site as members and the public see it — fixtures, clubs, news and more.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.cttfa.co.za" target="_blank" rel="noopener">Open</a></div></div>
       </div>
-      <p class="hint" style="margin-top:12px">Built for CTTLFA by the Treasurer's office. Each function is a module that can be refined on its own; this home ties them into one consolidated workspace.</p>
+      <p class="hint" style="margin-top:12px">External tools open in a new tab, so the Admin Centre stays open here to return to. Built for CTTLFA by the Treasurer&rsquo;s office &mdash; each function is a module that can be refined on its own.</p>
     </section>
 
     <!-- MEETINGS -->
@@ -1090,6 +1100,7 @@
 
   /* ---------- home (admin centre hub) ---------- */
   async function renderHome(){
+    try{ var hc=$("homeCrest"); if(hc && typeof LOGO!=="undefined" && LOGO && !hc.firstChild) hc.innerHTML='<img src="'+LOGO+'" alt="CTTLFA crest">'; }catch(e){}
     var el=$("homeKpi"); if(!el) return;
     try{ if(!_reg){ var r=await sb.rpc("reg_analytics",{}); if(!r.error) _reg=r.data; }
       if(_reg){ var c=_reg.current; el.innerHTML=kpi(regFmt(c.persons),"Registered members",_reg.cur_start.slice(0,4)+"–"+_reg.cur_end.slice(0,4)+" cycle")+kpi(regFmt((clubs||[]).length),"Member clubs","")+kpi(regFmt(c.new_in_cycle),"New this cycle","")+kpi(regFmt(_reg.days_to_new_cycle),"Days to new cycle","opens "+regDate(_reg.new_cycle_start)); el.style.display=""; }
