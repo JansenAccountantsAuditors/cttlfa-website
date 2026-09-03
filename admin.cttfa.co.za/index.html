@@ -75,6 +75,12 @@
   .tab{font-family:var(--cond);font-weight:700;letter-spacing:.05em;text-transform:uppercase;font-size:13.5px;border:0;background:transparent;color:#9fb0d8;padding:14px 20px;cursor:pointer;border-bottom:3px solid transparent}
   .tab:hover{color:#fff}
   .tab.on{color:#fff;border-bottom-color:var(--gold)}
+  .subnav{background:#0a2258;border-top:1px solid rgba(255,255,255,.06)}
+  .subnav-inner{max-width:1560px;margin:0 auto;display:flex;align-items:center;gap:2px;padding:0 24px;flex-wrap:wrap}
+  .subnav-lbl{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:11px;color:#7f93c4;padding-right:14px;margin-right:6px;border-right:1px solid rgba(255,255,255,.12)}
+  .subtab{font-family:var(--cond);font-weight:700;letter-spacing:.04em;text-transform:uppercase;font-size:12.5px;border:0;background:transparent;color:#9fb0d8;padding:11px 16px;cursor:pointer;border-bottom:3px solid transparent}
+  .subtab:hover{color:#fff}
+  .subtab.on{color:#fff;border-bottom-color:var(--gold)}
   .comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px 28px}
   .comp-summary{display:flex;gap:16px;margin:2px 0 16px;flex-wrap:wrap}
   .quorum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:6px}
@@ -183,16 +189,20 @@
       <button class="btn ghost sm" id="signOut" style="margin-left:6px;color:#fff;background:transparent;border-color:rgba(255,255,255,.3)">Sign out</button>
     </div>
     <nav class="topnav"><div class="topnav-inner" id="mainTabs">
-      <button class="tab on" data-tab="home" title="The CTTLFA Admin Centre home — jump to any function.">Home</button>
-      <button class="tab" data-tab="meetings" title="Create the meeting (AGM, SGM, General or Mancom) and pick the one you are working on. Everything else hangs off the selected meeting.">Meetings</button>
-      <button class="tab" data-tab="accredit" title="Check delegates in at the door, capture their cell number and consent, and issue their voting code. Votes are allocated to the club automatically.">Accreditation</button>
-      <button class="tab" data-tab="compliance" title="Mark each club compliant or not for this meeting. Do this before the first vote is started. A non-compliant club cannot be accredited or vote.">Compliance</button>
-      <button class="tab" data-tab="motions" title="Write up each motion for the meeting, its wording, who may vote, the majority needed and the timer. You can prepare several motions in advance.">Motions</button>
-      <button class="tab" data-tab="live" title="Run the vote on the day: start a motion, watch the timer and count, close it, see results and open the projector room view.">Live &amp; results</button>
-      <button class="tab" data-tab="registrations" title="Association-wide registration analytics: the SAFA two-year card cycle, current registered members, the monthly trend by type and a per-club breakdown. Read-only, admin only.">Registrations</button>
-      <button class="tab" data-tab="audit" title="A read-only record of every accreditation, removal, compliance change and motion start or close, with who did it and when.">Audit</button>
-      <button class="tab" data-tab="users" title="The Mancom allow-list. Only these people can sign in. Each sets their own password the first time.">Mancom users</button>
-      <button class="tab" data-tab="help" title="Full how-to guide: the running order for a meeting day, every screen explained, and how delegates vote from their phones.">Help</button>
+      <button class="tab on" data-top="home" data-tab="home" title="The CTTLFA Admin Centre home — jump to any function.">Home</button>
+      <button class="tab" data-top="voting" data-tab="meetings" title="Meetings and voting: create the meeting, accredit delegates, set compliance, prepare motions, run live secret ballots and view the audit trail. Its screens open on the bar below.">Voting &amp; Meetings</button>
+      <button class="tab" data-top="registrations" data-tab="registrations" title="Association-wide registration analytics: the SAFA two-year card cycle, current registered members, the monthly trend by type and a per-club breakdown. Read-only, admin only.">Registrations</button>
+      <button class="tab" data-top="users" data-tab="users" title="The Mancom allow-list. Only these people can sign in. Each sets their own password the first time.">Mancom users</button>
+      <button class="tab" data-top="help" data-tab="help" title="Full how-to guide: the running order for a meeting day, every screen explained, and how delegates vote from their phones.">Help</button>
+    </div></nav>
+    <nav class="subnav" id="votingSubnav" style="display:none"><div class="subnav-inner">
+      <span class="subnav-lbl">Voting &amp; Meetings</span>
+      <button class="subtab on" data-top="voting" data-tab="meetings" title="Create the meeting (AGM, SGM, General or Mancom) and pick the one you are working on.">Meetings</button>
+      <button class="subtab" data-top="voting" data-tab="accredit" title="Check delegates in at the door, capture their cell and consent, and issue their voting code.">Accreditation</button>
+      <button class="subtab" data-top="voting" data-tab="compliance" title="Mark each club compliant or not for this meeting before the first vote is started.">Compliance</button>
+      <button class="subtab" data-top="voting" data-tab="motions" title="Write up each motion: its wording, who may vote, the majority needed and the timer.">Motions</button>
+      <button class="subtab" data-top="voting" data-tab="live" title="Run the vote on the day: start a motion, watch the timer and count, close it and open the projector view.">Live &amp; results</button>
+      <button class="subtab" data-top="voting" data-tab="audit" title="A read-only record of every accreditation, removal, compliance change and motion start or close.">Audit</button>
     </div></nav>
   </header>
   <div class="wrap">
@@ -212,7 +222,9 @@
       #tab-home .homehero h1{margin:10px 0 2px;font-family:var(--head);color:var(--navy);font-size:31px;letter-spacing:-.01em}
       #tab-home .homehero .assoc{color:#9f6621;font-weight:700;letter-spacing:.15em;text-transform:uppercase;font-size:11.5px}
       #tab-home .homehero p.desc{max-width:74ch;margin:14px auto 0;color:var(--muted);font-size:14px;line-height:1.6}
-      #tab-home .homegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;margin-top:16px}
+      #tab-home .homegrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:18px}
+      @media(max-width:1180px){#tab-home .homegrid{grid-template-columns:repeat(2,1fr)}}
+      @media(max-width:620px){#tab-home .homegrid{grid-template-columns:1fr}}
       #tab-home .hmod{background:#fff;border:1px solid var(--line);border-radius:15px;padding:18px;display:flex;flex-direction:column;box-shadow:0 6px 20px rgba(9,20,48,.05)}
       #tab-home .hmod.muted{opacity:.72}
       #tab-home .hmod h3{margin:10px 0 4px;font-family:var(--head);color:var(--navy);font-size:16px}
@@ -230,12 +242,11 @@
         <h1>CTTLFA Admin Centre</h1>
         <div class="assoc">Cape Town Tygerberg Local Football Association</div>
         <p class="desc">The CTTLFA Admin Centre is the association&rsquo;s single online workspace for the Management Committee and staff. From one place you run meetings and voting, manage player registrations and club profiles, reach the website and discipline systems, follow fixtures and finances, and open the public site. Each function is its own module, brought together here so the whole association is administered from a single, secure home.</p>
-        <div class="kpis" id="homeKpi" style="margin-top:16px;display:none"></div>
       </div>
       <div class="homegrid">
         <div class="hmod"><div class="hic voting"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Voting &amp; Meetings</h3><p>Run AGMs, SGMs and Mancom meetings — accreditation, motions, live secret ballots and the formal record.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="meetings">Open</button></div></div>
         <div class="hmod"><div class="hic reg"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></div><h3>Registrations &amp; Clubs</h3><p>The full SAFA card-cycle analytics and per-club profiles, with live teams, fixtures, results and CSV/PDF exports.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="registrations">Open</button></div></div>
-        <div class="hmod"><div class="hic fix"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Fixtures &amp; Results</h3><p>Live league tables, fixtures and results across every division, on the CTTLFA LeagueRepublic site.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://cttfass.leaguerepublic.com" target="_blank" rel="noopener">Open</a></div></div>
+        <div class="hmod"><div class="hic fix"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Fixtures &amp; Results</h3><p>Live league tables, fixtures and results across every division, on the CTTLFA LeagueRepublic site. Use LR admin login to manage fixtures and appointments.</p><div class="hfoot"><span class="hchip ext">External</span><span style="display:flex;gap:8px"><a class="btn ghost sm" href="https://a.leaguerepublic.com/myaccount/login/index.html" target="_blank" rel="noopener" title="Sign in to LeagueRepublic administration with the CTTLFA league email. On the office machine your saved browser password fills it in — no password is stored on this site.">LR admin login</a><a class="btn ghost sm" href="https://cttfass.leaguerepublic.com" target="_blank" rel="noopener">Open</a></span></div></div>
         <div class="hmod"><div class="hic web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Website Admin</h3><p>Manage the public cttfa.co.za site — content, notices, committee, downloads and pages. This is now the live admin.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.websiteadmin.cttfa.co.za/?p=dashboard" target="_blank" rel="noopener">Open</a></div></div>
         <div class="hmod"><div class="hic disc"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="14" rx="1"/><path d="M9 21h6M12 17v4"/></svg></div><h3>Discipline, Referees &amp; Cards</h3><p>Yellow-card tracker, suspensions, referee appointments and administrative rulings.</p><div class="hfoot"><span class="hchip ext">External · rebuild planned</span><a class="btn ghost sm" href="https://dash.cttlfa.com" target="_blank" rel="noopener">Open</a></div></div>
         <div class="hmod"><div class="hic fincom"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div><h3>Fincom Dashboard</h3><p>The Finance Committee dashboard — budget, cash position and finance reporting at a glance.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://cttfafincom.tiiny.site/" target="_blank" rel="noopener">Open</a></div></div>
@@ -657,21 +668,25 @@
   }
 
   /* ---------- tabs ---------- */
-  Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(t){
-    t.onclick=function(){
-      Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(x){x.classList.toggle("on",x===t);});
-      ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
-      var _mp=$("meetingPick"); if(_mp) _mp.style.display=(["meetings","accredit","compliance","motions","live"].indexOf(t.dataset.tab)>=0)?"":"none";
-      if(t.dataset.tab!=="accredit") stopCiTimer();
-      if(t.dataset.tab!=="live" && liveTimer){ clearTimeout(liveTimer); liveTimer=null; }
-      if(t.dataset.tab==="accredit") renderAccredit();
-      if(t.dataset.tab==="compliance") renderCompliancePage();
-      if(t.dataset.tab==="motions") renderMotions();
-      if(t.dataset.tab==="live") renderLive();
-      if(t.dataset.tab==="audit") loadAudit();
-      if(t.dataset.tab==="home") renderHome();
-      if(t.dataset.tab==="registrations") renderRegistrations();
-    };
+  function goTab(name){
+    var votingSubs=["meetings","accredit","compliance","motions","live","audit"];
+    var top=(votingSubs.indexOf(name)>=0)?"voting":name;
+    Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(x){x.classList.toggle("on",x.dataset.top===top);});
+    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==name); });
+    var sub=$("votingSubnav"); if(sub){ sub.style.display=(top==="voting")?"":"none"; Array.prototype.forEach.call(sub.querySelectorAll(".subtab"),function(x){x.classList.toggle("on",x.dataset.tab===name);}); }
+    var _mp=$("meetingPick"); if(_mp) _mp.style.display=(["meetings","accredit","compliance","motions","live"].indexOf(name)>=0)?"":"none";
+    if(name!=="accredit") stopCiTimer();
+    if(name!=="live" && liveTimer){ clearTimeout(liveTimer); liveTimer=null; }
+    if(name==="accredit") renderAccredit();
+    if(name==="compliance") renderCompliancePage();
+    if(name==="motions") renderMotions();
+    if(name==="live") renderLive();
+    if(name==="audit") loadAudit();
+    if(name==="home") renderHome();
+    if(name==="registrations") renderRegistrations();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab, #votingSubnav .subtab"),function(t){
+    t.onclick=function(){ goTab(t.dataset.tab); };
   });
 
   /* ---------- clubs ---------- */
@@ -1101,13 +1116,8 @@
   /* ---------- home (admin centre hub) ---------- */
   async function renderHome(){
     try{ var hc=$("homeCrest"); if(hc && typeof LOGO!=="undefined" && LOGO && !hc.firstChild) hc.innerHTML='<img src="'+LOGO+'" alt="CTTLFA crest">'; }catch(e){}
-    var el=$("homeKpi"); if(!el) return;
-    try{ if(!_reg){ var r=await sb.rpc("reg_analytics",{}); if(!r.error) _reg=r.data; }
-      if(_reg){ var c=_reg.current; el.innerHTML=kpi(regFmt(c.persons),"Registered members",_reg.cur_start.slice(0,4)+"–"+_reg.cur_end.slice(0,4)+" cycle")+kpi(regFmt((clubs||[]).length),"Member clubs","")+kpi(regFmt(c.new_in_cycle),"New this cycle","")+kpi(regFmt(_reg.days_to_new_cycle),"Days to new cycle","opens "+regDate(_reg.new_cycle_start)); el.style.display=""; }
-      else { el.style.display="none"; }
-    }catch(e){ el.style.display="none"; }
   }
-  function homeWire(){ Array.prototype.forEach.call(document.querySelectorAll('#tab-home [data-goto]'),function(b){ b.onclick=function(){ var t=document.querySelector('#mainTabs .tab[data-tab="'+b.getAttribute("data-goto")+'"]'); if(t) t.click(); }; }); }
+  function homeWire(){ Array.prototype.forEach.call(document.querySelectorAll('#tab-home [data-goto]'),function(b){ b.onclick=function(){ goTab(b.getAttribute("data-goto")); }; }); }
 
   /* ---------- registrations (analytics + club central, admin only) ---------- */
   var _reg=null,_regYear=null,_regAll=null,_season=null,_seasonP=null,_regView=[],_regViewLabel="",_memBack=null,_lastClub=null,_lastFb=null,_memDetail=null;
