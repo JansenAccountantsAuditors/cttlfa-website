@@ -785,9 +785,9 @@ img[data-broken]{display:none!important}
 .ko-finals{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:16px 20px;margin:0 auto 26px;max-width:900px}
 .ko-finals-h{display:flex;align-items:center;gap:9px;color:var(--gold);font-family:var(--cond);text-transform:uppercase;letter-spacing:.08em;font-weight:700;font-size:13px;margin-bottom:14px;justify-content:center}
 .ko-finals-h svg{width:18px;height:18px}
-.ko-finals-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-@media(max-width:720px){.ko-finals-grid{grid-template-columns:1fr}}
-.kof{text-align:center;background:rgba(255,255,255,.05);border-radius:12px;padding:14px 12px}
+.ko-finals-grid{display:flex;flex-wrap:wrap;justify-content:center;gap:14px}
+.kof{text-align:center;background:rgba(255,255,255,.05);border-radius:12px;padding:14px 12px;flex:1 1 240px;max-width:300px}
+@media(max-width:720px){.kof{flex-basis:100%;max-width:100%}}
 .kof-t{display:block;color:#9fb0d8;font-family:var(--cond);text-transform:uppercase;letter-spacing:.06em;font-size:11.5px;margin-bottom:6px}
 .kof b{display:block;color:#fff;font-size:16px;margin-bottom:3px}
 .kof small{color:var(--gold);font-size:12.5px;font-weight:700}
