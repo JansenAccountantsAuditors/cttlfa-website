@@ -1,6 +1,6 @@
 <!-- CTTLFA Voting - Mancom admin console. Standalone, wired to Supabase (cttlfa-voting). -->
 <meta charset="utf-8">
-<title>CTTLFA Voting Admin</title>
+<title>CTTLFA Admin Centre</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -157,8 +157,8 @@
 <div class="login" id="loginView">
   <div class="lcard">
     <div class="logo" id="loginLogo">CT</div>
-    <h1>CTTLFA Voting Admin</h1>
-    <p>Management Committee access only.</p>
+    <h1>CTTLFA Admin Centre</h1>
+    <p>Management Committee &amp; LFA staff access.</p>
     <div class="seg" id="authSeg">
       <button data-mode="signin" class="on">Sign in</button>
       <button data-mode="signup">First time, set password</button>
@@ -177,13 +177,14 @@
   <header class="top">
     <div class="topbar">
       <div class="logo" id="topLogo">CT</div>
-      <div class="brandwrap"><span class="bt">CTTLFA</span><span class="bs">Voting Administration</span></div>
+      <div class="brandwrap"><span class="bt">CTTLFA</span><span class="bs">Admin Centre</span></div>
       <div class="who"><b id="whoName">-</b> <span class="rolechip" id="whoRole">-</span><br><span id="whoEmail" class="kv" style="color:#9fb0d8"></span></div>
       <button class="helptoggle on" id="helpToggle" title="Show or hide the little ? help tips across the admin. Turn them off once your team knows the system." aria-pressed="true"><span class="ht-track"></span><span id="helpToggleLbl">Help tips: on</span></button>
       <button class="btn ghost sm" id="signOut" style="margin-left:6px;color:#fff;background:transparent;border-color:rgba(255,255,255,.3)">Sign out</button>
     </div>
     <nav class="topnav"><div class="topnav-inner" id="mainTabs">
-      <button class="tab on" data-tab="meetings" title="Create the meeting (AGM, SGM, General or Mancom) and pick the one you are working on. Everything else hangs off the selected meeting.">Meetings</button>
+      <button class="tab on" data-tab="home" title="The CTTLFA Admin Centre home — jump to any function.">Home</button>
+      <button class="tab" data-tab="meetings" title="Create the meeting (AGM, SGM, General or Mancom) and pick the one you are working on. Everything else hangs off the selected meeting.">Meetings</button>
       <button class="tab" data-tab="accredit" title="Check delegates in at the door, capture their cell number and consent, and issue their voting code. Votes are allocated to the club automatically.">Accreditation</button>
       <button class="tab" data-tab="compliance" title="Mark each club compliant or not for this meeting. Do this before the first vote is started. A non-compliant club cannot be accredited or vote.">Compliance</button>
       <button class="tab" data-tab="motions" title="Write up each motion for the meeting, its wording, who may vote, the majority needed and the timer. You can prepare several motions in advance.">Motions</button>
@@ -203,8 +204,39 @@
       <span class="kv">Pick on the Meetings tab</span>
     </div>
 
+    <!-- HOME (Admin Centre hub) -->
+    <section id="tab-home">
+      <style>
+      #tab-home .homegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+      #tab-home .hmod{background:#fff;border:1px solid var(--line);border-radius:15px;padding:18px;display:flex;flex-direction:column;box-shadow:0 6px 20px rgba(9,20,48,.05)}
+      #tab-home .hmod.muted{opacity:.72}
+      #tab-home .hmod h3{margin:10px 0 4px;font-family:var(--head);color:var(--navy)}
+      #tab-home .hmod p{margin:0;color:var(--muted);font-size:13px;flex:1}
+      #tab-home .hic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff}
+      #tab-home .hic svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2}
+      #tab-home .hic.voting{background:var(--navy)} #tab-home .hic.reg{background:var(--blue)} #tab-home .hic.web{background:#2f7d57} #tab-home .hic.disc{background:#9a3130} #tab-home .hic.fin{background:#6b5b2a}
+      #tab-home .hfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+      #tab-home .hchip{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:3px 8px;border-radius:20px}
+      #tab-home .hchip.live{background:#e6efe9;color:#1c7c4a} #tab-home .hchip.ext{background:#EEF2FA;color:var(--muted)} #tab-home .hchip.soon{background:#FBF0D8;color:#9f6621}
+      #tab-home .homehero{background:linear-gradient(180deg,#fff,#FBFCFF)}
+      </style>
+      <div class="card homehero">
+        <h2 style="margin:0;font-family:var(--head);color:var(--navy)">CTTLFA Admin Centre</h2>
+        <p class="hint" style="margin:4px 0 0">One workspace for the Management Committee and LFA staff — voting, registrations, the website, discipline, and (soon) finance. Pick a function below or from the top menu.</p>
+        <div class="kpis" id="homeKpi" style="margin-top:14px;display:none"></div>
+      </div>
+      <div class="homegrid">
+        <div class="hmod"><div class="hic voting"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Voting &amp; Meetings</h3><p>Run AGMs, SGMs and Mancom meetings — accreditation, motions, live secret ballots and the formal record.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="meetings">Open</button></div></div>
+        <div class="hmod"><div class="hic reg"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></div><h3>Registrations &amp; Clubs</h3><p>The SAFA card-cycle analytics and per-club profiles, with live teams, fixtures, results and CSV/PDF exports.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="registrations">Open</button></div></div>
+        <div class="hmod"><div class="hic web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Website Admin</h3><p>Manage the public cttfa.co.za site — content, notices, committee, downloads and pages.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.websiteadmin.cttfa.co.za/?p=dashboard" target="_blank" rel="noopener">Open</a></div></div>
+        <div class="hmod"><div class="hic disc"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="14" rx="1"/><path d="M9 21h6M12 17v4"/></svg></div><h3>Discipline, Referees &amp; Cards</h3><p>Yellow-card tracker, suspensions, referee appointments and administrative rulings.</p><div class="hfoot"><span class="hchip ext">External · rebuild planned</span><a class="btn ghost sm" href="https://dash.cttlfa.com" target="_blank" rel="noopener">Open</a></div></div>
+        <div class="hmod muted"><div class="hic fin"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Finance</h3><p>Club levies, billing and financial standing — linked to the registration base, so money and members sit on one screen.</p><div class="hfoot"><span class="hchip soon">Coming soon</span><button class="btn ghost sm" disabled>Phase 4</button></div></div>
+      </div>
+      <p class="hint" style="margin-top:12px">Built for CTTLFA by the Treasurer's office. Each function is a module that can be refined on its own; this home ties them into one consolidated workspace.</p>
+    </section>
+
     <!-- MEETINGS -->
-    <section id="tab-meetings">
+    <section id="tab-meetings" class="hidden">
       <div class="card">
         <h3 data-help="Start here for every meeting. Fill in the name, type, date and venue and press Create meeting. It becomes the working meeting straight away, shown in the grey bar at the top of every tab. You can set it up days in advance.">Create a meeting</h3>
         <p class="hint">An AGM, SGM or Mancom meeting. Everything else, accreditation and motions, hangs off the meeting you select.</p>
@@ -611,13 +643,15 @@
     $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden");
     if(meRole==="viewer"){ /* viewers: read only - hide write controls */ document.body.classList.add("viewer"); }
     await loadClubs(); await loadMeetings(); await loadUsers();
+    renderHome(); homeWire(); var _mp0=$("meetingPick"); if(_mp0) _mp0.style.display="none";
   }
 
   /* ---------- tabs ---------- */
   Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(t){
     t.onclick=function(){
       Array.prototype.forEach.call(document.querySelectorAll("#mainTabs .tab"),function(x){x.classList.toggle("on",x===t);});
-      ["meetings","accredit","compliance","motions","live","registrations","audit","users","help"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
+      ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help"].forEach(function(n){ $("tab-"+n).classList.toggle("hidden", n!==t.dataset.tab); });
+      var _mp=$("meetingPick"); if(_mp) _mp.style.display=(["meetings","accredit","compliance","motions","live"].indexOf(t.dataset.tab)>=0)?"":"none";
       if(t.dataset.tab!=="accredit") stopCiTimer();
       if(t.dataset.tab!=="live" && liveTimer){ clearTimeout(liveTimer); liveTimer=null; }
       if(t.dataset.tab==="accredit") renderAccredit();
@@ -625,6 +659,7 @@
       if(t.dataset.tab==="motions") renderMotions();
       if(t.dataset.tab==="live") renderLive();
       if(t.dataset.tab==="audit") loadAudit();
+      if(t.dataset.tab==="home") renderHome();
       if(t.dataset.tab==="registrations") renderRegistrations();
     };
   });
@@ -1052,6 +1087,16 @@
     us.forEach(function(u){ h+='<tr><td><b>'+esc(u.full_name)+'</b></td><td>'+esc(u.email)+'</td><td class="kv">'+esc(u.title||"")+'</td><td><span class="tag '+(u.role==="administrator"?"open":(u.role==="secretary"?"full":"draft"))+'">'+esc(u.role)+'</span></td><td>'+(u.auth_id?'<span class="tag in">yes</span>':'<span class="kv">not yet</span>')+'</td></tr>'; });
     h+='</tbody></table>'; l.innerHTML=h;
   }
+
+  /* ---------- home (admin centre hub) ---------- */
+  async function renderHome(){
+    var el=$("homeKpi"); if(!el) return;
+    try{ if(!_reg){ var r=await sb.rpc("reg_analytics",{}); if(!r.error) _reg=r.data; }
+      if(_reg){ var c=_reg.current; el.innerHTML=kpi(regFmt(c.persons),"Registered members",_reg.cur_start.slice(0,4)+"–"+_reg.cur_end.slice(0,4)+" cycle")+kpi(regFmt((clubs||[]).length),"Member clubs","")+kpi(regFmt(c.new_in_cycle),"New this cycle","")+kpi(regFmt(_reg.days_to_new_cycle),"Days to new cycle","opens "+regDate(_reg.new_cycle_start)); el.style.display=""; }
+      else { el.style.display="none"; }
+    }catch(e){ el.style.display="none"; }
+  }
+  function homeWire(){ Array.prototype.forEach.call(document.querySelectorAll('#tab-home [data-goto]'),function(b){ b.onclick=function(){ var t=document.querySelector('#mainTabs .tab[data-tab="'+b.getAttribute("data-goto")+'"]'); if(t) t.click(); }; }); }
 
   /* ---------- registrations (analytics + club central, admin only) ---------- */
   var _reg=null,_regYear=null,_regAll=null,_season=null,_seasonP=null,_regView=[],_regViewLabel="",_memBack=null,_lastClub=null,_lastFb=null,_memDetail=null;
