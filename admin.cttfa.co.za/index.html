@@ -516,9 +516,10 @@
         <h3>Access levels</h3>
         <p>There are two levels, set per person on the Mancom users page:</p>
         <ol class="steps">
-          <li><b>Administrator.</b> Full control of every module (voting and meetings, registrations, website admin) and of the Mancom users list. Administrators can change other people's access.</li>
-          <li><b>Viewer.</b> Can open and read every module but cannot change anything. Use this for members who need sight of the information without editing rights.</li>
+          <li><b>Administrator.</b> Full control of every module (voting and meetings, registrations, website admin, Fincom) and of the Mancom users list. Administrators see every area and can change other people's access.</li>
+          <li><b>Viewer.</b> Can open and read only the areas ticked for them, and cannot change anything. Use this for members who need sight of certain information without editing rights.</li>
         </ol>
+        <p><b>Areas.</b> For each viewer, an administrator ticks which areas they may open (Voting, Registrations, Website Admin, Discipline, Fincom, Fixtures, Live site). Anything not ticked is hidden from them, on the Home page and everywhere else. This is how access is kept tight: for example, tick <b>Fincom</b> only for Finance Committee members, and they will see only the Fincom dashboard when they sign in.</p>
         <p class="sub">A change to someone's access takes effect the next time they sign in. An administrator cannot remove their own administrator rights or deactivate their own account, which prevents an accidental lock-out.</p>
       </div>
 
@@ -550,8 +551,9 @@
 
       <div class="card help-card" id="h-mod-fincom">
         <h3>Fincom Dashboard</h3>
-        <p><b>What it is:</b> the Finance Committee view of the budget, cash position and finance reporting at a glance.</p>
-        <p><b>Where:</b> Home &rarr; Fincom Dashboard, which opens <span class="kk">cttfafincom.tiiny.site</span> in a new tab. <b>Who:</b> Fincom and administrators.</p>
+        <p><b>What it is:</b> the Finance Committee operating dashboard, now hosted inside the Admin Centre. It covers the Fincom mandate and scope, the KPI summary, the 2026 budget and its monthly phasing, debtors, compliance, the work plan and meeting rhythm, and a document library holding the monthly Mancom packs, the budgets, the finance policy manual and the debtor-system review.</p>
+        <p><b>Where:</b> Home &rarr; Fincom Dashboard, which opens the gated page inside the Admin Centre (no separate site). <b>Who:</b> administrators and any user given <b>Fincom</b> area access on the Mancom users page. Everyone else does not see the card at all.</p>
+        <p><b>Security:</b> the figures and documents are not on any public address. They are served only to a signed-in user who has Fincom access; the document links are secure, single-session links that expire after an hour. The old public <span class="kk">cttfafincom.tiiny.site</span> version is being retired in favour of this.</p>
       </div>
 
       <div class="card help-card" id="h-mod-fixtures">
