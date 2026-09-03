@@ -361,6 +361,11 @@
 #tab-registrations .prepbox li{margin:0 0 7px;font-size:13px}
 #tab-registrations .mdk{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
 #tab-registrations .mdv{font-size:14px;color:var(--ink);font-weight:600}
+#tab-registrations .clubhdr{display:flex;gap:14px;align-items:center}
+#tab-registrations .clubhdr img{width:54px;height:54px;object-fit:contain;background:#fff;border:1px solid var(--line);border-radius:8px}
+#tab-registrations .formg{display:inline-flex;gap:4px;vertical-align:middle}
+#tab-registrations .formg b{width:20px;height:20px;border-radius:4px;color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--cond)}
+#tab-registrations .fW{background:var(--good)} #tab-registrations .fD{background:#8a94a8} #tab-registrations .fL{background:var(--bad)}
 </style>
 
     <!-- REGISTRATIONS (analytics, admin only) -->
@@ -1052,6 +1057,9 @@
   var _reg=null,_regYear=null,_regAll=null,_season=null,_seasonP=null,_regView=[],_regViewLabel="",_memBack=null,_lastClub=null,_lastFb=null,_memDetail=null;
   function regFmt(n){ return (n==null?"–":Number(n).toLocaleString("en-ZA").replace(/,/g," ")); }
   function regDate(iso){ if(!iso) return ""; var M=["January","February","March","April","May","June","July","August","September","October","November","December"]; var a=String(iso).split("-"); return parseInt(a[2],10)+" "+M[parseInt(a[1],10)-1]+" "+a[0]; }
+  function tcCap(w){ return w?w.charAt(0).toUpperCase()+w.slice(1):w; }
+  function titleCase(s){ if(s==null) return ""; s=String(s).trim(); if(!s) return ""; var low={van:1,der:1,den:1,de:1,du:1,da:1,dos:1,la:1,le:1,von:1,ten:1,ter:1,al:1,el:1,bin:1,binte:1}; return s.toLowerCase().split(/\s+/).map(function(w,i){ return w.split("-").map(function(seg){ if(i>0&&low[seg]) return seg; if(seg.indexOf("'")>0){ var a=seg.split("'"); return a.map(function(x,j){ return (j===0||x.length>1)?tcCap(x):x; }).join("'"); } if(seg.slice(0,2)==="mc"&&seg.length>2) return "Mc"+tcCap(seg.slice(2)); return tcCap(seg); }).join("-"); }).join(" "); }
+  function nameOf(m){ return (titleCase(m.first_name||"")+" "+titleCase(m.surname||"")).trim(); }
   function regClubNames(){ return (clubs||[]).map(function(c){return c.name;}); }
   function regBackBar(fn,label){ var b='<button class="reg-back" id="regBack">&larr; '+(label||"Back to overview")+'</button>'; setTimeout(function(){ var e=$("regBack"); if(e) e.onclick=(fn||regOverview); },0); return b; }
   function curCycleYear(){ var a=(_reg&&_reg.cycles_available)||[]; return a.length?Math.max.apply(null,a):Number(_reg.cur_start.slice(0,4)); }
@@ -1078,19 +1086,19 @@
     var retPc=c.persons?Math.round(c.returning/c.persons*100):0,newPc=c.persons?Math.round(c.new_in_cycle/c.persons*100):0;
     var growth=d.prev.persons?((c.persons-d.prev.persons)/d.prev.persons*100):0;
     var activeClubs=(d.clubs||[]).filter(function(x){return x.club!=="Non current"&&x.club!=="Referees & Officials";}).length||1;
-    var monTot=(d.monthly||[]).reduce(function(a,m){return a+m.total;},0);
     var top10=(d.clubs||[]).filter(function(x){return x.club!=="Non current"&&x.club!=="Referees & Officials";}).slice(0,10).reduce(function(a,x){return a+x.total;},0);
+    var forPc=c.persons?Math.round((c.foreign_nationals||0)/c.persons*100):0;
     var h='';
     h+='<div class="card">'+cycleSelector()+'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">Registration analytics</h3><p class="hint" style="margin:2px 0 0">SAFA card cycle '+cs+'–'+ce+(d.is_current?" (current)":"")+' · live from the registration database · as at '+esc(regDate(d.as_at))+'. Click any tile or club to drill in and download.</p></div><button class="btn ghost sm" id="regRefresh">Refresh</button></div>';
     h+='<div class="reg-cycles">'+regCyc("Previous cycle",ps+" – "+cs,d.prev.persons,d.prev.seniors,d.prev.juniors,"past")+regCyc("Selected cycle",cs+" – "+ce,c.persons,c.seniors,c.juniors,"cur")+'<div class="reg-cyc next"><div class="rt">Next cycle</div><div class="ry">'+ce+' – '+ne+'</div><div class="rp">—</div><div class="rc">opens '+regDate(d.new_cycle_start)+'</div><div class="rs">Re-card base '+regFmt(c.persons)+'</div></div></div>';
     if(d.is_current) h+='<div class="reg-countdown"><div class="d">'+regFmt(d.days_to_new_cycle)+'<span>days to new cycle</span></div><p>The '+ce+'–'+ne+' cycle opens '+regDate(d.new_cycle_start)+'. Every current member must be re-carded; the re-card base is the '+regFmt(c.persons)+' members registered this cycle, of whom '+regFmt(c.returning)+' carried over from the previous cycle.</p></div>';
     h+='</div>';
-    h+='<div class="card"><h3 style="margin:0 0 4px">Registered members — '+cs+'–'+ce+' cycle</h3><p class="hint" style="margin:0 0 12px">Cards valid to '+regDate(d.cur_end)+' · unique SAFA numbers · click a tile to list, view and export those members</p><div class="reg-stats">'+regStat(c.persons,"Registered members","this cycle","all")+regStat(c.seniors,"Seniors",snrPc+"% of members","cat:Senior")+regStat(c.juniors,"Juniors",jnrPc+"% of members","cat:Junior")+regStat(c.returning,"Returning","from previous cycle","returning")+regStat(c.new_in_cycle,"New entrants","first cycle","new")+regStat(c.referees,"Referees & officials","carded this cycle","ref")+'</div></div>';
-    h+='<div class="card"><h3 style="margin:0 0 6px">Benchmark ratios</h3><div class="kpis">'+kpi((growth>=0?"+":"")+growth.toFixed(1)+"%","Cycle-on-cycle growth",regFmt(d.prev.persons)+" → "+regFmt(c.persons))+kpi(jnrPc+"%","Junior share","development pipeline")+kpi(retPc+"%","Retention","returning ÷ current")+kpi(regFmt(Math.round(c.at_clubs/activeClubs)),"Avg per active club",regFmt(c.at_clubs)+" at "+activeClubs+" clubs")+kpi(regFmt(d.total_events),"Total card events","on record")+'</div></div>';
+    h+='<div class="card"><h3 style="margin:0 0 4px">Registered members — '+cs+'–'+ce+' cycle</h3><p class="hint" style="margin:0 0 12px">Cards valid to '+regDate(d.cur_end)+' · unique SAFA numbers · click a tile to list, view and export those members</p><div class="reg-stats">'+regStat(c.persons,"Registered members","this cycle","all")+regStat(c.seniors,"Seniors",snrPc+"% of members","cat:Senior")+regStat(c.juniors,"Juniors",jnrPc+"% of members","cat:Junior")+regStat(c.foreign,"Foreign","age not on card","cat:Foreign")+regStat(c.returning,"Returning","from previous cycle","returning")+regStat(c.new_in_cycle,"New entrants","first cycle","new")+regStat(c.referees,"Referees & officials","carded this cycle","ref")+'</div></div>';
+    h+='<div class="card"><h3 style="margin:0 0 6px">Benchmark ratios</h3><div class="kpis">'+kpi((growth>=0?"+":"")+growth.toFixed(1)+"%","Cycle-on-cycle growth",regFmt(d.prev.persons)+" → "+regFmt(c.persons))+kpi(jnrPc+"%","Junior share","development pipeline")+kpi(retPc+"%","Retention","returning ÷ current")+kpi(regFmt(Math.round(c.at_clubs/activeClubs)),"Avg per active club",regFmt(c.at_clubs)+" at "+activeClubs+" clubs")+kpi(regFmt(c.foreign_nationals||0),"Foreign nationals",forPc+"% of members")+kpi(regFmt(d.total_events),"Total card events","on record")+'</div></div>';
     h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0 0 4px">When registrations happen</h3><p class="hint" style="margin:0">Monthly, by type · busy window Feb–May</p></div><span style="display:flex;gap:8px"><button class="btn ghost sm" id="regMonCsv">CSV</button><button class="btn ghost sm" id="regMonPdf">PDF</button></span></div><div class="reg-legend" style="margin-top:8px"><span><i class="rsw" style="background:var(--navy)"></i>New (first card)</span><span><i class="rsw" style="background:var(--blue)"></i>Renewal</span><span><i class="rsw" style="background:var(--gold)"></i>Transfer</span></div><div id="regChart"></div></div>';
     h+='<div class="card"><h3 style="margin:0 0 4px">Growth vs retention</h3><div class="reg-msbar"><i style="background:var(--navy);width:'+retPc+'%">Returning '+regFmt(c.returning)+'</i><i style="background:var(--gold);color:var(--ink);width:'+newPc+'%">New '+regFmt(c.new_in_cycle)+'</i></div><p class="hint" style="margin:8px 0 0">Retention '+retPc+'% · new-entrant share '+newPc+'%. The re-card base cannot be assumed to renew in full.</p></div>';
     if(d.is_current) h+='<div class="card"><h3 style="margin:0 0 6px">Preparing for the '+ce+'–'+ne+' cycle</h3><div class="prepbox"><ul style="margin:0;padding-left:18px"><li><b>Re-card base of '+regFmt(c.persons)+' members</b> must renew from '+regDate(d.new_cycle_start)+'. Work down by club.</li><li><b>Plan for the February–May surge</b> — both seasons of this cycle loaded then; book card stock and SAFA processing ahead of it.</li><li><b>Protect the '+regFmt(c.returning)+' returning members</b> first; early club renewal drives hold the base.</li><li><b>Prioritise the larger clubs</b> — the top ten carry '+regFmt(top10)+' members between them.</li></ul></div></div>';
-    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h3 style="margin:0">Registered members by club</h3><span style="display:flex;gap:8px;align-items:center"><input id="regSearch" type="search" placeholder="Search club..." style="max-width:180px;width:auto" autocomplete="off" aria-label="Search club"><button class="btn ghost sm" id="regClubCsv">CSV</button><button class="btn ghost sm" id="regClubPdf">PDF</button></span></div><p class="hint" style="margin:6px 0 0">Click a club for its members, and its live teams, fixtures and results.</p><div id="regClubWrap" style="overflow-x:auto;margin-top:10px"></div></div>';
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h3 style="margin:0">Registered members by club</h3><span style="display:flex;gap:8px;align-items:center"><input id="regSearch" type="search" placeholder="Search club..." style="max-width:180px;width:auto" autocomplete="off" aria-label="Search club"><button class="btn ghost sm" id="regClubCsv">CSV</button><button class="btn ghost sm" id="regClubPdf">PDF</button></span></div><p class="hint" style="margin:6px 0 0">Click a club for its full profile — members, and its live teams, fixtures and results.</p><div id="regClubWrap" style="overflow-x:auto;margin-top:10px"></div></div>';
     root.innerHTML=h;
     var x;
     if(x=$("regRefresh")) x.onclick=function(){ renderRegistrations(_regYear); };
@@ -1124,13 +1132,13 @@
     q=q||""; var grouped={"Non current":1,"Referees & Officials":1};
     var rows=cl.filter(function(c){return c.club.toLowerCase().indexOf(q)>=0;});
     var maxT=Math.max.apply(null,cl.map(function(c){return c.total;}))||1;
-    var h='<table><thead><tr><th style="text-align:left">Club</th><th class="num">Seniors</th><th class="num">Juniors</th><th class="num">Unclass.</th><th class="num">Total</th></tr></thead><tbody>';
+    var h='<table><thead><tr><th style="text-align:left">Club</th><th class="num">Seniors</th><th class="num">Juniors</th><th class="num">Foreign</th><th class="num">Total</th></tr></thead><tbody>';
     rows.forEach(function(c){ var w=Math.max(2,Math.round(c.total/maxT*70));
       var tg=grouped[c.club]?' <span class="tag" style="background:#EEF2FA;color:var(--muted)">grouped</span>':'';
-      h+='<tr data-club="'+esc(c.club)+'" role="button" tabindex="0" title="Open '+esc(c.club)+'"><th scope="row" style="text-align:left;font-weight:600">'+esc(c.club)+tg+'<span style="display:inline-block;height:7px;width:'+w+'px;background:var(--blue5);border-radius:2px;margin-left:8px;vertical-align:middle"></span></th><td class="num">'+regFmt(c.seniors)+'</td><td class="num">'+regFmt(c.juniors)+'</td><td class="num">'+regFmt(c.unclassified)+'</td><td class="num"><b>'+regFmt(c.total)+'</b></td></tr>';
+      h+='<tr data-club="'+esc(c.club)+'" role="button" tabindex="0" title="Open '+esc(c.club)+'"><th scope="row" style="text-align:left;font-weight:600">'+esc(c.club)+tg+'<span style="display:inline-block;height:7px;width:'+w+'px;background:var(--blue5);border-radius:2px;margin-left:8px;vertical-align:middle"></span></th><td class="num">'+regFmt(c.seniors)+'</td><td class="num">'+regFmt(c.juniors)+'</td><td class="num">'+regFmt(c.foreign)+'</td><td class="num"><b>'+regFmt(c.total)+'</b></td></tr>';
     });
-    var S=rows.reduce(function(a,c){return {s:a.s+c.seniors,j:a.j+c.juniors,u:a.u+c.unclassified,t:a.t+c.total};},{s:0,j:0,u:0,t:0});
-    h+='</tbody><tfoot><tr><th style="text-align:left">'+(q?"Filtered":"All clubs")+' ('+rows.length+')</th><td class="num">'+regFmt(S.s)+'</td><td class="num">'+regFmt(S.j)+'</td><td class="num">'+regFmt(S.u)+'</td><td class="num"><b>'+regFmt(S.t)+'</b></td></tr></tfoot></table>';
+    var S=rows.reduce(function(a,c){return {s:a.s+c.seniors,j:a.j+c.juniors,f:a.f+c.foreign,t:a.t+c.total};},{s:0,j:0,f:0,t:0});
+    h+='</tbody><tfoot><tr><th style="text-align:left">'+(q?"Filtered":"All clubs")+' ('+rows.length+')</th><td class="num">'+regFmt(S.s)+'</td><td class="num">'+regFmt(S.j)+'</td><td class="num">'+regFmt(S.f)+'</td><td class="num"><b>'+regFmt(S.t)+'</b></td></tr></tfoot></table>';
     $("regClubWrap").innerHTML=h;
   }
   /* downloads */
@@ -1148,41 +1156,41 @@
     return y+14;
   }
   function regPDF(title,subtitle,head,body,fn){ if(!window.jspdf){ alert("PDF library still loading, try again in a moment."); return; } var doc=new window.jspdf.jsPDF({unit:"pt",format:"a4"}); var sy=regPdfHead(doc,title,subtitle); doc.autoTable({ startY:sy, head:[head], body:body, styles:{fontSize:8.3,cellPadding:3}, headStyles:{fillColor:[7,26,74],textColor:255}, alternateRowStyles:{fillColor:[238,242,250]} }); doc.save(fn); }
-  var MEM_HEAD=["SAFA number","Surname","First name","Category","Club","Type","Last card","Cycle status"];
-  function memRows(ms){ return ms.map(function(m){ return [m.safa||"",m.surname||"",m.first_name||"",m.category||"",m.club||"",m.type||"",m.last_card||"",m.returning?"Returning":"New"]; }); }
+  var MEM_HEAD=["SAFA number","Surname","First name","Category","Foreign","Club","Type","Last card","Cycle status"];
+  function memRows(ms){ return ms.map(function(m){ return [m.safa||"",titleCase(m.surname||""),titleCase(m.first_name||""),m.category||"",m.foreign?"Yes":"",m.club||"",m.type||"",m.last_card||"",m.returning?"Returning":"New"]; }); }
   function cycTag(){ return _reg.cur_start.slice(0,4)+"–"+_reg.cur_end.slice(0,4); }
   function dlMembersCSV(rows,label){ regCSV("CTTLFA members "+cycTag()+" - "+label+".csv",MEM_HEAD,memRows(rows)); }
   function dlMembersPDF(rows,label){ if(rows.length>2500){ alert("That is "+rows.length+" members — too many for one PDF. Use CSV for the full list; PDF works per club or filter."); return; } regPDF("Registered members — "+label,cycTag()+" cycle · "+rows.length+" members · as at "+regDate(_reg.as_at),MEM_HEAD,memRows(rows),"CTTLFA members "+cycTag()+" - "+label+".pdf"); }
-  function dlBreakdownCSV(){ regCSV("CTTLFA registered by club "+cycTag()+".csv",["Club","Seniors","Juniors","Unclassified","Total"],_reg.clubs.map(function(c){return [c.club,c.seniors,c.juniors,c.unclassified,c.total];})); }
-  function dlBreakdownPDF(){ regPDF("Registered members by club",cycTag()+" cycle · as at "+regDate(_reg.as_at)+" · total "+regFmt(_reg.current.persons),["Club","Seniors","Juniors","Unclass.","Total"],_reg.clubs.map(function(c){return [c.club,regFmt(c.seniors),regFmt(c.juniors),regFmt(c.unclassified),regFmt(c.total)];}),"CTTLFA registered by club "+cycTag()+".pdf"); }
+  function dlBreakdownCSV(){ regCSV("CTTLFA registered by club "+cycTag()+".csv",["Club","Seniors","Juniors","Foreign","Total"],_reg.clubs.map(function(c){return [c.club,c.seniors,c.juniors,c.foreign,c.total];})); }
+  function dlBreakdownPDF(){ regPDF("Registered members by club",cycTag()+" cycle · as at "+regDate(_reg.as_at)+" · total "+regFmt(_reg.current.persons),["Club","Seniors","Juniors","Foreign","Total"],_reg.clubs.map(function(c){return [c.club,regFmt(c.seniors),regFmt(c.juniors),regFmt(c.foreign),regFmt(c.total)];}),"CTTLFA registered by club "+cycTag()+".pdf"); }
   function dlMonthlyCSV(){ regCSV("CTTLFA registrations by month "+cycTag()+".csv",["Month","New","Renewal","Transfer","Total"],_reg.monthly.map(function(m){return [m.ym,m["new"],m.renewal,m.transfer,m.total];})); }
   function dlMonthlyPDF(){ regPDF("Registrations by month",cycTag()+" cycle · New / Renewal / Transfer · as at "+regDate(_reg.as_at),["Month","New","Renewal","Transfer","Total"],_reg.monthly.map(function(m){return [m.ym,regFmt(m["new"]),regFmt(m.renewal),regFmt(m.transfer),regFmt(m.total)];}),"CTTLFA registrations by month "+cycTag()+".pdf"); }
   /* members */
   async function regEnsureMembers(){ if(_regAll) return _regAll; var r=await sb.rpc("reg_members", _regYear!=null?{p_start_year:_regYear}:{}); if(r.error) throw r.error; _regAll=r.data||[]; return _regAll; }
-  function mfLabel(mf){ return ({all:"all registered members",returning:"returning members","new":"new entrants",ref:"referees & officials","cat:Senior":"senior members","cat:Junior":"junior members"})[mf]||mf; }
-  function mfPred(mf){ if(mf==="returning") return function(m){return m.returning;}; if(mf==="new") return function(m){return !m.returning;}; if(mf==="ref") return function(m){return m.type==="referee"||m.type==="official";}; if(mf==="cat:Senior") return function(m){return m.category==="Senior";}; if(mf==="cat:Junior") return function(m){return m.category==="Junior";}; return function(){return true;}; }
+  function mfLabel(mf){ return ({all:"all registered members",returning:"returning members","new":"new entrants",ref:"referees & officials","cat:Senior":"senior members","cat:Junior":"junior members","cat:Foreign":"foreign members"})[mf]||mf; }
+  function mfPred(mf){ if(mf==="returning") return function(m){return m.returning;}; if(mf==="new") return function(m){return !m.returning;}; if(mf==="ref") return function(m){return m.type==="referee"||m.type==="official";}; if(mf==="cat:Senior") return function(m){return m.category==="Senior";}; if(mf==="cat:Junior") return function(m){return m.category==="Junior";}; if(mf==="cat:Foreign") return function(m){return m.category==="Foreign";}; return function(){return true;}; }
   async function regMembersView(mf){
     var root=$("regRoot"); root.innerHTML='<div class="card"><p class="hint">Loading members...</p></div>';
     try{ await regEnsureMembers(); }catch(e){ root.innerHTML='<div class="card">'+regBackBar(regOverview)+'<p class="hint">Could not load members: '+esc(e.message||e)+'</p></div>'; return; }
     _regView=_regAll.filter(mfPred(mf)); _regViewLabel=mfLabel(mf); _memBack=renderMemberPage; renderMemberPage();
   }
-  function memFilter(q){ if(!q) return _regView; return _regView.filter(function(m){ return ((m.surname||"")+" "+(m.first_name||"")).toLowerCase().indexOf(q)>=0 || String(m.safa||"").indexOf(q)>=0 || (m.club||"").toLowerCase().indexOf(q)>=0; }); }
+  function memFilter(q){ if(!q) return _regView; return _regView.filter(function(m){ return (nameOf(m).toLowerCase().indexOf(q)>=0) || String(m.safa||"").indexOf(q)>=0 || (m.club||"").toLowerCase().indexOf(q)>=0; }); }
   function memberTableHTML(rows,cap){ var show=(cap&&rows.length>cap)?rows.slice(0,cap):rows;
     var h='<table><thead><tr><th style="text-align:left">SAFA</th><th style="text-align:left">Surname</th><th style="text-align:left">First name</th><th style="text-align:left">Category</th><th style="text-align:left">Club</th><th style="text-align:left">Type</th><th style="text-align:left">Last card</th></tr></thead><tbody>';
-    show.forEach(function(m){ h+='<tr><td><button class="reg-safa" data-safa="'+esc(m.safa||"")+'" title="View this member">'+esc(m.safa||"")+'</button></td><th scope="row" style="text-align:left">'+esc(m.surname||"")+'</th><td>'+esc(m.first_name||"")+'</td><td>'+esc(m.category||"")+'</td><td>'+esc(m.club||"")+'</td><td>'+esc(m.type||"")+'</td><td>'+esc(m.last_card||"")+'</td></tr>'; });
+    show.forEach(function(m){ h+='<tr><td><button class="reg-safa" data-safa="'+esc(m.safa||"")+'" title="View this member">'+esc(m.safa||"")+'</button></td><th scope="row" style="text-align:left">'+esc(titleCase(m.surname||""))+'</th><td>'+esc(titleCase(m.first_name||""))+'</td><td>'+esc(m.category||"")+(m.foreign?' <span class="tag" style="background:#EEF2FA;color:var(--muted)">foreign</span>':'')+'</td><td>'+esc(m.club||"")+'</td><td>'+esc(m.type||"")+'</td><td>'+esc(m.last_card||"")+'</td></tr>'; });
     h+='</tbody></table>'; if(cap&&rows.length>show.length) h+='<p class="hint">Showing first '+cap+' of '+regFmt(rows.length)+'. Narrow with search, or download the full list.</p>'; return h; }
   function wireSafa(container,backFn){ if(!container) return; container.onclick=function(e){ var b=e.target.closest(".reg-safa"); if(b) regMemberDetail(b.getAttribute("data-safa"),backFn); }; }
   function renderMemberPage(){
     var root=$("regRoot"),rows=_regView,label=_regViewLabel;
     var h='<div class="card">'+regBackBar(regOverview)+'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:6px"><div><h3 style="margin:0;text-transform:capitalize">'+esc(label)+'</h3><p class="hint" style="margin:2px 0 0">'+regFmt(rows.length)+' members · '+cycTag()+' cycle · as at '+regDate(_reg.as_at)+' · click a SAFA number to view the member</p></div><span style="display:flex;gap:8px;align-items:center"><input id="regMemSearch" type="search" placeholder="Search name / SAFA / club" style="max-width:220px;width:auto" autocomplete="off"><button class="btn ghost sm" id="regMemCsv">CSV</button><button class="btn ghost sm" id="regMemPdf">PDF</button></span></div><div id="regMemWrap" style="overflow-x:auto;margin-top:10px"></div><p class="hint" style="margin-top:8px">SAFA number and name shown for accreditation. ID numbers are never shown or exported. POPIA (Act 4 of 2013).</p></div>';
     root.innerHTML=h;
-    function draw(q){ $("regMemWrap").innerHTML=memberTableHTML(memFilter(q),800); }
-    draw(""); wireSafa($("regMemWrap"),renderMemberPage);
-    var s=$("regMemSearch"); if(s) s.oninput=function(){ draw(this.value.trim().toLowerCase()); };
+    function draw(q){ $("regMemWrap").innerHTML=memberTableHTML(memFilter(q),800); wireSafa($("regMemWrap"),renderMemberPage); }
+    draw("");
+    var sc=$("regMemSearch"); if(sc) sc.oninput=function(){ draw(this.value.trim().toLowerCase()); };
     $("regMemCsv").onclick=function(){ dlMembersCSV(memFilter(($("regMemSearch").value||"").trim().toLowerCase()),label); };
     $("regMemPdf").onclick=function(){ dlMembersPDF(memFilter(($("regMemSearch").value||"").trim().toLowerCase()),label); };
   }
-  /* member detail (card history) */
+  /* member detail */
   async function regMemberDetail(safa,backFn){
     var root=$("regRoot"); _memBack=backFn||_memBack||regOverview;
     root.innerHTML='<div class="card"><p class="hint">Loading member '+esc(safa)+'...</p></div>';
@@ -1191,9 +1199,9 @@
   }
   function renderMemberDetail(){
     var d=_memDetail,root=$("regRoot"),pr=d.person||{},hist=d.history||[];
-    var nm=((pr.first_name||"")+" "+(pr.surname||"")).trim()||("SAFA "+d.safa);
+    var nm=(titleCase(pr.first_name||"")+" "+titleCase(pr.surname||"")).trim()||("SAFA "+d.safa);
     var h='<div class="card">'+regBackBar(_memBack,"Back")+'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:6px"><div><h3 style="margin:0">'+esc(nm)+'</h3><p class="hint" style="margin:2px 0 0">SAFA '+esc(d.safa)+' · card history across all cycles</p></div><span style="display:flex;gap:8px"><button class="btn ghost sm" id="mdCsv">CSV</button><button class="btn ghost sm" id="mdPdf">PDF</button></span></div>';
-    h+='<div class="reg-stats" style="margin-top:12px">'+regStat(pr.category||"—","Category","latest")+regStat(pr.club_label||"—","Club","latest")+regStat(hist.length,"Cards","on record")+regStat((pr.seasons||"").split(",").filter(Boolean).length,"Seasons","")+regStat(pr.foreign_player?"Yes":"No","Foreign","")+'</div>';
+    h+='<div class="reg-stats" style="margin-top:12px">'+regStat(pr.category||"—","Category","latest")+regStat(pr.club_label||"—","Club","latest")+regStat(hist.length,"Cards","on record")+regStat((pr.seasons||"").split(",").filter(Boolean).length,"Seasons","")+regStat(pr.foreign_player?"Yes":"No","Foreign national","")+'</div>';
     h+='<p class="hint" style="margin-top:6px">First registered '+esc(regDate(pr.first_registered))+' · last '+esc(regDate(pr.last_registered))+(pr.id_changed?' · ID number changed over time':'')+'</p></div>';
     h+='<div class="card"><h3 style="margin:0 0 8px">Card history ('+hist.length+')</h3><div style="overflow-x:auto"><table><thead><tr><th style="text-align:left">Print date</th><th style="text-align:left">Season</th><th style="text-align:left">Club</th><th style="text-align:left">Category</th><th style="text-align:left">Movement</th><th style="text-align:left">Type</th></tr></thead><tbody>';
     hist.forEach(function(e){ h+='<tr><td style="text-align:left">'+esc(e.print_date||"")+'</td><td style="text-align:left">'+esc(e.season||"")+'</td><td style="text-align:left">'+esc(e.club_actual||e.club||"")+'</td><td style="text-align:left">'+esc(e.category||"")+'</td><td style="text-align:left">'+esc(e.movement||"")+'</td><td style="text-align:left">'+esc(e.type||"")+'</td></tr>'; });
@@ -1209,15 +1217,19 @@
   function normClub(s){ return String(s||"").toUpperCase().replace(/\bFC\b/g,"").replace(/[^A-Z0-9]/g,""); }
   var CLUB_ALIAS=[["GREENPOINT","Green Point"],["CRVASCO","C.R Vasco da Gama"],["VASCODAGAMA","C.R Vasco da Gama"],["EDGEMEAD","Edgemead G/W"],["NORWAYPARKS","Norway Parks"],["YMO","YMO FC"],["UCT","U C T"]];
   function teamToClub(team,names){ var nt=normClub(team); var best=null,bl=0; names.forEach(function(cn){ var nc=normClub(cn); if(nc && nt.indexOf(nc)===0 && nc.length>bl){best=cn;bl=nc.length;} }); if(best) return best; for(var i=0;i<CLUB_ALIAS.length;i++){ if(nt.indexOf(CLUB_ALIAS[i][0])===0) return CLUB_ALIAS[i][1]; } return null; }
+  function crestFor(club){ if(!_season||!_season.crests) return ""; var nc=normClub(club),best=null,bl=0; Object.keys(_season.crests).forEach(function(k){ var kk=normClub(k); if(kk && (nc.indexOf(kk)===0||kk.indexOf(nc)===0) && kk.length>bl){best=k;bl=kk.length;} }); if(!best) return ""; var base=_season.crestBase||"photos/crests"; return "https://www.cttfa.co.za/"+base+"/"+_season.crests[best]+"/115.jpg"; }
   function clubFootball(club){
-    var out={teams:[],fixtures:[],results:[],played:0,remaining:0,pct:0,ok:false};
+    var out={teams:[],fixtures:[],results:[],played:0,remaining:0,pct:0,ok:false,form:[]};
     if(!_season||!_season.leagues) return out; out.ok=true; var names=regClubNames(),L=_season.leagues;
     Object.keys(L).forEach(function(k){ var v=L[k],div=v.name||k;
-      (v.table||[]).forEach(function(r){ if(!Array.isArray(r)||!r[0]||String(r[0]).toLowerCase().indexOf("bye")>=0) return; if(teamToClub(r[0],names)===club){ out.teams.push({div:div,team:r[0],P:Number(r[1])||0,W:Number(r[2])||0,D:Number(r[3])||0,L:Number(r[4])||0,Pts:Number(r[7])||0}); out.played+=Number(r[1])||0; } });
+      var real=(v.table||[]).filter(function(r){return Array.isArray(r)&&r[0]&&String(r[0]).toLowerCase().indexOf("bye")<0;});
+      real.forEach(function(r,idx){ if(teamToClub(r[0],names)===club){ out.teams.push({div:div,team:r[0],P:Number(r[1])||0,W:Number(r[2])||0,D:Number(r[3])||0,L:Number(r[4])||0,Pts:Number(r[7])||0,pos:idx+1,of:real.length}); out.played+=Number(r[1])||0; } });
       (v.fixtures||[]).forEach(function(f){ if(!Array.isArray(f)) return; if(teamToClub(f[0],names)===club||teamToClub(f[1],names)===club){ out.fixtures.push({home:f[0],away:f[1],date:f[2],time:f[3],div:div}); out.remaining++; } });
       (v.results||[]).forEach(function(rs){ if(!Array.isArray(rs)) return; if(teamToClub(rs[0],names)===club||teamToClub(rs[1],names)===club){ out.results.push({home:rs[0],away:rs[1],hs:rs[2],as:rs[3],date:rs[4],div:div}); } });
     });
-    var denom=out.played+out.remaining; out.pct=denom>0?Math.round(out.played/denom*100):0; return out;
+    var denom=out.played+out.remaining; out.pct=denom>0?Math.round(out.played/denom*100):0;
+    out.form=out.results.slice(-6).map(function(r){ var homeClub=teamToClub(r.home,names)===club; var hs=Number(r.hs),as=Number(r.as); if(isNaN(hs)||isNaN(as)) return null; return (hs===as)?"D":((homeClub?(hs>as):(as>hs))?"W":"L"); }).filter(Boolean);
+    return out;
   }
   async function regClubView(club){
     var root=$("regRoot"); root.innerHTML='<div class="card"><p class="hint">Loading '+esc(club)+'...</p></div>';
@@ -1226,18 +1238,21 @@
     var fb=null; try{ await fetchSeason(); fb=clubFootball(club); }catch(e){ fb={ok:false}; }
     _regView=rows; _lastClub=club; _lastFb=fb; renderClubPage(club,fb);
   }
+  function formHTML(form){ if(!form||!form.length) return ""; return '<span class="formg">'+form.map(function(f){return '<b class="f'+f+'">'+f+'</b>';}).join("")+'</span>'; }
   function renderClubPage(club,fb){
     var root=$("regRoot"),rows=_regView;
-    var snr=rows.filter(function(m){return m.category==="Senior";}).length,jnr=rows.filter(function(m){return m.category==="Junior";}).length,un=rows.length-snr-jnr;
-    var ret=rows.filter(function(m){return m.returning;}).length,refs=rows.filter(function(m){return m.type==="referee"||m.type==="official";}).length;
-    var h='<div class="card">'+regBackBar(regOverview)+'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:6px"><div><h3 style="margin:0">'+esc(club)+'</h3><p class="hint" style="margin:2px 0 0">Club Central · '+cycTag()+' cycle · registrations, teams, fixtures and results · as at '+regDate(_reg.as_at)+'</p></div><span style="display:flex;gap:8px"><button class="btn ghost sm" id="regClubMemCsv">Members CSV</button><button class="btn ghost sm" id="regClubMemPdf">Members PDF</button></span></div>';
-    h+='<div class="reg-stats" style="margin-top:12px">'+regStat(rows.length,"Registered","this cycle")+regStat(snr,"Seniors","")+regStat(jnr,"Juniors","")+regStat(un,"Unclassified","")+regStat(ret,"Returning","from prev cycle")+regStat(refs,"Referees","")+'</div></div>';
+    var snr=rows.filter(function(m){return m.category==="Senior";}).length,jnr=rows.filter(function(m){return m.category==="Junior";}).length,frn=rows.filter(function(m){return m.category==="Foreign";}).length;
+    var ret=rows.filter(function(m){return m.returning;}).length,refs=rows.filter(function(m){return m.type==="referee"||m.type==="official";}).length,fnat=rows.filter(function(m){return m.foreign;}).length;
+    var crest=crestFor(club);
+    var h='<div class="card">'+regBackBar(regOverview)+'<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px"><div class="clubhdr">'+(crest?'<img src="'+esc(crest)+'" alt="" onerror="this.style.display=\'none\'">':'')+'<div><h3 style="margin:0">'+esc(club)+'</h3><p class="hint" style="margin:2px 0 0">Club profile · '+cycTag()+' cycle · as at '+regDate(_reg.as_at)+'</p></div></div><span style="display:flex;gap:8px"><button class="btn gold sm" id="regClubSummary">Club summary PDF</button><button class="btn ghost sm" id="regClubMemCsv">Members CSV</button><button class="btn ghost sm" id="regClubMemPdf">Members PDF</button></span></div>';
+    h+='<div class="reg-stats" style="margin-top:12px">'+regStat(rows.length,"Registered","this cycle")+regStat(snr,"Seniors","")+regStat(jnr,"Juniors","")+regStat(frn,"Foreign","age not on card")+regStat(ret,"Returning","from prev cycle")+regStat(rows.length-ret,"New","this cycle")+regStat(refs,"Referees","")+regStat(fnat,"Foreign nationals","")+'</div></div>';
     h+='<div class="card"><h3 style="margin:0 0 4px">Football — live from the Match Centre</h3>';
     if(!fb||!fb.ok){ h+='<p class="hint">Could not load live league data right now. Try again shortly, or open the club on cttfa.co.za.</p></div>'; }
     else if(!fb.teams.length){ h+='<p class="hint">No league teams matched this club in the current season data.</p></div>'; }
     else { h+='<div class="reg-stats" style="margin-bottom:10px">'+regStat(fb.teams.length,"Teams","in league play")+regStat(fb.played,"Matches played","this season")+regStat(fb.remaining,"Fixtures to play","")+regStat(fb.pct+"%","Season played","of scheduled")+'</div>';
-      h+='<div style="overflow-x:auto"><table><thead><tr><th style="text-align:left">Division</th><th style="text-align:left">Team</th><th class="num">P</th><th class="num">W</th><th class="num">D</th><th class="num">L</th><th class="num">Pts</th></tr></thead><tbody>';
-      fb.teams.forEach(function(t){ h+='<tr><td style="text-align:left">'+esc(t.div)+'</td><td style="text-align:left">'+esc(t.team)+'</td><td class="num">'+t.P+'</td><td class="num">'+t.W+'</td><td class="num">'+t.D+'</td><td class="num">'+t.L+'</td><td class="num"><b>'+t.Pts+'</b></td></tr>'; });
+      if(fb.form&&fb.form.length) h+='<p class="hint" style="margin:0 0 8px">Recent form (latest right): '+formHTML(fb.form)+'</p>';
+      h+='<div style="overflow-x:auto"><table><thead><tr><th style="text-align:left">Division</th><th style="text-align:left">Team</th><th class="num">Pos</th><th class="num">P</th><th class="num">W</th><th class="num">D</th><th class="num">L</th><th class="num">Pts</th></tr></thead><tbody>';
+      fb.teams.forEach(function(t){ h+='<tr><td style="text-align:left">'+esc(t.div)+'</td><td style="text-align:left">'+esc(t.team)+'</td><td class="num">'+t.pos+'/'+t.of+'</td><td class="num">'+t.P+'</td><td class="num">'+t.W+'</td><td class="num">'+t.D+'</td><td class="num">'+t.L+'</td><td class="num"><b>'+t.Pts+'</b></td></tr>'; });
       h+='</tbody></table></div>';
       if(fb.fixtures.length){ h+='<h4 style="margin:14px 0 6px;color:var(--navy)">Upcoming fixtures</h4><div style="overflow-x:auto"><table><tbody>'; fb.fixtures.slice(0,10).forEach(function(f){ h+='<tr><td style="text-align:left">'+esc((f.date||"")+" "+(f.time||""))+'</td><td style="text-align:left">'+esc(f.home)+' v '+esc(f.away)+'</td><td style="text-align:left">'+esc(f.div)+'</td></tr>'; }); h+='</tbody></table></div>'; }
       if(fb.results.length){ h+='<h4 style="margin:14px 0 6px;color:var(--navy)">Recent results</h4><div style="overflow-x:auto"><table><tbody>'; fb.results.slice(-10).reverse().forEach(function(r){ h+='<tr><td style="text-align:left">'+esc(r.date||"")+'</td><td style="text-align:left">'+esc(r.home)+' '+esc(r.hs)+'–'+esc(r.as)+' '+esc(r.away)+'</td><td style="text-align:left">'+esc(r.div)+'</td></tr>'; }); h+='</tbody></table></div>'; }
@@ -1248,9 +1263,26 @@
     var backHere=function(){ renderClubPage(club,fb); };
     function draw(q){ $("regMemWrap").innerHTML=memberTableHTML(memFilter(q),40); wireSafa($("regMemWrap"),backHere); }
     draw("");
-    var s=$("regMemSearch"); if(s) s.oninput=function(){ draw(this.value.trim().toLowerCase()); };
-    $("regClubMemCsv").onclick=function(){ dlMembersCSV(_regView,club); };
-    $("regClubMemPdf").onclick=function(){ dlMembersPDF(_regView,club); };
+    var sc=$("regMemSearch"); if(sc) sc.oninput=function(){ draw(this.value.trim().toLowerCase()); };
+    var b;
+    if(b=$("regClubMemCsv")) b.onclick=function(){ dlMembersCSV(_regView,club); };
+    if(b=$("regClubMemPdf")) b.onclick=function(){ dlMembersPDF(_regView,club); };
+    if(b=$("regClubSummary")) b.onclick=function(){ regClubSummaryPDF(club,fb); };
+  }
+  function regClubSummaryPDF(club,fb){
+    if(!window.jspdf){ alert("PDF library still loading, try again in a moment."); return; }
+    var rows=_regView;
+    var snr=rows.filter(function(m){return m.category==="Senior";}).length,jnr=rows.filter(function(m){return m.category==="Junior";}).length,frn=rows.filter(function(m){return m.category==="Foreign";}).length;
+    var ret=rows.filter(function(m){return m.returning;}).length,refs=rows.filter(function(m){return m.type==="referee"||m.type==="official";}).length,fnat=rows.filter(function(m){return m.foreign;}).length;
+    var doc=new window.jspdf.jsPDF({unit:"pt",format:"a4"});
+    var sy=regPdfHead(doc,club+" — Club profile",cycTag()+" card cycle · as at "+regDate(_reg.as_at));
+    var kv=[["Registered members",regFmt(rows.length)],["Seniors",regFmt(snr)],["Juniors",regFmt(jnr)],["Foreign (age not on card)",regFmt(frn)],["Foreign nationals",regFmt(fnat)],["Returning from previous cycle",regFmt(ret)],["New entrants this cycle",regFmt(rows.length-ret)],["Referees & officials",regFmt(refs)]];
+    if(fb&&fb.ok&&fb.teams.length){ kv.push(["League teams",regFmt(fb.teams.length)]); kv.push(["Matches played",regFmt(fb.played)]); kv.push(["Fixtures to play",regFmt(fb.remaining)]); kv.push(["Season played",fb.pct+"%"]); if(fb.form&&fb.form.length) kv.push(["Recent form",fb.form.join(" ")]); }
+    doc.autoTable({ startY:sy, head:[["Registration & activity","Value"]], body:kv, styles:{fontSize:9.5,cellPadding:5}, headStyles:{fillColor:[7,26,74],textColor:255}, columnStyles:{1:{halign:"right",cellWidth:120}} });
+    if(fb&&fb.ok&&fb.teams.length){ doc.autoTable({ startY:doc.lastAutoTable.finalY+16, head:[["Division","Team","Pos","P","W","D","L","Pts"]], body:fb.teams.map(function(t){return [t.div,t.team,t.pos+"/"+t.of,t.P,t.W,t.D,t.L,t.Pts];}), styles:{fontSize:8.3,cellPadding:3}, headStyles:{fillColor:[18,63,181],textColor:255} }); }
+    var y=doc.lastAutoTable.finalY+16; doc.setFontSize(8.3); doc.setTextColor(90,101,119);
+    doc.text("Registrations from the CTTLFA registration database; football from the CTTLFA Match Centre via cttfa.co.za. POPIA (Act 4 of 2013).",40,y,{maxWidth:515});
+    doc.save("CTTLFA club profile - "+club+" "+cycTag()+".pdf");
   }
 
   /* ---------- audit ---------- */
