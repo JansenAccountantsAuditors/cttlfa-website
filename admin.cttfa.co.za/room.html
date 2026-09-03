@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTTLFA Room View</title>
+<style>
+  :root{--navy:#071A4A;--navy2:#0C2560;--gold:#F4B41A;--for:#3FBB6B;--against:#F06565;--muted:#9fb0d8;}
+  *{box-sizing:border-box}html,body{margin:0;height:100%}
+  body{background:radial-gradient(1200px 700px at 50% -10%,#0d2b6b,var(--navy));color:#fff;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:16px;padding:22px 40px;border-bottom:1px solid rgba(255,255,255,.08)}
+  header img{width:56px;height:56px;border-radius:12px;background:#fff;padding:4px;object-fit:contain}
+  header .m{font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+  header .mn{font-size:22px;font-weight:800}
+  main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px 5vw}
+  .status{display:inline-flex;align-items:center;gap:12px;font-size:20px;letter-spacing:.14em;text-transform:uppercase;font-weight:800;margin-bottom:18px}
+  .dot{width:16px;height:16px;border-radius:50%}
+  .dot.on{background:var(--for);box-shadow:0 0 22px var(--for)} .dot.off{background:var(--against)}
+  .seq{font-size:20px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:800;margin-bottom:6px}
+  h1{font-size:clamp(34px,6vw,76px);line-height:1.05;margin:0 0 14px;font-weight:800;max-width:22ch}
+  .instr{font-size:clamp(18px,2.4vw,30px);color:#d6def3;max-width:40ch;margin:0 auto 26px;line-height:1.4}
+  .timer{font-variant-numeric:tabular-nums;font-weight:800;font-size:clamp(90px,22vw,260px);line-height:1;letter-spacing:.02em}
+  .timer.low{color:var(--against)}
+  .sub{color:var(--muted);font-size:22px;margin-top:10px;letter-spacing:.03em}
+  .outcome{font-size:clamp(40px,8vw,110px);font-weight:800;margin:6px 0 26px}
+  .outcome.carried{color:var(--for)} .outcome.failed{color:var(--against)}
+  .tally{display:flex;gap:34px;flex-wrap:wrap;justify-content:center}
+  .tcell{min-width:180px}
+  .tcell .n{font-size:clamp(48px,9vw,120px);font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .tcell .l{font-size:20px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:6px}
+  .tfor .n{color:var(--for)} .tagainst .n{color:var(--against)} .tabs .n{color:var(--gold)}
+  footer{padding:16px 40px;color:var(--muted);font-size:14px;text-align:center;border-top:1px solid rgba(255,255,255,.08)}
+  .big-wait{font-size:clamp(30px,4vw,52px);font-weight:800;color:#cdd7f0}
+  .rcontrols{margin-left:auto;display:flex;gap:10px}
+  .rbtn{appearance:none;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.10);color:#fff;
+    font:inherit;font-size:14px;font-weight:700;letter-spacing:.02em;padding:9px 15px;border-radius:9px;cursor:pointer;
+    min-height:40px;transition:background .15s,border-color .15s}
+  .rbtn:hover{background:rgba(255,255,255,.18)}
+  .rbtn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .rbtn.close{background:rgba(240,101,101,.16);border-color:rgba(240,101,101,.5)}
+  .rbtn.close:hover{background:rgba(240,101,101,.28)}
+  body.fs header .rcontrols .rbtn{opacity:.5}
+  body.fs header .rcontrols .rbtn:hover{opacity:1}
+</style>
+</head>
+<body>
+  <header>
+    <img src="data:image/jpeg;base64,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" alt="CTTLFA">
+    <div><div class="m" id="kind">General Meeting</div><div class="mn" id="mname">CTTLFA</div></div>
+    <div class="rcontrols">
+      <button class="rbtn" id="fsBtn" title="Fill the whole screen for the hall projector. Press Esc or this button again to exit.">Full screen</button>
+      <button class="rbtn close" id="closeBtn" title="Close this projector tab and go back to the admin.">Close</button>
+    </div>
+  </header>
+  <main id="main"><div class="big-wait">Connecting…</div></main>
+  <footer>CTTLFA delegate voting · secret ballot · results shown on close</footer>
+<script>
+"use strict";
+var SB="https://fbbbsvkshajollduapaw.supabase.co/rest/v1/rpc/room_state";
+var KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiYmJzdmtzaGFqb2xsZHVhcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODYyODgsImV4cCI6MjEwMzY2MjI4OH0.8heeqe-03Mji2NgHt17ZOCoctijRhF78cHvSQkrUUi0";
+var M=document.getElementById("main"), qs=new URLSearchParams(location.search), MID=qs.get("m")||"";
+var tick=null;
+function fmt(s){s=Math.max(0,Math.floor(s));var m=Math.floor(s/60),x=s%60;return m+":"+(x<10?"0":"")+x;}
+function poll(){
+  if(!MID){ M.innerHTML='<div class="big-wait">No meeting selected.<br><span style="font-size:20px;color:#9fb0d8">Open this from the Live tab in the admin.</span></div>'; return; }
+  fetch(SB,{method:"POST",headers:{apikey:KEY,Authorization:"Bearer "+KEY,"Content-Type":"application/json"},body:JSON.stringify({p_meeting:MID})})
+    .then(function(r){return r.json();}).then(render).catch(function(){});
+}
+function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c];});}
+function render(s){
+  if(!s||s.ok===false){ M.innerHTML='<div class="big-wait">Waiting for the meeting…</div>'; return; }
+  document.getElementById("mname").textContent=s.meeting||"CTTLFA";
+  document.getElementById("kind").textContent=(s.kind||"").toString().toUpperCase();
+  var m=s.motion;
+  if(!m){ if(tick){clearInterval(tick);tick=null;} M.innerHTML='<div class="big-wait">Waiting for the chairperson to open the next vote.</div>'; return; }
+  if(m.status==="open"){
+    M.innerHTML='<div class="status"><span class="dot on"></span>Voting open</div>'+
+      '<div class="seq">Motion '+(m.seq||"")+'</div><h1>'+esc(m.title)+'</h1>'+
+      (m.instruction?'<div class="instr">'+esc(m.instruction)+'</div>':'')+
+      '<div class="timer" id="tmr">--</div>'+
+      '<div class="sub">'+(m.strength||0)+' votes accredited</div>';
+    runTimer(m);
+  } else {
+    if(tick){clearInterval(tick);tick=null;}
+    var t=m.tally||{}, carried=!!t.passed;
+    M.innerHTML='<div class="seq">Motion '+(m.seq||"")+' · closed</div><h1 style="font-size:clamp(28px,4vw,52px)">'+esc(m.title)+'</h1>'+
+      '<div class="outcome '+(carried?"carried":"failed")+'">'+(carried?"CARRIED":"NOT CARRIED")+'</div>'+
+      '<div class="tally"><div class="tcell tfor"><div class="n">'+(t.yes_w||0)+'</div><div class="l">Yes</div></div>'+
+      '<div class="tcell tagainst"><div class="n">'+(t.no_w||0)+'</div><div class="l">No</div></div>'+
+      '<div class="tcell tabs"><div class="n">'+(t.abstain_w||0)+'</div><div class="l">Abstain</div></div></div>';
+  }
+}
+function runTimer(m){
+  if(tick){clearInterval(tick);tick=null;}
+  var el=document.getElementById("tmr"); if(!el||!m.opened_at||!m.timer_seconds){ if(el) el.textContent="--"; return; }
+  var start=new Date(m.opened_at).getTime(), total=m.timer_seconds*1000;
+  function up(){ var rem=Math.max(0,(start+total)-Date.now()); el.textContent=fmt(rem/1000); el.classList.toggle("low",rem<=10000); if(rem<=0&&tick){clearInterval(tick);tick=null;} }
+  up(); tick=setInterval(up,250);
+}
+// Projector controls: full screen + close
+(function(){
+  var fsBtn=document.getElementById("fsBtn"), closeBtn=document.getElementById("closeBtn");
+  function inFs(){ return document.fullscreenElement||document.webkitFullscreenElement; }
+  function syncFs(){
+    var on=!!inFs();
+    document.body.classList.toggle("fs",on);
+    if(fsBtn) fsBtn.textContent=on?"Exit full screen":"Full screen";
+  }
+  if(fsBtn){
+    fsBtn.addEventListener("click",function(){
+      try{
+        if(inFs()){ (document.exitFullscreen||document.webkitExitFullscreen).call(document); }
+        else{ var el=document.documentElement; (el.requestFullscreen||el.webkitRequestFullscreen).call(el); }
+      }catch(e){}
+    });
+    document.addEventListener("fullscreenchange",syncFs);
+    document.addEventListener("webkitfullscreenchange",syncFs);
+  }
+  if(closeBtn){
+    closeBtn.addEventListener("click",function(){
+      try{ window.close(); }catch(e){}
+      // Browsers block window.close() on tabs the script did not open, so fall back to a plain exit screen.
+      setTimeout(function(){
+        if(tick){clearInterval(tick);tick=null;}
+        document.body.innerHTML='<main style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center;padding:24px 5vw">'+
+          '<div class="big-wait">Projector view closed.<br><span style="font-size:20px;color:#9fb0d8">You can close this browser tab, or reopen the room from the Live tab in the admin.</span></div></main>';
+      },120);
+    });
+  }
+})();
+poll(); setInterval(poll,3000);
+</script>
+</body>
+</html>
