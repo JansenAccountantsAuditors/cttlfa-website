@@ -107,6 +107,9 @@
   .uadd input,.uadd select{width:auto;flex:1 1 160px;min-width:140px}
   .uadd .btn{flex:0 0 auto}
   .urole{padding:6px 8px;border-radius:8px;font-size:13px;width:auto}
+  .umodwrap{display:flex;flex-wrap:wrap;gap:4px 12px;max-width:340px}
+  .umodlbl{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer}
+  .umodlbl input{width:auto;margin:0}
   .comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px 28px}
   .comp-summary{display:flex;gap:16px;margin:2px 0 16px;flex-wrap:wrap}
   .quorum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:6px}
@@ -271,16 +274,21 @@
         <p class="desc">The CTTLFA Admin Centre is the association&rsquo;s single online workspace for the Management Committee and staff. From one place you run meetings and voting, manage player registrations and club profiles, reach the website and discipline systems, follow fixtures and finances, and open the public site. Each function is its own module, brought together here so the whole association is administered from a single, secure home.</p>
       </div>
       <div class="homegrid">
-        <div class="hmod"><div class="hic voting"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Voting &amp; Meetings</h3><p>Run AGMs, SGMs and Mancom meetings — accreditation, motions, live secret ballots and the formal record.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="meetings">Open</button></div></div>
-        <div class="hmod"><div class="hic reg"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></div><h3>Registrations &amp; Clubs</h3><p>The full SAFA card-cycle analytics and per-club profiles, with live teams, fixtures, results and CSV/PDF exports.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="registrations">Open</button></div></div>
-        <div class="hmod"><div class="hic fix"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Fixtures &amp; Results</h3><p>Live league tables, fixtures and results across every division, on the CTTLFA LeagueRepublic site. Use LR admin login to manage fixtures and appointments.</p><div class="hfoot"><span class="hchip ext">External</span><span style="display:flex;gap:8px"><a class="btn ghost sm" href="https://a.leaguerepublic.com/myaccount/login/index.html" target="_blank" rel="noopener" title="Sign in to LeagueRepublic administration with the CTTLFA league email. On the office machine your saved browser password fills it in — no password is stored on this site.">LR admin login</a><a class="btn ghost sm" href="https://cttfass.leaguerepublic.com" target="_blank" rel="noopener">Open</a></span></div></div>
-        <div class="hmod"><div class="hic web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Website Admin</h3><p>Manage the public cttfa.co.za site — content, notices, committee, downloads and pages. This is now the live admin.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.websiteadmin.cttfa.co.za/?p=dashboard" target="_blank" rel="noopener">Open</a></div></div>
-        <div class="hmod"><div class="hic disc"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="14" rx="1"/><path d="M9 21h6M12 17v4"/></svg></div><h3>Discipline, Referees &amp; Cards</h3><p>Yellow-card tracker, suspensions, referee appointments and administrative rulings.</p><div class="hfoot"><span class="hchip ext">External · rebuild planned</span><a class="btn ghost sm" href="https://dash.cttlfa.com" target="_blank" rel="noopener">Open</a></div></div>
-        <div class="hmod"><div class="hic fincom"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div><h3>Fincom Dashboard</h3><p>The Finance Committee dashboard — budget, cash position and finance reporting at a glance.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://cttfafincom.tiiny.site/" target="_blank" rel="noopener">Open</a></div></div>
-        <div class="hmod muted"><div class="hic fin"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Finance</h3><p>Club levies, billing and financial standing — linked to the registration base, so money and members sit on one screen.</p><div class="hfoot"><span class="hchip soon">Coming soon</span><button class="btn ghost sm" disabled>Phase 4</button></div></div>
-        <div class="hmod"><div class="hic site"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg></div><h3>Live Website</h3><p>Open the public cttfa.co.za site as members and the public see it — fixtures, clubs, news and more.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.cttfa.co.za" target="_blank" rel="noopener">Open</a></div></div>
+        <div class="hmod" data-area="voting"><div class="hic voting"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Voting &amp; Meetings</h3><p>Run AGMs, SGMs and Mancom meetings — accreditation, motions, live secret ballots and the formal record.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="meetings">Open</button></div></div>
+        <div class="hmod" data-area="registrations"><div class="hic reg"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></div><h3>Registrations &amp; Clubs</h3><p>The full SAFA card-cycle analytics and per-club profiles, with live teams, fixtures, results and CSV/PDF exports.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="registrations">Open</button></div></div>
+        <div class="hmod" data-area="fixtures"><div class="hic fix"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Fixtures &amp; Results</h3><p>Live league tables, fixtures and results across every division, on the CTTLFA LeagueRepublic site. Use LR admin login to manage fixtures and appointments.</p><div class="hfoot"><span class="hchip ext">External</span><span style="display:flex;gap:8px"><a class="btn ghost sm" href="https://a.leaguerepublic.com/myaccount/login/index.html" target="_blank" rel="noopener" title="Sign in to LeagueRepublic administration with the CTTLFA league email. On the office machine your saved browser password fills it in — no password is stored on this site.">LR admin login</a><a class="btn ghost sm" href="https://cttfass.leaguerepublic.com" target="_blank" rel="noopener">Open</a></span></div></div>
+        <div class="hmod" data-area="webadmin"><div class="hic web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Website Admin</h3><p>Manage the public cttfa.co.za site — content, notices, committee, downloads and pages. This is now the live admin.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.websiteadmin.cttfa.co.za/?p=dashboard" target="_blank" rel="noopener">Open</a></div></div>
+        <div class="hmod" data-area="discipline"><div class="hic disc"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="14" rx="1"/><path d="M9 21h6M12 17v4"/></svg></div><h3>Discipline, Referees &amp; Cards</h3><p>Yellow-card tracker, suspensions, referee appointments and administrative rulings.</p><div class="hfoot"><span class="hchip ext">External · rebuild planned</span><a class="btn ghost sm" href="https://dash.cttlfa.com" target="_blank" rel="noopener">Open</a></div></div>
+        <div class="hmod" data-area="fincom"><div class="hic fincom"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div><h3>Fincom Dashboard</h3><p>The Finance Committee operating dashboard — mandate, budget, monthly phasing, debtors, compliance and the Mancom packs. Restricted to Fincom members.</p><div class="hfoot"><span class="hchip live">Live · restricted</span><button class="btn gold sm" data-goto="fincom">Open</button></div></div>
+        <div class="hmod muted" data-area="fincom"><div class="hic fin"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Finance</h3><p>Club levies, billing and financial standing — linked to the registration base, so money and members sit on one screen.</p><div class="hfoot"><span class="hchip soon">Coming soon</span><button class="btn ghost sm" disabled>Phase 4</button></div></div>
+        <div class="hmod" data-area="site"><div class="hic site"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg></div><h3>Live Website</h3><p>Open the public cttfa.co.za site as members and the public see it — fixtures, clubs, news and more.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.cttfa.co.za" target="_blank" rel="noopener">Open</a></div></div>
       </div>
       <p class="hint" style="margin-top:12px">External tools open in a new tab, so the Admin Centre stays open here to return to. Built for CTTLFA by the Treasurer&rsquo;s office &mdash; each function is a module that can be refined on its own.</p>
+    </section>
+
+    <!-- FINCOM (restricted to Fincom members) -->
+    <section id="tab-fincom" class="hidden">
+      <div id="fincomRoot"><div class="card"><p class="hint">Loading the Fincom dashboard&hellip;</p></div></div>
     </section>
 
     <!-- MEETINGS -->
@@ -778,7 +786,7 @@
   async function afterLogin(){
     var u=(await sb.auth.getUser()).data.user;
     if(!u) return;
-    var r=await sb.from("admin_users").select("full_name,email,role,active").eq("auth_id",u.id).maybeSingle();
+    var r=await sb.from("admin_users").select("full_name,email,role,active,modules").eq("auth_id",u.id).maybeSingle();
     if(r.error||!r.data||!r.data.active){
       msg($("authMsg"),"This email is not on the Mancom allow-list, or is not active. Contact an administrator.","err");
       await sb.auth.signOut(); return;
@@ -793,11 +801,15 @@
   }
 
   /* ---------- tabs ---------- */
+  var ALL_AREAS=["voting","registrations","webadmin","discipline","fincom","fixtures","site"];
+  function canSee(area){ if(!area) return true; if(meRole==="administrator") return true; return (((me&&me.modules)||[]).indexOf(area)>=0); }
+  function tabArea(name){ if(["meetings","accredit","compliance","motions","live","audit"].indexOf(name)>=0) return "voting"; if(name==="registrations") return "registrations"; if(name==="webadmin") return "webadmin"; if(name==="fincom") return "fincom"; return null; }
   function goTab(name){
+    var _a=tabArea(name); if(_a && !canSee(_a)) name="home";
     var votingSubs=["meetings","accredit","compliance","motions","live","audit"];
     var sideActive=(name==="users")?"users":(name==="help")?"help":"home";
     Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav"),function(x){x.classList.toggle("on",x.dataset.tab===sideActive);});
-    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
+    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
     var sub=$("votingSubnav"); if(sub){ var inV=votingSubs.indexOf(name)>=0; sub.style.display=inV?"":"none"; Array.prototype.forEach.call(sub.querySelectorAll(".subtab"),function(x){x.classList.toggle("on",x.dataset.tab===name);}); }
     var _mp=$("meetingPick"); if(_mp) _mp.style.display=(["meetings","accredit","compliance","motions","live"].indexOf(name)>=0)?"":"none";
     if(name!=="accredit") stopCiTimer();
@@ -811,6 +823,7 @@
     if(name==="registrations") renderRegistrations();
     if(name==="users") loadUsers();
     if(name==="webadmin" && typeof renderWebadmin==="function") renderWebadmin();
+    if(name==="fincom" && typeof renderFincom==="function") renderFincom();
     try{ window.scrollTo(0,0); }catch(e){}
   }
   Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav, #votingSubnav .subtab"),function(t){
@@ -1231,9 +1244,11 @@
   }
 
   /* ---------- users ---------- */
+  var AREA_LABELS={voting:"Voting",registrations:"Registrations",webadmin:"Website Admin",discipline:"Discipline",fincom:"Fincom",fixtures:"Fixtures",site:"Live site"};
+  var AREA_ORDER=["voting","registrations","webadmin","discipline","fincom","fixtures","site"];
   async function loadUsers(){
     var l=$("usersList"); if(!l) return;
-    var r=await sb.from("admin_users").select("full_name,email,title,role,active,auth_id").order("role").order("full_name");
+    var r=await sb.from("admin_users").select("full_name,email,title,role,active,auth_id,modules").order("role").order("full_name");
     if(r.error){l.innerHTML='<p class="hint">'+esc(r.error.message)+'</p>';return;}
     var us=r.data||[];
     var isAdmin=(meRole==="administrator");
@@ -1248,23 +1263,28 @@
          '</div>';
     }
     h+='<div id="usersMsg"></div>';
-    h+='<table><thead><tr><th>Name</th><th>Email</th><th>Title</th><th>Access level</th><th>Sign-in</th>'+(isAdmin?'<th>Manage</th>':'')+'</tr></thead><tbody>';
+    h+='<table><thead><tr><th>Name</th><th>Email</th><th>Access level</th>'+(isAdmin?'<th>Areas they can open</th>':'')+'<th>Sign-in</th>'+(isAdmin?'<th>Manage</th>':'')+'</tr></thead><tbody>';
     us.forEach(function(u){
       var isMe=(me && u.email && me.email && u.email.toLowerCase()===me.email.toLowerCase());
       var roleCell = isAdmin
         ? '<select class="urole" data-email="'+esc(u.email)+'"><option value="viewer"'+(u.role==="viewer"?" selected":"")+'>Viewer</option><option value="administrator"'+(u.role==="administrator"?" selected":"")+'>Administrator</option></select>'
         : '<span class="tag '+(u.role==="administrator"?"open":"draft")+'">'+esc(u.role)+'</span>';
       var signin = (u.auth_id?'<span class="tag in">registered</span>':'<span class="kv">not yet</span>')+(u.active?'':' <span class="tag closed">inactive</span>');
+      var areas='';
+      if(isAdmin){
+        if(u.role==="administrator"){ areas='<span class="kv">All areas</span>'; }
+        else { var mods=u.modules||[]; areas='<div class="umodwrap">'+AREA_ORDER.map(function(a){ return '<label class="umodlbl"><input type="checkbox" class="umod" data-email="'+esc(u.email)+'" data-area="'+a+'"'+(mods.indexOf(a)>=0?' checked':'')+'> '+AREA_LABELS[a]+'</label>'; }).join('')+'</div>'; }
+      }
       var manage='';
       if(isAdmin){
         manage = u.active
           ? '<button class="btn ghost sm uact" data-email="'+esc(u.email)+'" data-active="0"'+(isMe?' disabled title="You cannot deactivate your own access"':'')+'>Deactivate</button>'
           : '<button class="btn green sm uact" data-email="'+esc(u.email)+'" data-active="1">Activate</button>';
       }
-      h+='<tr'+(u.active?'':' style="opacity:.55"')+'><td><b>'+esc(u.full_name)+'</b>'+(isMe?' <span class="kv">(you)</span>':'')+'</td><td>'+esc(u.email)+'</td><td class="kv">'+esc(u.title||"")+'</td><td>'+roleCell+'</td><td>'+signin+'</td>'+(isAdmin?'<td>'+manage+'</td>':'')+'</tr>';
+      h+='<tr'+(u.active?'':' style="opacity:.55"')+'><td><b>'+esc(u.full_name)+'</b>'+(isMe?' <span class="kv">(you)</span>':'')+'<br><span class="kv">'+esc(u.title||"")+'</span></td><td>'+esc(u.email)+'</td><td>'+roleCell+'</td>'+(isAdmin?'<td>'+areas+'</td>':'')+'<td>'+signin+'</td>'+(isAdmin?'<td>'+manage+'</td>':'')+'</tr>';
     });
     h+='</tbody></table>';
-    h+='<p class="hint" style="margin-top:10px"><b>Administrator</b> — full control of every module (voting, registrations, website admin) and of this allow-list. <b>Viewer</b> — can open and read every module but cannot change anything. A change takes effect the next time that person signs in.'+(isAdmin?'':' Only administrators can change access.')+'</p>';
+    h+='<p class="hint" style="margin-top:10px"><b>Administrator</b> — full control of every module and of this allow-list; sees every area. <b>Viewer</b> — can open and read only the areas ticked for them, and cannot change anything. Tick <b>Fincom</b> only for Finance Committee members. A change takes effect the next time that person signs in.'+(isAdmin?'':' Only administrators can change access.')+'</p>';
     l.innerHTML=h;
     if(isAdmin) wireUsers();
   }
@@ -1298,13 +1318,52 @@
         loadUsers();
       };
     });
+    Array.prototype.forEach.call(document.querySelectorAll("#usersList .umod"),function(cb){
+      cb.onchange=async function(){
+        var email=cb.dataset.email, chosen=[];
+        Array.prototype.forEach.call(document.querySelectorAll("#usersList .umod"),function(x){ if(x.dataset.email===email && x.checked) chosen.push(x.dataset.area); });
+        cb.disabled=true;
+        var r=await sb.rpc("set_user_modules",{p_email:email,p_modules:chosen});
+        cb.disabled=false;
+        if(r.error){ msg($("usersMsg"),r.error.message,"err"); cb.checked=!cb.checked; return; }
+        msg($("usersMsg"),"Area access updated for "+esc(email)+".","ok");
+      };
+    });
   }
 
   /* ---------- home (admin centre hub) ---------- */
   async function renderHome(){
     try{ var hc=$("homeCrest"); if(hc && typeof LOGO!=="undefined" && LOGO && !hc.firstChild) hc.innerHTML='<img src="'+LOGO+'" alt="CTTLFA crest">'; }catch(e){}
+    try{ Array.prototype.forEach.call(document.querySelectorAll('#tab-home .hmod'),function(c){ var a=c.getAttribute('data-area'); c.style.display=canSee(a)?'':'none'; }); }catch(e){}
+    try{ var un=document.querySelector('#sideNav .snav[data-tab="users"]'); if(un) un.style.display=(meRole==="administrator")?'':'none'; }catch(e){}
   }
   function homeWire(){ Array.prototype.forEach.call(document.querySelectorAll('#tab-home [data-goto]'),function(b){ b.onclick=function(){ goTab(b.getAttribute("data-goto")); }; }); }
+
+  /* ---------- fincom (gated dashboard) ---------- */
+  async function renderFincom(){
+    var root=$("fincomRoot"); if(!root) return;
+    if(!canSee("fincom")){ root.innerHTML='<div class="card"><h3>Fincom dashboard</h3><p class="hint">This area is restricted to Finance Committee members. Ask an administrator to grant you Fincom access on the Mancom users page.</p></div>'; return; }
+    root.innerHTML='<div class="card"><p class="hint">Loading the Fincom dashboard&hellip;</p></div>';
+    try{
+      var r=await sb.from("fincom_content").select("html").eq("id","operating").maybeSingle();
+      if(r.error) throw r.error;
+      if(!r.data || !r.data.html){ root.innerHTML='<div class="card"><h3>Fincom dashboard</h3><p class="hint">You do not have access to the Fincom dashboard, or it has not been published yet.</p></div>'; return; }
+      var html=r.data.html;
+      var docs={}, re=/data-fincom-doc="([^"]+)"/g, m; while((m=re.exec(html))){ docs[m[1]]=1; }
+      var names=Object.keys(docs), signed={};
+      await Promise.all(names.map(function(n){ return sb.storage.from("fincom").createSignedUrl(n, 3600).then(function(s){ if(s&&s.data&&s.data.signedUrl) signed[n]=s.data.signedUrl; }).catch(function(){}); }));
+      html=html.replace(/href="#" data-fincom-doc="([^"]+)"/g, function(_,n){ var u=signed[n]||"#"; return 'href="'+u+'" target="_blank" rel="noopener"'; });
+      root.innerHTML='';
+      var bar=document.createElement("div"); bar.className="card"; bar.style.marginBottom="12px";
+      bar.innerHTML='<h3 style="margin:0 0 4px">Fincom dashboard</h3><p class="hint" style="margin:0">Restricted to Finance Committee members. Documents open securely for your session only; the secure links refresh each time you open this page.</p>';
+      root.appendChild(bar);
+      var fr=document.createElement("iframe"); fr.id="fincomFrame";
+      fr.setAttribute("sandbox","allow-scripts allow-popups allow-downloads allow-popups-to-escape-sandbox");
+      fr.style.cssText="width:100%;height:calc(100vh - 230px);min-height:620px;border:1px solid var(--line);border-radius:12px;background:#fff;display:block";
+      root.appendChild(fr);
+      fr.srcdoc=html;
+    }catch(e){ root.innerHTML='<div class="card"><p class="hint">Could not load the Fincom dashboard: '+esc(e.message||e)+'</p></div>'; }
+  }
 
   /* ---------- registrations (analytics + club central, admin only) ---------- */
   var _reg=null,_regYear=null,_regAll=null,_season=null,_seasonP=null,_regView=[],_regViewLabel="",_memBack=null,_lastClub=null,_lastFb=null,_memDetail=null;
