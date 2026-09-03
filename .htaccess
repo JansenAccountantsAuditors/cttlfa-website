@@ -89,6 +89,7 @@ RewriteRule ^ /index.html [L]
   # keep the live feed and the page fresh
   <FilesMatch "season\.json$">
     Header set Cache-Control "public, max-age=300, must-revalidate"
+    Header set Access-Control-Allow-Origin "*"
   </FilesMatch>
 </IfModule>
 

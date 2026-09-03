@@ -340,6 +340,15 @@
 #tab-registrations .reg-msbar{height:34px;border-radius:8px;overflow:hidden;display:flex;border:1px solid var(--line)}
 #tab-registrations .reg-msbar i{display:flex;align-items:center;padding:0 10px;color:#fff;font-size:12px;font-weight:600;white-space:nowrap}
 #tab-registrations svg{width:100%;height:auto;display:block}
+#tab-registrations .reg-click{cursor:pointer}
+#tab-registrations .reg-click:hover{box-shadow:0 0 0 2px var(--gold) inset}
+#tab-registrations .reg-click:focus-visible{outline:3px solid var(--blue5);outline-offset:1px}
+#tab-registrations tr[data-club]{cursor:pointer}
+#tab-registrations tr[data-club]:hover td,#tab-registrations tr[data-club]:hover th{background:#EFF3FF}
+#tab-registrations tr[data-club]:focus-visible{outline:2px solid var(--blue5)}
+#tab-registrations .reg-back{background:none;border:0;color:var(--navy);font-weight:700;cursor:pointer;padding:2px 0 8px;font-size:13px}
+#tab-registrations .reg-back:hover{color:var(--blue)}
+#tab-registrations h4{font-family:var(--cond);font-weight:700}
 </style>
 
     <!-- REGISTRATIONS (analytics, admin only) -->
@@ -1027,71 +1036,168 @@
     h+='</tbody></table>'; l.innerHTML=h;
   }
 
-  /* ---------- registrations (analytics, admin only) ---------- */
-  var _reg=null;
+  /* ---------- registrations (analytics + club central, admin only) ---------- */
+  var _reg=null,_regAll=null,_season=null,_seasonP=null,_regView=[],_regViewLabel="";
   function regFmt(n){ return (n==null?"–":Number(n).toLocaleString("en-ZA").replace(/,/g," ")); }
   function regDate(iso){ if(!iso) return ""; var M=["January","February","March","April","May","June","July","August","September","October","November","December"]; var a=String(iso).split("-"); return parseInt(a[2],10)+" "+M[parseInt(a[1],10)-1]+" "+a[0]; }
+  function regClubNames(){ return (clubs||[]).map(function(c){return c.name;}); }
+  function regBackBar(){ return '<button class="reg-back" id="regBack">&larr; Back to overview</button>'; }
   async function renderRegistrations(){
     var root=$("regRoot"); if(!root) return;
     root.innerHTML='<div class="card"><p class="hint">Loading registration analytics...</p></div>';
-    try{
-      var r=await sb.rpc("reg_analytics");
-      if(r.error) throw r.error;
-      _reg=r.data; regDraw();
-    }catch(e){ root.innerHTML='<div class="card"><p class="hint">Could not load analytics: '+esc(e.message||e)+'</p></div>'; }
+    try{ var r=await sb.rpc("reg_analytics"); if(r.error) throw r.error; _reg=r.data; regOverview(); }
+    catch(e){ root.innerHTML='<div class="card"><p class="hint">Could not load analytics: '+esc(e.message||e)+'</p></div>'; }
   }
-  function regStat(v,l,sub){ return '<div class="reg-stat"><div class="v">'+regFmt(v)+'</div><div class="l">'+l+'</div><div class="sub">'+sub+'</div></div>'; }
+  function regStat(v,l,sub,mf){ var cl=mf?' reg-click':''; var at=mf?(' role="button" tabindex="0" data-mf="'+mf+'" title="Click to list and download these members"'):''; return '<div class="reg-stat'+cl+'"'+at+'><div class="v">'+regFmt(v)+'</div><div class="l">'+l+'</div><div class="sub">'+sub+'</div></div>'; }
   function regCyc(tag,yrs,persons,snr,jnr,cls){ return '<div class="reg-cyc '+cls+'">'+(cls==="cur"?'<span class="reg-here">You are here</span>':'')+'<div class="rt">'+tag+'</div><div class="ry">'+yrs+'</div><div class="rp">'+regFmt(persons)+'</div><div class="rc">registered members</div><div class="rs">Snr '+regFmt(snr)+' · Jnr '+regFmt(jnr)+'</div></div>'; }
-  function regDraw(){
-    var d=_reg, c=d.current, root=$("regRoot");
-    var cs=d.cur_start.slice(0,4), ce=d.cur_end.slice(0,4), ps=d.prev_start.slice(0,4), ne=String(Number(ce)+2);
-    var snrPc=c.persons?Math.round(c.seniors/c.persons*100):0, jnrPc=c.persons?Math.round(c.juniors/c.persons*100):0;
-    var retPc=c.persons?Math.round(c.returning/c.persons*100):0, newPc=c.persons?Math.round(c.new_in_cycle/c.persons*100):0;
+  function regOverview(){
+    var d=_reg,c=d.current,root=$("regRoot");
+    var cs=d.cur_start.slice(0,4),ce=d.cur_end.slice(0,4),ps=d.prev_start.slice(0,4),ne=String(Number(ce)+2);
+    var snrPc=c.persons?Math.round(c.seniors/c.persons*100):0,jnrPc=c.persons?Math.round(c.juniors/c.persons*100):0;
+    var retPc=c.persons?Math.round(c.returning/c.persons*100):0,newPc=c.persons?Math.round(c.new_in_cycle/c.persons*100):0;
     var h='';
-    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">Registration analytics</h3><p class="hint" style="margin:2px 0 0">SAFA two-year card cycle · live from the registration database · as at '+esc(regDate(d.as_at))+'</p></div><button class="btn ghost sm" id="regRefresh">Refresh</button></div>';
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">Registration analytics</h3><p class="hint" style="margin:2px 0 0">SAFA two-year card cycle · live from the registration database · as at '+esc(regDate(d.as_at))+'. Click any tile or club to drill in and download.</p></div><button class="btn ghost sm" id="regRefresh">Refresh</button></div>';
     h+='<div class="reg-cycles">'+regCyc("Previous cycle",ps+" – "+cs,d.prev.persons,d.prev.seniors,d.prev.juniors,"past")+regCyc("Current cycle",cs+" – "+ce,c.persons,c.seniors,c.juniors,"cur")+'<div class="reg-cyc next"><div class="rt">Next cycle</div><div class="ry">'+ce+' – '+ne+'</div><div class="rp">—</div><div class="rc">opens '+regDate(d.new_cycle_start)+'</div><div class="rs">Re-card base '+regFmt(c.persons)+'</div></div></div>';
     h+='<div class="reg-countdown"><div class="d">'+regFmt(d.days_to_new_cycle)+'<span>days to new cycle</span></div><p>The '+ce+'–'+ne+' cycle opens '+regDate(d.new_cycle_start)+'. Every current member must be re-carded; the re-card base is the '+regFmt(c.persons)+' members registered this cycle, of whom '+regFmt(c.returning)+' carried over from the previous cycle.</p></div></div>';
-    h+='<div class="card"><h3 style="margin:0 0 4px">Current cycle registered members</h3><p class="hint" style="margin:0 0 12px">Cards valid to '+regDate(d.cur_end)+' · unique SAFA numbers</p><div class="reg-stats">'+regStat(c.persons,"Registered members","this cycle")+regStat(c.seniors,"Seniors",snrPc+"% of members")+regStat(c.juniors,"Juniors",jnrPc+"% of members")+regStat(c.returning,"Returning","from previous cycle")+regStat(c.new_in_cycle,"New entrants","first cycle with CTTLFA")+regStat(c.referees,"Referees & officials","carded this cycle")+'</div></div>';
-    h+='<div class="card"><h3 style="margin:0 0 4px">When registrations happen</h3><p class="hint" style="margin:0 0 10px">Monthly, by type, across the current cycle — resource-planning view. Busy window is February to May.</p><div class="reg-legend"><span><i class="rsw" style="background:var(--navy)"></i>New (first card)</span><span><i class="rsw" style="background:var(--blue)"></i>Renewal</span><span><i class="rsw" style="background:var(--gold)"></i>Transfer</span></div><div id="regChart"></div></div>';
+    h+='<div class="card"><h3 style="margin:0 0 4px">Current cycle registered members</h3><p class="hint" style="margin:0 0 12px">Cards valid to '+regDate(d.cur_end)+' · unique SAFA numbers · click a tile to list and download those members</p><div class="reg-stats">'+regStat(c.persons,"Registered members","this cycle","all")+regStat(c.seniors,"Seniors",snrPc+"% of members","cat:Senior")+regStat(c.juniors,"Juniors",jnrPc+"% of members","cat:Junior")+regStat(c.returning,"Returning","from previous cycle","returning")+regStat(c.new_in_cycle,"New entrants","first cycle with CTTLFA","new")+regStat(c.referees,"Referees & officials","carded this cycle","ref")+'</div></div>';
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0 0 4px">When registrations happen</h3><p class="hint" style="margin:0">Monthly, by type · busy window Feb–May</p></div><span style="display:flex;gap:8px"><button class="btn ghost sm" id="regMonCsv">CSV</button><button class="btn ghost sm" id="regMonPdf">PDF</button></span></div><div class="reg-legend" style="margin-top:8px"><span><i class="rsw" style="background:var(--navy)"></i>New (first card)</span><span><i class="rsw" style="background:var(--blue)"></i>Renewal</span><span><i class="rsw" style="background:var(--gold)"></i>Transfer</span></div><div id="regChart"></div></div>';
     h+='<div class="card"><h3 style="margin:0 0 4px">Growth vs retention</h3><div class="reg-msbar"><i style="background:var(--navy);width:'+retPc+'%">Returning '+regFmt(c.returning)+'</i><i style="background:var(--gold);color:var(--ink);width:'+newPc+'%">New '+regFmt(c.new_in_cycle)+'</i></div><p class="hint" style="margin:8px 0 0">Retention '+retPc+'% · new-entrant share '+newPc+'%. The re-card base cannot be assumed to renew in full.</p></div>';
-    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h3 style="margin:0">Registered members by club</h3><input id="regSearch" type="search" placeholder="Search club..." style="max-width:220px;width:auto" autocomplete="off" aria-label="Search club"></div><div id="regClubWrap" style="overflow-x:auto;margin-top:10px"></div></div>';
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h3 style="margin:0">Registered members by club</h3><span style="display:flex;gap:8px;align-items:center"><input id="regSearch" type="search" placeholder="Search club..." style="max-width:190px;width:auto" autocomplete="off" aria-label="Search club"><button class="btn ghost sm" id="regClubCsv">CSV</button><button class="btn ghost sm" id="regClubPdf">PDF</button></span></div><p class="hint" style="margin:6px 0 0">Click a club for its members and live teams, fixtures and results.</p><div id="regClubWrap" style="overflow-x:auto;margin-top:10px"></div></div>';
     root.innerHTML=h;
     var rb=$("regRefresh"); if(rb) rb.onclick=renderRegistrations;
     regChart(d.monthly);
     regClubTable(d.clubs,c.persons,"");
     var srch=$("regSearch"); if(srch) srch.oninput=function(){ regClubTable(_reg.clubs,_reg.current.persons,this.value.trim().toLowerCase()); };
+    Array.prototype.forEach.call(root.querySelectorAll(".reg-stat.reg-click"),function(el){ var mf=el.getAttribute("data-mf"); el.onclick=function(){ regMembersView(mf); }; el.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); regMembersView(mf); } }; });
+    var wrap=$("regClubWrap");
+    if(wrap){ wrap.onclick=function(e){ var tr=e.target.closest("tr[data-club]"); if(tr) regClubView(tr.getAttribute("data-club")); }; wrap.onkeydown=function(e){ if(e.key==="Enter"){ var tr=e.target.closest("tr[data-club]"); if(tr){ e.preventDefault(); regClubView(tr.getAttribute("data-club")); } } }; }
+    var x;
+    if(x=$("regMonCsv")) x.onclick=dlMonthlyCSV;
+    if(x=$("regMonPdf")) x.onclick=dlMonthlyPDF;
+    if(x=$("regClubCsv")) x.onclick=dlBreakdownCSV;
+    if(x=$("regClubPdf")) x.onclick=dlBreakdownPDF;
   }
   function regChart(m){
     if(!m||!m.length){ $("regChart").innerHTML='<p class="hint">No data.</p>'; return; }
-    var W=920,H=300,pl=42,pr=8,pt=20,pb=48, iw=W-pl-pr, ih=H-pt-pb;
-    var max=Math.max.apply(null,m.map(function(x){return x.total;}))||1, nice=Math.ceil(max/1000)*1000||1000;
-    var slot=iw/m.length, bw=slot*0.7;
+    var W=920,H=300,pl=42,pr=8,pt=20,pb=48,iw=W-pl-pr,ih=H-pt-pb;
+    var max=Math.max.apply(null,m.map(function(x){return x.total;}))||1,nice=Math.ceil(max/1000)*1000||1000;
+    var slot=iw/m.length,bw=slot*0.7;
     function y(v){return pt+ih-(v/nice)*ih;}
     var cols={"new":"var(--navy)","renewal":"var(--blue)","transfer":"var(--gold)"};
     var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Monthly card registrations stacked by New, Renewal and Transfer across the current cycle.">';
     for(var g=0;g<=nice;g+=1000){var yy=y(g);s+='<line x1="'+pl+'" y1="'+yy+'" x2="'+(W-pr)+'" y2="'+yy+'" stroke="var(--line)"/><text x="'+(pl-5)+'" y="'+(yy+3)+'" text-anchor="end" font-size="9" fill="var(--muted)">'+g.toLocaleString("en-ZA").replace(/,/g," ")+'</text>';}
     m.forEach(function(r,i){
-      var x=pl+i*slot+slot*0.15, yb=y(0);
+      var x=pl+i*slot+slot*0.15,yb=y(0);
       [["new",r["new"]],["renewal",r.renewal],["transfer",r.transfer]].forEach(function(seg){ var v=seg[1]; if(v>0){var hh=(v/nice)*ih; yb-=hh; s+='<rect x="'+x+'" y="'+yb+'" width="'+bw+'" height="'+hh+'" fill="'+cols[seg[0]]+'"><title>'+r.ym+' '+seg[0]+': '+v+'</title></rect>';} });
       if(r.total>0) s+='<text x="'+(x+bw/2)+'" y="'+(yb-3)+'" text-anchor="middle" font-size="8.5" fill="var(--muted)">'+r.total.toLocaleString("en-ZA").replace(/,/g," ")+'</text>';
       s+='<text x="'+(x+bw/2)+'" y="'+(pt+ih+14)+'" text-anchor="end" font-size="9" fill="var(--muted)" transform="rotate(-90 '+(x+bw/2)+' '+(pt+ih+14)+')">'+r.ym.slice(2)+'</text>';
     });
-    s+='</svg>';
-    $("regChart").innerHTML=s;
+    s+='</svg>'; $("regChart").innerHTML=s;
   }
-  function regClubTable(clubs,total,q){
+  function regClubTable(cl,total,q){
     q=q||""; var grouped={"Non current":1,"Referees & Officials":1};
-    var rows=clubs.filter(function(c){return c.club.toLowerCase().indexOf(q)>=0;});
-    var maxT=Math.max.apply(null,clubs.map(function(c){return c.total;}))||1;
+    var rows=cl.filter(function(c){return c.club.toLowerCase().indexOf(q)>=0;});
+    var maxT=Math.max.apply(null,cl.map(function(c){return c.total;}))||1;
     var h='<table><thead><tr><th style="text-align:left">Club</th><th class="num">Seniors</th><th class="num">Juniors</th><th class="num">Unclass.</th><th class="num">Total</th></tr></thead><tbody>';
     rows.forEach(function(c){
       var w=Math.max(2,Math.round(c.total/maxT*70));
       var tg=grouped[c.club]?' <span class="tag" style="background:#EEF2FA;color:var(--muted)">grouped</span>':'';
-      h+='<tr><th scope="row" style="text-align:left;font-weight:600">'+esc(c.club)+tg+'<span style="display:inline-block;height:7px;width:'+w+'px;background:var(--blue5);border-radius:2px;margin-left:8px;vertical-align:middle"></span></th><td class="num">'+regFmt(c.seniors)+'</td><td class="num">'+regFmt(c.juniors)+'</td><td class="num">'+regFmt(c.unclassified)+'</td><td class="num"><b>'+regFmt(c.total)+'</b></td></tr>';
+      h+='<tr data-club="'+esc(c.club)+'" role="button" tabindex="0" title="Open '+esc(c.club)+'"><th scope="row" style="text-align:left;font-weight:600">'+esc(c.club)+tg+'<span style="display:inline-block;height:7px;width:'+w+'px;background:var(--blue5);border-radius:2px;margin-left:8px;vertical-align:middle"></span></th><td class="num">'+regFmt(c.seniors)+'</td><td class="num">'+regFmt(c.juniors)+'</td><td class="num">'+regFmt(c.unclassified)+'</td><td class="num"><b>'+regFmt(c.total)+'</b></td></tr>';
     });
     var S=rows.reduce(function(a,c){return {s:a.s+c.seniors,j:a.j+c.juniors,u:a.u+c.unclassified,t:a.t+c.total};},{s:0,j:0,u:0,t:0});
     h+='</tbody><tfoot><tr><th style="text-align:left">'+(q?"Filtered":"All clubs")+' ('+rows.length+')</th><td class="num">'+regFmt(S.s)+'</td><td class="num">'+regFmt(S.j)+'</td><td class="num">'+regFmt(S.u)+'</td><td class="num"><b>'+regFmt(S.t)+'</b></td></tr></tfoot></table>';
     $("regClubWrap").innerHTML=h;
+  }
+  function regCSV(fn,headers,rows){
+    var e2=function(v){ v=(v==null?"":String(v)); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+    var lines=[headers.map(e2).join(",")]; rows.forEach(function(r){ lines.push(r.map(e2).join(",")); });
+    var blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+    var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=fn; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href); a.remove();},400);
+  }
+  function regPDF(title,subtitle,head,body,fn,foot){
+    if(!window.jspdf){ alert("PDF library still loading, try again in a moment."); return; }
+    var doc=new window.jspdf.jsPDF({unit:"pt",format:"a4"}); pdfHead(doc,title);
+    if(subtitle){ doc.setFontSize(9.5); doc.setTextColor(90,101,119); doc.text(subtitle,40,112); }
+    doc.autoTable({ startY:122, head:[head], body:body, styles:{fontSize:8.3,cellPadding:3}, headStyles:{fillColor:[7,26,74],textColor:255}, alternateRowStyles:{fillColor:[238,242,250]} });
+    var y=doc.lastAutoTable.finalY+16; doc.setFontSize(8.3); doc.setTextColor(90,101,119);
+    doc.text(foot||"Prepared via the CTTLFA registration system. Personal data held under POPIA (Act 4 of 2013).",40,y,{maxWidth:515});
+    doc.save(fn);
+  }
+  var MEM_HEAD=["SAFA number","Surname","First name","Category","Club","Type","Last card","Cycle status"];
+  function memRows(ms){ return ms.map(function(m){ return [m.safa||"",m.surname||"",m.first_name||"",m.category||"",m.club||"",m.type||"",m.last_card||"",m.returning?"Returning":"New"]; }); }
+  function dlMembersCSV(rows,label){ regCSV("CTTLFA members - "+label+".csv",MEM_HEAD,memRows(rows)); }
+  function dlMembersPDF(rows,label){ if(rows.length>2500){ alert("That is "+rows.length+" members — too many for one PDF. Use CSV for the full list; PDF works per club or per filter."); return; } regPDF("Registered members — "+label,"Current cycle "+_reg.cur_start.slice(0,4)+"–"+_reg.cur_end.slice(0,4)+" · "+rows.length+" members · as at "+regDate(_reg.as_at),MEM_HEAD,memRows(rows),"CTTLFA members - "+label+".pdf"); }
+  function dlBreakdownCSV(){ regCSV("CTTLFA registered by club.csv",["Club","Seniors","Juniors","Unclassified","Total"],_reg.clubs.map(function(c){return [c.club,c.seniors,c.juniors,c.unclassified,c.total];})); }
+  function dlBreakdownPDF(){ regPDF("Registered members by club","Current cycle "+_reg.cur_start.slice(0,4)+"–"+_reg.cur_end.slice(0,4)+" · as at "+regDate(_reg.as_at)+" · total "+regFmt(_reg.current.persons),["Club","Seniors","Juniors","Unclass.","Total"],_reg.clubs.map(function(c){return [c.club,regFmt(c.seniors),regFmt(c.juniors),regFmt(c.unclassified),regFmt(c.total)];}),"CTTLFA registered by club.pdf"); }
+  function dlMonthlyCSV(){ regCSV("CTTLFA registrations by month.csv",["Month","New","Renewal","Transfer","Total"],_reg.monthly.map(function(m){return [m.ym,m["new"],m.renewal,m.transfer,m.total];})); }
+  function dlMonthlyPDF(){ regPDF("Registrations by month","Current cycle · New / Renewal / Transfer · as at "+regDate(_reg.as_at),["Month","New","Renewal","Transfer","Total"],_reg.monthly.map(function(m){return [m.ym,regFmt(m["new"]),regFmt(m.renewal),regFmt(m.transfer),regFmt(m.total)];}),"CTTLFA registrations by month.pdf"); }
+  async function regEnsureMembers(){ if(_regAll) return _regAll; var r=await sb.rpc("reg_members",{}); if(r.error) throw r.error; _regAll=r.data||[]; return _regAll; }
+  function mfLabel(mf){ return ({all:"all registered members",returning:"returning members","new":"new entrants",ref:"referees & officials","cat:Senior":"senior members","cat:Junior":"junior members"})[mf]||mf; }
+  function mfPred(mf){ if(mf==="returning") return function(m){return m.returning;}; if(mf==="new") return function(m){return !m.returning;}; if(mf==="ref") return function(m){return m.type==="referee"||m.type==="official";}; if(mf==="cat:Senior") return function(m){return m.category==="Senior";}; if(mf==="cat:Junior") return function(m){return m.category==="Junior";}; return function(){return true;}; }
+  async function regMembersView(mf){
+    var root=$("regRoot"); root.innerHTML='<div class="card"><p class="hint">Loading members...</p></div>';
+    try{ await regEnsureMembers(); }catch(e){ root.innerHTML='<div class="card">'+regBackBar()+'<p class="hint">Could not load members: '+esc(e.message||e)+'</p></div>'; $("regBack").onclick=regOverview; return; }
+    _regView=_regAll.filter(mfPred(mf)); _regViewLabel=mfLabel(mf); renderMemberPage();
+  }
+  function memFilter(q){ if(!q) return _regView; return _regView.filter(function(m){ return ((m.surname||"")+" "+(m.first_name||"")).toLowerCase().indexOf(q)>=0 || String(m.safa||"").indexOf(q)>=0 || (m.club||"").toLowerCase().indexOf(q)>=0; }); }
+  function renderMemberTable(q){
+    var rows=memFilter(q), cap=rows.length>800?rows.slice(0,800):rows;
+    var h='<table><thead><tr><th style="text-align:left">SAFA</th><th style="text-align:left">Surname</th><th style="text-align:left">First name</th><th style="text-align:left">Category</th><th style="text-align:left">Club</th><th style="text-align:left">Type</th><th style="text-align:left">Last card</th></tr></thead><tbody>';
+    cap.forEach(function(m){ h+='<tr><td>'+esc(m.safa||"")+'</td><th scope="row" style="text-align:left">'+esc(m.surname||"")+'</th><td>'+esc(m.first_name||"")+'</td><td>'+esc(m.category||"")+'</td><td>'+esc(m.club||"")+'</td><td>'+esc(m.type||"")+'</td><td>'+esc(m.last_card||"")+'</td></tr>'; });
+    h+='</tbody></table>'; if(rows.length>cap.length) h+='<p class="hint">Showing first 800 of '+regFmt(rows.length)+'. Narrow with search, or download the full list.</p>';
+    $("regMemWrap").innerHTML=h;
+  }
+  function renderMemberPage(){
+    var root=$("regRoot"),rows=_regView,label=_regViewLabel;
+    var h='<div class="card">'+regBackBar()+'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:6px"><div><h3 style="margin:0;text-transform:capitalize">'+esc(label)+'</h3><p class="hint" style="margin:2px 0 0">'+regFmt(rows.length)+' members · current cycle · as at '+regDate(_reg.as_at)+'</p></div><span style="display:flex;gap:8px;align-items:center"><input id="regMemSearch" type="search" placeholder="Search name / SAFA / club" style="max-width:220px;width:auto" autocomplete="off"><button class="btn ghost sm" id="regMemCsv">CSV</button><button class="btn ghost sm" id="regMemPdf">PDF</button></span></div><div id="regMemWrap" style="overflow-x:auto;margin-top:10px"></div><p class="hint" style="margin-top:8px">SAFA number and name shown for accreditation. ID numbers are never shown or exported. Personal data held under POPIA (Act 4 of 2013).</p></div>';
+    root.innerHTML=h; $("regBack").onclick=regOverview; renderMemberTable("");
+    var s=$("regMemSearch"); if(s) s.oninput=function(){ renderMemberTable(this.value.trim().toLowerCase()); };
+    $("regMemCsv").onclick=function(){ dlMembersCSV(memFilter(($("regMemSearch").value||"").trim().toLowerCase()),label); };
+    $("regMemPdf").onclick=function(){ dlMembersPDF(memFilter(($("regMemSearch").value||"").trim().toLowerCase()),label); };
+  }
+  function fetchSeason(){ if(_season) return Promise.resolve(_season); if(_seasonP) return _seasonP; _seasonP=fetch("https://www.cttfa.co.za/season.json",{cache:"no-store"}).then(function(r){return r.json();}).then(function(d){_season=d;return d;}); return _seasonP; }
+  function normClub(s){ return String(s||"").toUpperCase().replace(/\bFC\b/g,"").replace(/[^A-Z0-9]/g,""); }
+  var CLUB_ALIAS=[["GREENPOINT","Green Point"],["CRVASCO","C.R Vasco da Gama"],["VASCODAGAMA","C.R Vasco da Gama"],["EDGEMEAD","Edgemead G/W"],["NORWAYPARKS","Norway Parks"],["YMO","YMO FC"],["UCT","U C T"]];
+  function teamToClub(team,names){ var nt=normClub(team); var best=null,bl=0; names.forEach(function(cn){ var nc=normClub(cn); if(nc && nt.indexOf(nc)===0 && nc.length>bl){best=cn;bl=nc.length;} }); if(best) return best; for(var i=0;i<CLUB_ALIAS.length;i++){ if(nt.indexOf(CLUB_ALIAS[i][0])===0) return CLUB_ALIAS[i][1]; } return null; }
+  function clubFootball(club){
+    var out={teams:[],fixtures:[],results:[],played:0,remaining:0,pct:0,ok:false};
+    if(!_season||!_season.leagues) return out; out.ok=true; var names=regClubNames(),L=_season.leagues;
+    Object.keys(L).forEach(function(k){ var v=L[k],div=v.name||k;
+      (v.table||[]).forEach(function(r){ if(!Array.isArray(r)||!r[0]||String(r[0]).toLowerCase().indexOf("bye")>=0) return; if(teamToClub(r[0],names)===club){ out.teams.push({div:div,team:r[0],P:r[1],W:r[2],D:r[3],L:r[4],GF:r[5],GA:r[6],Pts:r[7]}); out.played+=Number(r[1])||0; } });
+      (v.fixtures||[]).forEach(function(f){ if(!Array.isArray(f)) return; if(teamToClub(f[0],names)===club||teamToClub(f[1],names)===club){ out.fixtures.push({home:f[0],away:f[1],date:f[2],time:f[3],venue:f[4],div:div}); out.remaining++; } });
+      (v.results||[]).forEach(function(rs){ if(!Array.isArray(rs)) return; if(teamToClub(rs[0],names)===club||teamToClub(rs[1],names)===club){ out.results.push({home:rs[0],away:rs[1],hs:rs[2],as:rs[3],date:rs[4],div:div}); } });
+    });
+    out.pct=(out.played+out.remaining)>0?Math.round(out.played/(out.played+out.remaining)*100):0; return out;
+  }
+  async function regClubView(club){
+    var root=$("regRoot"); root.innerHTML='<div class="card"><p class="hint">Loading '+esc(club)+'...</p></div>';
+    try{ await regEnsureMembers(); }catch(e){ root.innerHTML='<div class="card">'+regBackBar()+'<p class="hint">Could not load members: '+esc(e.message||e)+'</p></div>'; $("regBack").onclick=regOverview; return; }
+    var fb=null; try{ await fetchSeason(); fb=clubFootball(club); }catch(e){ fb={ok:false}; }
+    _regView=_regAll.filter(function(m){return m.club===club;}); _regViewLabel=club; renderClubPage(club,fb);
+  }
+  function renderClubPage(club,fb){
+    var root=$("regRoot"),rows=_regView;
+    var snr=rows.filter(function(m){return m.category==="Senior";}).length,jnr=rows.filter(function(m){return m.category==="Junior";}).length,un=rows.length-snr-jnr;
+    var ret=rows.filter(function(m){return m.returning;}).length,refs=rows.filter(function(m){return m.type==="referee"||m.type==="official";}).length;
+    var h='<div class="card">'+regBackBar()+'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-top:6px"><div><h3 style="margin:0">'+esc(club)+'</h3><p class="hint" style="margin:2px 0 0">Club Central · registrations, teams, fixtures and results · as at '+regDate(_reg.as_at)+'</p></div><span style="display:flex;gap:8px"><button class="btn ghost sm" id="regClubMemCsv">Members CSV</button><button class="btn ghost sm" id="regClubMemPdf">Members PDF</button></span></div>';
+    h+='<div class="reg-stats" style="margin-top:12px">'+regStat(rows.length,"Registered","this cycle")+regStat(snr,"Seniors","")+regStat(jnr,"Juniors","")+regStat(un,"Unclassified","")+regStat(ret,"Returning","from prev cycle")+regStat(refs,"Referees","")+'</div></div>';
+    h+='<div class="card"><h3 style="margin:0 0 4px">Football — live from the Match Centre</h3>';
+    if(!fb||!fb.ok){ h+='<p class="hint">Could not load live league data right now. Try again shortly, or open the club on cttfa.co.za.</p></div>'; }
+    else if(!fb.teams.length){ h+='<p class="hint">No league teams matched this club in the current season data.</p></div>'; }
+    else {
+      h+='<div class="reg-stats" style="margin-bottom:10px">'+regStat(fb.teams.length,"Teams","in league play")+regStat(fb.played,"Matches played","this season")+regStat(fb.remaining,"Fixtures to play","")+regStat(fb.pct+"%","Season played","of scheduled")+'</div>';
+      h+='<div style="overflow-x:auto"><table><thead><tr><th style="text-align:left">Division</th><th style="text-align:left">Team</th><th class="num">P</th><th class="num">W</th><th class="num">D</th><th class="num">L</th><th class="num">Pts</th></tr></thead><tbody>';
+      fb.teams.forEach(function(t){ h+='<tr><td style="text-align:left">'+esc(t.div)+'</td><td style="text-align:left">'+esc(t.team)+'</td><td class="num">'+t.P+'</td><td class="num">'+t.W+'</td><td class="num">'+t.D+'</td><td class="num">'+t.L+'</td><td class="num"><b>'+t.Pts+'</b></td></tr>'; });
+      h+='</tbody></table></div>';
+      if(fb.fixtures.length){ h+='<h4 style="margin:14px 0 6px;color:var(--navy)">Upcoming fixtures</h4><div style="overflow-x:auto"><table><tbody>'; fb.fixtures.slice(0,10).forEach(function(f){ h+='<tr><td style="text-align:left">'+esc((f.date||"")+" "+(f.time||""))+'</td><td style="text-align:left">'+esc(f.home)+' v '+esc(f.away)+'</td><td style="text-align:left">'+esc(f.div)+'</td></tr>'; }); h+='</tbody></table></div>'; }
+      if(fb.results.length){ h+='<h4 style="margin:14px 0 6px;color:var(--navy)">Recent results</h4><div style="overflow-x:auto"><table><tbody>'; fb.results.slice(-10).reverse().forEach(function(r){ h+='<tr><td style="text-align:left">'+esc(r.date||"")+'</td><td style="text-align:left">'+esc(r.home)+' '+esc(r.hs)+'–'+esc(r.as)+' '+esc(r.away)+'</td><td style="text-align:left">'+esc(r.div)+'</td></tr>'; }); h+='</tbody></table></div>'; }
+      h+='<p class="hint" style="margin-top:8px">Source: CTTLFA Match Centre (LeagueRepublic) via cttfa.co.za'+(_season&&_season.updated?', updated '+esc(regDate(String(_season.updated).slice(0,10))):'')+'. Byes excluded.</p></div>';
+    }
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h3 style="margin:0">Registered members ('+regFmt(rows.length)+')</h3><input id="regMemSearch" type="search" placeholder="Search name / SAFA" style="max-width:220px;width:auto" autocomplete="off"></div><div id="regMemWrap" style="overflow-x:auto;margin-top:10px"></div><p class="hint" style="margin-top:8px">SAFA number and name shown for accreditation. ID numbers are never shown or exported. POPIA (Act 4 of 2013).</p></div>';
+    root.innerHTML=h; $("regBack").onclick=regOverview; renderMemberTable("");
+    var s=$("regMemSearch"); if(s) s.oninput=function(){ renderMemberTable(this.value.trim().toLowerCase()); };
+    $("regClubMemCsv").onclick=function(){ dlMembersCSV(_regView,club); };
+    $("regClubMemPdf").onclick=function(){ dlMembersPDF(_regView,club); };
   }
 
   /* ---------- audit ---------- */
