@@ -10,7 +10,228 @@
   "asst1",
   "asst2"
  ],
- "senior": [],
+ "senior": [
+  [
+   "B1 - First Division",
+   "2026-09-05",
+   "15:45",
+   "Meadowridge",
+   "Tramway",
+   "S Mabara",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-06",
+   "15:45",
+   "Hellenic",
+   "Camps Bay",
+   "K Cupido",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-06",
+   "15:45",
+   "Mutual FC",
+   "Chelsea Bridgetown",
+   "B Arendse",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-05",
+   "15:45",
+   "Avendale Athletico",
+   "FC Kapstadt",
+   "B Arendse",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-05",
+   "15:45",
+   "Barmsley Spurs",
+   "Hellenic",
+   "A Van Den Heever",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-05",
+   "15:45",
+   "Camps Bay",
+   "Clyde Pinelands",
+   "D Motseo",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-05",
+   "15:45",
+   "Goodwood",
+   "Mutual FC",
+   "A Abrahams",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-05",
+   "15:45",
+   "Queens Park",
+   "Young Bafana",
+   "A Richards",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-05",
+   "15:45",
+   "West End United",
+   "Chelsea Bridgetown",
+   "D Vaughan",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-05",
+   "15:45",
+   "YSD Macassar",
+   "Varsity College",
+   "R Kalamdien",
+   "",
+   ""
+  ],
+  [
+   "B1 - First Division",
+   "2026-09-05",
+   "15:45",
+   "Bellville City",
+   "Kensington",
+   "M Swartz",
+   "",
+   ""
+  ],
+  [
+   "B1 - First Division",
+   "2026-09-05",
+   "15:45",
+   "Garden Village",
+   "Ruyterwacht",
+   "Bukola Pussiano Olakolu",
+   "",
+   ""
+  ],
+  [
+   "B1 - First Division",
+   "2026-09-05",
+   "15:45",
+   "J M I",
+   "Brooklyn Superstars",
+   "A Paulse",
+   "",
+   ""
+  ],
+  [
+   "B1 - First Division",
+   "2026-09-05",
+   "15:45",
+   "Northpine United",
+   "Kuilsriver",
+   "D Grant",
+   "",
+   ""
+  ],
+  [
+   "B1 - First Division",
+   "2026-09-05",
+   "15:45",
+   "Stephanian Ottery",
+   "Bothasig",
+   "P Arendse",
+   "",
+   ""
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-04",
+   "20:30",
+   "Hanover Park",
+   "Table View",
+   "W Engelbrecht",
+   "J Absalon",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-05",
+   "15:45",
+   "Green Point",
+   "Norway Parks",
+   "L Montanus",
+   "B Mlimisi",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-05",
+   "15:45",
+   "Rygersdal",
+   "Edgemead G/W",
+   "N Dunshire",
+   "J Absalon",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-05",
+   "15:45",
+   "U C T",
+   "Fish Hoek",
+   "S Makinana",
+   "M Matiwane",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-05",
+   "15:45",
+   "Wynberg st Johns",
+   "Holy Cross",
+   "J Paulse",
+   "S Loqo",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-05",
+   "15:45",
+   "C.R Vasco da Gama",
+   "FN Rangers",
+   "L De Klerk",
+   "L Nziweni",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-05",
+   "15:45",
+   "Durbanville",
+   "Saxon Rovers",
+   "A Williams",
+   "A Hayward",
+   "Club Ref"
+  ]
+ ],
  "junior": [
   [
    "O5 - Under 12 Division Five",
@@ -448,16 +669,6 @@
    "H2 - Womans First Division",
    "2026-09-03",
    "19:00",
-   "Stephanian Ottery",
-   "Green Point",
-   "A Richards",
-   "",
-   ""
-  ],
-  [
-   "H2 - Womans First Division",
-   "2026-09-03",
-   "19:00",
    "Hanover Park",
    "U C T",
    "R Kalamdien",
@@ -515,16 +726,6 @@
    ""
   ],
   [
-   "H1 - Womans Premier League",
-   "2026-09-06",
-   "14:00",
-   "Magic Ladies",
-   "Badgers FC",
-   "R Arendse",
-   "",
-   ""
-  ],
-  [
    "H2 - Womans First Division",
    "2026-09-06",
    "12:00",
@@ -533,7 +734,17 @@
    "E Piet",
    "",
    ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-07",
+   "19:00",
+   "Magic Ladies",
+   "Badgers FC",
+   "R Arendse",
+   "",
+   ""
   ]
  ],
- "week_label": "2026-09-01 to 2026-09-06"
+ "week_label": "2026-09-01 to 2026-09-07"
 }
