@@ -1422,6 +1422,10 @@
       var names=Object.keys(docs), signed={};
       await Promise.all(names.map(function(n){ return sb.storage.from("fincom").createSignedUrl(n, 3600).then(function(s){ if(s&&s.data&&s.data.signedUrl) signed[n]=s.data.signedUrl; }).catch(function(){}); }));
       html=html.replace(/href="#" data-fincom-doc="([^"]+)"/g, function(_,n){ var u=signed[n]||"#"; return 'href="'+u+'" target="_blank" rel="noopener"'; });
+      /* Some document links carry a real relative href (e.g. debtor-system-review.html) instead
+         of href="#". Point those at the secure link too, otherwise they resolve against the admin
+         URL inside the sandboxed frame and open to nothing. */
+      names.forEach(function(n){ if(signed[n]){ var e2=n.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); html=html.replace(new RegExp('href="'+e2+'"',"g"),'href="'+signed[n]+'" target="_blank" rel="noopener"'); } });
       root.innerHTML='';
       var fincomOnly=(meRole==="fincom");
       if(!fincomOnly){
