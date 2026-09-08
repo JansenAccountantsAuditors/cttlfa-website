@@ -110,6 +110,8 @@
   .umodwrap{display:flex;flex-wrap:wrap;gap:4px 12px;max-width:340px}
   .umodlbl{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer}
   .umodlbl input{width:auto;margin:0}
+  body.rolefincom #sideNav,body.rolefincom .side{display:none!important}
+  body.viewer .needwrite,body.noedit .needwrite{display:none!important}
   .comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px 28px}
   .comp-summary{display:flex;gap:16px;margin:2px 0 16px;flex-wrap:wrap}
   .quorum-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:6px}
@@ -222,7 +224,7 @@
     <aside class="side" id="sideNav">
       <div class="side-lbl">Admin Centre</div>
       <button class="snav on" data-tab="home" title="The Admin Centre home — launch any module from here."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>Home</button>
-      <button class="snav" data-tab="users" title="The Mancom allow-list — who may sign in, and their access level. Administrators manage this."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Mancom users</button>
+      <button class="snav" data-tab="users" title="The user list — who may sign in, and their access level. Administrators manage this."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users</button>
       <button class="snav" data-tab="help" title="Full how-to guidance for every part of the Admin Centre."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help</button>
     </aside>
     <main class="main">
@@ -488,7 +490,7 @@
     <section id="tab-help" class="hidden">
       <div class="card">
         <h3>CTTLFA Admin Centre &mdash; full guide</h3>
-        <p class="help-lead">This is the single guide to everything in the Admin Centre. It explains what each module does, how to reach it, who may use it, and where the external tools sit. The Admin Centre is the association's one online workspace for the Management Committee and office. You launch each function from a card on the Home page; the left sidebar always gives you Home, Mancom users and Help.</p>
+        <p class="help-lead">This is the single guide to everything in the Admin Centre. It explains what each module does, how to reach it, who may use it, and where the external tools sit. The Admin Centre is the association's one online workspace for the Management Committee and office. You launch each function from a card on the Home page; the left sidebar always gives you Home, Users and Help.</p>
         <div class="help-toc">
           <a href="#h-nav">Getting around</a>
           <a href="#h-signin">Signing in</a>
@@ -500,14 +502,14 @@
           <a href="#h-mod-fincom">Fincom Dashboard</a>
           <a href="#h-mod-fixtures">Fixtures &amp; Results</a>
           <a href="#h-mod-site">Live Website</a>
-          <a href="#h-users">Managing Mancom users</a>
+          <a href="#h-users">Managing users</a>
           <a href="#h-voting">Voting: full meeting-day guide</a>
         </div>
       </div>
 
       <div class="card help-card" id="h-nav">
         <h3>Getting around</h3>
-        <p>The <span class="kk">Home</span> page is the launcher. Each function is a card; press <span class="kk gold">Open</span> to go into it. The left sidebar stays with you throughout and holds three links: <span class="kk">Home</span> (back to the launcher), <span class="kk">Mancom users</span> (who may sign in) and <span class="kk">Help</span> (this page).</p>
+        <p>The <span class="kk">Home</span> page is the launcher. Each function is a card; press <span class="kk gold">Open</span> to go into it. The left sidebar stays with you throughout and holds three links: <span class="kk">Home</span> (back to the launcher), <span class="kk">Users</span> (who may sign in) and <span class="kk">Help</span> (this page).</p>
         <p>When you open <span class="kk">Voting &amp; Meetings</span>, a second row of tabs appears at the top of that page (Meetings, Accreditation, Compliance, Motions, Live &amp; results, Audit). Those screens belong to voting only and show only while you are in that module. The same pattern will apply to Website Admin once it is brought fully in-house.</p>
         <div class="callout"><b>External tools open in a new browser tab.</b> Fixtures, the Fincom dashboard, the discipline dashboard and the live public website open separately, so the Admin Centre stays open behind them for you to come back to.</div>
       </div>
@@ -519,12 +521,14 @@
 
       <div class="card help-card" id="h-access">
         <h3>Access levels</h3>
-        <p>There are two levels, set per person on the Mancom users page:</p>
+        <p>There are four user types, set per person on the Users page:</p>
         <ol class="steps">
-          <li><b>Administrator.</b> Full control of every module (voting and meetings, registrations, website admin, Fincom) and of the Mancom users list. Administrators see every area and can change other people's access.</li>
-          <li><b>Viewer.</b> Can open and read only the areas ticked for them, and cannot change anything. Use this for members who need sight of certain information without editing rights.</li>
+          <li><b>Administrator.</b> Sees and edits every module (voting and meetings, registrations, website admin, Fincom) and manages the Users list. Administrators can change other people's access.</li>
+          <li><b>Staff.</b> Sees everything, but can edit only the areas an administrator ticks for them (for example Website Admin and Voting). Everything else is view only.</li>
+          <li><b>Fincom.</b> Sees only the Fincom Dashboard, and only to view it. Nothing else in the Admin Centre is shown to a Fincom user. Use this for Finance Committee members who need the packs but not the rest.</li>
+          <li><b>Viewer.</b> Sees everything, view only. Cannot change anything. Use this for members who need sight of the information without editing rights.</li>
         </ol>
-        <p><b>Areas.</b> For each viewer, an administrator ticks which areas they may open (Voting, Registrations, Website Admin, Discipline, Fincom, Fixtures, Live site). Anything not ticked is hidden from them, on the Home page and everywhere else. This is how access is kept tight: for example, tick <b>Fincom</b> only for Finance Committee members, and they will see only the Fincom dashboard when they sign in.</p>
+        <p><b>Editable areas for Staff.</b> For a Staff user, an administrator ticks which areas they may edit (Voting, Registrations, Website Admin, Discipline, Fincom, Fixtures, Live site). A Staff user still sees every area; the ticks decide only what they can change. Anything not ticked is view only for them.</p>
         <p class="sub">A change to someone's access takes effect the next time they sign in. An administrator cannot remove their own administrator rights or deactivate their own account, which prevents an accidental lock-out.</p>
       </div>
 
@@ -574,11 +578,11 @@
       </div>
 
       <div class="card help-card" id="h-users">
-        <h3>Managing Mancom users</h3>
-        <p>Open <span class="kk">Mancom users</span> from the sidebar. Administrators see a management view; viewers see the list only.</p>
+        <h3>Managing users</h3>
+        <p>Open <span class="kk">Users</span> from the sidebar. Administrators see a management view; everyone else sees the list only.</p>
         <ol class="steps">
-          <li><b>Add a person.</b> Fill in their name, email and (optionally) title, choose Viewer or Administrator, and press <span class="kk gold">Add to allow-list</span>. They then sign in with that email and set their own password.</li>
-          <li><b>Change access.</b> Use the drop-down in the Access level column to switch a person between Viewer and Administrator.</li>
+          <li><b>Add a person.</b> Fill in their name, email and (optionally) title, choose the user type (Viewer, Staff, Fincom or Administrator), and press <span class="kk gold">Add to allow-list</span>. They then sign in with that email and set their own password.</li>
+          <li><b>Change access.</b> Use the drop-down in the User type column to change a person's type. For a Staff user, tick the areas they may edit in the next column.</li>
           <li><b>Suspend or restore.</b> Use <span class="kk">Deactivate</span> to stop someone signing in without deleting their record, and <span class="kk green">Activate</span> to restore them.</li>
         </ol>
         <p class="sub">All changes apply the next time that person signs in. You cannot deactivate or demote your own administrator account.</p>
@@ -802,16 +806,25 @@
     $("whoName").textContent=me.full_name; $("whoEmail").textContent=me.email;
     $("whoRole").textContent=meRole;
     $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden");
-    if(meRole==="viewer"){ /* viewers: read only - hide write controls */ document.body.classList.add("viewer"); }
+    if(meRole==="secretary") meRole="administrator"; /* legacy role, treated as administrator */
+    document.body.classList.remove("viewer","rolestaff","rolefincom");
+    if(meRole==="viewer") document.body.classList.add("viewer");
+    else if(meRole==="staff") document.body.classList.add("rolestaff");
+    else if(meRole==="fincom") document.body.classList.add("rolefincom");
     await loadClubs(); await loadMeetings(); await loadUsers();
     renderHome(); homeWire(); var _mp0=$("meetingPick"); if(_mp0) _mp0.style.display="none";
+    if(meRole==="fincom") goTab("fincom");
   }
 
   /* ---------- tabs ---------- */
   var ALL_AREAS=["voting","registrations","webadmin","discipline","fincom","fixtures","site"];
-  function canSee(area){ if(!area) return true; if(meRole==="administrator") return true; return (((me&&me.modules)||[]).indexOf(area)>=0); }
+  /* Visibility: Fincom users see ONLY the Fincom dashboard; everyone else sees all areas. */
+  function canSee(area){ if(!area) return true; if(meRole==="fincom") return area==="fincom"; return true; }
+  /* Edit rights: administrators edit everything; staff edit only their ticked areas; viewers and fincom edit nothing. */
+  function canEdit(area){ if(!area) return false; if(meRole==="administrator") return true; if(meRole==="staff") return (((me&&me.modules)||[]).indexOf(area)>=0); return false; }
   function tabArea(name){ if(["meetings","accredit","compliance","motions","live","audit"].indexOf(name)>=0) return "voting"; if(name==="registrations") return "registrations"; if(name==="webadmin") return "webadmin"; if(name==="fincom") return "fincom"; return null; }
   function goTab(name){
+    if(meRole==="fincom") name="fincom";
     var _a=tabArea(name); if(_a && !canSee(_a)) name="home";
     var votingSubs=["meetings","accredit","compliance","motions","live","audit"];
     var sideActive=(name==="users")?"users":(name==="help")?"help":"home";
@@ -1265,22 +1278,25 @@
          '<input type="text" id="uaName" placeholder="Full name">'+
          '<input type="email" id="uaEmail" placeholder="email@cttfa.co.za">'+
          '<input type="text" id="uaTitle" placeholder="Title on Mancom (optional)">'+
-         '<select id="uaRole"><option value="viewer">Viewer</option><option value="administrator">Administrator</option></select>'+
+         '<select id="uaRole"><option value="viewer">Viewer</option><option value="staff">Staff</option><option value="fincom">Fincom</option><option value="administrator">Administrator</option></select>'+
          '<button class="btn gold sm" id="uaBtn" title="Add this person to the allow-list. They sign in with this email and set their own password the first time.">Add to allow-list</button>'+
          '</div>';
     }
     h+='<div id="usersMsg"></div>';
-    h+='<table><thead><tr><th>Name</th><th>Email</th><th>Access level</th>'+(isAdmin?'<th>Areas they can open</th>':'')+'<th>Sign-in</th>'+(isAdmin?'<th>Manage</th>':'')+'</tr></thead><tbody>';
+    h+='<table><thead><tr><th>Name</th><th>Email</th><th>User type</th>'+(isAdmin?'<th>Access / editable areas</th>':'')+'<th>Sign-in</th>'+(isAdmin?'<th>Manage</th>':'')+'</tr></thead><tbody>';
     us.forEach(function(u){
       var isMe=(me && u.email && me.email && u.email.toLowerCase()===me.email.toLowerCase());
+      var _roleOpts=[["viewer","Viewer"],["staff","Staff"],["fincom","Fincom"],["administrator","Administrator"]];
       var roleCell = isAdmin
-        ? '<select class="urole" data-email="'+esc(u.email)+'"><option value="viewer"'+(u.role==="viewer"?" selected":"")+'>Viewer</option><option value="administrator"'+(u.role==="administrator"?" selected":"")+'>Administrator</option></select>'
+        ? '<select class="urole" data-email="'+esc(u.email)+'">'+_roleOpts.map(function(o){ return '<option value="'+o[0]+'"'+(u.role===o[0]?" selected":"")+'>'+o[1]+'</option>'; }).join('')+'</select>'
         : '<span class="tag '+(u.role==="administrator"?"open":"draft")+'">'+esc(u.role)+'</span>';
       var signin = (u.auth_id?'<span class="tag in">registered</span>':'<span class="kv">not yet</span>')+(u.active?'':' <span class="tag closed">inactive</span>');
       var areas='';
       if(isAdmin){
-        if(u.role==="administrator"){ areas='<span class="kv">All areas</span>'; }
-        else { var mods=u.modules||[]; areas='<div class="umodwrap">'+AREA_ORDER.map(function(a){ return '<label class="umodlbl"><input type="checkbox" class="umod" data-email="'+esc(u.email)+'" data-area="'+a+'"'+(mods.indexOf(a)>=0?' checked':'')+'> '+AREA_LABELS[a]+'</label>'; }).join('')+'</div>'; }
+        if(u.role==="administrator"){ areas='<span class="kv">Sees &amp; edits everything</span>'; }
+        else if(u.role==="viewer"){ areas='<span class="kv">Sees all &middot; view only</span>'; }
+        else if(u.role==="fincom"){ areas='<span class="kv">Fincom Dashboard only &middot; view only</span>'; }
+        else { var mods=u.modules||[]; areas='<div class="kv" style="margin-bottom:4px">Sees all &middot; can edit the ticked areas:</div><div class="umodwrap">'+AREA_ORDER.map(function(a){ return '<label class="umodlbl"><input type="checkbox" class="umod" data-email="'+esc(u.email)+'" data-area="'+a+'"'+(mods.indexOf(a)>=0?' checked':'')+'> '+AREA_LABELS[a]+'</label>'; }).join('')+'</div>'; }
       }
       var manage='';
       if(isAdmin){
@@ -1291,7 +1307,7 @@
       h+='<tr'+(u.active?'':' style="opacity:.55"')+'><td><b>'+esc(u.full_name)+'</b>'+(isMe?' <span class="kv">(you)</span>':'')+'<br><span class="kv">'+esc(u.title||"")+'</span></td><td>'+esc(u.email)+'</td><td>'+roleCell+'</td>'+(isAdmin?'<td>'+areas+'</td>':'')+'<td>'+signin+'</td>'+(isAdmin?'<td>'+manage+'</td>':'')+'</tr>';
     });
     h+='</tbody></table>';
-    h+='<p class="hint" style="margin-top:10px"><b>Administrator</b> — full control of every module and of this allow-list; sees every area. <b>Viewer</b> — can open and read only the areas ticked for them, and cannot change anything. Tick <b>Fincom</b> only for Finance Committee members. A change takes effect the next time that person signs in.'+(isAdmin?'':' Only administrators can change access.')+'</p>';
+    h+='<p class="hint" style="margin-top:10px"><b>Administrator</b> — sees and edits everything, and manages this user list. <b>Staff</b> — sees everything and can edit only the areas ticked above. <b>Fincom</b> — sees only the Fincom Dashboard, view only. <b>Viewer</b> — sees everything, view only. A change takes effect the next time that person signs in.'+(isAdmin?'':' Only administrators can change access.')+'</p>';
     l.innerHTML=h;
     if(isAdmin) wireUsers();
   }
@@ -1451,7 +1467,7 @@
   }
   async function waRenderList(){
     var def=waDef(_waCur), body=$("waBody"); if(!body) return;
-    var isAdmin=(meRole==='administrator');
+    var isAdmin=canEdit('webadmin');
     var data; try{ data=await waLoad(_waCur); }catch(e){ body.innerHTML='<div class="card"><p class="hint">Could not load: '+esc(e.message||e)+'</p></div>'; return; }
     _waData=data;
     var items=waItems(def,data);
@@ -1466,6 +1482,7 @@
       h+='</tbody></table>';
     }
     if(isAdmin) h+='<p class="hint" style="margin-top:12px">Changes save to the live content store and show on www.cttfa.co.za on the next page load.</p>';
+    else h+='<p class="hint" style="margin-top:12px">You have view-only access here. Only administrators, or staff granted Website Admin edit rights, can change this content.</p>';
     h+='</div>';
     body.innerHTML=h;
     if(isAdmin){
