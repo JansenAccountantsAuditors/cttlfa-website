@@ -1974,13 +1974,65 @@
     var rows='';
     rows+='<div class="ld-row"><div class="ld-h"><b>Website match data</b> <span class="hint">LeagueRepublic &rarr; fixtures, results, league tables, referee appointments</span></div>'
       +'<div class="ld-when">Last refreshed on the live site: <b>'+(ok?esc(fmtWhen(upd)):'could not reach the feed just now')+'</b></div>'
-      +'<div class="ld-act">'+(isAdmin?'<a class="btn gold sm" href="'+wfUrl+'" target="_blank" rel="noopener">Refresh live data now</a> ':'')+'<button class="btn ghost sm" id="ldReRead" type="button">Re-read feed</button></div>'
-      +'<p class="hint" style="margin:8px 0 0">This is pulled from LeagueRepublic automatically about every hour, and each change publishes to the live site on its own. Straight after you capture results, press <b>Refresh live data now</b> to push within a few minutes — it opens the sync on GitHub, where you press <b>Run workflow</b> (sign in with the association GitHub login if asked). <b>Re-read feed</b> just reloads the latest into this Admin Centre, for example before you map club names on the Clubs page.</p></div>';
+      +'<div class="ld-act"><span id="ldRefreshCtl"></span><button class="btn ghost sm" id="ldReRead" type="button">Re-read feed</button></div><div id="ldRefreshMsg"></div>'
+      +'<p class="hint" style="margin:8px 0 0">This is pulled from LeagueRepublic automatically about every hour, and each change publishes to the live site on its own. Straight after you capture results, press <b>Refresh live data now</b> to push it within a few minutes. <b>Re-read feed</b> just reloads the latest into this Admin Centre, for example before you map club names on the Clubs page.</p></div>';
     rows+='<div class="ld-row"><div class="ld-h"><b>Registration data</b> <span class="hint">SAFA card register &rarr; the Registrations analytics</span></div>'
       +'<div class="ld-when">Figures as at: <b>'+(regWhen?esc(regWhen):'open the Registrations module to see its as-at date')+'</b></div>'
       +'<p class="hint" style="margin:8px 0 0">The Registrations figures read live from the database every time the module is opened, so they are always current as at the last SAFA card export loaded. Loading a new export is done by the office; there is nothing to refresh here.</p></div>';
     var lr=$("ldRows"); if(lr) lr.innerHTML=rows;
     var rr=$("ldReRead"); if(rr) rr.onclick=async function(){ rr.disabled=true; rr.textContent='Re-reading…'; try{ _season=null; _seasonP=null; await fetchSeason(); }catch(e){} _waCur='livedata'; waRenderList(); };
+    waLdWireRefresh(isAdmin, wfUrl);
+  }
+  async function waLdWireRefresh(isAdmin, wfUrl){
+    var ctl=$("ldRefreshCtl"); if(!ctl) return;
+    var configured=false; try{ var r=await sb.rpc('app_config_has',{p_key:'gh_token'}); if(!r.error) configured=!!r.data; }catch(e){}
+    if(configured){
+      ctl.innerHTML='<button class="btn gold sm" id="ldRefreshNow" type="button">Refresh live data now</button> ';
+      $("ldRefreshNow").onclick=function(){ waLdDoRefresh(); };
+      if(isAdmin){ ctl.insertAdjacentHTML('beforeend','<button class="btn ghost sm" id="ldRefreshReconnect" type="button" title="Replace the saved GitHub token">Change token</button> '); var rc=$("ldRefreshReconnect"); if(rc) rc.onclick=function(){ waLdSetup(wfUrl); }; }
+    } else if(isAdmin){
+      ctl.innerHTML='<button class="btn gold sm" id="ldRefreshSetup" type="button">Enable one-click refresh</button> ';
+      $("ldRefreshSetup").onclick=function(){ waLdSetup(wfUrl); };
+    } else {
+      ctl.innerHTML='<a class="btn ghost sm" href="'+wfUrl+'" target="_blank" rel="noopener">Refresh on GitHub</a> ';
+    }
+  }
+  async function waLdDoRefresh(){
+    var m=$("ldRefreshMsg"), btn=$("ldRefreshNow"); if(btn) btn.disabled=true; if(m) msg(m,'Starting the sync…','ok');
+    try{
+      var r=await sb.functions.invoke('lr_refresh',{ body:{} }); var d=(r&&r.data)||{};
+      if(r&&r.error){ if(m) msg(m,'Could not start the refresh: '+(r.error.message||r.error),'err'); }
+      else if(d.ok){ if(m) msg(m,'Refresh started. The live site updates within a few minutes — press Re-read feed shortly to see the new time.','ok'); }
+      else if(d.configured===false){ if(m) msg(m,'Not connected yet — press Enable one-click refresh to set it up.','err'); }
+      else { if(m) msg(m,'GitHub did not accept it'+(d.status?(' (HTTP '+d.status+')'):'')+'. '+(d.hint||'')+' You can still run it on GitHub.','err'); }
+    }catch(e){ if(m) msg(m,'Could not start the refresh: '+((e&&e.message)||e),'err'); }
+    if(btn) btn.disabled=false;
+  }
+  function waLdSetup(wfUrl){
+    var body=$("waBody"); if(!body) return;
+    var tokUrl='https://github.com/settings/tokens/new?scopes=repo,workflow&description=CTTLFA%20Admin%20-%20LR%20refresh';
+    var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><h3 style="margin:0">Enable one-click refresh</h3><button class="btn ghost sm" id="ldSetupBack" type="button">&larr; Back to Live data</button></div>'
+      +'<p class="hint" style="max-width:76ch;margin:6px 0 0">A one-time setup so <b>Refresh live data now</b> can run the LeagueRepublic sync on its own, without opening GitHub each time. It takes about two minutes and only has to be done once.</p><div id="waMsg"></div>'
+      +'<ol class="steps" style="margin-top:14px">'
+      +'<li><b>Create a GitHub token.</b> Open the token page (sign in with the association GitHub login if asked): <a href="'+tokUrl+'" target="_blank" rel="noopener" class="btn ghost sm" style="margin-left:4px">Create a GitHub token &rarr;</a><br><span class="hint">It opens with the right boxes ticked (<span class="kk">repo</span> and <span class="kk">workflow</span>). Set <b>Expiration</b> to <b>No expiration</b> (or a long period), then press <b>Generate token</b> at the bottom of that page.</span></li>'
+      +'<li><b>Copy the token.</b> GitHub shows it once, starting with <span class="kk">ghp_</span>. Copy it.</li>'
+      +'<li><b>Paste it here and save.</b> It is stored securely on the server (never on the public site) and used only to start this one sync.<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center;max-width:580px"><input id="ldTok" type="password" placeholder="Paste the GitHub token (ghp_…)" style="flex:1;min-width:250px" autocomplete="off"><button class="btn gold sm" id="ldTokSave" type="button">Save &amp; connect</button></div></li>'
+      +'</ol>'
+      +'<p class="hint" style="margin-top:10px">Rather not set this up now? You can always <a href="'+wfUrl+'" target="_blank" rel="noopener">run the sync on GitHub</a> in one extra click.</p></div>';
+    body.innerHTML=h;
+    $("ldSetupBack").onclick=function(){ _waCur='livedata'; waRenderList(); };
+    $("ldTokSave").onclick=async function(){
+      var tok=($("ldTok").value||'').trim(), m=$("waMsg");
+      if(!tok){ if(m) msg(m,'Paste the token first.','err'); return; }
+      var btn=$("ldTokSave"); btn.disabled=true; if(m) msg(m,'Saving and testing…','ok');
+      try{
+        var s=await sb.rpc('app_config_set',{p_key:'gh_token',p_value:tok});
+        if(s.error){ if(m) msg(m,'Could not save: '+(s.error.message||s.error),'err'); btn.disabled=false; return; }
+        var r=await sb.functions.invoke('lr_refresh',{ body:{} }); var d=(r&&r.data)||{};
+        if(!(r&&r.error) && d.ok){ if(m) msg(m,'Connected. A first refresh has been started as a test — the live site will update shortly. Returning to Live data…','ok'); setTimeout(function(){ _waCur='livedata'; waRenderList(); },1700); }
+        else { var reason=(r&&r.error)?(r.error.message||r.error):((d.hint||'GitHub did not accept the token.')+(d.status?(' (HTTP '+d.status+')'):'')); if(m) msg(m,'Saved, but the test refresh did not run: '+reason+' Check the token has repo access, then press Save & connect again.','err'); btn.disabled=false; }
+      }catch(e){ if(m) msg(m,'Could not save: '+((e&&e.message)||e),'err'); btn.disabled=false; }
+    };
   }
   function waSettingsForm(isAdmin){
     var body=$("waBody"); if(!body) return; var s=_waData||{};
