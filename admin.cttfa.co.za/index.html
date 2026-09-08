@@ -276,7 +276,7 @@
       #tab-home .hic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff}
       #tab-home .hic svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2}
       #tab-home .hic.voting{background:#071A4A} #tab-home .hic.reg{background:#123FB5} #tab-home .hic.fix{background:#4F6D7F} #tab-home .hic.web{background:#2f7d57}
-      #tab-home .hic.disc{background:#9a3130} #tab-home .hic.fincom{background:#9f6621} #tab-home .hic.fin{background:#6b5b2a} #tab-home .hic.site{background:#0C2461}
+      #tab-home .hic.disc{background:#9a3130} #tab-home .hic.fincom{background:#9f6621} #tab-home .hic.fin{background:#6b5b2a} #tab-home .hic.site{background:#0C2461} #tab-home .hic.stats{background:#0a7d55}
       #tab-home .hfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
       #tab-home .hchip{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:3px 8px;border-radius:20px}
       #tab-home .hchip.live{background:#e6efe9;color:#1c7c4a} #tab-home .hchip.ext{background:#EEF2FA;color:var(--muted)} #tab-home .hchip.soon{background:#FBF0D8;color:#9f6621}
@@ -296,6 +296,7 @@
         <div class="hmod" data-area="fincom"><div class="hic fincom"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div><h3>Fincom Dashboard</h3><p>The Finance Committee operating dashboard — mandate, budget, monthly phasing, debtors, compliance and the Mancom packs. Restricted to Fincom members.</p><div class="hfoot"><span class="hchip live">Live · restricted</span><button class="btn gold sm" data-goto="fincom">Open</button></div></div>
         <div class="hmod muted" data-area="fincom"><div class="hic fin"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Finance</h3><p>Club levies, billing and financial standing — linked to the registration base, so money and members sit on one screen.</p><div class="hfoot"><span class="hchip soon">Coming soon</span><button class="btn ghost sm" disabled>Phase 4</button></div></div>
         <div class="hmod" data-area="site"><div class="hic site"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg></div><h3>Live Website</h3><p>Open the public cttfa.co.za site as members and the public see it — fixtures, clubs, news and more.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.cttfa.co.za" target="_blank" rel="noopener">Open</a></div></div>
+        <div class="hmod" data-area="webstats"><div class="hic stats"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg></div><h3>Website Analytics</h3><p>Live Google Analytics for the public cttfa.co.za site — visitors, sources, top pages and countries, with your own date range.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="webstats">Open</button></div></div>
       </div>
       <p class="hint" style="margin-top:12px">External tools open in a new tab, so the Admin Centre stays open here to return to. Built for CTTLFA by the Treasurer&rsquo;s office &mdash; each function is a module that can be refined on its own.</p>
     </section>
@@ -303,6 +304,11 @@
     <!-- FINCOM (restricted to Fincom members) -->
     <section id="tab-fincom" class="hidden">
       <div id="fincomRoot"><div class="card"><p class="hint">Loading the Fincom dashboard&hellip;</p></div></div>
+    </section>
+
+    <!-- WEBSITE ANALYTICS (embedded Looker Studio, live GA4) -->
+    <section id="tab-webstats" class="hidden">
+      <div id="webstatsRoot"><div class="card"><p class="hint">Loading website analytics&hellip;</p></div></div>
     </section>
 
     <!-- WEBSITE ADMIN (in-house content editor) -->
@@ -837,14 +843,14 @@
   function canSee(area){ if(!area) return true; if(meRole==="fincom") return area==="fincom"; return true; }
   /* Edit rights: administrators edit everything; staff edit only their ticked areas; viewers and fincom edit nothing. */
   function canEdit(area){ if(!area) return false; if(meRole==="administrator") return true; if(meRole==="staff") return (((me&&me.modules)||[]).indexOf(area)>=0); return false; }
-  function tabArea(name){ if(["meetings","accredit","compliance","motions","live","audit"].indexOf(name)>=0) return "voting"; if(name==="registrations") return "registrations"; if(name==="webadmin") return "webadmin"; if(name==="fincom") return "fincom"; return null; }
+  function tabArea(name){ if(["meetings","accredit","compliance","motions","live","audit"].indexOf(name)>=0) return "voting"; if(name==="registrations") return "registrations"; if(name==="webadmin") return "webadmin"; if(name==="fincom") return "fincom"; if(name==="webstats") return "webstats"; return null; }
   function goTab(name){
     if(meRole==="fincom") name="fincom";
     var _a=tabArea(name); if(_a && !canSee(_a)) name="home";
     var votingSubs=["meetings","accredit","compliance","motions","live","audit"];
     var sideActive=(name==="users")?"users":(name==="help")?"help":"home";
     Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav"),function(x){x.classList.toggle("on",x.dataset.tab===sideActive);});
-    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
+    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom","webstats"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
     var sub=$("votingSubnav"); if(sub){ var inV=votingSubs.indexOf(name)>=0; sub.style.display=inV?"":"none"; Array.prototype.forEach.call(sub.querySelectorAll(".subtab"),function(x){x.classList.toggle("on",x.dataset.tab===name);}); }
     var _mp=$("meetingPick"); if(_mp) _mp.style.display=(["meetings","accredit","compliance","motions","live"].indexOf(name)>=0)?"":"none";
     if(name!=="accredit") stopCiTimer();
@@ -859,6 +865,7 @@
     if(name==="users") loadUsers();
     if(name==="webadmin" && typeof renderWebadmin==="function") renderWebadmin();
     if(name==="fincom" && typeof renderFincom==="function") renderFincom();
+    if(name==="webstats" && typeof renderWebstats==="function") renderWebstats();
     try{ window.scrollTo(0,0); }catch(e){}
   }
   Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav, #votingSubnav .subtab"),function(t){
@@ -1418,6 +1425,38 @@
   function homeWire(){ Array.prototype.forEach.call(document.querySelectorAll('#tab-home [data-goto]'),function(b){ b.onclick=function(){ goTab(b.getAttribute("data-goto")); }; }); }
 
   /* ---------- fincom (gated dashboard) ---------- */
+  /* ---------- website analytics (embedded Looker Studio on GA4) ---------- */
+  /* Paste the Looker Studio EMBED url here once the report is shared with embedding on.
+     It looks like: https://lookerstudio.google.com/embed/reporting/<id>/page/<id> */
+  var LOOKER_URL="";
+  function renderWebstats(){
+    var root=$("webstatsRoot"); if(!root) return;
+    if(!canSee("webstats")){ root.innerHTML='<div class="card"><h3>Website Analytics</h3><p class="hint">This area is restricted.</p></div>'; return; }
+    if(!LOOKER_URL){
+      root.innerHTML='<div class="card"><h3>Website Analytics &mdash; not connected yet</h3>'+
+        '<p class="hint">This shows the live Google Analytics for <b>www.cttfa.co.za</b> once a Looker Studio dashboard is linked. One-time setup, about ten minutes:</p>'+
+        '<ol class="steps">'+
+        '<li>Sign in to <span class="kk">lookerstudio.google.com</span> with the Google account that can see the site&rsquo;s Analytics.</li>'+
+        '<li><b>Create &rarr; Report</b>, add data, choose <b>Google Analytics</b>, and pick the <b>Cape Town Tygerberg LFA</b> property (a402827176 / p547720506). A blank report auto-builds a sensible default.</li>'+
+        '<li>Make sure there is a <b>Date range control</b> on the page (add one if not), plus the tiles you want: users, sessions, channels, top pages, countries, events.</li>'+
+        '<li><b>Share &rarr; Manage access &rarr; turn on &ldquo;Enable embedding&rdquo;</b>, then <b>Share &rarr; Embed report</b> and copy the URL (it starts with <span class="kk">https://lookerstudio.google.com/embed/reporting/</span>).</li>'+
+        '<li>Send that embed URL to the Treasurer / to this project and it is dropped in here. It then shows live for everyone signed in, with the date picker built in.</li>'+
+        '</ol>'+
+        '<p class="hint" style="margin-top:10px">You can always open the full report directly: <a href="https://analytics.google.com/analytics/web/#/a402827176p547720506/reports/reportinghub" target="_blank" rel="noopener">Google Analytics &rarr;</a></p>'+
+        '</div>';
+      return;
+    }
+    root.innerHTML='';
+    var bar=document.createElement("div"); bar.className="card"; bar.style.marginBottom="12px";
+    bar.innerHTML='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0 0 4px">Website Analytics</h3><p class="hint" style="margin:0;max-width:70ch">Live Google Analytics for www.cttfa.co.za. Change the period with the date control inside the dashboard.</p></div><a class="btn ghost sm" href="https://analytics.google.com/analytics/web/#/a402827176p547720506/reports/reportinghub" target="_blank" rel="noopener">Open in Google Analytics</a></div>';
+    root.appendChild(bar);
+    var fr=document.createElement("iframe"); fr.id="webstatsFrame";
+    fr.setAttribute("allowfullscreen",""); fr.setAttribute("loading","lazy");
+    fr.style.cssText="width:100%;height:calc(100vh - 250px);min-height:640px;border:1px solid var(--line);border-radius:12px;background:#fff;display:block";
+    fr.src=LOOKER_URL;
+    root.appendChild(fr);
+  }
+
   async function renderFincom(){
     var root=$("fincomRoot"); if(!root) return;
     if(!canSee("fincom")){ root.innerHTML='<div class="card"><h3>Fincom dashboard</h3><p class="hint">This area is restricted to Finance Committee members. Ask an administrator to grant you Fincom access on the Mancom users page.</p></div>'; return; }
