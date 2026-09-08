@@ -111,6 +111,9 @@
   .umodlbl{font-size:12px;color:var(--muted);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;cursor:pointer}
   .umodlbl input{width:auto;margin:0}
   body.rolefincom #sideNav,body.rolefincom .side{display:none!important}
+  body.rolefincom #helpToggle{display:none}
+  body.rolefincom .main .wrap{max-width:none;padding:0}
+  body.rolefincom #tab-fincom{padding:0}
   body.viewer .needwrite,body.noedit .needwrite{display:none!important}
   .comp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:8px 28px}
   .comp-summary{display:flex;gap:16px;margin:2px 0 16px;flex-wrap:wrap}
@@ -810,7 +813,10 @@
     document.body.classList.remove("viewer","rolestaff","rolefincom");
     if(meRole==="viewer") document.body.classList.add("viewer");
     else if(meRole==="staff") document.body.classList.add("rolestaff");
-    else if(meRole==="fincom") document.body.classList.add("rolefincom");
+    else if(meRole==="fincom"){
+      document.body.classList.add("rolefincom");
+      try{ var _bs=document.querySelector(".brandwrap .bs"); if(_bs) _bs.textContent="Fincom Dashboard"; document.title="CTTLFA Fincom Dashboard"; }catch(e){}
+    }
     await loadClubs(); await loadMeetings(); await loadUsers();
     renderHome(); homeWire(); var _mp0=$("meetingPick"); if(_mp0) _mp0.style.display="none";
     if(meRole==="fincom") goTab("fincom");
@@ -1417,12 +1423,17 @@
       await Promise.all(names.map(function(n){ return sb.storage.from("fincom").createSignedUrl(n, 3600).then(function(s){ if(s&&s.data&&s.data.signedUrl) signed[n]=s.data.signedUrl; }).catch(function(){}); }));
       html=html.replace(/href="#" data-fincom-doc="([^"]+)"/g, function(_,n){ var u=signed[n]||"#"; return 'href="'+u+'" target="_blank" rel="noopener"'; });
       root.innerHTML='';
-      var bar=document.createElement("div"); bar.className="card"; bar.style.marginBottom="12px";
-      bar.innerHTML='<h3 style="margin:0 0 4px">Fincom dashboard</h3><p class="hint" style="margin:0">Restricted to Finance Committee members. Documents open securely for your session only; the secure links refresh each time you open this page.</p>';
-      root.appendChild(bar);
+      var fincomOnly=(meRole==="fincom");
+      if(!fincomOnly){
+        var bar=document.createElement("div"); bar.className="card"; bar.style.marginBottom="12px";
+        bar.innerHTML='<h3 style="margin:0 0 4px">Fincom dashboard</h3><p class="hint" style="margin:0">Restricted to Finance Committee members. Documents open securely for your session only; the secure links refresh each time you open this page.</p>';
+        root.appendChild(bar);
+      }
       var fr=document.createElement("iframe"); fr.id="fincomFrame";
       fr.setAttribute("sandbox","allow-scripts allow-popups allow-downloads allow-popups-to-escape-sandbox");
-      fr.style.cssText="width:100%;height:calc(100vh - 230px);min-height:620px;border:1px solid var(--line);border-radius:12px;background:#fff;display:block";
+      fr.style.cssText=fincomOnly
+        ? "width:100%;height:calc(100vh - 82px);min-height:520px;border:0;border-radius:0;background:#fff;display:block"
+        : "width:100%;height:calc(100vh - 230px);min-height:620px;border:1px solid var(--line);border-radius:12px;background:#fff;display:block";
       root.appendChild(fr);
       /* Keep in-page (#section) links scrolling inside the dashboard. A srcdoc iframe inherits
          the parent's base URL, so a bare "#budget" link would otherwise reload the whole admin
