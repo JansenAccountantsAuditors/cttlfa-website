@@ -64,7 +64,11 @@
 
   /* shell */
   .top{background:linear-gradient(180deg,var(--navy),#0a2359);color:#fff}
-  .topbar{max-width:1560px;margin:0 auto;display:flex;align-items:center;gap:16px;padding:16px 32px}
+  .topbar{max-width:1560px;margin:0 auto;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;padding:16px 32px}
+  .tb-brand{display:flex;align-items:center;gap:14px;justify-self:center}
+  .tb-actions{display:flex;align-items:center;gap:8px;justify-self:end}
+  .tb-actions .who{margin-left:0}
+  @media(max-width:720px){ .tb-left{display:none} .topbar{grid-template-columns:auto 1fr} .tb-brand{justify-self:start} }
   .top .logo{width:52px;height:52px;border-radius:13px;background:#fff;padding:4px;overflow:hidden;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:var(--navy);font-family:var(--head);font-weight:800}
   .top .logo img{width:100%;height:100%;object-fit:contain;border-radius:9px;display:block}
   .brandwrap{display:flex;flex-direction:column;line-height:1.12}
@@ -216,11 +220,16 @@
 <div id="appView" class="hidden">
   <header class="top">
     <div class="topbar">
-      <div class="logo" id="topLogo">CT</div>
-      <div class="brandwrap"><span class="bt">CTTLFA</span><span class="bs">Admin Centre</span></div>
-      <div class="who"><b id="whoName">-</b> <span class="rolechip" id="whoRole">-</span><br><span id="whoEmail" class="kv" style="color:#9fb0d8"></span></div>
-      <button class="helptoggle on" id="helpToggle" title="Show or hide the little ? help tips across the admin. Turn them off once your team knows the system." aria-pressed="true"><span class="ht-track"></span><span id="helpToggleLbl">Help tips: on</span></button>
-      <button class="btn ghost sm" id="signOut" style="margin-left:6px;color:#fff;background:transparent;border-color:rgba(255,255,255,.3)">Sign out</button>
+      <div class="tb-left" aria-hidden="true"></div>
+      <div class="tb-brand">
+        <div class="logo" id="topLogo">CT</div>
+        <div class="brandwrap"><span class="bt">CTTLFA</span><span class="bs">Admin Centre</span></div>
+      </div>
+      <div class="tb-actions">
+        <div class="who"><b id="whoName">-</b> <span class="rolechip" id="whoRole">-</span><br><span id="whoEmail" class="kv" style="color:#9fb0d8"></span></div>
+        <button class="helptoggle on" id="helpToggle" title="Show or hide the little ? help tips across the admin. Turn them off once your team knows the system." aria-pressed="true"><span class="ht-track"></span><span id="helpToggleLbl">Help tips: on</span></button>
+        <button class="btn ghost sm" id="signOut" style="margin-left:6px;color:#fff;background:transparent;border-color:rgba(255,255,255,.3)">Sign out</button>
+      </div>
     </div>
   </header>
   <div class="shell">
@@ -483,8 +492,8 @@
     <!-- USERS -->
     <section id="tab-users" class="hidden">
       <div class="card">
-        <h3 data-help="The allow-list of people who may sign in to this admin. Each person sets their own password the first time they sign in with an approved email. Only administrators can change roles.">Mancom users</h3>
-        <p class="hint">The allow-list. Only these people can access the admin, and each sets their own password the first time. Administrators can change roles.</p>
+        <h3 data-help="The allow-list of people who may sign in to this admin. Each person sets their own password the first time they sign in with an approved email. Only administrators can change roles." style="text-align:center">Users</h3>
+        <p class="hint" style="text-align:center">The allow-list. Only these people can access the admin, and each sets their own password the first time. Administrators can change roles.</p>
         <div id="usersList"><p class="hint">Loading...</p></div>
       </div>
     </section>
