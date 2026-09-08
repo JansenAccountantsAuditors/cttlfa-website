@@ -1814,10 +1814,11 @@
     $("cf_lrFetch").onclick=async function(){ var res=$("cf_lrResult"); res.innerHTML='<p class="hint" style="margin-top:8px">Fetching the live LeagueRepublic team list…</p>';
       try{ await fetchSeason(); }catch(e){ res.innerHTML='<p class="hint" style="margin-top:8px">Could not reach the LeagueRepublic feed right now: '+esc(e.message||e)+'</p>'; return; }
       var set={}, L=(_season&&_season.leagues)||{};
+      function addNm(n){ if(n && String(n).toLowerCase().indexOf('bye')<0) set[n]=1; }
       Object.keys(L).forEach(function(k){ var v=L[k];
-        (v.table||[]).forEach(function(r){ if(Array.isArray(r)&&r[0]&&String(r[0]).toLowerCase().indexOf('bye')<0) set[r[0]]=1; });
-        (v.fixtures||[]).forEach(function(f){ if(Array.isArray(f)){ if(f[0])set[f[0]]=1; if(f[1])set[f[1]]=1; } });
-        (v.results||[]).forEach(function(r){ if(Array.isArray(r)){ if(r[0])set[r[0]]=1; if(r[1])set[r[1]]=1; } });
+        (v.table||[]).forEach(function(r){ if(Array.isArray(r)) addNm(r[0]); });
+        (v.fixtures||[]).forEach(function(f){ if(Array.isArray(f)){ addNm(f[0]); addNm(f[1]); } });
+        (v.results||[]).forEach(function(r){ if(Array.isArray(r)){ addNm(r[0]); addNm(r[1]); } });
       });
       var allLR=Object.keys(set).sort(function(a,b){return a.localeCompare(b);});
       var siteClubs=waItems(waDef('clubs'),_waData), siteNames=siteClubs.map(function(c){return c.name;});
