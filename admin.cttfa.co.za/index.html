@@ -291,7 +291,7 @@
         <div class="hmod" data-area="voting"><div class="hic voting"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Voting &amp; Meetings</h3><p>Run AGMs, SGMs and Mancom meetings — accreditation, motions, live secret ballots and the formal record.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="meetings">Open</button></div></div>
         <div class="hmod" data-area="registrations"><div class="hic reg"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></div><h3>Registrations &amp; Clubs</h3><p>The full SAFA card-cycle analytics and per-club profiles, with live teams, fixtures, results and CSV/PDF exports.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="registrations">Open</button></div></div>
         <div class="hmod" data-area="fixtures"><div class="hic fix"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Fixtures &amp; Results</h3><p>Live league tables, fixtures and results across every division, on the CTTLFA LeagueRepublic site. Use LR admin login to manage fixtures and appointments.</p><div class="hfoot"><span class="hchip ext">External</span><span style="display:flex;gap:8px"><a class="btn ghost sm" href="https://a.leaguerepublic.com/myaccount/login/index.html" target="_blank" rel="noopener" title="Sign in to LeagueRepublic administration with the CTTLFA league email. On the office machine your saved browser password fills it in — no password is stored on this site.">LR admin login</a><a class="btn ghost sm" href="https://cttfass.leaguerepublic.com" target="_blank" rel="noopener">Open</a></span></div></div>
-        <div class="hmod" data-area="webadmin"><div class="hic web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Website Admin</h3><p>Edit the public cttfa.co.za content in-house — committee, downloads, sponsors, notices, news, key dates and gallery. Changes show on the live site on the next page load.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="webadmin">Open</button></div></div>
+        <div class="hmod" data-area="webadmin"><div class="hic web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Website Admin</h3><p>Edit the public cttfa.co.za content in-house — clubs (detail, map pins and LeagueRepublic names), committee, downloads, sponsors, notices, news, key dates and gallery. Changes show on the live site on the next page load.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="webadmin">Open</button></div></div>
         <div class="hmod" data-area="discipline"><div class="hic disc"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="14" rx="1"/><path d="M9 21h6M12 17v4"/></svg></div><h3>Discipline, Referees &amp; Cards</h3><p>Yellow-card tracker, suspensions, referee appointments and administrative rulings.</p><div class="hfoot"><span class="hchip ext">External · rebuild planned</span><a class="btn ghost sm" href="https://dash.cttlfa.com" target="_blank" rel="noopener">Open</a></div></div>
         <div class="hmod" data-area="fincom"><div class="hic fincom"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div><h3>Fincom Dashboard</h3><p>The Finance Committee operating dashboard — mandate, budget, monthly phasing, debtors, compliance and the Mancom packs. Restricted to Fincom members.</p><div class="hfoot"><span class="hchip live">Live · restricted</span><button class="btn gold sm" data-goto="fincom">Open</button></div></div>
         <div class="hmod muted" data-area="fincom"><div class="hic fin"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Finance</h3><p>Club levies, billing and financial standing — linked to the registration base, so money and members sit on one screen.</p><div class="hfoot"><span class="hchip soon">Coming soon</span><button class="btn ghost sm" disabled>Phase 4</button></div></div>
@@ -1578,6 +1578,7 @@
       {k:'image',type:'image',label:'Photo',dir:'committee'},
       {k:'message',type:'textarea',label:'On-page message (optional)'}
     ], summary:function(it){ return (it.role||'')+' — '+(it.name||''); } },
+    {id:'clubs', key:'clubs', title:'Clubs', custom:'clubs', hint:'The member clubs shown on the public site: detail, ground and suburb, map pin (GPS), honours, and the LeagueRepublic name mapping used to pull each club\'s fixtures and results.', summary:function(it){ return (it.name||'(unnamed)'); } },
     {id:'sponsors', key:'sponsors', title:'Sponsors', hint:'The website sponsor credit shown on the home page.', fields:[
       {k:'name',type:'text',label:'Name'},
       {k:'url',type:'text',label:'Website URL'},
@@ -1602,7 +1603,8 @@
       {k:'name',type:'text',label:'Album name'},
       {k:'date',type:'text',label:'Date / caption'},
       {k:'photos',type:'photos',label:'Add photos',dir:'gallery'}
-    ], summary:function(it){ return (it.name||'(untitled)')+'  ('+((it.photos||[]).length)+' photos)'; } }
+    ], summary:function(it){ return (it.name||'(untitled)')+'  ('+((it.photos||[]).length)+' photos)'; } },
+    {id:'settings', key:'settings', title:'Settings', custom:'settings', hint:'Options for the public-site content tools — currently the Google Maps key used by the club map pin picker.', summary:function(){ return 'Settings'; } }
   ];
   function waDef(id){ for(var i=0;i<WA_DEFS.length;i++){ if(WA_DEFS[i].id===id) return WA_DEFS[i]; } return WA_DEFS[0]; }
   function waSlug(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,''); }
@@ -1628,6 +1630,8 @@
     var isAdmin=canEdit('webadmin');
     var data; try{ data=await waLoad(_waCur); }catch(e){ body.innerHTML='<div class="card"><p class="hint">Could not load: '+esc(e.message||e)+'</p></div>'; return; }
     _waData=data;
+    if(def.custom==='clubs'){ return waClubList(isAdmin); }
+    if(def.custom==='settings'){ return waSettingsForm(isAdmin); }
     var items=waItems(def,data);
     var h='<div class="card"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0">'+esc(def.title)+'</h3><p class="hint" style="margin:4px 0 0;max-width:64ch">'+esc(def.hint)+'</p></div>'+(isAdmin?'<button class="btn gold sm" id="waAdd">Add</button>':'')+'</div><div id="waMsg"></div>';
     if(!items.length){ h+='<p class="hint" style="margin-top:14px">Nothing here yet.'+(isAdmin?' Press Add to create the first one.':'')+'</p>'; }
@@ -1657,6 +1661,7 @@
   }
   function waRenderForm(){
     var def=waDef(_waCur), body=$("waBody"); if(!body) return;
+    if(def.custom==='clubs'){ return waClubForm(); }
     var it=_waEdit.item; if(def.load) def.load(it);
     var h='<div class="card"><h3>'+(_waEdit.isNew?'Add':'Edit')+' &mdash; '+esc(def.title)+'</h3><div id="waMsg"></div>';
     def.fields.forEach(function(f){
@@ -1715,6 +1720,167 @@
     }catch(e){ if(m) msg(m,(e&&e.message)||String(e),'err'); btn.disabled=false; }
   }
 
+  /* ---------- website admin: Clubs editor + Settings (custom sections) ---------- */
+  var _waClubQ='', _mapsKey=null;
+  function deMoji(s){ s=String(s==null?'':s);
+    return s.replace(/\u00e2[\u0080-\u009f\u2013\u2014\u2018-\u201d\u2122]{0,2}/g,function(m){ return /[\u2014\u201d]/.test(m)?'\u2014':'\u2013'; })
+            .replace(/[\u0080-\u009f\ufffd]/g,'');
+  }
+  async function waMapsKey(){ if(_mapsKey!=null) return _mapsKey; try{ var s=await waLoad('settings'); _mapsKey=(s&&s.mapsApiKey)||''; }catch(e){ _mapsKey=''; } return _mapsKey; }
+  function ensureMaps(cb){
+    if(window.google&&window.google.maps){ cb(); return; }
+    window._mapsCbs=window._mapsCbs||[]; window._mapsCbs.push(cb);
+    function flush(){ var cbs=window._mapsCbs||[]; window._mapsCbs=[]; cbs.forEach(function(f){ try{f();}catch(e){} }); }
+    if(window._mapsLoading){ if(window._mapsFailed||(window.google&&window.google.maps)) flush(); return; }
+    window._mapsLoading=true;
+    waMapsKey().then(function(k){
+      if(!k){ window._mapsFailed=true; flush(); return; }
+      window.__mapsReady=function(){ flush(); };
+      var sc=document.createElement('script'); sc.async=true; sc.defer=true;
+      sc.src='https://maps.googleapis.com/maps/api/js?key='+encodeURIComponent(k)+'&libraries=places&callback=__mapsReady';
+      sc.onerror=function(){ window._mapsFailed=true; flush(); };
+      document.head.appendChild(sc);
+    });
+  }
+  function waClubList(isAdmin){
+    var body=$("waBody"); if(!body) return; var arr=waItems(waDef('clubs'),_waData);
+    var q=_waClubQ.trim().toLowerCase();
+    var mapped=arr.filter(function(c){return (c.lrAliases||[]).length;}).length, pinned=arr.filter(function(c){return c.lat&&c.lng;}).length;
+    var rows=arr.map(function(it,i){return {it:it,i:i};}).filter(function(o){ return !q || (o.it.name||'').toLowerCase().indexOf(q)>=0 || (o.it.suburb||'').toLowerCase().indexOf(q)>=0; });
+    var h='<div class="card"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0">Clubs</h3><p class="hint" style="margin:4px 0 0;max-width:72ch">'+arr.length+' member clubs on the public site. Open a club to update its detail, ground and suburb, drop its map pin (GPS), record honours, and manage the LeagueRepublic name mapping that pulls its fixtures and results.</p></div>'+(isAdmin?'<button class="btn gold sm" id="waAdd">Add club</button>':'')+'</div><div id="waMsg"></div>';
+    h+='<div style="display:flex;gap:16px;flex-wrap:wrap;margin:10px 0 2px"><span class="stat"><b>'+arr.length+'</b><span>clubs</span></span><span class="stat"><b>'+pinned+'</b><span>with a map pin</span></span><span class="stat"><b>'+mapped+'</b><span>LR-mapped</span></span></div>';
+    h+='<div style="margin:8px 0 4px"><input id="waClubSearch" type="search" placeholder="Search club or suburb…" style="max-width:260px;width:auto" value="'+esc(_waClubQ)+'" autocomplete="off" aria-label="Search clubs"></div>';
+    h+='<div style="overflow-x:auto"><table style="margin-top:4px"><thead><tr><th style="text-align:left">Club</th><th style="text-align:left">Suburb</th><th style="text-align:left">Type</th><th style="text-align:right">Teams</th><th style="text-align:center">Pin</th><th style="text-align:center">LR names</th>'+(isAdmin?'<th></th>':'')+'</tr></thead><tbody>';
+    rows.forEach(function(o){ var it=o.it; var pin=(it.lat&&it.lng); var nal=(it.lrAliases||[]).length;
+      h+='<tr><td style="text-align:left">'+esc(it.name||'(unnamed)')+'</td><td style="text-align:left">'+esc(it.suburb||'')+'</td><td style="text-align:left">'+(it.type==='associate'?'Associate':'Full')+'</td><td style="text-align:right">'+esc(it.teams2026||'')+'</td><td style="text-align:center">'+(pin?'<span title="Map pin set">✓</span>':'<span title="No GPS pin" style="color:var(--bad)">—</span>')+'</td><td style="text-align:center">'+(nal?nal:'<span title="No LR name mapped" style="color:var(--bad)">0</span>')+'</td>'+(isAdmin?'<td style="text-align:right;white-space:nowrap"><button class="btn ghost sm waEdit" data-i="'+o.i+'">Edit</button> <button class="btn ghost sm waDel" data-i="'+o.i+'">Delete</button></td>':'')+'</tr>';
+    });
+    if(!rows.length) h+='<tr><td colspan="7" class="hint" style="text-align:left">No clubs match “'+esc(_waClubQ)+'”.</td></tr>';
+    h+='</tbody></table></div>';
+    h+='<p class="hint" style="margin-top:12px">'+(isAdmin?'Changes save to the live content store and show on www.cttfa.co.za on the next page load.':'You have view-only access here.')+'</p></div>';
+    body.innerHTML=h;
+    var s=$("waClubSearch"); if(s){ s.oninput=function(){ var pos=this.selectionStart; _waClubQ=this.value; waClubList(isAdmin); var s2=$("waClubSearch"); if(s2){ s2.focus(); try{ s2.setSelectionRange(pos,pos); }catch(e){} } }; }
+    if(isAdmin){
+      var add=$("waAdd"); if(add) add.onclick=function(){ _waEdit={isNew:true,item:{type:'full',lrAliases:[],honours:[]}}; waClubForm(); };
+      Array.prototype.forEach.call(body.querySelectorAll('.waEdit'),function(b){ b.onclick=function(){ var i=+b.dataset.i; _waEdit={isNew:false,i:i,item:JSON.parse(JSON.stringify(waItems(waDef('clubs'),_waData)[i]))}; waClubForm(); }; });
+      Array.prototype.forEach.call(body.querySelectorAll('.waDel'),function(b){ b.onclick=async function(){ if(!window.confirm('Delete this club from the public site content?')) return; var a=waItems(waDef('clubs'),_waData).slice(); a.splice(+b.dataset.i,1); await waPersist(waDef('clubs'),a); }; });
+    }
+  }
+  function waClubForm(){
+    var body=$("waBody"); if(!body) return; var it=_waEdit.item; if(!it.lrAliases) it.lrAliases=[]; if(!it.honours) it.honours=[];
+    function fld(label,id,type,val,hint){ return '<div><label class="f">'+esc(label)+'</label><input id="'+id+'" type="'+(type||'text')+'"'+(type==='number'?' step="any"':'')+' value="'+esc(val==null?'':val)+'" autocomplete="off">'+(hint?'<p class="hint" style="margin:3px 0 0">'+esc(hint)+'</p>':'')+'</div>'; }
+    function selfld(label,id,opts,val){ return '<div><label class="f">'+esc(label)+'</label><select id="'+id+'">'+opts.map(function(o){return '<option value="'+o[0]+'"'+(val===o[0]?' selected':'')+'>'+esc(o[1])+'</option>';}).join('')+'</select></div>'; }
+    function honRow(y,t){ return '<div class="honrow" style="display:flex;gap:8px;margin-bottom:6px;align-items:center"><input class="hy" type="text" value="'+esc(deMoji(y||''))+'" placeholder="Year" style="max-width:96px;width:auto"><input class="ht" type="text" value="'+esc(deMoji(t||''))+'" placeholder="Honour / achievement" style="flex:1"><button class="btn ghost sm honrm" type="button">Remove</button></div>'; }
+    var hsty='margin:18px 0 8px;color:var(--navy);font-size:14px;border-top:1px solid var(--line);padding-top:14px';
+    var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><h3 style="margin:0">'+(_waEdit.isNew?'Add club':'Edit club — '+esc(it.name||''))+'</h3><button class="btn ghost sm" id="cf_back" type="button">← All clubs</button></div><div id="waMsg"></div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">';
+    h+=fld('Club name','cf_name','text',it.name);
+    h+=selfld('Membership','cf_type',[['full','Full member'],['associate','Associate member']],it.type||'full');
+    h+=fld('Founded (year)','cf_founded','number',it.founded);
+    h+=fld('Teams entered (2026)','cf_teams','number',it.teams2026);
+    h+=fld('Home ground','cf_ground','text',it.ground);
+    h+=fld('Suburb','cf_suburb','text',it.suburb);
+    h+=fld('Website','cf_website','url',it.website);
+    h+=fld('Facebook','cf_facebook','url',it.facebook);
+    h+='</div>';
+    h+='<div style="margin-top:12px">'+fld('Logo path (as used on the public site)','cf_logo','text',it.logo,'e.g. 2022/11/avendale-150x150.jpg')+'</div>';
+    h+='<h4 style="'+hsty+'">Location &amp; map pin (GPS)</h4>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+fld('Latitude','cf_lat','number',it.lat)+fld('Longitude','cf_lng','number',it.lng)+'</div>';
+    h+='<div style="margin-top:8px"><input id="cf_addr" type="text" placeholder="Search an address to drop the pin…" style="width:100%" autocomplete="off"></div>';
+    h+='<div id="clubMap" style="height:300px;margin-top:8px;border:1px solid var(--line);border-radius:10px;background:var(--line2)"></div>';
+    h+='<p class="hint" id="clubMapNote" style="margin-top:6px">Search an address or drag the pin to set the club’s location. The latitude and longitude update automatically.</p>';
+    h+='<h4 style="'+hsty+'">Honours</h4><div id="cf_honours"></div><button class="btn ghost sm" id="cf_honAdd" type="button" style="margin-top:4px">Add honour</button>';
+    h+='<h4 style="'+hsty+'">LeagueRepublic names</h4><p class="hint" style="max-width:72ch">The names this club plays under on LeagueRepublic. They are how the public site links this club to its fixtures, results and league position, so add every spelling LR uses.</p>';
+    h+='<div id="cf_aliases" style="margin-top:6px"></div>';
+    h+='<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center"><input id="cf_aliasNew" type="text" placeholder="Add an LR name…" style="max-width:260px;width:auto" autocomplete="off"><button class="btn ghost sm" id="cf_aliasAdd" type="button">Add name</button><button class="btn ghost sm" id="cf_lrFetch" type="button">Fetch from LeagueRepublic</button></div><div id="cf_lrResult"></div>';
+    h+='<div class="btnrow" style="margin-top:18px"><button class="btn gold" id="cf_save" type="button">Save club</button> <button class="btn ghost" id="cf_cancel" type="button">Cancel</button></div>';
+    h+='</div>';
+    body.innerHTML=h;
+    function back(){ _waEdit=null; _waCur='clubs'; waRenderList(); }
+    $("cf_back").onclick=back; $("cf_cancel").onclick=back;
+    /* honours */
+    function wireHon(){ Array.prototype.forEach.call($("cf_honours").querySelectorAll('.honrm'),function(b){ b.onclick=function(){ var r=b.closest('.honrow'); if(r) r.remove(); }; }); }
+    $("cf_honours").innerHTML=(it.honours||[]).map(function(hp){ return honRow(hp[0],hp[1]); }).join('') || '<p class="hint" style="margin:0 0 6px">No honours recorded yet.</p>';
+    wireHon();
+    $("cf_honAdd").onclick=function(){ var w=$("cf_honours"); var empty=w.querySelector('.hint'); if(empty) empty.remove(); w.insertAdjacentHTML('beforeend',honRow('','')); wireHon(); };
+    /* aliases */
+    function renderAliases(){ var w=$("cf_aliases"); if(!w) return; var a=it.lrAliases||[];
+      w.innerHTML=a.length? a.map(function(x,i){ return '<span style="display:inline-flex;align-items:center;gap:7px;background:var(--line2);border:1px solid var(--line);border-radius:16px;padding:4px 6px 4px 12px;margin:0 8px 8px 0;font-size:13px">'+esc(x)+'<button type="button" data-ar="'+i+'" title="Remove" style="border:0;background:none;cursor:pointer;color:var(--bad);font-weight:800;font-size:15px;line-height:1;padding:0 2px">×</button></span>'; }).join('') : '<p class="hint" style="margin:0">No LeagueRepublic names mapped yet — the public site cannot find this club’s fixtures until at least one is added.</p>';
+      Array.prototype.forEach.call(w.querySelectorAll('[data-ar]'),function(b){ b.onclick=function(){ it.lrAliases.splice(+b.dataset.ar,1); renderAliases(); }; });
+    }
+    renderAliases();
+    function addAlias(nm){ nm=(nm||'').trim(); if(!nm) return; var exists=(it.lrAliases||[]).some(function(x){return x.toLowerCase()===nm.toLowerCase();}); if(!exists){ it.lrAliases.push(nm); renderAliases(); } }
+    $("cf_aliasAdd").onclick=function(){ addAlias($("cf_aliasNew").value); $("cf_aliasNew").value=''; $("cf_aliasNew").focus(); };
+    $("cf_aliasNew").onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); $("cf_aliasAdd").click(); } };
+    $("cf_lrFetch").onclick=async function(){ var res=$("cf_lrResult"); res.innerHTML='<p class="hint" style="margin-top:8px">Fetching the live LeagueRepublic team list…</p>';
+      try{ await fetchSeason(); }catch(e){ res.innerHTML='<p class="hint" style="margin-top:8px">Could not reach the LeagueRepublic feed right now: '+esc(e.message||e)+'</p>'; return; }
+      var set={}, L=(_season&&_season.leagues)||{};
+      Object.keys(L).forEach(function(k){ var v=L[k];
+        (v.table||[]).forEach(function(r){ if(Array.isArray(r)&&r[0]&&String(r[0]).toLowerCase().indexOf('bye')<0) set[r[0]]=1; });
+        (v.fixtures||[]).forEach(function(f){ if(Array.isArray(f)){ if(f[0])set[f[0]]=1; if(f[1])set[f[1]]=1; } });
+        (v.results||[]).forEach(function(r){ if(Array.isArray(r)){ if(r[0])set[r[0]]=1; if(r[1])set[r[1]]=1; } });
+      });
+      var allLR=Object.keys(set).sort(function(a,b){return a.localeCompare(b);});
+      var siteClubs=waItems(waDef('clubs'),_waData), siteNames=siteClubs.map(function(c){return c.name;});
+      function matchClub(nm){ var n=normClub(nm); for(var ci=0;ci<siteClubs.length;ci++){ var al=siteClubs[ci].lrAliases||[]; for(var ai=0;ai<al.length;ai++){ if(normClub(al[ai])===n) return siteClubs[ci].name; } } return teamToClub(nm,siteNames); }
+      var mineN={}; (it.lrAliases||[]).forEach(function(a){ mineN[normClub(a)]=1; });
+      var mine=[], unassigned=[];
+      allLR.forEach(function(nm){ if(mineN[normClub(nm)]) return; var mc=matchClub(nm); if(mc===it.name){ mine.push(nm); } else if(!mc){ unassigned.push(nm); } });
+      function chips(list){ return list.map(function(nm){ return '<button type="button" class="btn ghost sm lrAdd" data-nm="'+esc(nm).replace(/"/g,'&quot;')+'" style="margin:2px 6px 2px 0">+ '+esc(nm)+'</button>'; }).join(''); }
+      var hh='<div class="card" style="margin-top:10px;background:var(--line2);box-shadow:none"><p class="hint" style="margin:0"><b>'+allLR.length+'</b> team names are live on LeagueRepublic'+(_season&&_season.updated?', updated '+esc(String(_season.updated).slice(0,10)):'')+'.</p>';
+      if(mine.length){ hh+='<p class="hint" style="margin:10px 0 4px">Auto-matched to <b>'+esc(it.name||'this club')+'</b> but not yet saved — click to add:</p>'+chips(mine); }
+      hh+='<p class="hint" style="margin:12px 0 4px">Unassigned LR names (not linked to any club) — click one to map it to <b>'+esc(it.name||'this club')+'</b>:</p>';
+      hh+= unassigned.length? chips(unassigned) : '<span class="hint">None — every LR name is already mapped to a club.</span>';
+      hh+='</div>'; res.innerHTML=hh;
+      Array.prototype.forEach.call(res.querySelectorAll('.lrAdd'),function(b){ b.onclick=function(){ addAlias(b.dataset.nm); b.disabled=true; b.textContent='✓ '+b.dataset.nm; }; });
+    };
+    /* map */
+    (function initMap(){ var mapDiv=$("clubMap"), note=$("clubMapNote");
+      var la0=parseFloat(it.lat), ln0=parseFloat(it.lng); var has=!isNaN(la0)&&!isNaN(ln0);
+      var center={lat:has?la0:-33.925, lng:has?ln0:18.55};
+      ensureMaps(function(){
+        if(window._mapsFailed||!(window.google&&window.google.maps)){ if(mapDiv) mapDiv.style.display='none'; var a=$("cf_addr"); if(a) a.style.display='none'; if(note) note.textContent='Map unavailable — enter the latitude and longitude manually above.'; return; }
+        var map=new google.maps.Map(mapDiv,{center:center,zoom:has?15:10,mapTypeControl:false,streetViewControl:false,fullscreenControl:false});
+        var marker=new google.maps.Marker({position:center,map:map,draggable:true});
+        function setLL(la,ln){ var lt=$("cf_lat"),lg=$("cf_lng"); if(lt) lt.value=Math.round(la*1e6)/1e6; if(lg) lg.value=Math.round(ln*1e6)/1e6; }
+        marker.addListener('dragend',function(e){ setLL(e.latLng.lat(),e.latLng.lng()); });
+        map.addListener('click',function(e){ marker.setPosition(e.latLng); setLL(e.latLng.lat(),e.latLng.lng()); });
+        function fromInputs(){ var la=parseFloat($("cf_lat").value), ln=parseFloat($("cf_lng").value); if(!isNaN(la)&&!isNaN(ln)){ var p={lat:la,lng:ln}; marker.setPosition(p); map.panTo(p); } }
+        var lt=$("cf_lat"),lg=$("cf_lng"); if(lt) lt.addEventListener('change',fromInputs); if(lg) lg.addEventListener('change',fromInputs);
+        try{ var ac=new google.maps.places.Autocomplete($("cf_addr"),{fields:['geometry']}); ac.addListener('place_changed',function(){ var pl=ac.getPlace(); if(pl&&pl.geometry&&pl.geometry.location){ var p=pl.geometry.location; marker.setPosition(p); map.panTo(p); map.setZoom(16); setLL(p.lat(),p.lng()); } }); }catch(e){}
+      });
+    })();
+    /* save */
+    $("cf_save").onclick=function(){
+      var it2=Object.assign({},it);
+      it2.name=($("cf_name").value||'').trim();
+      it2.type=$("cf_type").value;
+      var fnd=parseInt($("cf_founded").value,10); it2.founded=isNaN(fnd)?'':fnd;
+      var tms=parseInt($("cf_teams").value,10); it2.teams2026=isNaN(tms)?'':tms;
+      it2.ground=($("cf_ground").value||'').trim();
+      it2.suburb=($("cf_suburb").value||'').trim();
+      it2.website=($("cf_website").value||'').trim();
+      it2.facebook=($("cf_facebook").value||'').trim();
+      it2.logo=($("cf_logo").value||'').trim();
+      var la=parseFloat($("cf_lat").value), ln=parseFloat($("cf_lng").value);
+      it2.lat=isNaN(la)?'':la; it2.lng=isNaN(ln)?'':ln;
+      var hon=[]; Array.prototype.forEach.call($("cf_honours").querySelectorAll('.honrow'),function(r){ var y=(r.querySelector('.hy').value||'').trim(), t=(r.querySelector('.ht').value||'').trim(); if(y||t) hon.push([y,t]); });
+      it2.honours=hon; it2.lrAliases=(it.lrAliases||[]).filter(Boolean);
+      if(!it2.name){ msg($("waMsg"),'A club name is required.','err'); return; }
+      var arr=waItems(waDef('clubs'),_waData).slice();
+      if(_waEdit.isNew) arr.push(it2); else arr[_waEdit.i]=it2;
+      var btn=$("cf_save"); btn.disabled=true; msg($("waMsg"),'Saving…','ok');
+      waPersist(waDef('clubs'),arr).then(function(ok){ if(!ok) btn.disabled=false; });
+    };
+  }
+  function waSettingsForm(isAdmin){
+    var body=$("waBody"); if(!body) return; var s=_waData||{};
+    var h='<div class="card"><h3 style="margin:0">Settings</h3><p class="hint" style="margin:4px 0 12px;max-width:64ch">Options for the public-site content tools.</p><div id="waMsg"></div>';
+    h+='<div style="max-width:520px"><label class="f">Google Maps API key</label><input id="set_maps" type="text" value="'+esc(s.mapsApiKey||'')+'"'+(isAdmin?'':' disabled')+' autocomplete="off"><p class="hint" style="margin-top:4px">Used by the club map pin picker. In the Google Cloud console, restrict this key to the *.cttfa.co.za sites.</p></div>';
+    h+=(isAdmin?'<div class="btnrow" style="margin-top:14px"><button class="btn gold" id="set_save" type="button">Save settings</button></div>':'<p class="hint" style="margin-top:12px">You have view-only access here.</p>');
+    h+='</div>'; body.innerHTML=h;
+    if(isAdmin){ $("set_save").onclick=function(){ var obj=Object.assign({},_waData); obj.mapsApiKey=($("set_maps").value||'').trim(); obj.updated=waToday(); var btn=$("set_save"); btn.disabled=true; msg($("waMsg"),'Saving…','ok'); sb.rpc('wa_set',{p_section:'settings',p_data:obj}).then(function(r){ if(r.error){ msg($("waMsg"),r.error.message||String(r.error),'err'); } else { _mapsKey=obj.mapsApiKey; msg($("waMsg"),'Saved.','ok'); } btn.disabled=false; }); }; }
+  }
+
   /* ---------- registrations (analytics + club central, admin only) ---------- */
   var _reg=null,_regYear=null,_regAll=null,_season=null,_seasonP=null,_regView=[],_regViewLabel="",_memBack=null,_lastClub=null,_lastFb=null,_memDetail=null;
   function regFmt(n){ return (n==null?"–":Number(n).toLocaleString("en-ZA").replace(/,/g," ")); }
@@ -1760,11 +1926,12 @@
     h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0 0 4px">When registrations happen</h3><p class="hint" style="margin:0">Monthly, by type · busy window Feb–May</p></div><span style="display:flex;gap:8px"><button class="btn ghost sm" id="regMonCsv">CSV</button><button class="btn ghost sm" id="regMonPdf">PDF</button></span></div><div class="reg-legend" style="margin-top:8px"><span><i class="rsw" style="background:var(--navy)"></i>New (first card)</span><span><i class="rsw" style="background:var(--blue)"></i>Renewal</span><span><i class="rsw" style="background:var(--gold)"></i>Transfer</span></div><div id="regChart"></div></div>';
     h+='<div class="card"><h3 style="margin:0 0 4px">Growth vs retention</h3><div class="reg-msbar"><i style="background:var(--navy);width:'+retPc+'%">Returning '+regFmt(c.returning)+'</i><i style="background:var(--gold);color:var(--ink);width:'+newPc+'%">New '+regFmt(c.new_in_cycle)+'</i></div><p class="hint" style="margin:8px 0 0">Retention '+retPc+'% · new-entrant share '+newPc+'%. The re-card base cannot be assumed to renew in full.</p></div>';
     if(d.is_current) h+='<div class="card"><h3 style="margin:0 0 6px">Preparing for the '+ce+'–'+ne+' cycle</h3><div class="prepbox"><ul style="margin:0;padding-left:18px"><li><b>Re-card base of '+regFmt(c.persons)+' members</b> must renew from '+regDate(d.new_cycle_start)+'. Work down by club.</li><li><b>Plan for the February–May surge</b> — both seasons of this cycle loaded then; book card stock and SAFA processing ahead of it.</li><li><b>Protect the '+regFmt(c.returning)+' returning members</b> first; early club renewal drives hold the base.</li><li><b>Prioritise the larger clubs</b> — the top ten carry '+regFmt(top10)+' members between them.</li></ul></div></div>';
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0 0 4px">Top clubs by registered members</h3><p class="hint" style="margin:0">The twelve largest clubs this cycle · click a bar to open the club profile</p></div></div><div id="regTopClubs" style="margin-top:12px;display:flex;flex-direction:column;gap:2px"></div></div>';
     h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h3 style="margin:0">Registered members by club</h3><span style="display:flex;gap:8px;align-items:center"><input id="regSearch" type="search" placeholder="Search club..." style="max-width:180px;width:auto" autocomplete="off" aria-label="Search club"><button class="btn ghost sm" id="regClubCsv">CSV</button><button class="btn ghost sm" id="regClubPdf">PDF</button></span></div><p class="hint" style="margin:6px 0 0">Click a club for its full profile — members, and its live teams, fixtures and results.</p><div id="regClubWrap" style="overflow-x:auto;margin-top:10px"></div></div>';
     root.innerHTML=h;
     var x;
     if(x=$("regRefresh")) x.onclick=function(){ renderRegistrations(_regYear); };
-    regChart(d.monthly); regClubTable(d.clubs,c.persons,"");
+    regChart(d.monthly); regTopClubs(d.clubs); regClubTable(d.clubs,c.persons,"");
     var srch=$("regSearch"); if(srch) srch.oninput=function(){ regClubTable(_reg.clubs,_reg.current.persons,this.value.trim().toLowerCase()); };
     Array.prototype.forEach.call(root.querySelectorAll(".reg-stat.reg-click"),function(el){ var mf=el.getAttribute("data-mf"); el.onclick=function(){ regMembersView(mf); }; el.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); regMembersView(mf); } }; });
     var wrap=$("regClubWrap");
@@ -1802,6 +1969,20 @@
     var S=rows.reduce(function(a,c){return {s:a.s+c.seniors,j:a.j+c.juniors,f:a.f+c.foreign,t:a.t+c.total};},{s:0,j:0,f:0,t:0});
     h+='</tbody><tfoot><tr><th style="text-align:left">'+(q?"Filtered":"All clubs")+' ('+rows.length+')</th><td class="num">'+regFmt(S.s)+'</td><td class="num">'+regFmt(S.j)+'</td><td class="num">'+regFmt(S.f)+'</td><td class="num"><b>'+regFmt(S.t)+'</b></td></tr></tfoot></table>';
     $("regClubWrap").innerHTML=h;
+  }
+  function regTopClubs(cl){
+    var wrap=$("regTopClubs"); if(!wrap) return;
+    var grouped={"Non current":1,"Referees & Officials":1};
+    var list=(cl||[]).filter(function(c){return !grouped[c.club] && c.total>0;}).slice().sort(function(a,b){return b.total-a.total;}).slice(0,12);
+    var max=list.length?list[0].total:1; var h='';
+    list.forEach(function(c,i){ var pct=Math.max(3,Math.round(c.total/max*100));
+      h+='<button type="button" data-club="'+esc(c.club)+'" title="Open '+esc(c.club)+' profile" style="display:grid;grid-template-columns:210px 1fr 64px;align-items:center;gap:12px;width:100%;text-align:left;background:transparent;border:0;border-radius:8px;padding:6px 8px;cursor:pointer;font:inherit">'
+        +'<span style="display:flex;align-items:center;gap:8px;min-width:0"><span style="flex:0 0 auto;width:20px;height:20px;border-radius:5px;background:var(--line2);color:var(--muted);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center">'+(i+1)+'</span><span style="font-weight:600;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(c.club)+'</span></span>'
+        +'<span style="height:16px;background:var(--line2);border-radius:8px;overflow:hidden"><span style="display:block;height:100%;width:'+pct+'%;background:linear-gradient(90deg,var(--blue),var(--blue5));border-radius:8px"></span></span>'
+        +'<span style="text-align:right;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums">'+regFmt(c.total)+'</span></button>';
+    });
+    wrap.innerHTML=h||'<p class="hint">No club data.</p>';
+    Array.prototype.forEach.call(wrap.querySelectorAll('button[data-club]'),function(b){ b.onmouseenter=function(){b.style.background='var(--line2)';}; b.onmouseleave=function(){b.style.background='transparent';}; b.onfocus=function(){b.style.background='var(--line2)';}; b.onblur=function(){b.style.background='transparent';}; b.onclick=function(){ regClubView(b.dataset.club); }; });
   }
   /* downloads */
   function regCSV(fn,headers,rows){ var e2=function(v){ v=(v==null?"":String(v)); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }; var lines=[headers.map(e2).join(",")]; rows.forEach(function(r){ lines.push(r.map(e2).join(",")); }); var blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=fn; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href); a.remove();},400); }
