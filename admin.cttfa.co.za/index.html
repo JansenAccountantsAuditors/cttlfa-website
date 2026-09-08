@@ -291,7 +291,7 @@
         <div class="hmod" data-area="voting"><div class="hic voting"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Voting &amp; Meetings</h3><p>Run AGMs, SGMs and Mancom meetings — accreditation, motions, live secret ballots and the formal record.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="meetings">Open</button></div></div>
         <div class="hmod" data-area="registrations"><div class="hic reg"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></div><h3>Registrations &amp; Clubs</h3><p>The full SAFA card-cycle analytics and per-club profiles, with live teams, fixtures, results and CSV/PDF exports.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="registrations">Open</button></div></div>
         <div class="hmod" data-area="fixtures"><div class="hic fix"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Fixtures &amp; Results</h3><p>Live league tables, fixtures and results across every division, on the CTTLFA LeagueRepublic site. Use LR admin login to manage fixtures and appointments.</p><div class="hfoot"><span class="hchip ext">External</span><span style="display:flex;gap:8px"><a class="btn ghost sm" href="https://a.leaguerepublic.com/myaccount/login/index.html" target="_blank" rel="noopener" title="Sign in to LeagueRepublic administration with the CTTLFA league email. On the office machine your saved browser password fills it in — no password is stored on this site.">LR admin login</a><a class="btn ghost sm" href="https://cttfass.leaguerepublic.com" target="_blank" rel="noopener">Open</a></span></div></div>
-        <div class="hmod" data-area="webadmin"><div class="hic web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Website Admin</h3><p>Edit the public cttfa.co.za content in-house — clubs (detail, map pins and LeagueRepublic names), committee, downloads, sponsors, notices, news, key dates and gallery. Changes show on the live site on the next page load.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="webadmin">Open</button></div></div>
+        <div class="hmod" data-area="webadmin"><div class="hic web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Website Admin</h3><p>Edit the public cttfa.co.za content in-house — clubs (detail, map pins and LeagueRepublic names), committee, downloads, sponsors, notices, news, key dates and gallery, plus a live-data refresh and last-updated view. Changes show on the live site on the next page load.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="webadmin">Open</button></div></div>
         <div class="hmod" data-area="discipline"><div class="hic disc"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="14" rx="1"/><path d="M9 21h6M12 17v4"/></svg></div><h3>Discipline, Referees &amp; Cards</h3><p>Yellow-card tracker, suspensions, referee appointments and administrative rulings.</p><div class="hfoot"><span class="hchip ext">External · rebuild planned</span><a class="btn ghost sm" href="https://dash.cttlfa.com" target="_blank" rel="noopener">Open</a></div></div>
         <div class="hmod" data-area="fincom"><div class="hic fincom"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div><h3>Fincom Dashboard</h3><p>The Finance Committee operating dashboard — mandate, budget, monthly phasing, debtors, compliance and the Mancom packs. Restricted to Fincom members.</p><div class="hfoot"><span class="hchip live">Live · restricted</span><button class="btn gold sm" data-goto="fincom">Open</button></div></div>
         <div class="hmod muted" data-area="fincom"><div class="hic fin"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Finance</h3><p>Club levies, billing and financial standing — linked to the registration base, so money and members sit on one screen.</p><div class="hfoot"><span class="hchip soon">Coming soon</span><button class="btn ghost sm" disabled>Phase 4</button></div></div>
@@ -479,6 +479,37 @@
 #tab-registrations .formg{display:inline-flex;gap:4px;vertical-align:middle}
 #tab-registrations .formg b{width:20px;height:20px;border-radius:4px;color:#fff;font-size:11px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--cond)}
 #tab-registrations .fW{background:var(--good)} #tab-registrations .fD{background:#8a94a8} #tab-registrations .fL{background:var(--bad)}
+#tab-registrations .reg-lookup .rl-ic{flex:0 0 auto;width:38px;height:38px;border-radius:10px;background:var(--navy);color:#fff;display:inline-flex;align-items:center;justify-content:center}
+#tab-registrations .reg-lookup input[type=search]{font-size:15px;padding:11px 13px}
+#tab-registrations .reg-insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+#tab-registrations .reg-insight{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-left-width:4px;border-radius:10px;background:#FBFCFF;padding:11px 13px}
+#tab-registrations .reg-insight p{margin:0;font-size:12.8px;line-height:1.5;color:var(--ink)}
+#tab-registrations .reg-insight .ri-ic{flex:0 0 auto;font-size:15px;line-height:1.3}
+#tab-registrations .reg-insight.good{border-left-color:var(--good)} #tab-registrations .reg-insight.good .ri-ic{color:var(--good)}
+#tab-registrations .reg-insight.warn{border-left-color:var(--warn)} #tab-registrations .reg-insight.warn .ri-ic{color:var(--warn)}
+#tab-registrations .reg-insight.bad{border-left-color:var(--bad)} #tab-registrations .reg-insight.bad .ri-ic{color:var(--bad)}
+#tab-registrations .reg-donuts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+#tab-registrations .reg-donut-wrap{border:1px solid var(--line);border-radius:12px;background:#FBFCFF;padding:14px}
+#tab-registrations .reg-donut-title{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:12px;color:var(--muted);margin-bottom:8px}
+#tab-registrations .reg-donut-flex{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+#tab-registrations .reg-dleg{display:flex;flex-direction:column;gap:4px;flex:1;min-width:150px}
+#tab-registrations .reg-dlegrow{display:grid;grid-template-columns:14px 1fr auto auto;gap:9px;align-items:center;width:100%;text-align:left;background:transparent;border:0;border-radius:7px;padding:6px 8px;font:inherit;color:var(--ink)}
+#tab-registrations .reg-dlegrow.cl{cursor:pointer} #tab-registrations .reg-dlegrow.cl:hover{background:var(--line2)}
+#tab-registrations .reg-dlegrow .sw{width:12px;height:12px;border-radius:3px}
+#tab-registrations .reg-dlegrow .lb{font-weight:600;font-size:13px} #tab-registrations .reg-dlegrow .vl{font-weight:700;font-variant-numeric:tabular-nums;color:var(--navy)} #tab-registrations .reg-dlegrow .pc{font-size:11.5px;color:var(--muted);min-width:34px;text-align:right}
+.ld-row{border:1px solid var(--line);border-radius:12px;background:#FBFCFF;padding:14px 16px;margin-bottom:12px}
+.ld-row .ld-h{font-size:14.5px;color:var(--ink)} .ld-row .ld-h .hint{font-weight:400}
+.ld-row .ld-when{margin-top:4px;font-size:13px;color:var(--ink)}
+.ld-row .ld-act{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.qnav{position:fixed;right:22px;bottom:22px;z-index:80;display:flex;flex-direction:column;align-items:flex-end;gap:10px}
+.qnav-fab{width:56px;height:56px;border-radius:50%;border:0;background:var(--gold);color:var(--navy);box-shadow:0 8px 24px rgba(7,26,74,.28);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:transform .15s,background .15s}
+.qnav-fab:hover{background:#ffc93c} .qnav-fab.on{transform:rotate(45deg);background:var(--navy);color:#fff}
+.qnav-menu{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(7,26,74,.22);padding:8px;min-width:224px;max-height:70vh;overflow:auto}
+.qnav-menu .qnav-h{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:11px;color:var(--muted);padding:6px 10px 8px}
+.qnav-item{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:9px;padding:10px 12px;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;min-height:40px}
+.qnav-item:hover{background:var(--line2);color:var(--navy)}
+@media print{.qnav{display:none}}
+@media(max-width:600px){.qnav{right:14px;bottom:14px}}
 </style>
 
     <!-- REGISTRATIONS (analytics, admin only) -->
@@ -516,6 +547,7 @@
           <a href="#h-mod-voting">Voting &amp; Meetings</a>
           <a href="#h-mod-reg">Registrations &amp; Clubs</a>
           <a href="#h-mod-web">Website Admin</a>
+          <a href="#h-mod-webstats">Website Analytics</a>
           <a href="#h-mod-disc">Discipline, Referees &amp; Cards</a>
           <a href="#h-mod-fincom">Fincom Dashboard</a>
           <a href="#h-mod-fixtures">Fixtures &amp; Results</a>
@@ -528,8 +560,9 @@
       <div class="card help-card" id="h-nav">
         <h3>Getting around</h3>
         <p>The <span class="kk">Home</span> page is the launcher. Each function is a card; press <span class="kk gold">Open</span> to go into it. The left sidebar stays with you throughout and holds three links: <span class="kk">Home</span> (back to the launcher), <span class="kk">Users</span> (who may sign in) and <span class="kk">Help</span> (this page).</p>
-        <p>When you open <span class="kk">Voting &amp; Meetings</span>, a second row of tabs appears at the top of that page (Meetings, Accreditation, Compliance, Motions, Live &amp; results, Audit). Those screens belong to voting only and show only while you are in that module. The same pattern will apply to Website Admin once it is brought fully in-house.</p>
-        <div class="callout"><b>External tools open in a new browser tab.</b> Fixtures, the Fincom dashboard, the discipline dashboard and the live public website open separately, so the Admin Centre stays open behind them for you to come back to.</div>
+        <p>Some modules open with a second row of tabs at the top of the page. <span class="kk">Voting &amp; Meetings</span> has Meetings, Accreditation, Compliance, Motions, Live &amp; results and Audit. <span class="kk">Website Admin</span> has its own row too — Notices, News, Committee, Clubs, Sponsors, Downloads, Key dates, Gallery, Live data and Settings. Those sub-tabs belong to that module and show only while you are in it.</p>
+        <div class="callout"><b>Quick navigation.</b> A round gold <b>+</b> button sits in the bottom-right corner of every page. Press it for a short menu that jumps straight to any module — Home, Voting, Registrations, Website Analytics, Website Admin, Fincom, the live site — or back to the top of a long page, so you are not scrolling to get around.</div>
+        <div class="callout"><b>External tools open in a new browser tab.</b> Fixtures (LeagueRepublic), the discipline dashboard and the live public website open separately, so the Admin Centre stays open behind them for you to come back to.</div>
       </div>
 
       <div class="card help-card" id="h-signin">
@@ -559,15 +592,35 @@
 
       <div class="card help-card" id="h-mod-reg">
         <h3>Registrations &amp; Clubs</h3>
-        <p><b>What it is:</b> the association-wide registration analytics built on the SAFA two-year card cycle. It shows which cycle we are in, current registered members, the monthly trend by type (senior, junior, foreign), a per-club breakdown, and per-club profiles that pull in live teams, fixtures, results and form from the public website.</p>
-        <p><b>Where:</b> Home &rarr; Registrations &amp; Clubs. <b>Who:</b> read-only analytics, administrators only, because it holds member-level data.</p>
-        <p><b>How to use it:</b> the headline figures are clickable. Click any number to list the members behind it, then export that list to CSV or PDF. Use the cycle selector to compare the current 2024&ndash;2026 cycle against 2022&ndash;2024. Search a club to open its profile; from there you can open a member's full card history. Identity numbers are never shown or exported, in line with the Protection of Personal Information Act 4 of 2013.</p>
+        <p><b>What it is:</b> the association-wide registration picture, built on the SAFA two-year card cycle. It shows which cycle we are in, how many members are registered, who they are (senior, junior, foreign), how many are returning versus new, when in the year cards are loaded, a per-club breakdown, and per-club profiles that pull in live teams, fixtures, results and form from the public website.</p>
+        <p><b>Where:</b> Home &rarr; Registrations &amp; Clubs. <b>Who:</b> read-only, administrators only, because it holds member-level data.</p>
+        <p><b>Look up a member.</b> At the top of the page is a search box that reads the whole registered roll. Type a <b>SAFA number, surname or first name</b> to find any player, referee, coach or official, and click the result to see their full card history across every cycle — useful for verifying on the spot whether someone is registered and where. Identity numbers are never shown or exported (Protection of Personal Information Act 4 of 2013).</p>
+        <p><b>Read the picture, not just the numbers.</b> Below the search the page gives you a plain-language read of the season (&ldquo;what the numbers mean&rdquo;), doughnut charts of the membership by category and returning-versus-new, a running total of how the cycle has built up, the monthly registration pattern, and a ranking of the largest clubs. Every figure, slice and bar is <b>clickable</b>: click it to list the members behind it and export that list to CSV or PDF. Click a club, or a bar in the top-clubs chart, to open its full profile.</p>
+        <p><b>Compare cycles.</b> Use the cycle selector to compare the current cycle against the previous one, and watch the countdown to the next card cycle so re-carding is planned in good time.</p>
       </div>
 
       <div class="card help-card" id="h-mod-web">
         <h3>Website Admin</h3>
-        <p><b>What it is:</b> where the office edits the content of the public site (www.cttfa.co.za) without touching code: clubs, committee and key contacts, sponsors, downloads, news graphics, notices, key dates and events, and the photo gallery. The public site reads these and updates on the next page load, so there is no redeploy.</p>
-        <p><b>Where:</b> Home &rarr; Website Admin. <b>Who:</b> administrators. <b>Status:</b> this is being brought fully inside the Admin Centre so there is one place to work from. Until that move is complete, the card opens the existing website admin; once in-house, it becomes a page here with its own set of sub-pages, and the separate websiteadmin site falls away.</p>
+        <p><b>What it is:</b> where the office edits the content of the public site (www.cttfa.co.za) without touching code or asking anyone to redeploy. It now lives fully inside the Admin Centre, with its own row of sub-tabs. The public site reads this content and updates on the next page load.</p>
+        <p><b>The sub-tabs:</b></p>
+        <ul class="steps">
+          <li><b>Notices</b> — short dated messages shown as a strip on the public site.</li>
+          <li><b>News</b> — uploaded graphics or posters for the home and news pages.</li>
+          <li><b>Committee</b> — the office bearers shown publicly (phone and internal contact stay private).</li>
+          <li><b>Clubs</b> — the full club record for all 55 clubs: name and membership type, ground and suburb, a <b>map pin</b> you set by searching an address or dragging a marker (the latitude and longitude fill in for you), honours, website and Facebook, and the <b>LeagueRepublic names</b> the club plays under. A <b>Fetch from LeagueRepublic</b> button pulls the live team list, matches names to the club automatically, and lets you map any it does not recognise with one click. This mapping is what lets the public site show each club&rsquo;s fixtures and results.</li>
+          <li><b>Sponsors, Downloads, Key dates, Gallery</b> — the sponsor credit, the document library, the events list and the photo albums.</li>
+          <li><b>Live data</b> — see below.</li>
+          <li><b>Settings</b> — the Google Maps key used by the club map picker.</li>
+        </ul>
+        <p><b>Live data (refresh the live site).</b> The <span class="kk">Live data</span> tab shows when the public site last refreshed its match data from LeagueRepublic, and when the registration figures were last loaded. The match data updates automatically about every hour. Straight after you capture results, press <span class="kk gold">Refresh live data now</span> to push the update within a few minutes — it opens the sync on GitHub, where you press <b>Run workflow</b>. <b>Re-read feed</b> reloads the latest into the Admin Centre, for example before you map club names on the Clubs tab.</p>
+        <p><b>Where:</b> Home &rarr; Website Admin. <b>Who:</b> administrators, and any Staff user given Website Admin edit rights. Viewers see the content but cannot change it. The separate old websiteadmin site has fallen away.</p>
+      </div>
+
+      <div class="card help-card" id="h-mod-webstats">
+        <h3>Website Analytics</h3>
+        <p><b>What it is:</b> a live view of how the public site (www.cttfa.co.za) is being used — how many people visit, whether they arrive from Google, social media or a direct link, which pages they read most, which countries they are in, and what they do on the site. It reads straight from Google Analytics, so it is always current, and you choose the period you want to look at.</p>
+        <p><b>How to read it (for anyone).</b> The three headline tiles are the plain story: <b>Active users</b> is how many different people used the site, <b>New users</b> is how many were there for the first time, and <b>Sessions</b> is how many separate visits there were (one person can visit several times). The line shows how visitors rise and fall day by day. The bars show where people come from and which pages they open. The map shows where in the world they are — for us, almost entirely South Africa. Change the date box at the top to look at a day, a month or the whole season.</p>
+        <p><b>Where:</b> Home &rarr; Website Analytics. <b>Who:</b> every signed-in user can see it; there is nothing to edit. It carries no member or personal information, only visitor counts.</p>
       </div>
 
       <div class="card help-card" id="h-mod-disc">
@@ -580,7 +633,7 @@
         <h3>Fincom Dashboard</h3>
         <p><b>What it is:</b> the Finance Committee operating dashboard, now hosted inside the Admin Centre. It covers the Fincom mandate and scope, the KPI summary, the 2026 budget and its monthly phasing, debtors, compliance, the work plan and meeting rhythm, and a document library holding the monthly Mancom packs, the budgets, the finance policy manual and the debtor-system review.</p>
         <p><b>Where:</b> Home &rarr; Fincom Dashboard, which opens the gated page inside the Admin Centre (no separate site). <b>Who:</b> administrators and any user given <b>Fincom</b> area access on the Mancom users page. Everyone else does not see the card at all.</p>
-        <p><b>Security:</b> the figures and documents are not on any public address. They are served only to a signed-in user who has Fincom access; the document links are secure, single-session links that expire after an hour. The old public <span class="kk">cttfafincom.tiiny.site</span> version is being retired in favour of this.</p>
+        <p><b>Security:</b> the figures and documents are not on any public address. They are served only to a signed-in user who has Fincom access; the document links are secure, single-session links that expire after an hour. The old public <span class="kk">cttfafincom.tiiny.site</span> version has been retired in favour of this.</p>
       </div>
 
       <div class="card help-card" id="h-mod-fixtures">
@@ -834,6 +887,7 @@
     }
     await loadClubs(); await loadMeetings(); await loadUsers();
     renderHome(); homeWire(); var _mp0=$("meetingPick"); if(_mp0) _mp0.style.display="none";
+    ensureQuickNav();
     if(meRole==="fincom") goTab("fincom");
   }
 
@@ -871,6 +925,38 @@
   Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav, #votingSubnav .subtab"),function(t){
     t.onclick=function(){ goTab(t.dataset.tab); };
   });
+  /* ---------- quick navigation (floating +) ---------- */
+  function ensureQuickNav(){
+    if(document.getElementById("qnav")){ qnavBuildMenu(); return; }
+    var wrap=document.createElement("div"); wrap.id="qnav"; wrap.className="qnav";
+    wrap.innerHTML='<div class="qnav-menu hidden" id="qnavMenu"></div><button class="qnav-fab" id="qnavFab" aria-label="Quick navigation" title="Jump to another part of the Admin Centre"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>';
+    document.body.appendChild(wrap);
+    var fab=document.getElementById("qnavFab"), menu=document.getElementById("qnavMenu");
+    fab.onclick=function(e){ e.stopPropagation(); var open=!menu.classList.contains("hidden"); if(open){ menu.classList.add("hidden"); fab.classList.remove("on"); } else { qnavBuildMenu(); menu.classList.remove("hidden"); fab.classList.add("on"); } };
+    document.addEventListener("click",function(e){ if(!wrap.contains(e.target)){ menu.classList.add("hidden"); fab.classList.remove("on"); } });
+    qnavBuildMenu();
+  }
+  function qnavBuildMenu(){
+    var menu=document.getElementById("qnavMenu"); if(!menu) return;
+    var items=[]; items.push({t:"↑  Top of page",act:function(){ try{ window.scrollTo({top:0,behavior:"smooth"}); }catch(e){ window.scrollTo(0,0); } }});
+    function tab(label,name){ return {t:label,act:function(){ goTab(name); }}; }
+    function ext(label,url){ return {t:label+"  ↗",act:function(){ window.open(url,"_blank","noopener"); }}; }
+    if(meRole==="fincom"){ items.push(tab("Fincom Dashboard","fincom")); }
+    else {
+      items.push(tab("Home","home"));
+      items.push(tab("Voting & Meetings","meetings"));
+      items.push(tab("Registrations & Clubs","registrations"));
+      items.push(tab("Website Analytics","webstats"));
+      items.push(tab("Website Admin","webadmin"));
+      items.push(tab("Fincom Dashboard","fincom"));
+      if(meRole==="administrator") items.push(tab("Users","users"));
+      items.push(ext("Fixtures & Results","https://cttfass.leaguerepublic.com"));
+      items.push(ext("Live website","https://www.cttfa.co.za"));
+    }
+    items.push(tab("Help & guide","help"));
+    menu.innerHTML='<div class="qnav-h">Jump to</div>'+items.map(function(it,i){ return '<button class="qnav-item" data-i="'+i+'">'+esc(it.t)+'</button>'; }).join("");
+    Array.prototype.forEach.call(menu.querySelectorAll(".qnav-item"),function(b){ b.onclick=function(){ var it=items[+b.dataset.i]; menu.classList.add("hidden"); var f=document.getElementById("qnavFab"); if(f) f.classList.remove("on"); try{ it.act(); }catch(e){} }; });
+  }
 
   /* ---------- clubs ---------- */
   async function loadClubs(){
@@ -1579,6 +1665,7 @@
       {k:'message',type:'textarea',label:'On-page message (optional)'}
     ], summary:function(it){ return (it.role||'')+' — '+(it.name||''); } },
     {id:'clubs', key:'clubs', title:'Clubs', custom:'clubs', hint:'The member clubs shown on the public site: detail, ground and suburb, map pin (GPS), honours, and the LeagueRepublic name mapping used to pull each club\'s fixtures and results.', summary:function(it){ return (it.name||'(unnamed)'); } },
+    {id:'livedata', key:'livedata', title:'Live data', custom:'livedata', hint:'When the public site last refreshed its live match and registration data, and how to pull the latest through by hand.', summary:function(){ return 'Live data'; } },
     {id:'sponsors', key:'sponsors', title:'Sponsors', hint:'The website sponsor credit shown on the home page.', fields:[
       {k:'name',type:'text',label:'Name'},
       {k:'url',type:'text',label:'Website URL'},
@@ -1631,6 +1718,7 @@
     var data; try{ data=await waLoad(_waCur); }catch(e){ body.innerHTML='<div class="card"><p class="hint">Could not load: '+esc(e.message||e)+'</p></div>'; return; }
     _waData=data;
     if(def.custom==='clubs'){ return waClubList(isAdmin); }
+    if(def.custom==='livedata'){ return waLiveData(isAdmin); }
     if(def.custom==='settings'){ return waSettingsForm(isAdmin); }
     var items=waItems(def,data);
     var h='<div class="card"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0">'+esc(def.title)+'</h3><p class="hint" style="margin:4px 0 0;max-width:64ch">'+esc(def.hint)+'</p></div>'+(isAdmin?'<button class="btn gold sm" id="waAdd">Add</button>':'')+'</div><div id="waMsg"></div>';
@@ -1873,6 +1961,26 @@
       waPersist(waDef('clubs'),arr).then(function(ok){ if(!ok) btn.disabled=false; });
     };
   }
+  async function waLiveData(isAdmin){
+    var body=$("waBody"); if(!body) return;
+    var repo='JansenAccountantsAuditors/cttlfa-website';
+    var wfUrl='https://github.com/'+repo+'/actions/workflows/leaguerepublic-sync.yml';
+    body.innerHTML='<div class="card"><h3 style="margin:0">Live data</h3><p class="hint" style="margin:4px 0 0;max-width:76ch">When the public site (www.cttfa.co.za) last refreshed its live data, and how to pull the latest through by hand between the automatic updates.</p><div id="waMsg"></div><div id="ldRows" style="margin-top:16px"><p class="hint">Checking the live feed&hellip;</p></div></div>';
+    function fmtWhen(iso){ if(!iso) return 'unknown'; var d=new Date(iso); if(isNaN(d.getTime())) return String(iso); var mins=Math.max(0,Math.round((Date.now()-d.getTime())/60000)); var ago=mins<1?'just now':(mins<60?mins+' min ago':(mins<1440?Math.round(mins/60)+' h ago':Math.round(mins/1440)+' days ago')); return d.toLocaleString('en-ZA')+' · '+ago; }
+    var upd=null, ok=true;
+    try{ _season=null; _seasonP=null; await fetchSeason(); upd=_season&&_season.updated; }catch(e){ ok=false; }
+    var regWhen=(typeof _reg!=='undefined'&&_reg&&_reg.as_at)?regDate(_reg.as_at):null;
+    var rows='';
+    rows+='<div class="ld-row"><div class="ld-h"><b>Website match data</b> <span class="hint">LeagueRepublic &rarr; fixtures, results, league tables, referee appointments</span></div>'
+      +'<div class="ld-when">Last refreshed on the live site: <b>'+(ok?esc(fmtWhen(upd)):'could not reach the feed just now')+'</b></div>'
+      +'<div class="ld-act">'+(isAdmin?'<a class="btn gold sm" href="'+wfUrl+'" target="_blank" rel="noopener">Refresh live data now</a> ':'')+'<button class="btn ghost sm" id="ldReRead" type="button">Re-read feed</button></div>'
+      +'<p class="hint" style="margin:8px 0 0">This is pulled from LeagueRepublic automatically about every hour, and each change publishes to the live site on its own. Straight after you capture results, press <b>Refresh live data now</b> to push within a few minutes — it opens the sync on GitHub, where you press <b>Run workflow</b> (sign in with the association GitHub login if asked). <b>Re-read feed</b> just reloads the latest into this Admin Centre, for example before you map club names on the Clubs page.</p></div>';
+    rows+='<div class="ld-row"><div class="ld-h"><b>Registration data</b> <span class="hint">SAFA card register &rarr; the Registrations analytics</span></div>'
+      +'<div class="ld-when">Figures as at: <b>'+(regWhen?esc(regWhen):'open the Registrations module to see its as-at date')+'</b></div>'
+      +'<p class="hint" style="margin:8px 0 0">The Registrations figures read live from the database every time the module is opened, so they are always current as at the last SAFA card export loaded. Loading a new export is done by the office; there is nothing to refresh here.</p></div>';
+    var lr=$("ldRows"); if(lr) lr.innerHTML=rows;
+    var rr=$("ldReRead"); if(rr) rr.onclick=async function(){ rr.disabled=true; rr.textContent='Re-reading…'; try{ _season=null; _seasonP=null; await fetchSeason(); }catch(e){} _waCur='livedata'; waRenderList(); };
+  }
   function waSettingsForm(isAdmin){
     var body=$("waBody"); if(!body) return; var s=_waData||{};
     var h='<div class="card"><h3 style="margin:0">Settings</h3><p class="hint" style="margin:4px 0 12px;max-width:64ch">Options for the public-site content tools.</p><div id="waMsg"></div>';
@@ -1918,21 +2026,24 @@
     var top10=(d.clubs||[]).filter(function(x){return x.club!=="Non current"&&x.club!=="Referees & Officials";}).slice(0,10).reduce(function(a,x){return a+x.total;},0);
     var forPc=c.persons?Math.round((c.foreign_nationals||0)/c.persons*100):0;
     var h='';
+    h+='<div class="card reg-lookup"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="rl-ic"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg></span><div style="flex:1;min-width:220px"><h3 style="margin:0">Look up a member</h3><p class="hint" style="margin:2px 0 0">Search the whole registered roll — any player, referee, coach or official — by SAFA number, surname or first name. Click a result for their full card history.</p></div></div><div style="position:relative;max-width:560px;margin-top:10px"><input id="regRollSearch" type="search" placeholder="SAFA number, surname or first name…" autocomplete="off" aria-label="Look up a member"><div class="search-list hidden" id="regRollResults"></div></div><p class="hint" style="margin:8px 0 0">Identity numbers are never shown or exported. POPIA (Act 4 of 2013).</p></div>';
     h+='<div class="card">'+cycleSelector()+'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">Registration analytics</h3><p class="hint" style="margin:2px 0 0">SAFA card cycle '+cs+'–'+ce+(d.is_current?" (current)":"")+' · live from the registration database · as at '+esc(regDate(d.as_at))+'. Click any tile or club to drill in and download.</p></div><button class="btn ghost sm" id="regRefresh">Refresh</button></div>';
     h+='<div class="reg-cycles">'+regCyc("Previous cycle",ps+" – "+cs,d.prev.persons,d.prev.seniors,d.prev.juniors,"past")+regCyc("Selected cycle",cs+" – "+ce,c.persons,c.seniors,c.juniors,"cur")+'<div class="reg-cyc next"><div class="rt">Next cycle</div><div class="ry">'+ce+' – '+ne+'</div><div class="rp">—</div><div class="rc">opens '+regDate(d.new_cycle_start)+'</div><div class="rs">Re-card base '+regFmt(c.persons)+'</div></div></div>';
     if(d.is_current) h+='<div class="reg-countdown"><div class="d">'+regFmt(d.days_to_new_cycle)+'<span>days to new cycle</span></div><p>The '+ce+'–'+ne+' cycle opens '+regDate(d.new_cycle_start)+'. Every current member must be re-carded; the re-card base is the '+regFmt(c.persons)+' members registered this cycle, of whom '+regFmt(c.returning)+' carried over from the previous cycle.</p></div>';
     h+='</div>';
     h+='<div class="card"><h3 style="margin:0 0 4px">Registered members — '+cs+'–'+ce+' cycle</h3><p class="hint" style="margin:0 0 12px">Cards valid to '+regDate(d.cur_end)+' · unique SAFA numbers · click a tile to list, view and export those members</p><div class="reg-stats">'+regStat(c.persons,"Registered members","this cycle","all")+regStat(c.seniors,"Seniors",snrPc+"% of members","cat:Senior")+regStat(c.juniors,"Juniors",jnrPc+"% of members","cat:Junior")+regStat(c.foreign,"Foreign","age not on card","cat:Foreign")+regStat(c.returning,"Returning","from previous cycle","returning")+regStat(c.new_in_cycle,"New entrants","first cycle","new")+regStat(c.referees,"Referees & officials","carded this cycle","ref")+'</div></div>';
-    h+='<div class="card"><h3 style="margin:0 0 6px">Benchmark ratios</h3><div class="kpis">'+kpi((growth>=0?"+":"")+growth.toFixed(1)+"%","Cycle-on-cycle growth",regFmt(d.prev.persons)+" → "+regFmt(c.persons))+kpi(jnrPc+"%","Junior share","development pipeline")+kpi(retPc+"%","Retention","returning ÷ current")+kpi(regFmt(Math.round(c.at_clubs/activeClubs)),"Avg per active club",regFmt(c.at_clubs)+" at "+activeClubs+" clubs")+kpi(regFmt(c.foreign_nationals||0),"Foreign nationals",forPc+"% of members")+kpi(regFmt(d.total_events),"Total card events","on record")+'</div></div>';
+    h+='<div class="card"><h3 style="margin:0 0 4px">What the numbers mean</h3><p class="hint" style="margin:0 0 12px">Plain-language read on the season so far. Each point is drawn from the figures above.</p>'+regInsights(d)+'</div>';
+    h+='<div class="card"><h3 style="margin:0 0 4px">Membership at a glance</h3><p class="hint" style="margin:0 0 14px">Who makes up the '+regFmt(c.persons)+' registered members, and how many are returning versus new. Click any slice or row to list those members.</p><div class="reg-donuts"><div class="reg-donut-wrap"><div class="reg-donut-title">By category</div><div class="reg-donut-flex">'+regDonut([{label:"Seniors",value:c.seniors,color:"var(--navy)",mf:"cat:Senior"},{label:"Juniors",value:c.juniors,color:"var(--blue5)",mf:"cat:Junior"},{label:"Foreign",value:c.foreign,color:"var(--gold)",mf:"cat:Foreign"}],"members")+regDonutLegend([{label:"Seniors",value:c.seniors,color:"var(--navy)",mf:"cat:Senior"},{label:"Juniors",value:c.juniors,color:"var(--blue5)",mf:"cat:Junior"},{label:"Foreign",value:c.foreign,color:"var(--gold)",mf:"cat:Foreign"}],c.persons)+'</div></div><div class="reg-donut-wrap"><div class="reg-donut-title">Returning vs new</div><div class="reg-donut-flex">'+regDonut([{label:"Returning",value:c.returning,color:"var(--navy)",mf:"returning"},{label:"New entrants",value:c.new_in_cycle,color:"var(--gold)",mf:"new"}],"members")+regDonutLegend([{label:"Returning",value:c.returning,color:"var(--navy)",mf:"returning"},{label:"New entrants",value:c.new_in_cycle,color:"var(--gold)",mf:"new"}],c.persons)+'</div></div></div><p class="hint" style="margin:12px 0 0">Retention '+retPc+'% · new-entrant share '+newPc+'%. The re-card base cannot be assumed to renew in full.</p></div>';
+    h+='<div class="card"><h3 style="margin:0 0 4px">Benchmark ratios</h3><div class="kpis">'+kpi((growth>=0?"+":"")+growth.toFixed(1)+"%","Cycle-on-cycle growth",regFmt(d.prev.persons)+" → "+regFmt(c.persons))+kpi(jnrPc+"%","Junior share","development pipeline")+kpi(retPc+"%","Retention","returning ÷ current")+kpi(regFmt(Math.round(c.at_clubs/activeClubs)),"Avg per active club",regFmt(c.at_clubs)+" at "+activeClubs+" clubs")+kpi(regFmt(c.foreign_nationals||0),"Foreign nationals",forPc+"% of members")+kpi(regFmt(d.total_events),"Total card events","on record")+'</div></div>';
     h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0 0 4px">When registrations happen</h3><p class="hint" style="margin:0">Monthly, by type · busy window Feb–May</p></div><span style="display:flex;gap:8px"><button class="btn ghost sm" id="regMonCsv">CSV</button><button class="btn ghost sm" id="regMonPdf">PDF</button></span></div><div class="reg-legend" style="margin-top:8px"><span><i class="rsw" style="background:var(--navy)"></i>New (first card)</span><span><i class="rsw" style="background:var(--blue)"></i>Renewal</span><span><i class="rsw" style="background:var(--gold)"></i>Transfer</span></div><div id="regChart"></div></div>';
-    h+='<div class="card"><h3 style="margin:0 0 4px">Growth vs retention</h3><div class="reg-msbar"><i style="background:var(--navy);width:'+retPc+'%">Returning '+regFmt(c.returning)+'</i><i style="background:var(--gold);color:var(--ink);width:'+newPc+'%">New '+regFmt(c.new_in_cycle)+'</i></div><p class="hint" style="margin:8px 0 0">Retention '+retPc+'% · new-entrant share '+newPc+'%. The re-card base cannot be assumed to renew in full.</p></div>';
+    h+='<div class="card"><h3 style="margin:0 0 4px">How the cycle has built up</h3><p class="hint" style="margin:0 0 6px">Running total of registered members as the '+cs+'–'+ce+' cycle has progressed. The steep stretch is the February–May registration surge.</p><div id="regCumChart"></div></div>';
     if(d.is_current) h+='<div class="card"><h3 style="margin:0 0 6px">Preparing for the '+ce+'–'+ne+' cycle</h3><div class="prepbox"><ul style="margin:0;padding-left:18px"><li><b>Re-card base of '+regFmt(c.persons)+' members</b> must renew from '+regDate(d.new_cycle_start)+'. Work down by club.</li><li><b>Plan for the February–May surge</b> — both seasons of this cycle loaded then; book card stock and SAFA processing ahead of it.</li><li><b>Protect the '+regFmt(c.returning)+' returning members</b> first; early club renewal drives hold the base.</li><li><b>Prioritise the larger clubs</b> — the top ten carry '+regFmt(top10)+' members between them.</li></ul></div></div>';
     h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0 0 4px">Top clubs by registered members</h3><p class="hint" style="margin:0">The twelve largest clubs this cycle · click a bar to open the club profile</p></div></div><div id="regTopClubs" style="margin-top:12px;display:flex;flex-direction:column;gap:2px"></div></div>';
     h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap"><h3 style="margin:0">Registered members by club</h3><span style="display:flex;gap:8px;align-items:center"><input id="regSearch" type="search" placeholder="Search club..." style="max-width:180px;width:auto" autocomplete="off" aria-label="Search club"><button class="btn ghost sm" id="regClubCsv">CSV</button><button class="btn ghost sm" id="regClubPdf">PDF</button></span></div><p class="hint" style="margin:6px 0 0">Click a club for its full profile — members, and its live teams, fixtures and results.</p><div id="regClubWrap" style="overflow-x:auto;margin-top:10px"></div></div>';
     root.innerHTML=h;
     var x;
     if(x=$("regRefresh")) x.onclick=function(){ renderRegistrations(_regYear); };
-    regChart(d.monthly); regTopClubs(d.clubs); regClubTable(d.clubs,c.persons,"");
+    regChart(d.monthly); regCumChart(d.monthly); regTopClubs(d.clubs); regClubTable(d.clubs,c.persons,""); regWireDonuts(root); regWireRollSearch();
     var srch=$("regSearch"); if(srch) srch.oninput=function(){ regClubTable(_reg.clubs,_reg.current.persons,this.value.trim().toLowerCase()); };
     Array.prototype.forEach.call(root.querySelectorAll(".reg-stat.reg-click"),function(el){ var mf=el.getAttribute("data-mf"); el.onclick=function(){ regMembersView(mf); }; el.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); regMembersView(mf); } }; });
     var wrap=$("regClubWrap");
@@ -1984,6 +2095,77 @@
     });
     wrap.innerHTML=h||'<p class="hint">No club data.</p>';
     Array.prototype.forEach.call(wrap.querySelectorAll('button[data-club]'),function(b){ b.onmouseenter=function(){b.style.background='var(--line2)';}; b.onmouseleave=function(){b.style.background='transparent';}; b.onfocus=function(){b.style.background='var(--line2)';}; b.onblur=function(){b.style.background='transparent';}; b.onclick=function(){ regClubView(b.dataset.club); }; });
+  }
+  /* ---- registrations: visual helpers (donut, trend, insights, roll search) ---- */
+  function regDonut(segs,centerLabel){
+    var total=segs.reduce(function(a,s){return a+(s.value||0);},0)||1;
+    var cx=90,cy=90,r=60,sw=26,C=2*Math.PI*r,off=0,circ='';
+    segs.forEach(function(s){ var frac=(s.value||0)/total, len=frac*C;
+      circ+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="none" stroke="'+s.color+'" stroke-width="'+sw+'" stroke-linecap="butt" stroke-dasharray="'+len+' '+(C-len)+'" stroke-dashoffset="'+(-off)+'" transform="rotate(-90 '+cx+' '+cy+')"'+(s.mf?' style="cursor:pointer" data-mf="'+s.mf+'"':'')+'><title>'+esc(s.label)+': '+regFmt(s.value)+' ('+Math.round(frac*100)+'%)</title></circle>';
+      off+=len; });
+    return '<svg viewBox="0 0 180 180" width="168" height="168" role="img" aria-label="'+esc(centerLabel||'')+'">'+circ
+      +'<text x="'+cx+'" y="'+(cy-2)+'" text-anchor="middle" font-size="27" font-weight="800" fill="var(--navy)">'+regFmt(total)+'</text>'
+      +'<text x="'+cx+'" y="'+(cy+17)+'" text-anchor="middle" font-size="10.5" fill="var(--muted)">'+esc(centerLabel||'total')+'</text></svg>';
+  }
+  function regDonutLegend(segs,total){
+    total=total||segs.reduce(function(a,s){return a+(s.value||0);},0)||1;
+    return '<div class="reg-dleg">'+segs.map(function(s){ var pct=Math.round((s.value||0)/total*100);
+      return '<'+(s.mf?'button type="button"':'div')+' class="reg-dlegrow'+(s.mf?' cl':'')+'"'+(s.mf?' data-mf="'+s.mf+'"':'')+'><span class="sw" style="background:'+s.color+'"></span><span class="lb">'+esc(s.label)+'</span><span class="vl">'+regFmt(s.value)+'</span><span class="pc">'+pct+'%</span></'+(s.mf?'button':'div')+'>';
+    }).join('')+'</div>';
+  }
+  function regCumChart(m){
+    var el=$("regCumChart"); if(!el) return;
+    if(!m||!m.length){ el.innerHTML='<p class="hint">No data.</p>'; return; }
+    var W=920,H=250,pl=46,pr=12,pt=16,pb=42,iw=W-pl-pr,ih=H-pt-pb;
+    var cum=[],run=0; m.forEach(function(r){ run+=(r.total||0); cum.push(run); });
+    var max=cum[cum.length-1]||1,nice=Math.max(500,Math.ceil(max/500)*500),step=nice/5;
+    function x(i){ return pl+(m.length<=1?iw/2:(i/(m.length-1))*iw); } function y(v){ return pt+ih-(v/nice)*ih; }
+    var pts=cum.map(function(v,i){return x(i)+','+y(v);}).join(' ');
+    var area='M'+x(0)+','+y(0)+' L'+cum.map(function(v,i){return x(i)+','+y(v);}).join(' L')+' L'+x(m.length-1)+','+y(0)+' Z';
+    var s='<svg viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Cumulative registered members over the cycle.">';
+    for(var g=0;g<=nice+1;g+=step){ var yy=y(g); s+='<line x1="'+pl+'" y1="'+yy+'" x2="'+(W-pr)+'" y2="'+yy+'" stroke="var(--line)"/><text x="'+(pl-6)+'" y="'+(yy+3)+'" text-anchor="end" font-size="9" fill="var(--muted)">'+Math.round(g).toLocaleString("en-ZA").replace(/,/g," ")+'</text>'; }
+    s+='<path d="'+area+'" fill="var(--blue5)" opacity="0.12"/><polyline points="'+pts+'" fill="none" stroke="var(--blue)" stroke-width="2.5"/>';
+    cum.forEach(function(v,i){ s+='<circle cx="'+x(i)+'" cy="'+y(v)+'" r="2.6" fill="var(--blue)"><title>'+m[i].ym+': '+regFmt(v)+' cumulative</title></circle>'; if(i%2===0||i===m.length-1) s+='<text x="'+x(i)+'" y="'+(pt+ih+14)+'" text-anchor="middle" font-size="8.5" fill="var(--muted)">'+m[i].ym.slice(2)+'</text>'; });
+    s+='</svg>'; el.innerHTML=s;
+  }
+  function regInsightCard(icon,tone,text){ return '<div class="reg-insight '+tone+'"><span class="ri-ic">'+icon+'</span><p>'+text+'</p></div>'; }
+  function regInsights(d){
+    var c=d.current, out=[];
+    var growth=d.prev.persons?((c.persons-d.prev.persons)/d.prev.persons*100):0;
+    var jnrPc=c.persons?Math.round(c.juniors/c.persons*100):0, retPc=c.persons?Math.round(c.returning/c.persons*100):0;
+    var clubsReal=(d.clubs||[]).filter(function(x){return x.club!=="Non current"&&x.club!=="Referees & Officials";});
+    var top10=clubsReal.slice(0,10).reduce(function(a,x){return a+x.total;},0), conc=c.persons?Math.round(top10/c.persons*100):0;
+    if(growth>=0.5) out.push(regInsightCard("&#9650;","good","<b>Membership is growing.</b> Up "+growth.toFixed(1)+"% on the previous cycle ("+regFmt(d.prev.persons)+" &rarr; "+regFmt(c.persons)+" members). The base is expanding, not just holding."));
+    else if(growth<=-0.5) out.push(regInsightCard("&#9660;","bad","<b>Membership is contracting.</b> Down "+Math.abs(growth).toFixed(1)+"% on the previous cycle ("+regFmt(d.prev.persons)+" &rarr; "+regFmt(c.persons)+"). Renewal drives need attention."));
+    else out.push(regInsightCard("&#8776;","warn","<b>Membership is flat.</b> Broadly level with the previous cycle ("+regFmt(d.prev.persons)+" &rarr; "+regFmt(c.persons)+")."));
+    out.push(regInsightCard("&#9917;",(jnrPc>=40?"good":(jnrPc>=25?"warn":"bad")),"<b>Junior pipeline is "+(jnrPc>=40?"strong":(jnrPc>=25?"moderate":"thin"))+".</b> Juniors are "+jnrPc+"% of the membership — the pool that feeds senior football in the years ahead."));
+    out.push(regInsightCard("&#8635;",(retPc>=75?"good":(retPc>=55?"warn":"bad")),"<b>Retention is "+retPc+"%.</b> "+regFmt(c.returning)+" of this cycle&rsquo;s members carried over from the last one. The "+regFmt(c.persons)+" re-card base cannot be assumed to renew in full — protect the returning members first."));
+    out.push(regInsightCard("&#127942;",(conc>=60?"warn":"good"),"<b>The ten largest clubs hold "+conc+"% of all members</b> ("+regFmt(top10)+" of "+regFmt(c.persons)+"). "+(conc>=60?"Membership is concentrated — a change at a big club moves the whole association.":"Membership is reasonably spread across the clubs.")));
+    return '<div class="reg-insights">'+out.join('')+'</div>';
+  }
+  function regWireDonuts(root){
+    Array.prototype.forEach.call(root.querySelectorAll('[data-mf]'),function(el){ if(el.tagName==='CIRCLE'||el.classList.contains('reg-dlegrow')){ el.style.cursor='pointer'; el.onclick=function(){ regMembersView(el.getAttribute('data-mf')); }; if(el.classList.contains('reg-dlegrow')) el.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); regMembersView(el.getAttribute('data-mf')); } }; } });
+  }
+  var rollTimer=null;
+  function regWireRollSearch(){
+    var inp=$("regRollSearch"); if(!inp) return;
+    inp.oninput=function(){ clearTimeout(rollTimer); var q=this.value; rollTimer=setTimeout(function(){ doRollSearch(q); },220); };
+    document.addEventListener('click',function(e){ var box=$("regRollResults"); if(box && !box.contains(e.target) && e.target!==inp){ box.classList.add('hidden'); } });
+  }
+  async function doRollSearch(q){
+    var box=$("regRollResults"); if(!box) return;
+    q=(q||'').trim(); if(q.length<2){ box.classList.add('hidden'); box.innerHTML=''; return; }
+    var qs=q.replace(/[(),*%]/g,'').trim(); if(!qs){ box.classList.add('hidden'); return; }
+    var isNum=/^\d/.test(qs), query=sb.from("people").select("id,first_name,surname,category,club_id,safa_reg_no");
+    if(isNum) query=query.ilike("safa_reg_no",qs+"%").order("safa_reg_no").limit(40);
+    else query=query.or("surname.ilike."+qs+"%,first_name.ilike."+qs+"%").order("surname").limit(40);
+    var r=await query;
+    if(r.error){ box.innerHTML='<div class="sub">'+esc(r.error.message||r.error)+'</div>'; box.classList.remove('hidden'); return; }
+    var ppl=r.data||[];
+    if(!ppl.length){ box.innerHTML='<div class="sub">No match on the registered roll.</div>'; box.classList.remove('hidden'); return; }
+    box.innerHTML=ppl.map(function(p){ var nm=esc((titleCase(p.first_name||"")+" "+titleCase(p.surname||"")).trim())||"(no name)"; var club=(typeof clubById==="function")?clubById(p.club_id):null; var safa=p.safa_reg_no?'SAFA '+esc(p.safa_reg_no)+' · ':''; var noSafa=p.safa_reg_no?'':' data-nosafa="1"'; return '<div data-safa="'+esc(p.safa_reg_no||'')+'"'+noSafa+'><span class="nm">'+nm+'</span> <span class="sub">'+safa+(club?esc(club.name):'no member club')+(p.category?' · '+esc(p.category):'')+'</span></div>'; }).join('');
+    box.classList.remove('hidden');
+    Array.prototype.forEach.call(box.querySelectorAll('[data-safa]'),function(dv){ dv.onclick=function(){ if(dv.getAttribute('data-nosafa')){ return; } var safa=dv.getAttribute('data-safa'); if(safa){ box.classList.add('hidden'); regMemberDetail(safa, regOverview); } }; });
   }
   /* downloads */
   function regCSV(fn,headers,rows){ var e2=function(v){ v=(v==null?"":String(v)); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }; var lines=[headers.map(e2).join(",")]; rows.forEach(function(r){ lines.push(r.map(e2).join(",")); }); var blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"}); var a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=fn; document.body.appendChild(a); a.click(); setTimeout(function(){URL.revokeObjectURL(a.href); a.remove();},400); }
