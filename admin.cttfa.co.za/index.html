@@ -1424,7 +1424,11 @@
       fr.setAttribute("sandbox","allow-scripts allow-popups allow-downloads allow-popups-to-escape-sandbox");
       fr.style.cssText="width:100%;height:calc(100vh - 230px);min-height:620px;border:1px solid var(--line);border-radius:12px;background:#fff;display:block";
       root.appendChild(fr);
-      fr.srcdoc=html;
+      /* Keep in-page (#section) links scrolling inside the dashboard. A srcdoc iframe inherits
+         the parent's base URL, so a bare "#budget" link would otherwise reload the whole admin
+         app inside this sandboxed frame and show a fresh login. Intercept and scroll instead. */
+      var _navfix='<scr'+'ipt>(function(){document.addEventListener("click",function(e){var t=e.target;while(t&&t.tagName!=="A"){t=t.parentNode;}if(!t||!t.getAttribute)return;var hh=t.getAttribute("href")||"";if(hh.charAt(0)!=="#")return;e.preventDefault();var id=hh.slice(1);if(!id)return;var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});},true);})();</scr'+'ipt>';
+      fr.srcdoc=html+_navfix;
     }catch(e){ root.innerHTML='<div class="card"><p class="hint">Could not load the Fincom dashboard: '+esc(e.message||e)+'</p></div>'; }
   }
 
