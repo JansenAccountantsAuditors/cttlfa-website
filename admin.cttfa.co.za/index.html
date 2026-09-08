@@ -1418,16 +1418,28 @@
     if(!window._fincomMsgWired){
       window._fincomMsgWired=true;
       window.addEventListener("message", async function(ev){
-        var frEl=document.getElementById("fincomFrame");
-        if(!frEl || ev.source!==frEl.contentWindow) return;
-        var name=(ev.data&&ev.data.fincomOpen)||""; if(!name) return;
+        var mainFr=document.getElementById("fincomFrame");
+        var docFr=document.getElementById("fincomDocFrame");
+        var d=ev.data||{};
+        /* A link clicked inside an open report. Same-site / relative links (e.g. "Back to Fincom")
+           simply close the report and return to the dashboard; genuine external links open in a new tab. */
+        if(d.fincomDocLink && docFr && ev.source===docFr.contentWindow){
+          try{ var u=new URL(d.fincomDocLink, location.href);
+            if(u.host===location.host){ var ovc=document.getElementById("fincomDocOverlay"); if(ovc) ovc.remove(); }
+            else { window.open(u.href,"_blank","noopener"); }
+          }catch(_e){ var ovc2=document.getElementById("fincomDocOverlay"); if(ovc2) ovc2.remove(); }
+          return;
+        }
+        /* Open an HTML document from the main dashboard frame. */
+        if(!(d.fincomOpen && mainFr && ev.source===mainFr.contentWindow)) return;
+        var name=d.fincomOpen;
         var ov=document.getElementById("fincomDocOverlay");
         if(!ov){
           ov=document.createElement("div"); ov.id="fincomDocOverlay";
           ov.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(11,18,32,.6);display:flex;flex-direction:column";
           var bc=document.createElement("div"); bc.style.cssText="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 16px;background:#0b1a2b;color:#fff";
           bc.innerHTML='<b id="fincomDocTitle">Loading&hellip;</b>';
-          var cbtn=document.createElement("button"); cbtn.textContent="Close"; cbtn.style.cssText="color:#fff;background:transparent;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 14px;cursor:pointer";
+          var cbtn=document.createElement("button"); cbtn.textContent="← Back to dashboard"; cbtn.style.cssText="color:#fff;background:transparent;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 14px;cursor:pointer";
           cbtn.onclick=function(){ ov.remove(); };
           bc.appendChild(cbtn);
           var dfr=document.createElement("iframe"); dfr.id="fincomDocFrame";
@@ -1440,7 +1452,7 @@
           var dl=await sb.storage.from("fincom").download(name);
           if(dl.error||!dl.data) throw (dl.error||new Error("not found"));
           var txt=await dl.data.text();
-          var nf='<scr'+'ipt>(function(){document.addEventListener("click",function(e){var t=e.target;while(t&&t.tagName!=="A"){t=t.parentNode;}if(!t||!t.getAttribute)return;var hh=t.getAttribute("href")||"";if(hh.charAt(0)!=="#")return;e.preventDefault();var id=hh.slice(1);if(!id)return;var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});},true);})();</scr'+'ipt>';
+          var nf='<scr'+'ipt>(function(){document.addEventListener("click",function(e){var t=e.target;while(t&&t.tagName!=="A"){t=t.parentNode;}if(!t||!t.getAttribute)return;var hh=t.getAttribute("href")||"";if(hh===""||hh==="#"){e.preventDefault();return;}if(hh.charAt(0)==="#"){e.preventDefault();var id=hh.slice(1);var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});return;}e.preventDefault();parent.postMessage({fincomDocLink:hh},"*");},true);})();</scr'+'ipt>';
           document.getElementById("fincomDocFrame").srcdoc=txt+nf;
           if(titleEl) titleEl.textContent=name.replace(/\.html?$/i,"").replace(/[-_]+/g," ");
         }catch(e){ if(titleEl) titleEl.textContent="Could not open the document"; }
