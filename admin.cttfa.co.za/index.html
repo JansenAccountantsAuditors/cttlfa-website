@@ -1412,6 +1412,40 @@
   async function renderFincom(){
     var root=$("fincomRoot"); if(!root) return;
     if(!canSee("fincom")){ root.innerHTML='<div class="card"><h3>Fincom dashboard</h3><p class="hint">This area is restricted to Finance Committee members. Ask an administrator to grant you Fincom access on the Mancom users page.</p></div>'; return; }
+    /* Render HTML documents (which the dashboard links to) inside an in-app overlay. Supabase
+       serves stored HTML over a signed URL as plain text, so opening one in a new tab shows the
+       source. Here we download it through the authenticated client and render it via srcdoc. */
+    if(!window._fincomMsgWired){
+      window._fincomMsgWired=true;
+      window.addEventListener("message", async function(ev){
+        var frEl=document.getElementById("fincomFrame");
+        if(!frEl || ev.source!==frEl.contentWindow) return;
+        var name=(ev.data&&ev.data.fincomOpen)||""; if(!name) return;
+        var ov=document.getElementById("fincomDocOverlay");
+        if(!ov){
+          ov=document.createElement("div"); ov.id="fincomDocOverlay";
+          ov.style.cssText="position:fixed;inset:0;z-index:9999;background:rgba(11,18,32,.6);display:flex;flex-direction:column";
+          var bc=document.createElement("div"); bc.style.cssText="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 16px;background:#0b1a2b;color:#fff";
+          bc.innerHTML='<b id="fincomDocTitle">Loading&hellip;</b>';
+          var cbtn=document.createElement("button"); cbtn.textContent="Close"; cbtn.style.cssText="color:#fff;background:transparent;border:1px solid rgba(255,255,255,.4);border-radius:8px;padding:6px 14px;cursor:pointer";
+          cbtn.onclick=function(){ ov.remove(); };
+          bc.appendChild(cbtn);
+          var dfr=document.createElement("iframe"); dfr.id="fincomDocFrame";
+          dfr.setAttribute("sandbox","allow-scripts allow-popups allow-downloads allow-popups-to-escape-sandbox");
+          dfr.style.cssText="flex:1;width:100%;border:0;background:#fff";
+          ov.appendChild(bc); ov.appendChild(dfr); document.body.appendChild(ov);
+        }
+        var titleEl=document.getElementById("fincomDocTitle"); if(titleEl) titleEl.innerHTML="Loading&hellip;";
+        try{
+          var dl=await sb.storage.from("fincom").download(name);
+          if(dl.error||!dl.data) throw (dl.error||new Error("not found"));
+          var txt=await dl.data.text();
+          var nf='<scr'+'ipt>(function(){document.addEventListener("click",function(e){var t=e.target;while(t&&t.tagName!=="A"){t=t.parentNode;}if(!t||!t.getAttribute)return;var hh=t.getAttribute("href")||"";if(hh.charAt(0)!=="#")return;e.preventDefault();var id=hh.slice(1);if(!id)return;var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});},true);})();</scr'+'ipt>';
+          document.getElementById("fincomDocFrame").srcdoc=txt+nf;
+          if(titleEl) titleEl.textContent=name.replace(/\.html?$/i,"").replace(/[-_]+/g," ");
+        }catch(e){ if(titleEl) titleEl.textContent="Could not open the document"; }
+      });
+    }
     root.innerHTML='<div class="card"><p class="hint">Loading the Fincom dashboard&hellip;</p></div>';
     try{
       var r=await sb.from("fincom_content").select("html").eq("id","operating").maybeSingle();
@@ -1421,11 +1455,16 @@
       var docs={}, re=/data-fincom-doc="([^"]+)"/g, m; while((m=re.exec(html))){ docs[m[1]]=1; }
       var names=Object.keys(docs), signed={};
       await Promise.all(names.map(function(n){ return sb.storage.from("fincom").createSignedUrl(n, 3600).then(function(s){ if(s&&s.data&&s.data.signedUrl) signed[n]=s.data.signedUrl; }).catch(function(){}); }));
-      html=html.replace(/href="#" data-fincom-doc="([^"]+)"/g, function(_,n){ var u=signed[n]||"#"; return 'href="'+u+'" target="_blank" rel="noopener"'; });
-      /* Some document links carry a real relative href (e.g. debtor-system-review.html) instead
-         of href="#". Point those at the secure link too, otherwise they resolve against the admin
-         URL inside the sandboxed frame and open to nothing. */
-      names.forEach(function(n){ if(signed[n]){ var e2=n.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); html=html.replace(new RegExp('href="'+e2+'"',"g"),'href="'+signed[n]+'" target="_blank" rel="noopener"'); } });
+      function _docHref(n){
+        /* HTML docs render in the in-app overlay (see the message handler above); everything else
+           (PDF, docx, xlsx) opens securely in a new tab via its signed URL. */
+        if(/\.html?$/i.test(n)) return 'href="#" data-fincom-open="'+n.replace(/"/g,'&quot;')+'"';
+        var u=signed[n]||"#"; return 'href="'+u+'" target="_blank" rel="noopener"';
+      }
+      html=html.replace(/href="#" data-fincom-doc="([^"]+)"/g, function(_,n){ return _docHref(n); });
+      /* Some document links carry a real relative href (e.g. debtor-system-review.html) instead of
+         href="#"; rewrite those the same way, else they resolve against the admin URL in the frame. */
+      names.forEach(function(n){ var e2=n.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); html=html.replace(new RegExp('href="'+e2+'"',"g"), _docHref(n)); });
       root.innerHTML='';
       var fincomOnly=(meRole==="fincom");
       if(!fincomOnly){
@@ -1442,7 +1481,7 @@
       /* Keep in-page (#section) links scrolling inside the dashboard. A srcdoc iframe inherits
          the parent's base URL, so a bare "#budget" link would otherwise reload the whole admin
          app inside this sandboxed frame and show a fresh login. Intercept and scroll instead. */
-      var _navfix='<scr'+'ipt>(function(){document.addEventListener("click",function(e){var t=e.target;while(t&&t.tagName!=="A"){t=t.parentNode;}if(!t||!t.getAttribute)return;var hh=t.getAttribute("href")||"";if(hh.charAt(0)!=="#")return;e.preventDefault();var id=hh.slice(1);if(!id)return;var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});},true);})();</scr'+'ipt>';
+      var _navfix='<scr'+'ipt>(function(){document.addEventListener("click",function(e){var t=e.target;while(t&&t.tagName!=="A"){t=t.parentNode;}if(!t||!t.getAttribute)return;var op=t.getAttribute("data-fincom-open");if(op){e.preventDefault();parent.postMessage({fincomOpen:op},"*");return;}var hh=t.getAttribute("href")||"";if(hh.charAt(0)!=="#")return;e.preventDefault();var id=hh.slice(1);if(!id)return;var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:"smooth",block:"start"});},true);})();</scr'+'ipt>';
       fr.srcdoc=html+_navfix;
     }catch(e){ root.innerHTML='<div class="card"><p class="hint">Could not load the Fincom dashboard: '+esc(e.message||e)+'</p></div>'; }
   }
