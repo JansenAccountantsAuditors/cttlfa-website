@@ -1266,6 +1266,7 @@
   /* ---------- users ---------- */
   var AREA_LABELS={voting:"Voting",registrations:"Registrations",webadmin:"Website Admin",discipline:"Discipline",fincom:"Fincom",fixtures:"Fixtures",site:"Live site"};
   var AREA_ORDER=["voting","registrations","webadmin","discipline","fincom","fixtures","site"];
+  var _uEditing=null;
   async function loadUsers(){
     var l=$("usersList"); if(!l) return;
     var r=await sb.from("admin_users").select("full_name,email,title,role,active,auth_id,modules").order("role").order("full_name");
@@ -1283,6 +1284,19 @@
          '</div>';
     }
     h+='<div id="usersMsg"></div>';
+    if(isAdmin && _uEditing){
+      var eu=us.filter(function(x){ return x.email===_uEditing; })[0];
+      if(eu){
+        h+='<div class="uadd" id="uEditPanel" style="background:rgba(244,180,26,.06);border:1px solid rgba(244,180,26,.25);padding:10px;border-radius:10px">'+
+           '<input type="text" id="ueName" value="'+esc(eu.full_name||'')+'" placeholder="Full name">'+
+           '<input type="email" id="ueEmail" value="'+esc(eu.email)+'" placeholder="email@cttfa.co.za">'+
+           '<input type="text" id="ueTitle" value="'+esc(eu.title||'')+'" placeholder="Title (optional)">'+
+           '<button class="btn gold sm" id="ueSave" data-email="'+esc(eu.email)+'">Save changes</button>'+
+           '<button class="btn ghost sm" id="ueCancel">Cancel</button>'+
+           '</div>';
+        if(eu.auth_id) h+='<p class="hint" style="margin:2px 0 8px">This person has already registered; changing their email updates the list entry only, they still sign in with the email they registered.</p>';
+      }
+    }
     h+='<table><thead><tr><th>Name</th><th>Email</th><th>User type</th>'+(isAdmin?'<th>Access / editable areas</th>':'')+'<th>Sign-in</th>'+(isAdmin?'<th>Manage</th>':'')+'</tr></thead><tbody>';
     us.forEach(function(u){
       var isMe=(me && u.email && me.email && u.email.toLowerCase()===me.email.toLowerCase());
@@ -1303,6 +1317,8 @@
         manage = u.active
           ? '<button class="btn ghost sm uact" data-email="'+esc(u.email)+'" data-active="0"'+(isMe?' disabled title="You cannot deactivate your own access"':'')+'>Deactivate</button>'
           : '<button class="btn green sm uact" data-email="'+esc(u.email)+'" data-active="1">Activate</button>';
+        manage += ' <button class="btn ghost sm uedit" data-email="'+esc(u.email)+'">Edit</button>';
+        if(!isMe) manage += ' <button class="btn ghost sm udel" data-email="'+esc(u.email)+'" title="Remove this person from the list">Remove</button>';
       }
       h+='<tr'+(u.active?'':' style="opacity:.55"')+'><td><b>'+esc(u.full_name)+'</b>'+(isMe?' <span class="kv">(you)</span>':'')+'<br><span class="kv">'+esc(u.title||"")+'</span></td><td>'+esc(u.email)+'</td><td>'+roleCell+'</td>'+(isAdmin?'<td>'+areas+'</td>':'')+'<td>'+signin+'</td>'+(isAdmin?'<td>'+manage+'</td>':'')+'</tr>';
     });
@@ -1352,6 +1368,30 @@
         msg($("usersMsg"),"Area access updated for "+esc(email)+".","ok");
       };
     });
+    Array.prototype.forEach.call(document.querySelectorAll("#usersList .uedit"),function(b){
+      b.onclick=function(){ _uEditing=b.dataset.email; loadUsers(); };
+    });
+    Array.prototype.forEach.call(document.querySelectorAll("#usersList .udel"),function(b){
+      b.onclick=async function(){
+        if(!window.confirm("Remove "+b.dataset.email+" from the list? They will no longer be able to sign in. This does not delete any of their work.")) return;
+        b.disabled=true;
+        var r=await sb.rpc("delete_user",{p_email:b.dataset.email});
+        b.disabled=false;
+        if(r.error){ msg($("usersMsg"),r.error.message,"err"); return; }
+        msg($("usersMsg"),"Removed "+esc(b.dataset.email)+" from the list.","ok"); _uEditing=null; loadUsers();
+      };
+    });
+    var eSave=$("ueSave"); if(eSave) eSave.onclick=async function(){
+      var cur=eSave.dataset.email, name=($("ueName").value||"").trim(), email=($("ueEmail").value||"").trim(), title=($("ueTitle").value||"").trim();
+      if(!name){ msg($("usersMsg"),"Name cannot be blank.","err"); return; }
+      if(!email){ msg($("usersMsg"),"Email cannot be blank.","err"); return; }
+      eSave.disabled=true;
+      var r=await sb.rpc("update_user",{p_email:cur,p_new_email:email,p_full_name:name,p_title:title});
+      eSave.disabled=false;
+      if(r.error){ msg($("usersMsg"),r.error.message,"err"); return; }
+      msg($("usersMsg"),"Updated "+esc(name)+".","ok"); _uEditing=null; loadUsers();
+    };
+    var eCancel=$("ueCancel"); if(eCancel) eCancel.onclick=function(){ _uEditing=null; loadUsers(); };
   }
 
   /* ---------- home (admin centre hub) ---------- */
