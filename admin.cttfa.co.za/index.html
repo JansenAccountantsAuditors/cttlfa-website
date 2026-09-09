@@ -1631,7 +1631,9 @@
     // header + provenance
     h+='<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">'
       +'<div><h3 style="margin:0 0 3px">Club Debtors</h3><p class="hint" style="margin:0;max-width:80ch">Who owes the Association, how old the money is, and whether we are chasing it the way the Constitution requires. Balances and ageing come straight from Sage.</p></div>'
-      +'<button class="btn ghost sm" id="debRefresh" title="Reload from the database">Reload</button></div>'
+      +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
+      +'<div style="display:flex;gap:8px"><button class="btn gold sm" id="debFetch" title="Pull the latest balances from Sage">Fetch from Sage</button><button class="btn ghost sm" id="debRefresh" title="Reload from the database">Reload</button></div>'
+      +'<span class="hint" id="debFetchStatus" style="font-size:11.5px;text-align:right"></span></div></div>'
       +'<div class="deb-prov"><span class="warn">Management-prepared, unaudited</span>'
       +'<span>As at <b>'+dDateZA(s.as_at)+'</b></span><span>Source: <b>Sage Business Cloud</b>, extracted '+dDateZA(s.extracted_at)+'</span>'
       +'<span>Reconciled to Sage: <b>'+(s.reconciled?'yes':'no')+'</b></span><span>FY ending <b>31 October</b></span><span>Classification: <b>Confidential</b></span></div>'
@@ -1666,12 +1668,50 @@
       +'<p class="hint" style="font-size:11.5px;margin:8px 0 0">Click a club for its account, ageing and to log a statement, reminder, notice or Mancom referral. Contact detail stays in Sage, under POPIA.</p></div>';
     root.innerHTML=h;
     $("debRefresh").onclick=function(){ renderDebtors(true); };
+    $("debFetch").onclick=debFetchFromSage;
     var q=$("debQ"); q.oninput=function(){ _debQ=this.value.trim().toLowerCase(); debTable(); };
     $("debStatusF").onchange=function(){ _debStatus=this.value; debTable(); };
     debTable();
+    debShowRefreshState();
   }
   function debKpi(k,v,sub,tone){ var col=tone==='bad'?'#9A3130':(tone==='lead'?'#fff':'var(--navy)'); var bg=tone==='lead'?'var(--navy)':'#fff'; var kc=tone==='lead'?'#B7C4E6':'var(--muted)'; return '<div class="deb-kpi" style="background:'+bg+'"><div class="k" style="color:'+kc+'">'+esc(k)+'</div><div class="v" style="color:'+col+'">'+v+'</div><div class="s" style="color:'+kc+'">'+esc(sub)+'</div></div>'; }
   function debComp(label,val,tone,hint){ var m={ok:['#E7F5EC','#1c5136','Done'],due:['#FCF3D8','#7a5312','Due'],bad:['#FBECEA','#8a3c17','Attention'],muted:['#EEF2F8','#5A667C','–']}[tone]||['#EEF2F8','#5A667C','']; return '<div class="deb-comprow"><div><div class="cl">'+esc(label)+'</div><div class="ch">'+esc(hint)+'</div></div><div style="text-align:right"><div class="cv">'+esc(val)+'</div><span class="deb-tag" style="background:'+m[0]+';color:'+m[1]+'">'+m[2]+'</span></div></div>'; }
+
+  /* ---- Fetch from Sage (queues the office-PC agent) ---- */
+  var _debPoll=null;
+  function debSetFetchStatus(txt,tone){ var el=$("debFetchStatus"); if(!el) return; el.innerHTML=txt; el.style.color=(tone==='bad')?'#9A3130':(tone==='ok'?'#1c5136':'var(--muted)'); }
+  function debFetchBtnDisabled(x){ var b=$("debFetch"); if(b) b.disabled=!!x; }
+  function debStateText(r){
+    var age=r.heartbeat?(Date.now()-new Date(r.heartbeat).getTime())/1000:1e9, agentDown=age>200, st=r.status||'idle';
+    if(st==='queued') return ['Queued — waiting for the office PC…',''];
+    if(st==='running') return ['Fetching from Sage… '+(r.last_result?('('+esc(r.last_result)+')'):''),''];
+    if(st==='needs_login') return ['Sign in to CTTLFA Sage on the office PC (run signin.bat once), then Fetch again.','bad'];
+    if(st==='error') return [esc(r.last_result||'Last fetch failed.'),'bad'];
+    var base=r.last_result?esc(r.last_result):'Ready.';
+    if(agentDown) return ['Refresh agent offline — start the office PC. '+base,'bad'];
+    return ['Up to date · '+base,'ok'];
+  }
+  function debShowRefreshState(){
+    sb.rpc('deb_refresh_state').then(function(r){ if(r.error||!r.data) return; var t=debStateText(r.data); debSetFetchStatus(t[0],t[1]);
+      if(r.data.status==='queued'||r.data.status==='running') debStartPolling(); });
+  }
+  function debFetchFromSage(){
+    debFetchBtnDisabled(true); debSetFetchStatus('Requesting a fetch…','');
+    sb.rpc('deb_request_refresh').then(function(r){
+      if(r.error){ debSetFetchStatus(esc(r.error.message||String(r.error)),'bad'); debFetchBtnDisabled(false); return; }
+      debStartPolling();
+    });
+  }
+  function debStartPolling(){
+    if(_debPoll) clearInterval(_debPoll); var tries=0;
+    _debPoll=setInterval(function(){ tries++;
+      sb.rpc('deb_refresh_state').then(function(r){ if(r.error||!r.data) return; var d=r.data,t=debStateText(d); debSetFetchStatus(t[0],t[1]);
+        if(d.status==='done'){ clearInterval(_debPoll); _debPoll=null; debFetchBtnDisabled(false); _deb=null; renderDebtors(true); }
+        else if(d.status==='error'||d.status==='needs_login'){ clearInterval(_debPoll); _debPoll=null; debFetchBtnDisabled(false); }
+      });
+      if(tries>150){ clearInterval(_debPoll); _debPoll=null; debFetchBtnDisabled(false); }
+    },4000);
+  }
 
   function debTable(){
     var clubs=(_deb.clubs||[]).filter(function(c){ if(_debStatus&&c.status!==_debStatus)return false; if(_debQ&&(c.name.toLowerCase().indexOf(_debQ)<0&&String(c.code||'').toLowerCase().indexOf(_debQ)<0&&String(c.suburb||'').toLowerCase().indexOf(_debQ)<0))return false; return true; });
