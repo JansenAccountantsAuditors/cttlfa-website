@@ -196,7 +196,7 @@
   .helptoggle .ht-track:after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s}
   .helptoggle.on .ht-track{background:var(--gold)}
   .helptoggle.on .ht-track:after{left:16px}
-.deb-stmtbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 2px}.deb-stmthint{font-size:11px;color:var(--muted)}</style>
+.deb-stmtbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:12px 0 2px}.deb-stmthint{font-size:11px;color:var(--muted)}.deb-runtypes{display:flex;flex-wrap:wrap;gap:6px;margin:2px 0 6px}.deb-rt{border:1px solid #D3DBDE;background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;cursor:pointer;color:var(--navy,#071A4A)}.deb-rt.on{background:var(--navy,#071A4A);color:#fff;border-color:var(--navy,#071A4A)}.deb-chk{display:flex;align-items:center;gap:8px;font-size:12px;margin:2px 0 8px;cursor:pointer}.deb-scope{max-height:230px;overflow:auto;border:1px solid #D3DBDE;border-radius:8px}.deb-scoperow{display:flex;align-items:center;gap:8px;padding:7px 10px;border-bottom:1px solid #EEF2F8;font-size:12px;cursor:pointer}.deb-scoperow:last-child{border-bottom:0}.deb-scoperow .nm{flex:1;font-weight:600}.deb-scoperow .cd{color:var(--muted);font-size:11px;width:52px}.deb-scoperow .bl{width:78px;text-align:right;font-weight:700}.deb-corr-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}</style>
 
 <!-- LOGIN -->
 <div class="login" id="loginView">
@@ -1633,7 +1633,7 @@
     h+='<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">'
       +'<div><h3 style="margin:0 0 3px">Club Debtors</h3><p class="hint" style="margin:0;max-width:80ch">Who owes the Association, how old the money is, and whether we are chasing it the way the Constitution requires. Balances and ageing come straight from Sage.</p></div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
-      +'<div style="display:flex;gap:8px"><button class="btn gold sm" id="debFetch" title="Pull the latest balances from Sage">Fetch from Sage</button><button class="btn ghost sm" id="debRefresh" title="Reload from the database">Reload</button></div>'
+      +'<div style="display:flex;gap:8px"><button class="btn gold sm" id="debFetch" title="Pull the latest balances from Sage">Fetch from Sage</button>'+((meRole==='administrator'||meRole==='staff')?'<button class="btn gold sm" id="debCorr" title="Statements and notices">Correspondence</button>':'')+'<button class="btn ghost sm" id="debRefresh" title="Reload from the database">Reload</button></div>'
       +'<span class="hint" id="debFetchStatus" style="font-size:11.5px;text-align:right"></span></div></div>'
       +'<div class="deb-prov"><span class="warn">Management-prepared, unaudited</span>'
       +'<span>As at <b>'+dDateZA(s.as_at)+'</b></span><span>Source: <b>Sage Business Cloud</b>, extracted '+dDateZA(s.extracted_at)+'</span>'
@@ -1669,6 +1669,7 @@
       +'<p class="hint" style="font-size:11.5px;margin:8px 0 0">Click a club for its account, ageing and to log a statement, reminder, notice or Mancom referral. Contact detail stays in Sage, under POPIA.</p></div>';
     root.innerHTML=h;
     $("debRefresh").onclick=function(){ renderDebtors(true); };
+    var _dc=$("debCorr"); if(_dc) _dc.onclick=function(){ debOpenCorr(); };
     $("debFetch").onclick=debFetchFromSage;
     var q=$("debQ"); q.oninput=function(){ _debQ=this.value.trim().toLowerCase(); debTable(); };
     $("debStatusF").onchange=function(){ _debStatus=this.value; debTable(); };
@@ -1744,7 +1745,7 @@
     return 'Dear '+nm+' Committee,\n\nA friendly reminder that '+dR(c.bal)+' is outstanding on the club account. Please settle at your convenience using club code '+ref+' as the payment reference; banking details are on the attached statement.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
   }
 
-  /* ---- Club statement (branded PDF, jsPDF + autoTable) ---- */
+  /* ============ Club statements & correspondence (jsPDF + autoTable) ============ */
   var _debSettings=null;
   async function debGetSettings(){
     if(_debSettings) return _debSettings;
@@ -1753,154 +1754,277 @@
   }
   function debAmt(n){ n=Number(n)||0; var neg=n<0; var v=Math.abs(n).toFixed(2); var p=v.split('.'); p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '); var s=p[0]+'.'+p[1]; return neg?'('+s+')':s; }
   function debAmtR(n){ n=Number(n)||0; return (n<0?'(R ':'R ')+debAmt(n).replace(/^\(|\)$/g,'')+(n<0?')':''); }
+  var DEB_NAVY=[7,26,74], DEB_GOLD=[224,152,26], DEB_INK=[33,45,51], DEB_MUTED=[90,102,124], DEB_HAIR=[210,216,228];
 
-  async function debStatementPDF(c, opts){
-    opts=opts||{};
-    var stx, S;
-    try{
-      var r=await sb.rpc('deb_statement',{p_key:c.club_key}); if(r.error) throw r.error; stx=r.data||{};
-      S=await debGetSettings();
-    }catch(e){ if(!opts.silent) alert('Could not build the statement: '+(e.message||e)); return null; }
-    var JS=window.jspdf&&window.jspdf.jsPDF; if(!JS){ alert('PDF engine not loaded — reload the page and try again.'); return null; }
-    var rows=(stx.rows||[]);
-    var doc=new JS({unit:'pt',format:'a4',compress:true});
-    var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=40;
-    var navy=[7,26,74], gold=[224,152,26], ink=[33,45,51], muted=[90,102,124], hair=[210,216,228], bad=[154,49,48];
-    var today=new Date(), todayZA=dDateZA(today.toISOString().slice(0,10));
-    var sAsAt = (_deb&&_deb.snapshot&&_deb.snapshot.as_at)||today.toISOString().slice(0,10);
-    var closing = rows.length ? Number(rows[rows.length-1].balance)||0 : Number(c.bal)||0;
-
-    // ---- letterhead ----
+  function debLetterhead(doc, S, rightTitle){
+    var W=doc.internal.pageSize.getWidth(), M=40;
     try{ if(window.LOGO_URI) doc.addImage(LOGO_URI,'JPEG',M,30,46,48); }catch(e){}
-    doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor.apply(doc,navy);
-    doc.text('STATEMENT OF ACCOUNT', W-M, 44, {align:'right'});
-    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor.apply(doc,navy);
+    if(rightTitle){ doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor.apply(doc,DEB_NAVY);
+      doc.text(rightTitle, W-M, 44, {align:'right'}); }
+    doc.setFont('helvetica','bold'); doc.setFontSize(12); doc.setTextColor.apply(doc,DEB_NAVY);
     var onm=doc.splitTextToSize(S.org_name||'Cape Town Tygerberg Local Football Association', W-M-58-160);
     doc.text(onm, M+58, 44);
-    var cy0 = 44 + onm.length*13 + 2;
-    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,muted);
+    var cy0=44+onm.length*13+2;
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,DEB_MUTED);
     doc.text((S.org_contact||'CTTLFA Finance Office'), M+58, cy0);
-    var ruleY = Math.max(84, cy0+10);
-    doc.setDrawColor.apply(doc,gold); doc.setLineWidth(2); doc.line(M,ruleY,W-M,ruleY);
-
-    // ---- to / meta blocks ----
-    var topY=ruleY+18;
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor.apply(doc,muted);
-    doc.text('STATEMENT TO', M, topY);
-    doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor.apply(doc,ink);
-    doc.text(stx.name||c.name, M, topY+16);
-    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor.apply(doc,muted);
-    var subline=[]; if(stx.code||c.code) subline.push('Account '+(stx.code||c.code));
-    if(c.suburb) subline.push(c.suburb);
-    doc.text(subline.join('   ·   '), M, topY+30);
-    doc.setFontSize(8.5);
-    doc.text('Contact details held in Sage under POPIA.', M, topY+44);
-
-    // meta table (right)
-    doc.autoTable({
-      startY: topY-8,
-      margin:{left: W/2+40, right:M},
-      theme:'plain', styles:{fontSize:9, cellPadding:{top:1.5,bottom:1.5,left:0,right:0}, textColor:ink},
-      columnStyles:{0:{textColor:muted, cellWidth:'auto'}, 1:{halign:'right', fontStyle:'bold', cellWidth:120}},
-      body:[
-        ['Statement date', todayZA],
-        ['Account reference', (stx.code||c.code||'—')],
-        ['Activity to', dDateZA(stx.ledger_to||sAsAt)],
-        ['Ageing as at', dDateZA(sAsAt)]
-      ]
-    });
-
-    // ---- balance due band ----
-    var bandY=Math.max(doc.lastAutoTable.finalY, topY+52)+14;
-    doc.setFillColor.apply(doc,navy); doc.roundedRect(M,bandY,W-2*M,42,4,4,'F');
-    doc.setTextColor(255,255,255); doc.setFont('helvetica','normal'); doc.setFontSize(9.5);
-    doc.text('Balance due', M+16, bandY+18);
-    doc.setFont('helvetica','bold'); doc.setFontSize(18);
-    doc.setTextColor.apply(doc, closing>0?[255,255,255]:gold);
-    doc.text(debAmtR(closing), W-M-16, bandY+27, {align:'right'});
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(183,196,230);
-    doc.text(closing>0?'Payable to the Association':(closing<0?'Account in credit':'Account settled — thank you'), M+16, bandY+32);
-
-    // ---- ageing strip ----
-    var ageY=bandY+42+16;
-    var bands=[['Current',c.cur],['30 days',c.b30],['60 days',c.b60],['90 days',c.b90],['120 days +',c.b120]];
-    doc.autoTable({
-      startY: ageY,
-      margin:{left:M,right:M},
-      theme:'grid',
-      head:[bands.map(function(b){return b[0];}).concat(['Total'])],
-      body:[bands.map(function(b){return debAmt(b[1]);}).concat([debAmt(closing>0?closing:0)])],
-      headStyles:{fillColor:[239,244,247], textColor:navy, fontStyle:'bold', fontSize:8.5, halign:'right', lineColor:hair, lineWidth:0.5},
-      bodyStyles:{fontSize:9, halign:'right', textColor:ink, lineColor:hair, lineWidth:0.5},
-      columnStyles:{5:{fontStyle:'bold'}}
-    });
-    doc.setFontSize(7.5); doc.setTextColor.apply(doc,muted); doc.setFont('helvetica','normal');
-    doc.text('Ageing per Sage Days Outstanding. Amounts in Rand.', M, doc.lastAutoTable.finalY+11);
-
-    // ---- transactions ----
-    var body=rows.map(function(t){
-      return [ t.is_opening?'':dDateZA(t.tx_date), t.reference||'', t.tx_type||'',
-        (t.description||''), t.debit!=null?debAmt(t.debit):'', t.credit!=null?debAmt(t.credit):'', debAmt(t.balance) ];
-    });
-    doc.autoTable({
-      startY: doc.lastAutoTable.finalY+20,
-      margin:{left:M,right:M},
-      head:[['Date','Reference','Type','Description','Debit','Credit','Balance']],
-      body: body.length?body:[['','','','No transactions on record for this account.','','','']],
-      theme:'striped',
-      headStyles:{fillColor:navy, textColor:[255,255,255], fontSize:8.5, fontStyle:'bold'},
-      bodyStyles:{fontSize:8, textColor:ink, cellPadding:{top:2.5,bottom:2.5,left:4,right:4}},
-      alternateRowStyles:{fillColor:[247,249,252]},
-      columnStyles:{
-        0:{cellWidth:52}, 1:{cellWidth:64}, 2:{cellWidth:66}, 3:{cellWidth:'auto'},
-        4:{cellWidth:52,halign:'right'}, 5:{cellWidth:52,halign:'right'}, 6:{cellWidth:58,halign:'right',fontStyle:'bold'}
-      },
-      didParseCell:function(d){
-        var raw=rows[d.row.index];
-        if(raw&&raw.is_opening&&d.section==='body'){ d.cell.styles.fontStyle='bold'; d.cell.styles.fillColor=[239,244,247]; }
-      }
-    });
-
-    // closing balance line under the table
-    var cy=doc.lastAutoTable.finalY;
-    if(cy>H-120){ doc.addPage(); cy=60; }
-    doc.setDrawColor.apply(doc,navy); doc.setLineWidth(0.8); doc.line(W-M-190, cy+10, W-M, cy+10);
-    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor.apply(doc,navy);
-    doc.text('Balance due', W-M-190, cy+26);
-    doc.text(debAmtR(closing), W-M, cy+26, {align:'right'});
-
-    // ---- payment / banking ----
-    var bank=(S.bank_details||'[Banking details to be confirmed]').split('\n');
-    var boxH=Math.max(84, 30 + bank.length*12 + 26);
-    var payY=cy+46;
-    if(payY>H-(boxH+40)){ doc.addPage(); payY=60; }
-    doc.setFillColor(247,249,252); doc.setDrawColor.apply(doc,hair); doc.setLineWidth(0.5);
-    doc.roundedRect(M,payY,W-2*M,boxH,4,4,'FD');
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor.apply(doc,navy);
-    doc.text('Payment details', M+14, payY+18);
-    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,ink);
-    var by=payY+32; bank.forEach(function(l){ doc.text(l, M+14, by); by+=12; });
-    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,navy);
-    doc.text('Payment reference:  '+(stx.code||c.code||stx.name||c.name), M+14, by+6);
-    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor.apply(doc,muted);
-    var terms=(S.payment_terms||'');
-    doc.text(doc.splitTextToSize(terms, (W-2*M)/2-20), W/2+8, payY+32);
-
-    // ---- footers on every page ----
+    var ruleY=Math.max(84, cy0+10);
+    doc.setDrawColor.apply(doc,DEB_GOLD); doc.setLineWidth(2); doc.line(M,ruleY,W-M,ruleY);
+    return ruleY;
+  }
+  function debFooters(doc, S){
+    var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=40;
     var pages=doc.internal.getNumberOfPages();
-    for(var i=1;i<=pages;i++){
-      doc.setPage(i);
-      doc.setDrawColor.apply(doc,hair); doc.setLineWidth(0.5); doc.line(M,H-42,W-M,H-42);
-      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor.apply(doc,muted);
+    for(var i=1;i<=pages;i++){ doc.setPage(i);
+      doc.setDrawColor.apply(doc,DEB_HAIR); doc.setLineWidth(0.5); doc.line(M,H-42,W-M,H-42);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor.apply(doc,DEB_MUTED);
       doc.text('Management-prepared, unaudited · Source: Sage Business Cloud · Confidential to the club and the Association', M, H-30);
       doc.text((S.statement_footer||''), M, H-20, {maxWidth:W-2*M-60});
       doc.text('Page '+i+' of '+pages, W-M, H-30, {align:'right'});
     }
+  }
+  function debBankLines(S){ return (S.bank_details||'[Banking details to be confirmed]').split('\n'); }
 
-    var fname='CTTLFA Statement - '+((stx.name||c.name).replace(/[^A-Za-z0-9 ]/g,'').trim())+' - '+today.toISOString().slice(0,10)+'.pdf';
-    if(opts.blob) return {blob:doc.output('blob'), name:fname, doc:doc};
-    doc.save(fname);
-    return {name:fname};
+  // ---- statement body into an existing doc (starts on current page top) ----
+  function debRenderStatementInto(doc, c, stx, S){
+    var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=40;
+    var today=new Date(), todayZA=dDateZA(today.toISOString().slice(0,10));
+    var sAsAt=(_deb&&_deb.snapshot&&_deb.snapshot.as_at)||today.toISOString().slice(0,10);
+    var rows=(stx.rows||[]);
+    var closing=rows.length?Number(rows[rows.length-1].balance)||0:Number(c.bal)||0;
+    var ruleY=debLetterhead(doc,S,'STATEMENT OF ACCOUNT');
+    var topY=ruleY+18;
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor.apply(doc,DEB_MUTED); doc.text('STATEMENT TO', M, topY);
+    doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor.apply(doc,DEB_INK); doc.text(stx.name||c.name, M, topY+16);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor.apply(doc,DEB_MUTED);
+    var sub=[]; if(stx.code||c.code) sub.push('Account '+(stx.code||c.code)); if(c.suburb) sub.push(c.suburb);
+    doc.text(sub.join('   ·   '), M, topY+30);
+    doc.setFontSize(8.5); doc.text('Contact details held in Sage under POPIA.', M, topY+44);
+    doc.autoTable({ startY:topY-8, margin:{left:W/2+40,right:M}, theme:'plain',
+      styles:{fontSize:9,cellPadding:{top:1.5,bottom:1.5,left:0,right:0},textColor:DEB_INK},
+      columnStyles:{0:{textColor:DEB_MUTED},1:{halign:'right',fontStyle:'bold',cellWidth:120}},
+      body:[['Statement date',todayZA],['Account reference',(stx.code||c.code||'—')],['Activity to',dDateZA(stx.ledger_to||sAsAt)],['Ageing as at',dDateZA(sAsAt)]] });
+    var bandY=Math.max(doc.lastAutoTable.finalY,topY+52)+14;
+    doc.setFillColor.apply(doc,DEB_NAVY); doc.roundedRect(M,bandY,W-2*M,42,4,4,'F');
+    doc.setTextColor(255,255,255); doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.text('Balance due', M+16, bandY+18);
+    doc.setFont('helvetica','bold'); doc.setFontSize(18); doc.setTextColor.apply(doc, closing>0?[255,255,255]:DEB_GOLD);
+    doc.text(debAmtR(closing), W-M-16, bandY+27, {align:'right'});
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(183,196,230);
+    doc.text(closing>0?'Payable to the Association':(closing<0?'Account in credit':'Account settled — thank you'), M+16, bandY+32);
+    var ageY=bandY+42+16;
+    var bands=[['Current',c.cur],['30 days',c.b30],['60 days',c.b60],['90 days',c.b90],['120 days +',c.b120]];
+    doc.autoTable({ startY:ageY, margin:{left:M,right:M}, theme:'grid',
+      head:[bands.map(function(b){return b[0];}).concat(['Total'])],
+      body:[bands.map(function(b){return debAmt(b[1]);}).concat([debAmt(closing>0?closing:0)])],
+      headStyles:{fillColor:[239,244,247],textColor:DEB_NAVY,fontStyle:'bold',fontSize:8.5,halign:'right',lineColor:DEB_HAIR,lineWidth:0.5},
+      bodyStyles:{fontSize:9,halign:'right',textColor:DEB_INK,lineColor:DEB_HAIR,lineWidth:0.5}, columnStyles:{5:{fontStyle:'bold'}} });
+    doc.setFontSize(7.5); doc.setTextColor.apply(doc,DEB_MUTED); doc.text('Ageing per Sage Days Outstanding. Amounts in Rand.', M, doc.lastAutoTable.finalY+11);
+    var body=rows.map(function(t){ return [ t.is_opening?'':dDateZA(t.tx_date), t.reference||'', t.tx_type||'', (t.description||''),
+      t.debit!=null?debAmt(t.debit):'', t.credit!=null?debAmt(t.credit):'', debAmt(t.balance) ]; });
+    doc.autoTable({ startY:doc.lastAutoTable.finalY+20, margin:{left:M,right:M},
+      head:[['Date','Reference','Type','Description','Debit','Credit','Balance']],
+      body:body.length?body:[['','','','No transactions on record for this account.','','','']], theme:'striped',
+      headStyles:{fillColor:DEB_NAVY,textColor:[255,255,255],fontSize:8.5,fontStyle:'bold'},
+      bodyStyles:{fontSize:8,textColor:DEB_INK,cellPadding:{top:2.5,bottom:2.5,left:4,right:4}}, alternateRowStyles:{fillColor:[247,249,252]},
+      columnStyles:{0:{cellWidth:52},1:{cellWidth:64},2:{cellWidth:66},3:{cellWidth:'auto'},4:{cellWidth:52,halign:'right'},5:{cellWidth:52,halign:'right'},6:{cellWidth:58,halign:'right',fontStyle:'bold'}},
+      didParseCell:function(d){ var raw=rows[d.row.index]; if(raw&&raw.is_opening&&d.section==='body'){ d.cell.styles.fontStyle='bold'; d.cell.styles.fillColor=[239,244,247]; } } });
+    var cy=doc.lastAutoTable.finalY; if(cy>H-120){ doc.addPage(); cy=60; }
+    doc.setDrawColor.apply(doc,DEB_NAVY); doc.setLineWidth(0.8); doc.line(W-M-190,cy+10,W-M,cy+10);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor.apply(doc,DEB_NAVY);
+    doc.text('Balance due', W-M-190, cy+26); doc.text(debAmtR(closing), W-M, cy+26, {align:'right'});
+    var bank=debBankLines(S); var boxH=Math.max(84,30+bank.length*12+26); var payY=cy+46;
+    if(payY>H-(boxH+40)){ doc.addPage(); payY=60; }
+    doc.setFillColor(247,249,252); doc.setDrawColor.apply(doc,DEB_HAIR); doc.setLineWidth(0.5); doc.roundedRect(M,payY,W-2*M,boxH,4,4,'FD');
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor.apply(doc,DEB_NAVY); doc.text('Payment details', M+14, payY+18);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,DEB_INK);
+    var by=payY+32; bank.forEach(function(l){ doc.text(l, M+14, by); by+=12; });
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,DEB_NAVY);
+    doc.text('Payment reference:  '+(stx.code||c.code||stx.name||c.name), M+14, by+6);
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor.apply(doc,DEB_MUTED);
+    doc.text(doc.splitTextToSize((S.payment_terms||''), (W-2*M)/2-20), W/2+8, payY+32);
+  }
+
+  async function debFetchStatement(c){ var r=await sb.rpc('deb_statement',{p_key:c.club_key}); if(r.error) throw r.error; return r.data||{}; }
+
+  async function debStatementPDF(c, opts){
+    opts=opts||{};
+    var stx,S;
+    try{ stx=await debFetchStatement(c); S=await debGetSettings(); }
+    catch(e){ if(!opts.silent) alert('Could not build the statement: '+(e.message||e)); return null; }
+    var JSc=window.jspdf&&window.jspdf.jsPDF; if(!JSc){ alert('PDF engine not loaded — reload the page.'); return null; }
+    var doc=new JSc({unit:'pt',format:'a4',compress:true});
+    debRenderStatementInto(doc,c,stx,S); debFooters(doc,S);
+    var fn='CTTLFA Statement - '+((stx.name||c.name).replace(/[^A-Za-z0-9 ]/g,'').trim())+' - '+new Date().toISOString().slice(0,10)+'.pdf';
+    if(opts.doc) return doc;
+    doc.save(fn); return {name:fn};
+  }
+
+  // ---- tiered letters ----
+  var DEB_TIERS={
+    statement:{key:'statement',label:'Statement run',action:'statement_sent',subject:'Statement of account',
+      right:'STATEMENT COVERING LETTER'},
+    reminder:{key:'reminder',label:'Courtesy reminders',action:'reminder_sent',subject:'Courtesy reminder — outstanding account',
+      right:'COURTESY REMINDER'},
+    formal:{key:'formal',label:'Formal notices',action:'formal_notice',subject:'Formal notice — overdue account',
+      right:'FORMAL NOTICE'},
+    suspension:{key:'suspension',label:'Suspension-review notices',action:'referred_mancom',subject:'Referral to the Management Committee — good standing and match eligibility',
+      right:'NOTICE OF REFERRAL'}
+  };
+  function debLetterBody(c, tier){
+    var bal=debAmtR(c.bal), over=debAmtR(c.over), ref=c.code||c.name;
+    var d90=debAmtR(Number(c.b90)+Number(c.b120));
+    if(tier==='statement'){
+      return c.bal>0.01
+        ? ['Please find enclosed the club’s current statement of account with the Association, reflecting a balance of '+bal+'.',
+           'We would be grateful if the outstanding amount could be settled at your earliest convenience. Banking details appear on the statement, and the club code '+ref+' should be used as the payment reference.',
+           'Should payment already have been made, kindly disregard this letter and accept our thanks.']
+        : ['Please find enclosed the club’s current statement of account with the Association.',
+           'The account is settled and no payment is due. The statement is provided for the club’s records.'];
+    }
+    if(tier==='reminder'){
+      return ['This is a courtesy reminder that the club account reflects '+bal+' outstanding, of which '+over+' is now overdue.',
+        'We would appreciate settlement at your earliest convenience. Banking details appear below and the club code '+ref+' should be used as the payment reference.',
+        'Should the amount already have been paid, kindly disregard this reminder and accept our thanks.'];
+    }
+    if(tier==='formal'){
+      return ['This letter serves as formal notice that '+bal+' is outstanding on the club account, of which '+over+' is overdue.',
+        'We request that the overdue amount be settled within 14 days of the date of this notice. Should the club be unable to settle in full, a written application for a payment plan may be made under Article 7.11.16 of the Constitution, on club letterhead, signed by the chairperson, and supported by the last three months’ bank statements and the latest financial statements.',
+        'Continued non-payment will result in the account being referred to the Management Committee for further action.'];
+    }
+    return ['The club account reflects '+bal+' outstanding, of which '+d90+' is more than 90 days overdue.',
+      'As the account has passed the formal-notice stage without settlement or an approved payment plan, it is being referred to the Management Committee for a review of the club’s good standing and match eligibility in terms of the Constitution and the Association’s Rules.',
+      'To avoid this review proceeding, the overdue amount must be settled, or a written application for a payment plan submitted under Article 7.11.16, by return and without delay.'];
+  }
+  function debRenderLetterInto(doc, c, S, tierKey){
+    var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=40;
+    var T=DEB_TIERS[tierKey]||DEB_TIERS.reminder;
+    var todayZA=dDateZA(new Date().toISOString().slice(0,10));
+    var ruleY=debLetterhead(doc,S,T.right);
+    var y=ruleY+22;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor.apply(doc,DEB_MUTED);
+    doc.text(todayZA, W-M, y, {align:'right'});
+    doc.setTextColor.apply(doc,DEB_INK); doc.setFont('helvetica','bold'); doc.setFontSize(10);
+    doc.text('The Committee', M, y); doc.text(c.name+(c.code?'  ('+c.code+')':''), M, y+14);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor.apply(doc,DEB_MUTED);
+    doc.text('Delivered by email to the club’s registered contact.', M, y+27);
+    y+=48;
+    doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor.apply(doc,DEB_NAVY);
+    doc.text(doc.splitTextToSize(T.subject, W-2*M), M, y); y+=20;
+    doc.setFont('helvetica','normal'); doc.setFontSize(10); doc.setTextColor.apply(doc,DEB_INK);
+    doc.text('Dear '+c.name+' Committee', M, y); y+=18;
+    debLetterBody(c,tierKey).forEach(function(p){ var lines=doc.splitTextToSize(p, W-2*M); doc.text(lines, M, y); y+=lines.length*13+7; });
+    // balance summary box
+    y+=4;
+    doc.setFillColor(247,249,252); doc.setDrawColor.apply(doc,DEB_HAIR); doc.setLineWidth(0.5); doc.roundedRect(M,y,W-2*M,58,4,4,'FD');
+    doc.autoTable({ startY:y+9, margin:{left:M+14,right:M+14}, theme:'plain',
+      styles:{fontSize:9,cellPadding:{top:1.5,bottom:1.5,left:0,right:0}},
+      columnStyles:{0:{textColor:DEB_MUTED,cellWidth:120},1:{halign:'right',fontStyle:'bold',textColor:DEB_INK,cellWidth:110,cellPadding:{top:1.5,bottom:1.5,right:24,left:0}},2:{textColor:DEB_MUTED,cellWidth:110,cellPadding:{top:1.5,bottom:1.5,left:12,right:0}},3:{halign:'right',fontStyle:'bold',textColor:DEB_INK}},
+      body:[['Balance outstanding', debAmtR(c.bal), 'Overdue (30+ days)', debAmtR(c.over)],
+            ['Payment reference', (c.code||c.name), 'Status', (c.status||'')]] });
+    y+=58+14;
+    var bank=debBankLines(S);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,DEB_NAVY); doc.text('Payment details', M, y); y+=13;
+    doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,DEB_INK);
+    bank.forEach(function(l){ doc.text(l, M, y); y+=12; });
+    y+=16;
+    doc.setFontSize(10); doc.setTextColor.apply(doc,DEB_INK);
+    doc.text('Yours faithfully', M, y); y+=30;
+    doc.setFont('helvetica','bold'); doc.text((S.from_name||'The Treasurer'), M, y); y+=13;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor.apply(doc,DEB_MUTED);
+    doc.text('Treasurer, '+(S.org_name||'Cape Town Tygerberg Local Football Association'), M, y);
+    if(S.reply_to){ y+=12; doc.text(S.reply_to, M, y); }
+  }
+
+  // ---- run pack (combined PDF) ----
+  async function debBuildPack(clubs, tierKey, includeStatement, onProgress){
+    var S=await debGetSettings();
+    var JSc=window.jspdf&&window.jspdf.jsPDF; if(!JSc){ alert('PDF engine not loaded — reload the page.'); return null; }
+    var doc=new JSc({unit:'pt',format:'a4',compress:true}); var first=true;
+    for(var i=0;i<clubs.length;i++){ var c=clubs[i];
+      if(onProgress) onProgress(i+1, clubs.length, c.name);
+      if(!first) doc.addPage(); first=false;
+      if(tierKey==='statement'){
+        var stx=await debFetchStatement(c); debRenderStatementInto(doc,c,stx,S);
+      } else {
+        debRenderLetterInto(doc,c,S,tierKey);
+        if(includeStatement){ doc.addPage(); var st2=await debFetchStatement(c); debRenderStatementInto(doc,c,st2,S); }
+      }
+    }
+    debFooters(doc,S);
+    var label=(DEB_TIERS[tierKey]||{}).label||'Run';
+    var fn='CTTLFA '+label+' - '+new Date().toISOString().slice(0,10)+'.pdf';
+    doc.save(fn); return {name:fn, n:clubs.length};
+  }
+
+  // ---- correspondence drawer ----
+  function debCorrScope(tierKey){
+    var clubs=(_deb.clubs||[]);
+    if(tierKey==='statement') return clubs.filter(function(c){return c.bal>0.01;});
+    if(tierKey==='reminder') return clubs.filter(function(c){return c.status==='Reminder';});
+    if(tierKey==='formal') return clubs.filter(function(c){return c.status==='Formal notice';});
+    if(tierKey==='suspension') return clubs.filter(function(c){return c.status==='Suspension review';});
+    return [];
+  }
+  var _corrTier='statement', _corrSel={}, _corrInclStmt=true;
+  function debOpenCorr(){
+    var canW=(meRole==='administrator'||meRole==='staff'); if(!canW) return;
+    var scrim=document.getElementById('debScrim')||(function(){var d=document.createElement('div');d.id='debScrim';d.className='deb-scrim';document.body.appendChild(d);d.onclick=debClose;return d;})();
+    var dr=document.getElementById('debDrawer')||(function(){var d=document.createElement('aside');d.id='debDrawer';d.className='deb-drawer';document.body.appendChild(d);return d;})();
+    _corrSel={}; debCorrDraw(dr); dr.classList.add('on'); scrim.classList.add('on');
+  }
+  function debCorrDraw(dr){
+    var T=DEB_TIERS[_corrTier], scope=debCorrScope(_corrTier);
+    scope.forEach(function(c){ if(_corrSel[c.club_key]===undefined) _corrSel[c.club_key]=true; });
+    var chosen=scope.filter(function(c){return _corrSel[c.club_key];});
+    var tot=chosen.reduce(function(a,c){return a+Number(c.bal);},0);
+    var h='<div class="dh"><div><h3>Correspondence &amp; statement runs</h3><div class="dsub">Draft, review and issue club statements and notices</div></div><button class="dx" id="debCX" aria-label="Close">×</button></div><div class="db">';
+    h+='<div class="deb-sec">Run type</div><div class="deb-runtypes">';
+    ['statement','reminder','formal','suspension'].forEach(function(k){ h+='<button class="deb-rt'+(k===_corrTier?' on':'')+'" data-rt="'+k+'">'+DEB_TIERS[k].label+'</button>'; });
+    h+='</div>';
+    var expl={statement:'A covering letter and the full statement of account for every club with a balance.',
+      reminder:'A courtesy reminder for clubs at the 30-day Reminder stage.',
+      formal:'A formal notice for clubs at the 60-day Formal-notice stage, citing Article 7.11.16.',
+      suspension:'A referral notice for clubs at the 90/120-day Suspension-review stage — review of good standing and match eligibility.'};
+    h+='<p class="hint" style="font-size:12px;margin:2px 0 10px">'+expl[_corrTier]+'</p>';
+    if(_corrTier!=='statement'){
+      h+='<label class="deb-chk"><input type="checkbox" id="corrIncl"'+(_corrInclStmt?' checked':'')+'> Attach the statement of account to each letter</label>';
+    }
+    h+='<div class="deb-sec">Clubs in scope <span class="hint" style="font-weight:400">('+chosen.length+' of '+scope.length+' selected · '+debAmtR(tot)+')</span></div>';
+    if(!scope.length){ h+='<p class="hint" style="font-size:12px">No clubs are currently at this stage.</p>'; }
+    else{
+      h+='<div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn ghost sm" id="corrAll">Select all</button><button class="btn ghost sm" id="corrNone">Clear</button></div>';
+      h+='<div class="deb-scope">'+scope.map(function(c){ return '<label class="deb-scoperow"><input type="checkbox" data-k="'+esc(c.club_key)+'"'+(_corrSel[c.club_key]?' checked':'')+'><span class="nm">'+esc(c.name)+'</span><span class="cd">'+esc(c.code||'')+'</span>'+dPill(c.status)+'<span class="bl">'+dR(c.bal)+'</span></label>'; }).join('')+'</div>';
+    }
+    h+='<div class="deb-corr-actions"><button class="btn gold" id="corrBuild"'+(chosen.length?'':' disabled')+'>Build pack (PDF)</button>'
+      +'<button class="btn ghost" id="corrLog"'+(chosen.length?'':' disabled')+'>Log this run</button></div>';
+    h+='<div id="corrStatus" class="hint" style="font-size:12px;margin-top:8px"></div>';
+    h+='<p class="hint" style="font-size:11px;margin-top:14px">Packs are produced here for your review and manual issue to clubs. Logging records the run against each club, with your name and the date, for the audit file and the constitutional-management panel. Email issue via Resend (from the CTTLFA finance address on cttlfa.com) is a later phase and will require your per-run approval.</p></div>';
+    dr.innerHTML=h;
+    document.getElementById('debCX').onclick=debClose;
+    Array.prototype.forEach.call(dr.querySelectorAll('[data-rt]'),function(b){ b.onclick=function(){ _corrTier=b.dataset.rt; _corrSel={}; debCorrDraw(dr); }; });
+    var inc=document.getElementById('corrIncl'); if(inc) inc.onchange=function(){ _corrInclStmt=this.checked; };
+    var sa=document.getElementById('corrAll'); if(sa) sa.onclick=function(){ scope.forEach(function(c){_corrSel[c.club_key]=true;}); debCorrDraw(dr); };
+    var sn=document.getElementById('corrNone'); if(sn) sn.onclick=function(){ scope.forEach(function(c){_corrSel[c.club_key]=false;}); debCorrDraw(dr); };
+    Array.prototype.forEach.call(dr.querySelectorAll('.deb-scoperow input[data-k]'),function(x){ x.onchange=function(){ _corrSel[x.dataset.k]=x.checked; debCorrDraw(dr); }; });
+    var bd=document.getElementById('corrBuild'); if(bd) bd.onclick=async function(){
+      var chosen=debCorrScope(_corrTier).filter(function(c){return _corrSel[c.club_key];}); if(!chosen.length) return;
+      var st=document.getElementById('corrStatus'); this.disabled=true; var self=this; var ot=self.textContent; self.textContent='Building…';
+      try{ await debBuildPack(chosen,_corrTier,_corrInclStmt,function(i,n,nm){ st.textContent='Rendering '+i+' of '+n+': '+nm; });
+        st.textContent='Pack downloaded — '+chosen.length+' club'+(chosen.length>1?'s':'')+'.'; }
+      catch(e){ st.textContent='Could not build the pack: '+(e.message||e); }
+      self.textContent=ot; self.disabled=false;
+    };
+    var lg=document.getElementById('corrLog'); if(lg) lg.onclick=async function(){
+      var chosen=debCorrScope(_corrTier).filter(function(c){return _corrSel[c.club_key];}); if(!chosen.length) return;
+      if(!confirm('Log this '+DEB_TIERS[_corrTier].label.toLowerCase()+' run against '+chosen.length+' club'+(chosen.length>1?'s':'')+'? This records an action on each club for the audit file.')) return;
+      var st=document.getElementById('corrStatus'); this.disabled=true; var self=this; var ot=self.textContent; self.textContent='Logging…';
+      var action=DEB_TIERS[_corrTier].action, done=0;
+      for(var i=0;i<chosen.length;i++){ var c=chosen[i];
+        try{ await sb.rpc('deb_log_action',{p_key:c.club_key,p_name:c.name,p_action:action,p_amount:c.bal,p_detail:DEB_TIERS[_corrTier].label+' issued'}); done++; }catch(e){}
+        st.textContent='Logged '+done+' of '+chosen.length+'…';
+      }
+      st.textContent='Logged against '+done+' club'+(done>1?'s':'')+'.'; self.textContent=ot; self.disabled=false;
+      _deb=null; renderDebtors(true);
+    };
   }
 
   async function debOpenClub(key){
