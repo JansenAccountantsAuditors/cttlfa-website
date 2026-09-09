@@ -1775,11 +1775,10 @@
     var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=40;
     var pages=doc.internal.getNumberOfPages();
     for(var i=1;i<=pages;i++){ doc.setPage(i);
-      doc.setDrawColor.apply(doc,DEB_HAIR); doc.setLineWidth(0.5); doc.line(M,H-42,W-M,H-42);
-      doc.setFont('helvetica','normal'); doc.setFontSize(7); doc.setTextColor.apply(doc,DEB_MUTED);
-      doc.text('Management-prepared, unaudited · Source: Sage Business Cloud · Confidential to the club and the Association', M, H-30);
-      doc.text((S.statement_footer||''), M, H-20, {maxWidth:W-2*M-60});
-      doc.text('Page '+i+' of '+pages, W-M, H-30, {align:'right'});
+      doc.setDrawColor.apply(doc,DEB_HAIR); doc.setLineWidth(0.5); doc.line(M,H-40,W-M,H-40);
+      doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor.apply(doc,DEB_MUTED);
+      doc.text((S.statement_footer||''), M, H-27, {maxWidth:W-2*M-60});
+      doc.text('Page '+i+' of '+pages, W-M, H-27, {align:'right'});
     }
   }
   function debBankLines(S){ return (S.bank_details||'[Banking details to be confirmed]').split('\n'); }
@@ -1817,30 +1816,32 @@
       body:[bands.map(function(b){return debAmt(b[1]);}).concat([debAmt(closing>0?closing:0)])],
       headStyles:{fillColor:[239,244,247],textColor:DEB_NAVY,fontStyle:'bold',fontSize:8.5,halign:'right',lineColor:DEB_HAIR,lineWidth:0.5},
       bodyStyles:{fontSize:9,halign:'right',textColor:DEB_INK,lineColor:DEB_HAIR,lineWidth:0.5}, columnStyles:{5:{fontStyle:'bold'}} });
-    doc.setFontSize(7.5); doc.setTextColor.apply(doc,DEB_MUTED); doc.text('Ageing per Sage Days Outstanding. Amounts in Rand.', M, doc.lastAutoTable.finalY+11);
-    var body=rows.map(function(t){ return [ t.is_opening?'':dDateZA(t.tx_date), t.reference||'', t.tx_type||'', (t.description||''),
+    function shT(x){ x=x||''; var m={'Tax Invoice':'Invoice','Customer Receipt':'Receipt','Customer Adjustment':'Adjustment','Credit Note':'Credit note','Opening Balance':'Opening','Customer Journal':'Journal','Supplier Invoice':'Invoice'}; return m[x]||x; }
+    var body=rows.map(function(t){ return [ t.is_opening?'':dDateZA(t.tx_date), t.reference||'', shT(t.tx_type), (t.description||''),
       t.debit!=null?debAmt(t.debit):'', t.credit!=null?debAmt(t.credit):'', debAmt(t.balance) ]; });
-    doc.autoTable({ startY:doc.lastAutoTable.finalY+20, margin:{left:M,right:M},
+    doc.autoTable({ startY:doc.lastAutoTable.finalY+18, margin:{left:M,right:M},
       head:[['Date','Reference','Type','Description','Debit','Credit','Balance']],
       body:body.length?body:[['','','','No transactions on record for this account.','','','']], theme:'striped',
       headStyles:{fillColor:DEB_NAVY,textColor:[255,255,255],fontSize:8.5,fontStyle:'bold'},
       bodyStyles:{fontSize:8,textColor:DEB_INK,cellPadding:{top:2.5,bottom:2.5,left:4,right:4}}, alternateRowStyles:{fillColor:[247,249,252]},
-      columnStyles:{0:{cellWidth:52},1:{cellWidth:64},2:{cellWidth:66},3:{cellWidth:'auto'},4:{cellWidth:52,halign:'right'},5:{cellWidth:52,halign:'right'},6:{cellWidth:58,halign:'right',fontStyle:'bold'}},
+      columnStyles:{0:{cellWidth:64,overflow:'visible'},1:{cellWidth:62},2:{cellWidth:58},3:{cellWidth:'auto'},4:{cellWidth:52,halign:'right'},5:{cellWidth:52,halign:'right'},6:{cellWidth:58,halign:'right',fontStyle:'bold'}},
       didParseCell:function(d){ var raw=rows[d.row.index]; if(raw&&raw.is_opening&&d.section==='body'){ d.cell.styles.fontStyle='bold'; d.cell.styles.fillColor=[239,244,247]; } } });
     var cy=doc.lastAutoTable.finalY; if(cy>H-120){ doc.addPage(); cy=60; }
     doc.setDrawColor.apply(doc,DEB_NAVY); doc.setLineWidth(0.8); doc.line(W-M-190,cy+10,W-M,cy+10);
     doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor.apply(doc,DEB_NAVY);
     doc.text('Balance due', W-M-190, cy+26); doc.text(debAmtR(closing), W-M, cy+26, {align:'right'});
-    var bank=debBankLines(S); var boxH=Math.max(84,30+bank.length*12+26); var payY=cy+46;
+    var bank=debBankLines(S); var boxH=Math.max(84,30+bank.length*12+16); var payY=cy+46;
     if(payY>H-(boxH+40)){ doc.addPage(); payY=60; }
     doc.setFillColor(247,249,252); doc.setDrawColor.apply(doc,DEB_HAIR); doc.setLineWidth(0.5); doc.roundedRect(M,payY,W-2*M,boxH,4,4,'FD');
-    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor.apply(doc,DEB_NAVY); doc.text('Payment details', M+14, payY+18);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor.apply(doc,DEB_NAVY); doc.text('Payment details', M+16, payY+18);
     doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,DEB_INK);
-    var by=payY+32; bank.forEach(function(l){ doc.text(l, M+14, by); by+=12; });
-    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,DEB_NAVY);
-    doc.text('Payment reference:  '+(stx.code||c.code||stx.name||c.name), M+14, by+6);
+    var by=payY+32; bank.forEach(function(l){ doc.text(l, M+16, by); by+=12; });
+    var rx=W/2+34;
+    doc.setDrawColor.apply(doc,DEB_HAIR); doc.setLineWidth(0.5); doc.line(rx-16,payY+12,rx-16,payY+boxH-12);
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor.apply(doc,DEB_MUTED); doc.text('PAYMENT REFERENCE', rx, payY+18);
+    doc.setFont('helvetica','bold'); doc.setFontSize(14); doc.setTextColor.apply(doc,DEB_NAVY); doc.text((stx.code||c.code||stx.name||c.name), rx, payY+35);
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor.apply(doc,DEB_MUTED);
-    doc.text(doc.splitTextToSize((S.payment_terms||''), (W-2*M)/2-20), W/2+8, payY+32);
+    doc.text(doc.splitTextToSize('Please quote this reference on every payment. Queries: '+(S.org_contact||''), (W-M)-rx-14), rx, payY+50);
   }
 
   async function debFetchStatement(c){ var r=await sb.rpc('deb_statement',{p_key:c.club_key}); if(r.error) throw r.error; return r.data||{}; }
