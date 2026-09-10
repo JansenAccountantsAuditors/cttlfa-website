@@ -1801,11 +1801,10 @@
     doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor.apply(doc,DEB_MUTED);
     var sub=[]; if(stx.code||c.code) sub.push('Account '+(stx.code||c.code)); if(c.suburb) sub.push(c.suburb);
     doc.text(sub.join('   ·   '), M, topY+30);
-    doc.setFontSize(8.5); doc.text('Contact details held in Sage under POPIA.', M, topY+44);
     doc.autoTable({ startY:topY-8, margin:{left:W/2+40,right:M}, theme:'plain',
       styles:{fontSize:9,cellPadding:{top:1.5,bottom:1.5,left:0,right:0},textColor:DEB_INK},
       columnStyles:{0:{textColor:DEB_MUTED},1:{halign:'right',fontStyle:'bold',cellWidth:120}},
-      body:[['Statement date',todayZA],['Account reference',(stx.code||c.code||'—')],['Activity to',dDateZA(stx.ledger_to||sAsAt)],['Ageing as at',dDateZA(sAsAt)]] });
+      body:[['Statement date',todayZA],['Account reference',(stx.code||c.code||'—')],['Statement period',(stx.period_from?dDateZA(stx.period_from):'—')+'  –  '+dDateZA(stx.period_to||sAsAt)],['Ageing as at',dDateZA(sAsAt)]] });
     var bandY=Math.max(doc.lastAutoTable.finalY,topY+52)+14;
     doc.setFillColor.apply(doc,DEB_NAVY); doc.roundedRect(M,bandY,W-2*M,42,4,4,'F');
     doc.setTextColor(255,255,255); doc.setFont('helvetica','normal'); doc.setFontSize(9.5); doc.text('Balance due', M+16, bandY+18);
@@ -2371,7 +2370,28 @@
         +'<span>Received this year</span><b>'+dR(facts.received_ytd)+'</b>'
         +'<span>Ledger vs Sage ageing</span><b>'+(recon===null?'–':(recon?'<span style="color:#1c5136">In sync</span>':'<span style="color:#9A3130">differs by '+dR(Number(txbal)-bal)+'</span>'))+'</b></div>';
     } else { h+='<p class="hint" style="font-size:12px">No transaction history is loaded for this club yet. Balance and ageing above come from the live Sage Days-Outstanding report.</p>'; }
-    h+='<div class="deb-contact">Club contact is held in Sage and shown only to signed-in officers, under the Protection of Personal Information Act 4 of 2013. Payment reference: <b>'+esc(c.code||c.name.replace(/[^A-Za-z]/g,'').slice(0,6).toUpperCase())+'</b></div>';
+    var _ct=data.contact||null, _ref=esc(c.code||c.name.replace(/[^A-Za-z]/g,'').slice(0,6).toUpperCase());
+    h+='<div class="deb-sec">Club contact'+(canW?' <button class="deb-linkbtn" id="debCtEdit">edit</button>':'')+'</div>';
+    h+='<div id="debCtView">';
+    if(_ct&&(_ct.name||_ct.email||_ct.phone||_ct.cc_email)){
+      h+='<div class="deb-kv"><span>Contact</span><b>'+(_ct.name?esc(_ct.name):'–')+'</b>'
+        +'<span>Email</span><b>'+(_ct.email?'<a href="mailto:'+esc(_ct.email)+'">'+esc(_ct.email)+'</a>':'<span style="color:#9A3130">not captured</span>')+'</b>'
+        +(_ct.cc_email?'<span>CC</span><b><a href="mailto:'+esc(_ct.cc_email)+'">'+esc(_ct.cc_email)+'</a></b>':'')
+        +'<span>Phone</span><b>'+(_ct.phone?'<a href="tel:'+esc(_ct.phone)+'">'+esc(_ct.phone)+'</a>':'–')+'</b></div>';
+      h+='<div class="hint" style="font-size:11px;margin-top:4px">Source: Sage customer listing'+(_ct.updated_by?' · '+esc(_ct.updated_by):'')+(_ct.updated_at?' · '+dDateZA(_ct.updated_at):'')+'</div>';
+    } else {
+      h+='<p class="hint" style="font-size:12px">No contact captured yet.'+(canW?' Use edit to add the club’s contact person and email.':'')+'</p>';
+    }
+    h+='</div>';
+    if(canW){
+      h+='<div id="debCtForm" style="display:none;margin-top:4px">'
+        +'<label style="font-size:11px;color:#59666b;display:block;margin-bottom:5px">Contact person<input type="text" id="debCtName" value="'+esc((_ct&&_ct.name)||'')+'" style="display:block;width:100%;margin-top:2px;padding:5px 7px;border:1px solid #d2d8e4;border-radius:5px;font-size:13px"></label>'
+        +'<label style="font-size:11px;color:#59666b;display:block;margin-bottom:5px">Email<input type="email" id="debCtEmail" value="'+esc((_ct&&_ct.email)||'')+'" style="display:block;width:100%;margin-top:2px;padding:5px 7px;border:1px solid #d2d8e4;border-radius:5px;font-size:13px"></label>'
+        +'<label style="font-size:11px;color:#59666b;display:block;margin-bottom:5px">CC email<input type="email" id="debCtCc" value="'+esc((_ct&&_ct.cc_email)||'')+'" style="display:block;width:100%;margin-top:2px;padding:5px 7px;border:1px solid #d2d8e4;border-radius:5px;font-size:13px"></label>'
+        +'<label style="font-size:11px;color:#59666b;display:block;margin-bottom:5px">Phone<input type="text" id="debCtPhone" value="'+esc((_ct&&_ct.phone)||'')+'" style="display:block;width:100%;margin-top:2px;padding:5px 7px;border:1px solid #d2d8e4;border-radius:5px;font-size:13px"></label>'
+        +'<div><button class="btn sm" id="debCtSave">Save contact</button> <button class="btn ghost sm" id="debCtCancel">Cancel</button> <span class="hint" id="debCtMsg" style="font-size:11px"></span></div></div>';
+    }
+    h+='<div class="deb-contact" style="margin-top:8px">Payment reference: <b>'+_ref+'</b></div>';
     h+='</div><div class="deb-col">';
     // RIGHT: recommended step + actions
     h+='<div class="deb-rec"><div class="deb-rec-h">Recommended next step'+(rec.a?'<span class="deb-rec-art">'+esc(rec.a)+'</span>':'')+'</div><div class="deb-rec-t">'+esc(rec.t)+'</div><div class="deb-rec-b">'+rec.b+'</div>';
@@ -2398,6 +2418,9 @@
     h+='</div></div></div>';
     m.innerHTML=h;
     document.getElementById('debX').onclick=debModalClose;
+    var _ce=document.getElementById('debCtEdit'); if(_ce) _ce.onclick=function(){ var v=document.getElementById('debCtView'),f=document.getElementById('debCtForm'); if(v)v.style.display='none'; if(f)f.style.display='block'; };
+    var _cx=document.getElementById('debCtCancel'); if(_cx) _cx.onclick=function(){ var v=document.getElementById('debCtView'),f=document.getElementById('debCtForm'); if(f)f.style.display='none'; if(v)v.style.display='block'; };
+    var _cs=document.getElementById('debCtSave'); if(_cs) _cs.onclick=async function(){ var b=this; b.disabled=true; var msg=document.getElementById('debCtMsg'); if(msg)msg.textContent='Saving…'; try{ await sb.rpc('deb_contact_set',{p_key:c.club_key,p_name:document.getElementById('debCtName').value,p_email:document.getElementById('debCtEmail').value,p_cc:document.getElementById('debCtCc').value,p_phone:document.getElementById('debCtPhone').value}); _deb=null; debOpenClub(key); }catch(e){ alert('Could not save contact: '+(e.message||e)); b.disabled=false; if(msg)msg.textContent=''; } };
     var _bs=document.getElementById('debStmt'); if(_bs) _bs.onclick=async function(){ var b=this; b.disabled=true; var t=b.textContent; b.textContent='Generating…'; try{ await debStatementPDF(c); }catch(e){ alert('Statement error: '+(e.message||e)); } b.textContent=t; b.disabled=false; };
     var cp=document.getElementById('debCopy'); if(cp) cp.onclick=function(){ try{navigator.clipboard.writeText(debReminderText(c));}catch(e){} this.textContent='Copied'; var b=this; setTimeout(function(){b.textContent='Copy '+((DEB_ST[c.status]||['message'])[0]).toLowerCase();},1300); };
     var ch=document.getElementById('debCorrHere'); if(ch) ch.onclick=function(){ debModalClose(); setTimeout(debOpenCorr,140); };
