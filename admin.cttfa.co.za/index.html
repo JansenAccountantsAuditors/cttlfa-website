@@ -241,7 +241,23 @@
 .deb-fchart{display:block;width:100%;max-width:470px;height:auto;margin:2px auto 0}
 .deb-fcap{font-size:11.5px;color:#59667c;line-height:1.5;max-width:78ch;margin:9px auto 0;text-align:center}
 .deb-guide h4:first-of-type{margin-top:2px}
-.deb-guide .deb-flow-notes{margin-top:14px}</style>
+.deb-guide .deb-flow-notes{margin-top:14px}
+.deb-clock{display:inline-flex;align-items:center;gap:9px;background:var(--navy,#071A4A);color:#fff;border-radius:8px;padding:5px 12px;line-height:1.2}
+.deb-clock .cd{font-weight:700;font-size:12px;font-variant-numeric:tabular-nums}
+.deb-clock .ct{font-size:12px;color:#c7d2ec;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.deb-clock:before{content:"SAST";font-size:8.5px;font-weight:700;letter-spacing:.06em;color:#8ea3c9;background:rgba(255,255,255,.12);border-radius:4px;padding:2px 5px}
+.deb-gate-clubs{max-height:46vh;overflow:auto;border:1px solid #E3E8F0;border-radius:10px;margin:4px 0 2px}
+.deb-gate-row{display:flex;align-items:center;gap:12px;padding:10px 12px;border-bottom:1px solid #EEF2F8}
+.deb-gate-row:last-child{border-bottom:0}
+.deb-gate-row.done{background:#F7FAFC;opacity:.75}
+.deb-gate-main{flex:1;min-width:0}
+.deb-gate-main .nm{font-weight:700;color:var(--navy,#071A4A)}
+.deb-gate-main .cd{color:var(--muted);font-size:11px;margin-left:5px}
+.deb-gate-main .rs{font-size:11.5px;color:#7a2320;margin-top:2px;line-height:1.35}
+.deb-gate-arr{flex:none;text-align:right;font-weight:800;color:#9A3130;font-variant-numeric:tabular-nums;min-width:86px}
+.deb-gate-act{flex:none;display:flex;gap:6px;align-items:center}
+.deb-gate-state{font-size:11px;font-weight:700}
+.deb-gate-state.sent{color:#1c5136}.deb-gate-state.held{color:#7a5312}</style>
 
 <!-- LOGIN -->
 <div class="login" id="loginView">
@@ -1669,6 +1685,62 @@
   function dDateTimeZA(iso){ if(!iso) return '–'; var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var d=new Date(String(iso).replace(' ','T')); if(isNaN(d.getTime())) return dDateZA(iso); return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
   function dAgo(d){ d=Number(d); if(!d&&d!==0) return '–'; if(d>=999) return 'no receipt on record'; if(d<=0) return 'today'; if(d===1) return 'yesterday'; return d+' days ago'; }
 
+  var _debClockTimer=null;
+  function debStartClock(){
+    if(_debClockTimer){ clearInterval(_debClockTimer); _debClockTimer=null; }
+    function tick(){
+      var el=document.getElementById('debClock');
+      if(!el){ if(_debClockTimer){ clearInterval(_debClockTimer); _debClockTimer=null; } return; }
+      var now=new Date();
+      var d=now.toLocaleDateString('en-ZA',{timeZone:'Africa/Johannesburg',weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+      var t=now.toLocaleTimeString('en-GB',{timeZone:'Africa/Johannesburg',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      var cd=el.querySelector('.cd'), ct=el.querySelector('.ct');
+      if(cd) cd.textContent=d; if(ct) ct.textContent=t;
+    }
+    tick(); _debClockTimer=setInterval(tick,1000);
+  }
+  function debTodayISO(){ return new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Johannesburg'}); }
+
+  function debOOCGate(clubs){
+    var canW=(meRole==='administrator'||meRole==='staff'); if(!canW) return;
+    var pending=(clubs||[]).filter(function(c){ return c.stage==='ooc' && !c.ooc; });
+    if(!pending.length) return;
+    var today=debTodayISO();
+    try{ if(localStorage.getItem('debOOCGateDay')===today) return; }catch(e){}
+    var m=debModal(); var st={};
+    function close(){ try{ localStorage.setItem('debOOCGateDay',today); }catch(e){} debModalClose(); if(Object.keys(st).length){ renderDebtors(true); } }
+    function draw(){
+      var rows=pending.map(function(c){
+        var s=st[c.club_key]; var arr=dR(c.over,false);
+        var age=(c.age!=null?c.age:''); var pd=(age?(age-30):'');
+        var reason='Oldest open item '+(age||'54+')+' days old'+(pd!==''?' ('+pd+' past due)':'')+', '+arr+' overdue &mdash; Rules 10.2.3 / 10.8.';
+        var act = s==='sent' ? '<span class="deb-gate-state sent">Issued (test)</span>'
+                : s==='held' ? '<span class="deb-gate-state held">Held for review</span>'
+                : '<button class="btn sm" data-send="'+esc(c.club_key)+'">Confirm &amp; issue</button> <button class="deb-linkbtn" data-hold="'+esc(c.club_key)+'">Hold</button>';
+        return '<div class="deb-gate-row'+(s?' done':'')+'"><div class="deb-gate-main"><span class="nm">'+esc(c.name)+'</span><span class="cd">'+esc(c.code||'')+'</span><div class="rs">'+reason+'</div></div><div class="deb-gate-arr">'+arr+'</div><div class="deb-gate-act">'+act+'</div></div>';
+      }).join('');
+      m.innerHTML='<div class="deb-mhead"><div><h3>Out of Compliance &mdash; confirm before issue</h3><div class="dsub">As at '+dDateTimeZA(new Date().toISOString())+' &middot; '+pending.length+' club'+(pending.length>1?'s':'')+' meet the trigger. No notice goes out until you confirm each one.</div></div><button class="dx" id="debGateX" aria-label="Close">&times;</button></div>'
+        +'<div class="deb-mbody">'
+        +'<div class="deb-gate" style="margin-bottom:12px">Every send is in <b>test mode</b> and reaches the Treasurer only. Confirming records the club Out of Compliance with <b>today</b> as the effective date and issues the notice. Hold to deal with a club later.</div>'
+        +'<div class="deb-gate-clubs">'+rows+'</div>'
+        +'<div class="deb-corr-actions" style="justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="debGateLater">Close &mdash; decide later</button></div>'
+        +'<p class="hint" style="font-size:11px;margin-top:8px">This confirmation appears once when you first open the dashboard each day. Held clubs remain on the dashboard.</p></div>';
+      var x=document.getElementById('debGateX'); if(x) x.onclick=close;
+      var later=document.getElementById('debGateLater'); if(later) later.onclick=close;
+      Array.prototype.forEach.call(m.querySelectorAll('[data-hold]'),function(b){ b.onclick=function(){ st[b.dataset.hold]='held'; draw(); }; });
+      Array.prototype.forEach.call(m.querySelectorAll('[data-send]'),function(b){ b.onclick=async function(){
+        var key=b.dataset.send, c=pending.filter(function(x){return x.club_key===key;})[0]; if(!c) return;
+        b.disabled=true; b.textContent='Issuing…';
+        try{
+          await sb.rpc('deb_ooc_place',{p_key:key,p_route:'notice',p_started_on:debTodayISO(),p_amount:Number(c.over)||null,p_notice_ref:null,p_note:'Confirmed via morning gate'});
+          await debSendOne(c,'ooc'); st[key]='sent';
+        }catch(e){ alert('Could not issue: '+(e.message||e)); b.disabled=false; b.textContent='Confirm & issue'; return; }
+        draw();
+      }; });
+    }
+    draw();
+  }
+
   function debFlowchartSVG(){
     function nd(x,y,w,fill,stroke,t,tc,sub,sc){
       return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="54" rx="9" fill="'+fill+'" stroke="'+stroke+'"/>'
@@ -1770,6 +1842,8 @@
     }
     if(!_deb || _deb.empty){ root.innerHTML='<div class="card"><h3>Club Debtors</h3><p class="hint">No Sage extract has been loaded yet.</p></div>'; return; }
     debRender();
+    try{ debStartClock(); }catch(e){}
+    try{ debOOCGate(_deb.clubs||[]); }catch(e){}
   }
 
   function debRender(){
@@ -1793,6 +1867,7 @@
     h+='<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">'
       +'<div><h3 style="margin:0 0 3px">Club Debtors</h3><p class="hint" style="margin:0;max-width:80ch">Who owes the Association, how old the money is, and whether we are chasing it the way the Constitution requires. Balances and ageing come straight from Sage.</p></div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
+      +'<div class="deb-clock" id="debClock" title="Cape Town time — the working date and time that stamps a trigger and the letter"><span class="cd">&mdash;</span><span class="ct">&mdash;</span></div>'
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost sm" id="debGuide" title="How the debtor process works and how it aligns to the Constitution">Process guide</button><button class="btn gold sm" id="debFetch" title="Pull the latest balances from Sage">Fetch from Sage</button>'+((meRole==='administrator'||meRole==='staff')?'<button class="btn gold sm" id="debQueue" title="Follow-ups due">Action Queue'+debAQBadge()+'</button><button class="btn ghost sm" id="debDesk" title="Collections working list">Collections Desk</button><button class="btn ghost sm" id="debCorr" title="Statements and notices">Correspondence</button>':'')+'<button class="btn ghost sm" id="debRefresh" title="Reload from the database">Reload</button></div>'
       +'<span class="hint" id="debFetchStatus" style="font-size:11.5px;text-align:right"></span></div></div>'
       +'<div class="deb-prov"><span class="warn">Management-prepared, unaudited</span>'
