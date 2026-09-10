@@ -23,16 +23,6 @@
   ],
   [
    "C1 - Second Division",
-   "2026-09-10",
-   "20:30",
-   "YSD Macassar",
-   "Hellenic",
-   "A Williams",
-   "Club Ref",
-   "Club Ref"
-  ],
-  [
-   "C1 - Second Division",
    "2026-09-09",
    "20:30",
    "Clyde Pinelands",
@@ -57,7 +47,7 @@
    "20:30",
    "Rygersdal",
    "Hanover Park",
-   "L De Klerk",
+   "A Williams",
    "L Somi",
    "Club Ref"
   ]
@@ -70,6 +60,346 @@
    "FN Rangers",
    "Norway Parks",
    "N Dunshire",
+   "",
+   ""
+  ],
+  [
+   "M1 - Under 14 Premier One",
+   "2026-09-12",
+   "09:30",
+   "FC Kapstadt",
+   "Cape Town Spurs",
+   "D Motseo",
+   "",
+   ""
+  ],
+  [
+   "O2 - Under 12 Premier Two",
+   "2026-09-12",
+   "08:15",
+   "Stephanian Ottery",
+   "Clyde Pinelands",
+   "M Swartz",
+   "",
+   ""
+  ],
+  [
+   "O2 - Under 12 Premier Two",
+   "2026-09-12",
+   "08:15",
+   "Meadowridge",
+   "Fish Hoek",
+   "N Dunshire",
+   "",
+   ""
+  ],
+  [
+   "O2 - Under 12 Premier Two",
+   "2026-09-12",
+   "08:15",
+   "Sunningdale City",
+   "Edgemead G/W",
+   "S Bhali",
+   "",
+   ""
+  ],
+  [
+   "O1 - Under 12 Premier One",
+   "2026-09-12",
+   "08:15",
+   "FN Rangers",
+   "Norway Parks",
+   "M Matiwane",
+   "",
+   ""
+  ],
+  [
+   "M5 - Under 14 Division Five",
+   "2026-09-12",
+   "09:30",
+   "Bothasig",
+   "Edgemead G/W",
+   "C Jagers",
+   "",
+   ""
+  ],
+  [
+   "M2 - Under 14 Premier Two",
+   "2026-09-12",
+   "09:30",
+   "Stephanian Ottery",
+   "Clyde Pinelands",
+   "A Richards",
+   "",
+   ""
+  ],
+  [
+   "M2 - Under 14 Premier Two",
+   "2026-09-12",
+   "09:30",
+   "Young Bafana",
+   "Durbanville",
+   "A Williams",
+   "",
+   ""
+  ],
+  [
+   "M2 - Under 14 Premier Two",
+   "2026-09-12",
+   "09:30",
+   "Meadowridge",
+   "Fish Hoek",
+   "J Absalon",
+   "",
+   ""
+  ],
+  [
+   "M1 - Under 14 Premier One",
+   "2026-09-12",
+   "09:30",
+   "De Beers",
+   "Wynberg st Johns",
+   "D  Lockman",
+   "",
+   ""
+  ],
+  [
+   "M1 - Under 14 Premier One",
+   "2026-09-12",
+   "09:30",
+   "C.R Vasco da Gama",
+   "Table View",
+   "P Arendse",
+   "",
+   ""
+  ],
+  [
+   "M1 - Under 14 Premier One",
+   "2026-09-12",
+   "09:30",
+   "FN Rangers",
+   "Norway Parks",
+   "S Loqo",
+   "",
+   ""
+  ],
+  [
+   "O1 - Under 12 Premier One",
+   "2026-09-12",
+   "08:15",
+   "C.R Vasco da Gama",
+   "Table View",
+   "E Piet",
+   "",
+   ""
+  ],
+  [
+   "K5 - Under 16 Division Five",
+   "2026-09-12",
+   "10:50",
+   "Bothasig",
+   "Edgemead G/W",
+   "C Jagers",
+   "",
+   ""
+  ],
+  [
+   "K2 - Under 16 Premier Two",
+   "2026-09-12",
+   "10:50",
+   "Young Bafana",
+   "Durbanville",
+   "A Williams",
+   "",
+   ""
+  ],
+  [
+   "K2 - Under 16 Premier Two",
+   "2026-09-12",
+   "10:50",
+   "Stephanian Ottery",
+   "Clyde Pinelands",
+   "M Swartz",
+   "",
+   ""
+  ],
+  [
+   "K2 - Under 16 Premier Two",
+   "2026-09-12",
+   "10:50",
+   "Meadowridge",
+   "Fish Hoek",
+   "N Dunshire",
+   "",
+   ""
+  ],
+  [
+   "O1 - Under 12 Premier One",
+   "2026-09-12",
+   "08:15",
+   "FC Kapstadt",
+   "Cape Town Spurs",
+   "D Vaughan",
+   "",
+   ""
+  ],
+  [
+   "K1 - Under 16 Premier One",
+   "2026-09-12",
+   "10:50",
+   "De Beers",
+   "Wynberg st Johns",
+   "D  Lockman",
+   "",
+   ""
+  ],
+  [
+   "K1 - Under 16 Premier One",
+   "2026-09-12",
+   "10:50",
+   "C.R Vasco da Gama",
+   "Table View",
+   "E Piet",
+   "",
+   ""
+  ],
+  [
+   "K1 - Under 16 Premier One",
+   "2026-09-12",
+   "10:50",
+   "FN Rangers",
+   "Norway Parks",
+   "L Nziweni",
+   "",
+   ""
+  ],
+  [
+   "I2 - Under 18 Premier Two",
+   "2026-09-12",
+   "12:30",
+   "Stephanian Ottery",
+   "Clyde Pinelands",
+   "A Richards",
+   "",
+   ""
+  ],
+  [
+   "I2 - Under 18 Premier Two",
+   "2026-09-12",
+   "12:30",
+   "Meadowridge",
+   "Fish Hoek",
+   "J Absalon",
+   "",
+   ""
+  ],
+  [
+   "I1 - Under 18 Premier One",
+   "2026-09-12",
+   "12:30",
+   "C.R Vasco da Gama",
+   "Table View",
+   "P Arendse",
+   "",
+   ""
+  ],
+  [
+   "I1 - Under 18 Premier One",
+   "2026-09-12",
+   "12:30",
+   "FN Rangers",
+   "Norway Parks",
+   "R Kalamdien",
+   "",
+   ""
+  ],
+  [
+   "I2 - Under 18 Premier Two",
+   "2026-09-12",
+   "12:30",
+   "Sunningdale City",
+   "Edgemead G/W",
+   "A De Freitas",
+   "Hugo Bailey",
+   "C Richards"
+  ],
+  [
+   "K2 - Under 16 Premier Two",
+   "2026-09-12",
+   "10:50",
+   "Sunningdale City",
+   "Edgemead G/W",
+   "S Bhali",
+   "Lekobe Malatsi",
+   "Hugo Bailey"
+  ],
+  [
+   "M2 - Under 14 Premier Two",
+   "2026-09-12",
+   "09:30",
+   "Sunningdale City",
+   "Edgemead G/W",
+   "Hugo Bailey",
+   "A De Freitas",
+   "Lekobe Malatsi"
+  ],
+  [
+   "O2 - Under 12 Premier Two",
+   "2026-09-12",
+   "08:15",
+   "Kuilsriver",
+   "Saxon Rovers",
+   "F Nel",
+   "",
+   ""
+  ],
+  [
+   "I2 - Under 18 Premier Two",
+   "2026-09-12",
+   "12:30",
+   "Kuilsriver",
+   "Saxon Rovers",
+   "F Nel",
+   "",
+   ""
+  ],
+  [
+   "K2 - Under 16 Premier Two",
+   "2026-09-12",
+   "10:50",
+   "Kuilsriver",
+   "Saxon Rovers",
+   "K Cupido",
+   "",
+   ""
+  ],
+  [
+   "M2 - Under 14 Premier Two",
+   "2026-09-12",
+   "09:30",
+   "Kuilsriver",
+   "Saxon Rovers",
+   "K Cupido",
+   "",
+   ""
+  ],
+  [
+   "I1 - Under 18 Premier One",
+   "2026-09-12",
+   "12:30",
+   "FC Kapstadt",
+   "Cape Town Spurs",
+   "D Motseo",
+   "",
+   ""
+  ],
+  [
+   "K1 - Under 16 Premier One",
+   "2026-09-12",
+   "10:50",
+   "FC Kapstadt",
+   "Cape Town Spurs",
+   "D Vaughan",
    "",
    ""
   ]
