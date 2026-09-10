@@ -1603,6 +1603,7 @@
   function dPc(n){ return (Math.round((Number(n)||0)*10)/10).toFixed(1)+'%'; }
   function dPill(status){ var m=DEB_ST[status]||[status,'#EEF2F8','#33415c','#5A667C']; return '<span class="deb-pill" style="background:'+m[1]+';color:'+m[2]+'"><i style="background:'+m[3]+'"></i>'+esc(m[0])+'</span>'; }
   function dDateZA(iso){ if(!iso) return '–'; var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],a=String(iso).slice(0,10).split('-'); return parseInt(a[2],10)+' '+M[parseInt(a[1],10)-1]+' '+a[0]; }
+  function dDateTimeZA(iso){ if(!iso) return '–'; var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var d=new Date(String(iso).replace(' ','T')); if(isNaN(d.getTime())) return dDateZA(iso); return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
   function dAgo(d){ d=Number(d); if(!d&&d!==0) return '–'; if(d>=999) return 'no receipt on record'; if(d<=0) return 'today'; if(d===1) return 'yesterday'; return d+' days ago'; }
 
   async function renderDebtors(force){
@@ -2366,19 +2367,21 @@
     var ref=c.code||c.name;
     return String(t||'')
       .replace(/{club}/g, c.name).replace(/{code}/g, ref)
-      .replace(/{balance}/g, dR(c.bal)).replace(/{overdue}/g, dR(c.over))
-      .replace(/{as_at}/g, dDateZA(_deb&&_deb.snapshot&&_deb.snapshot.as_at))
+      .replace(/{balance}/g, dR(c.bal,false)).replace(/{overdue}/g, dR(c.over,false))
+      .replace(/{as_at}/g, dDateZA((_deb&&_deb.snapshot&&_deb.snapshot.as_at)||(c.as_at)))
       .replace(/{banking}/g, (S&&S.bank_details)||'');
   }
   function debEmailHtml(textBody, S){
     var e=function(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
     var paras=e(textBody).split(/\n\n+/).map(function(p){return '<p style="margin:0 0 12px;line-height:1.5">'+p.replace(/\n/g,'<br>')+'</p>';}).join('');
     return '<div style="font-family:Arial,Helvetica,sans-serif;color:#0B1220;max-width:620px;margin:0 auto">'
-      +'<div style="background:#071A4A;color:#ffffff;padding:16px 20px;border-radius:8px 8px 0 0"><b style="font-size:15px">Cape Town Tygerberg Local Football Association</b><div style="color:#B7C4E6;font-size:12px">Finance Office</div></div>'
+      +'<div style="background:#071A4A;padding:14px 20px;border-radius:8px 8px 0 0"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse"><tr><td style="vertical-align:middle;padding-right:12px"><img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" width="46" height="46" alt="CTTLFA" style="display:block;border-radius:6px;background:#ffffff"></td><td style="vertical-align:middle"><div style="color:#ffffff;font-size:15px;font-weight:bold;line-height:1.2">Cape Town Tygerberg Local Football Association</div><div style="color:#B7C4E6;font-size:12px;margin-top:2px">Finance Office</div></td></tr></table></div>'
       +'<div style="border:1px solid #E3E8F0;border-top:0;border-radius:0 0 8px 8px;padding:18px 20px;font-size:14px">'+paras
       +'<hr style="border:0;border-top:1px solid #eee;margin:14px 0"><div style="font-size:11px;color:#59666B">Issued by the Treasurer of the Cape Town Tygerberg LFA. Queries to '+((S&&S.reply_to)||'treasurer@cttfa.co.za')+'. Your statement is attached.</div></div></div>';
   }
   async function debSendOne(c, trigger){
+    if(!_deb||!_deb.clubs){ try{ var _rr=await sb.rpc('deb_dashboard'); if(!_rr.error&&_rr.data) _deb=_rr.data; }catch(e){} }
+    var _full=((_deb&&_deb.clubs)||[]).filter(function(x){return x.club_key===c.club_key;})[0]; if(_full) c=_full;
     var st=await debSendSetup(); var S=st.settings||{}; var tpl=st.tplMap[trigger]||{};
     var subject=debFill(tpl.subject||'Statement of account — {club} ({code})', c, S);
     var text=debFill(tpl.body||'Please find your statement attached.', c, S);
@@ -2485,7 +2488,7 @@
     m.innerHTML='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">Loading the account…</div></div><button class="dx" id="debX" aria-label="Close">×</button></div><div class="deb-mbody"></div>';
     var _x0=document.getElementById('debX'); if(_x0) _x0.onclick=debModalClose;
     var data={}; try{ var r0=await sb.rpc('deb_club',{p_key:key}); if(!r0.error&&r0.data) data=r0.data; }catch(e){}
-    var facts=data.facts||{}, coll=data.collection||{}, acts=data.actions||[], notes=data.notes||[];
+    var facts=data.facts||{}, coll=data.collection||{}, acts=data.actions||[], notes=data.notes||[], sends=data.sends||[];
     var sc=coll.status_colour||'unmarked';
     var bal=Number(c.bal)||0, cur=Number(c.cur)||0, over=Number(c.over)||0;
     var tot=cur+Number(c.b30)+Number(c.b60)+Number(c.b90)+Number(c.b120); if(bal<0) tot=Math.abs(bal);
@@ -2563,6 +2566,9 @@
         +'<div class="deb-noteopts"><label>Follow-up <input type="date" id="debNoteFU"></label><label>Promise R <input type="number" id="debNotePA" step="0.01" style="width:90px"></label><label>by <input type="date" id="debNotePD"></label><button class="btn sm" id="debNoteAdd">Add note</button></div>';
     }
     h+='<div class="deb-sec">Notes'+(notes.length?' <span class="hint" style="font-weight:400">('+notes.filter(function(n){return n.status==='open';}).length+' open)</span>':'')+'</div><div id="debNotes">'+debNotesHtml(notes)+'</div>';
+    h+='<div class="deb-sec">Correspondence sent <span class="hint" style="font-weight:400">('+sends.length+')</span></div>'
+      +'<p class="hint" style="font-size:11px;margin:-2px 0 6px">Audit trail of every email issued to this club from the platform — kept for DC and query evidence. A copy of each is also held in the treasurer and ops mailboxes (BCC).</p>'
+      +'<div id="debSendLog" class="hint" style="font-size:12px">'+(sends.length?sends.map(function(s){ var lbl=(DEB_TIERS[s.trigger]||{}).label||(s.trigger||'email'); var col=(s.status==='sent')?'#296944':((s.status==='error'||s.status==='no_key'||s.status==='no_email')?'#9A3130':'#59666b'); return '<div class="deb-logrow"><b>'+esc(lbl)+'</b> · '+dDateTimeZA(s.at)+' · '+esc(s.to||'—')+' · <span style="color:'+col+';font-weight:700">'+esc(s.status)+'</span>'+(s.test?' · <span class="hint">test</span>':'')+(s.by?' · '+esc(s.by):'')+'</div>';}).join(''):'No emails sent from the platform yet.')+'</div>';
     h+='<div class="deb-sec">Collection history</div><div id="debLog" class="hint" style="font-size:12px">'+(acts.length?acts.map(function(a){return '<div class="deb-logrow"><b>'+esc((a.action||'').replace(/_/g,' '))+'</b> · '+dDateZA(a.at)+(a.detail?' · '+esc(a.detail):'')+'</div>';}).join(''):'No actions logged yet.')+'</div>';
     if(canW && bal>0){
       h+='<div class="deb-sec">Log an action</div><div class="deb-acts">'
