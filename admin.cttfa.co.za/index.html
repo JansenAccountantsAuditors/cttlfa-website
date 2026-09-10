@@ -237,7 +237,11 @@
 .deb-route{font-size:12.5px;color:#2b3a45;line-height:1.55;max-width:84ch;margin:0}
 .deb-authlist{font-size:11px;color:#59666b;margin:14px 0 0;line-height:1.55}
 @media(max-width:820px){.deb-flow{grid-template-columns:1fr 1fr}}
-@media(max-width:560px){.deb-flow{grid-template-columns:1fr}.deb-flow-notes{grid-template-columns:1fr}}</style>
+@media(max-width:560px){.deb-flow{grid-template-columns:1fr}.deb-flow-notes{grid-template-columns:1fr}}
+.deb-fchart{display:block;width:100%;max-width:470px;height:auto;margin:2px auto 0}
+.deb-fcap{font-size:11.5px;color:#59667c;line-height:1.5;max-width:78ch;margin:9px auto 0;text-align:center}
+.deb-guide h4:first-of-type{margin-top:2px}
+.deb-guide .deb-flow-notes{margin-top:14px}</style>
 
 <!-- LOGIN -->
 <div class="login" id="loginView">
@@ -1665,37 +1669,76 @@
   function dDateTimeZA(iso){ if(!iso) return '–'; var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var d=new Date(String(iso).replace(' ','T')); if(isNaN(d.getTime())) return dDateZA(iso); return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
   function dAgo(d){ d=Number(d); if(!d&&d!==0) return '–'; if(d>=999) return 'no receipt on record'; if(d<=0) return 'today'; if(d===1) return 'yesterday'; return d+' days ago'; }
 
-  function debProcessPanel(){
+  function debFlowchartSVG(){
+    function nd(x,y,w,fill,stroke,t,tc,sub,sc){
+      return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="54" rx="9" fill="'+fill+'" stroke="'+stroke+'"/>'
+        +'<text x="'+(x+w/2)+'" y="'+(y+22)+'" text-anchor="middle" font-size="13" font-weight="700" fill="'+tc+'">'+t+'</text>'
+        +'<text x="'+(x+w/2)+'" y="'+(y+39)+'" text-anchor="middle" font-size="10" fill="'+sc+'">'+sub+'</text>';
+    }
+    function gate(y,txt){ return '<text x="146" y="'+y+'" font-size="10" fill="#59667c">'+txt+'</text>'; }
+    var s='<svg class="deb-fchart" viewBox="0 0 480 738" role="img" aria-label="Flowchart of the debtor correspondence process: monthly statement, then payment reminder at 40 days, final reminder at 47 days, and Out of Compliance at 54 days, with off-ramps to account settled and payment arrangement, and a referral to the Management Committee on a second notice in a season.">';
+    s+='<defs>'
+      +'<marker id="arwg" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5A667C"/></marker>'
+      +'<marker id="arwGr" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1C7C4A"/></marker>'
+      +'<marker id="arwBl" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#2F6FB0"/></marker>'
+      +'</defs>';
+    // spine arrows
+    s+='<line x1="131" y1="70" x2="131" y2="137" stroke="#5A667C" stroke-width="2" marker-end="url(#arwg)"/>';
+    s+='<line x1="131" y1="194" x2="131" y2="261" stroke="#5A667C" stroke-width="2" marker-end="url(#arwg)"/>';
+    s+='<line x1="131" y1="318" x2="131" y2="385" stroke="#5A667C" stroke-width="2" marker-end="url(#arwg)"/>';
+    s+='<line x1="131" y1="442" x2="131" y2="509" stroke="#9A3130" stroke-width="2" marker-end="url(#arwg)"/>';
+    s+='<line x1="131" y1="566" x2="131" y2="657" stroke="#5A667C" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arwg)"/>';
+    // branch arrows
+    s+='<line x1="238" y1="167" x2="255" y2="167" stroke="#1C7C4A" stroke-width="2" marker-end="url(#arwGr)"/>';
+    s+='<line x1="238" y1="291" x2="255" y2="291" stroke="#2F6FB0" stroke-width="2" marker-end="url(#arwBl)"/>';
+    // gate labels
+    s+=gate(108,'40 days &middot; 10 past due');
+    s+=gate(232,'47 days &middot; 17 past due');
+    s+=gate(356,'54 days &middot; 24 past due');
+    s+=gate(600,'2nd notice in a season');
+    // spine nodes
+    s+=nd(24,16,214,'#EEF2F8','#B4C0D4','Monthly statement','#3a4761','Art 7.11.14 &middot; Day 10','#5a6678');
+    s+=nd(24,140,214,'#FBF1DD','#E4C88C','Payment reminder','#7a5312','Rule 10.2 &middot; Day 40','#8a6a2e');
+    s+=nd(24,264,214,'#FBEBE0','#E8B89C','Final reminder','#8a3c17','Rule 10.2.3 &middot; Day 47 &middot; 7-day grace','#95562f');
+    s+=nd(24,388,214,'#F8E7E5','#E3B0AC','Out of Compliance','#7a2320','Rules 10.2.3 / 10.8 &middot; Day 54','#94413d');
+    s+=nd(24,512,214,'#FFF4F3','#E3B0AC','Consequences apply','#7a2320','Rule 16.4.2.6 &middot; until settled','#94413d');
+    s+=nd(24,660,214,'#071A4A','#071A4A','Management Committee','#ffffff','Rule 10.2.4 &middot; 2nd notice','#c7d2ec');
+    // branch nodes
+    s+=nd(258,140,198,'#E7F5EC','#A8D8BC','Account settled','#1c5136','Paid in full &middot; good standing','#3f6b52');
+    s+=nd(258,264,198,'#E8F0FA','#AECBE8','Payment arrangement','#1e456e','Art 7.11.16 &middot; not escalated','#3f5f80');
+    s+='</svg>';
+    return s;
+  }
+
+  function debGuideBody(){
     var STG=[
-      {nm:'Monthly statement',day:'Day 10 · monthly',hb:'#5A667C',tb:'#EEF2F8',tf:'#3a4761',
+      {nm:'Monthly statement',tb:'#EEF2F8',tf:'#3a4761',
        trig:'Every club with a balance, on the 10th of each month.',
        gets:'Statement of account (PDF) and a covering email.',
        treat:'Standard monthly cycle. The club has 30 days to query an invoice (Art 7.11.15) before it is deemed correct and due.',
        auth:'Art 7.11.14'},
-      {nm:'Payment reminder',day:'Day 40 · 10 past due',hb:'#B7791F',tb:'#FBF1DD',tf:'#7a5312',
+      {nm:'Payment reminder',tb:'#FBF1DD',tf:'#7a5312',
        trig:'Oldest unpaid invoice reaches 40 days from invoice (10 days past the 30-day term), with R500+ overdue.',
        gets:'Courtesy reminder with the statement attached.',
        treat:'First graduated notice. The payment-plan route under Art 7.11.16 is offered here.',
        auth:'Rule 10.2'},
-      {nm:'Final reminder',day:'Day 47 · 17 past due',hb:'#C05621',tb:'#FBEBE0',tf:'#8a3c17',
+      {nm:'Final reminder',tb:'#FBEBE0',tf:'#8a3c17',
        trig:'Oldest unpaid invoice reaches 47 days and is still unsettled.',
        gets:'Final reminder with a 7-day grace, statement attached.',
        treat:'The last notice before the account goes Out of Compliance.',
        auth:'Rule 10.2.3'},
-      {nm:'Out of Compliance',day:'Day 54 · 24 past due',hb:'#9A3130',tb:'#F8E7E5',tf:'#7a2320',
+      {nm:'Out of Compliance',tb:'#F8E7E5',tf:'#7a2320',
        trig:'Oldest invoice reaches 54 days, R500+ still overdue and the grace has expired.',
        gets:'Out of Compliance notice.',
        treat:'Served notice. Disciplinary consequences under Rule 16.4.2.6 apply until the arrears are settled. Not a Management Committee referral on the first occurrence.',
        auth:'Rules 10.2.3 &amp; 10.8'}
     ];
-    var h='<details class="deb-proc" open>';
-    h+='<summary><div><div class="pt">How the debtor correspondence process works</div><div class="ps">The steps a club moves through, what it receives at each, and where each step comes from in the Constitution and Rules.</div></div><span class="chev">&#9654;</span></summary>';
-    h+='<div class="pbody">';
+    var h='';
     h+='<p class="plead">Debtor collections follow a fixed, constitutional cadence &mdash; not ad-hoc chasing. Every club starts on the monthly statement and only moves to the next step as its oldest unpaid invoice ages. The path is the same for every club, so the treatment is consistent and defensible.</p>';
-    h+='<h4>The flow</h4><div class="deb-flow">';
-    h+=STG.map(function(s){ return '<div class="deb-fc"><div class="fch" style="background:'+s.hb+'"><span class="nm">'+s.nm+'</span><span class="day">'+s.day+'</span></div><div class="fcb"><div><span class="lbl">Trigger</span>'+s.trig+'</div><div><span class="lbl">Club receives</span>'+s.gets+'</div></div><div class="auth">'+s.auth+'</div></div>'; }).join('');
-    h+='</div>';
-    h+='<div class="deb-flow-notes"><div class="deb-fnote"><b>Payment arrangement (the off-ramp).</b> A club in genuine difficulty may apply for a written payment plan &mdash; a letter on club letterhead, signed by the chairman, with three months&rsquo; bank statements and the latest annual financial statements. While an approved plan is honoured, the club is not escalated. (Art 7.11.16)</div><div class="deb-fnote"><b>A second time in one season.</b> If a club is served a second Out of Compliance notice in the same season, it is summoned to appear before the Management Committee for action. (Rule 10.2.4)</div></div>';
+    h+='<h4>The flow at a glance</h4>';
+    h+=debFlowchartSVG();
+    h+='<p class="deb-fcap">Follow the spine downward. A club leaves the path the moment it pays in full or an approved payment arrangement is in place; it only reaches Out of Compliance after the statement, the reminder and the final reminder have all passed unpaid.</p>';
+    h+='<div class="deb-flow-notes"><div class="deb-fnote"><b>Payment arrangement (the off-ramp).</b> A club in genuine difficulty may apply for a written payment plan &mdash; a letter on club letterhead, signed by the chairman, with three months&rsquo; bank statements and the latest annual financial statements. While an approved plan is honoured, the club is not escalated. (Art 7.11.16)</div><div class="deb-fnote"><b>A second time in one season.</b> If a club is served a second Out of Compliance notice in the same season, it is summoned to appear before the Management Committee for action. The first notice is a Treasurer-served step, not a Mancom referral. (Rule 10.2.4)</div></div>';
     h+='<h4>The Out of Compliance trigger, exactly</h4>';
     h+='<div class="deb-trigbox"><div class="th">An account is placed Out of Compliance only when both of these are true on the day the run is built:</div><ol><li>the club&rsquo;s <b>oldest unpaid invoice has reached 54 days</b> from its invoice date &mdash; 24 days past the 30-day payment term under Rule 10.2; <b>and</b></li><li>Sage shows a <b>real overdue amount of R500 or more</b> on the account.</li></ol><p style="font-size:11.5px;color:#7a2320;margin:9px 0 0;line-height:1.5">The R500 floor is a materiality threshold approved by Fincom in April 2026. It stops an old unallocated receipt or a trivial balance from tipping a club into Out of Compliance &mdash; which is why an account can carry an old ledger item and still correctly sit on &ldquo;statement&rdquo;.</p></div>';
     h+='<h4>What each step means, and where it comes from</h4>';
@@ -1708,8 +1751,13 @@
     h+='<h4>What Out of Compliance means for the club (Rule 16.4.2.6)</h4>';
     h+='<ul class="deb-cons"><li>The club may not become involved in the affairs of the Association.</li><li>It may not accumulate points, and upcoming fixtures are forfeited.</li><li>Historic results stand, but a 3-point deduction is applied to each game from the date the club went out of compliance.</li><li>It may not proceed with knockout-competition fixtures, and forfeits those matches.</li><li>Juniors may still play scheduled league fixtures (with no accumulation of points) and continue in the knockout competition.</li><li>The club remains out of compliance until the arrears are settled (Rule 10.2.3).</li></ul>';
     h+='<p class="deb-authlist"><b>Authorities.</b> Constitution Articles 7.11.14 (monthly statements), 7.11.15 (30-day query window), 7.11.16 (payment plans) and 7.11.17 (approved-plan breach). Rules and Regulations 10.2 to 10.2.4, 10.3 and 10.8 (payment terms, the out-of-compliance notice, and the repeat-offence referral to the Management Committee). Disciplinary Rule 16.4.2.6 (the consequences of being out of compliance). The R500 materiality threshold was approved by Fincom in April 2026.</p>';
-    h+='</div></details>';
     return h;
+  }
+
+  function debOpenGuide(){
+    var m=debModal();
+    m.innerHTML='<div class="deb-mhead"><div><h3>How the debtor correspondence process works</h3><div class="dsub">The steps, the triggers, and the constitutional basis &mdash; for the Management Committee and the office</div></div><button class="dx" id="debGX" aria-label="Close">&times;</button></div><div class="deb-mbody deb-guide">'+debGuideBody()+'</div>';
+    var x=document.getElementById('debGX'); if(x) x.onclick=debModalClose;
   }
 
   async function renderDebtors(force){
@@ -1741,13 +1789,11 @@
     var h='';
     // NOT-LIVE notice
     h+='<div class="deb-notlive"><span class="nl-tag">Not live</span><div><b>Automated correspondence is not live yet &mdash; pending Mancom approval.</b> This module is in final testing ahead of the Management Committee meeting on Tuesday 13 September 2026. The balances, ageing and stages shown are the real Sage figures, but no correspondence goes out to clubs. Every send is in test mode and reaches the Treasurer only. Nagging Panda remains the live collections system until Mancom approves the switch.</div></div>';
-    // process guide (for Mancom and office staff)
-    h+=debProcessPanel();
     // header + provenance
     h+='<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">'
       +'<div><h3 style="margin:0 0 3px">Club Debtors</h3><p class="hint" style="margin:0;max-width:80ch">Who owes the Association, how old the money is, and whether we are chasing it the way the Constitution requires. Balances and ageing come straight from Sage.</p></div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
-      +'<div style="display:flex;gap:8px"><button class="btn gold sm" id="debFetch" title="Pull the latest balances from Sage">Fetch from Sage</button>'+((meRole==='administrator'||meRole==='staff')?'<button class="btn gold sm" id="debQueue" title="Follow-ups due">Action Queue'+debAQBadge()+'</button><button class="btn ghost sm" id="debDesk" title="Collections working list">Collections Desk</button><button class="btn ghost sm" id="debCorr" title="Statements and notices">Correspondence</button>':'')+'<button class="btn ghost sm" id="debRefresh" title="Reload from the database">Reload</button></div>'
+      +'<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost sm" id="debGuide" title="How the debtor process works and how it aligns to the Constitution">Process guide</button><button class="btn gold sm" id="debFetch" title="Pull the latest balances from Sage">Fetch from Sage</button>'+((meRole==='administrator'||meRole==='staff')?'<button class="btn gold sm" id="debQueue" title="Follow-ups due">Action Queue'+debAQBadge()+'</button><button class="btn ghost sm" id="debDesk" title="Collections working list">Collections Desk</button><button class="btn ghost sm" id="debCorr" title="Statements and notices">Correspondence</button>':'')+'<button class="btn ghost sm" id="debRefresh" title="Reload from the database">Reload</button></div>'
       +'<span class="hint" id="debFetchStatus" style="font-size:11.5px;text-align:right"></span></div></div>'
       +'<div class="deb-prov"><span class="warn">Management-prepared, unaudited</span>'
       +'<span>As at <b>'+dDateZA(s.as_at)+'</b></span><span>Source: <b>Sage Business Cloud</b>, extracted '+dDateZA(s.extracted_at)+'</span>'
@@ -1784,6 +1830,7 @@
       +'<p class="hint" style="font-size:11.5px;margin:8px 0 0">Click a club for its account, ageing and recommended step. The stage is the correspondence step due &mdash; driven by the oldest open item&rsquo;s invoice age and the Sage overdue amount. Hover any stage pill for what to do at that step.</p></div>';
     root.innerHTML=h;
     $("debRefresh").onclick=function(){ renderDebtors(true); };
+    var _gd=$("debGuide"); if(_gd) _gd.onclick=function(){ debOpenGuide(); };
     var _dq=$("debQueue"); if(_dq) _dq.onclick=function(){ debOpenQueue(); };
     var _dk=$("debDesk"); if(_dk) _dk.onclick=function(){ debOpenDesk(); };
     var _dc=$("debCorr"); if(_dc) _dc.onclick=function(){ debOpenCorr(); };
