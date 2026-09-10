@@ -2009,9 +2009,9 @@
   function debCorrScope(tierKey){
     var clubs=(_deb.clubs||[]);
     if(tierKey==='statement') return clubs.filter(function(c){return c.bal>0.01;});
-    if(tierKey==='reminder') return clubs.filter(function(c){return Number(c.over)>=500 && Number(c.b60||0)===0 && (Number(c.b90||0)+Number(c.b120||0))===0;});
-    if(tierKey==='final') return clubs.filter(function(c){return Number(c.over)>=500 && Number(c.b60||0)>0 && (Number(c.b90||0)+Number(c.b120||0))===0;});
-    if(tierKey==='ooc') return clubs.filter(function(c){return Number(c.over)>=500 && (Number(c.b90||0)+Number(c.b120||0))>0;});
+    if(tierKey==='reminder') return clubs.filter(function(c){return c.stage==='reminder';});
+    if(tierKey==='final') return clubs.filter(function(c){return c.stage==='final';});
+    if(tierKey==='ooc') return clubs.filter(function(c){return c.stage==='ooc';});
     return [];
   }
   var _corrTier='statement', _corrSel={}, _corrInclStmt=true;
@@ -2044,14 +2044,14 @@
     if(!scope.length){ h+='<p class="hint" style="font-size:12px">No clubs are currently at this stage.</p>'; }
     else{
       h+='<div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn ghost sm" id="corrAll">Select all</button><button class="btn ghost sm" id="corrNone">Clear</button></div>';
-      h+='<div class="deb-scope">'+scope.map(function(c){ return '<label class="deb-scoperow"><input type="checkbox" data-k="'+esc(c.club_key)+'"'+(_corrSel[c.club_key]?' checked':'')+'><span class="nm">'+esc(c.name)+'</span><span class="cd">'+esc(c.code||'')+'</span>'+dPill(c.status)+'<span class="bl">'+dR(c.bal)+'</span></label>'; }).join('')+'</div>';
+      h+='<div class="deb-scope">'+scope.map(function(c){ return '<label class="deb-scoperow"><input type="checkbox" data-k="'+esc(c.club_key)+'"'+(_corrSel[c.club_key]?' checked':'')+'><span class="nm">'+esc(c.name)+'</span><span class="cd">'+esc(c.code||'')+'</span>'+dStage(c.stage)+'<span class="bl">'+dR(c.bal)+'</span></label>'; }).join('')+'</div>';
     }
     h+='<div class="deb-corr-actions"><button class="btn gold" id="corrBuild"'+(chosen.length?'':' disabled')+'>Build pack (PDF)</button>'
       +'<button class="btn" id="corrSend"'+(chosen.length?'':' disabled')+'>Send emails…</button>'
       +'<button class="btn ghost" id="corrLog"'+(chosen.length?'':' disabled')+'>Log this run</button>'
       +'<button class="btn ghost" id="corrSetup" title="Email setup">Email setup</button></div>';
     h+='<div id="corrStatus" class="hint" style="font-size:12px;margin-top:8px"></div>';
-    h+='<p class="hint" style="font-size:11px;margin-top:14px">Packs are produced here for your review and manual issue to clubs. Logging records the run against each club, with your name and the date, for the audit file and the constitutional-management panel. Email issue via Resend (from the CTTLFA finance address on cttlfa.com) is a later phase and will require your per-run approval.</p></div>';
+    h+='<p class="hint" style="font-size:11px;margin-top:14px">Packs are produced here for review, and emails issue via Resend from the CTTLFA finance address. Logging records the run against each club, with your name and the date, for the audit file and the constitutional-management panel. Sending is in test mode until Mancom approves go-live &mdash; every email reaches the Treasurer only, with a BCC copy retained, and nothing goes to clubs.</p></div>';
     dr.innerHTML=h;
     document.getElementById('debCX').onclick=debClose;
     Array.prototype.forEach.call(dr.querySelectorAll('[data-mode]'),function(b){ b.onclick=function(){ _corrMode=b.dataset.mode; _corrSel={}; debCorrDraw(dr); }; });
@@ -2531,7 +2531,7 @@
     var gate=(bal>10000)||(Number(c.b120)>5000);
     var txbal=facts.tx_balance, recon=(txbal==null)?null:(Math.abs(Number(txbal)-bal)<=0.01);
     // header
-    var h='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">'+(c.code?esc(c.code)+' · ':'')+(c.suburb?esc(c.suburb)+' · ':'')+(c.active?'active member':'dormant account')+'  '+dPillLite(c.status)+'  '+debSCpillLite(sc)+'</div></div><button class="dx" id="debX" aria-label="Close">×</button></div>';
+    var h='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">'+(c.code?esc(c.code)+' · ':'')+(c.suburb?esc(c.suburb)+' · ':'')+(c.active?'active member':'dormant account')+'  '+dStageLite(c.stage)+'  '+debSCpillLite(sc)+'</div></div><button class="dx" id="debX" aria-label="Close">×</button></div>';
     h+='<div class="deb-mbody">';
     // stat tiles: total / current / overdue
     h+='<div class="deb-tiles">'
@@ -2592,7 +2592,7 @@
       +'<label style="font-size:11px;color:#59666b;display:inline-flex;align-items:center;gap:4px">Period <select id="debStmtPeriod" style="font-size:12px;padding:3px 5px;border:1px solid #d2d8e4;border-radius:5px"><option value="fy">This financial year</option><option value="pfy">Previous financial year</option><option value="12m">Last 12 months</option><option value="all">All history</option><option value="custom">Custom…</option></select></label>'
       +'<span id="debStmtCustom" style="display:none;font-size:11px;color:#59666b">from <input type="date" id="debStmtFrom" style="font-size:12px;padding:2px 4px;border:1px solid #d2d8e4;border-radius:5px"> to <input type="date" id="debStmtTo" style="font-size:12px;padding:2px 4px;border:1px solid #d2d8e4;border-radius:5px"></span>'
       +'<button class="btn gold sm" id="debStmt">Statement (PDF)</button>'
-      +(bal>0.01?'<button class="btn ghost sm" id="debCopy">Copy '+((DEB_ST[c.status]||['message'])[0]).toLowerCase()+'</button>':'')
+      +(bal>0.01?'<button class="btn ghost sm" id="debCopy" title="Copy the '+esc(dStageLabel(c.stage).toLowerCase())+' letter text to paste elsewhere">Copy letter</button>':'')
       +'<button class="btn ghost sm" id="debCorrHere">Correspondence…</button></div></div>';
     if(canW){
       h+='<div class="deb-sec">Working status</div><div style="margin-bottom:10px">'+debSCselect(sc,'id="debSC" data-k="'+esc(c.club_key)+'"')+'<span class="hint" style="font-size:11px;margin-left:8px">Sets the chasing cadence; separate from the constitutional step.</span></div>';
@@ -2623,7 +2623,7 @@
     var _cs=document.getElementById('debCtSave'); if(_cs) _cs.onclick=async function(){ var b=this; b.disabled=true; var msg=document.getElementById('debCtMsg'); if(msg)msg.textContent='Saving…'; try{ await sb.rpc('deb_contact_set',{p_key:c.club_key,p_name:document.getElementById('debCtName').value,p_email:document.getElementById('debCtEmail').value,p_cc:document.getElementById('debCtCc').value,p_phone:document.getElementById('debCtPhone').value}); _deb=null; debOpenClub(key); }catch(e){ alert('Could not save contact: '+(e.message||e)); b.disabled=false; if(msg)msg.textContent=''; } };
     var _spd=document.getElementById('debStmtPeriod'); if(_spd) _spd.onchange=function(){ var cu=document.getElementById('debStmtCustom'); if(cu) cu.style.display=(this.value==='custom')?'inline':'none'; };
     var _bs=document.getElementById('debStmt'); if(_bs) _bs.onclick=async function(){ var b=this; b.disabled=true; var t=b.textContent; b.textContent='Generating…'; try{ await debStatementPDF(c, debStmtPeriodOpts()); }catch(e){ alert('Statement error: '+(e.message||e)); } b.textContent=t; b.disabled=false; };
-    var cp=document.getElementById('debCopy'); if(cp) cp.onclick=function(){ try{navigator.clipboard.writeText(debReminderText(c));}catch(e){} this.textContent='Copied'; var b=this; setTimeout(function(){b.textContent='Copy '+((DEB_ST[c.status]||['message'])[0]).toLowerCase();},1300); };
+    var cp=document.getElementById('debCopy'); if(cp) cp.onclick=function(){ try{navigator.clipboard.writeText(debReminderText(c));}catch(e){} this.textContent='Copied'; var b=this; setTimeout(function(){b.textContent='Copy letter';},1300); };
     var ch=document.getElementById('debCorrHere'); if(ch) ch.onclick=function(){ debModalClose(); setTimeout(debOpenCorr,140); };
     var scs=document.getElementById('debSC'); if(scs) scs.onchange=async function(){ try{ await sb.rpc('deb_set_status',{p_key:c.club_key,p_name:c.name,p_colour:this.value}); _deb=null; }catch(e){ alert('Could not set status: '+(e.message||e)); } };
     var na=document.getElementById('debNoteAdd'); if(na) na.onclick=async function(){ var nt=document.getElementById('debNote').value.trim(); if(!nt){ alert('Type a note first.'); return; } var fu=document.getElementById('debNoteFU').value||null; var pa=document.getElementById('debNotePA').value||null; var pd=document.getElementById('debNotePD').value||null; this.disabled=true; try{ await sb.rpc('deb_add_note',{p_key:c.club_key,p_name:c.name,p_note:nt,p_follow_up:fu,p_promise_amount:pa,p_promise_date:pd}); _deb=null; debOpenClub(key); }catch(e){ alert('Could not add note: '+(e.message||e)); this.disabled=false; } };
@@ -2631,6 +2631,7 @@
     Array.prototype.forEach.call(m.querySelectorAll('[data-act]'),function(b){ b.onclick=function(){ debAct(c,b.dataset.act,b); }; });
   }
   function dPillLite(status){ var m=(typeof DEB_ST!=='undefined'&&DEB_ST[status])||[status]; return '<span class="deb-hpill">'+esc(m[0])+'</span>'; }
+  function dStageLite(stage){ var m=(typeof DEB_STG!=='undefined'&&DEB_STG[stage])||['—','#EEF2F8','#33415c','#8A97AE']; return '<span class="deb-hpill" title="'+esc((typeof DEB_STG_GUIDE!=='undefined'&&DEB_STG_GUIDE[stage])||'')+'"><i style="background:'+m[3]+'"></i>'+esc(m[0])+'</span>'; }
   function debSCpillLite(sc){ var m=DEB_SC[sc]||DEB_SC.unmarked; return '<span class="deb-hpill" style="background:rgba(255,255,255,.14)"><i style="background:'+m[1]+'"></i>'+esc(m[0])+'</span>'; }
   function debClose(){ var d=document.getElementById('debDrawer'),s=document.getElementById('debScrim'); if(d)d.classList.remove('on'); if(s)s.classList.remove('on'); }
   async function debAct(c,action,btn){
