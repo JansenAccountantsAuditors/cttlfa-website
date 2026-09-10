@@ -2393,7 +2393,7 @@
   async function debSendRun(clubs, trigger, statusEl){
     var st=await debSendSetup(true); var test=(st.config&&st.config.test_mode!==false);
     var to=test?('TEST MODE — every email goes to '+((st.config&&st.config.test_email)||'the Treasurer')+', not to clubs'):'LIVE — emails go to each club’s address on file';
-    if(!confirm('Send '+clubs.length+' '+((DEB_TIERS[trigger]||{}).label||'email').toLowerCase()+' email'+(clubs.length>1?'s':'')+'?\n\n'+to+'\n\nEach email includes the branded statement PDF.')) return;
+    if(!(await debConfirm('Send '+clubs.length+' '+((DEB_TIERS[trigger]||{}).label||'email').toLowerCase()+' email'+(clubs.length>1?'s':'')+'?\n\n'+to+'\n\nEach email includes the branded statement PDF.', 'Send '+clubs.length+' now'))) return;
     var ok=0, fail=0;
     for(var i=0;i<clubs.length;i++){ var c=clubs[i];
       if(statusEl) statusEl.textContent='Sending '+(i+1)+' of '+clubs.length+': '+c.name+'…';
