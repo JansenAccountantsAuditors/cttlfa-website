@@ -53,7 +53,7 @@
   ],
   [
    "A1 - Premier League",
-   "2026-09-11",
+   "2026-09-10",
    "20:30",
    "Rygersdal",
    "Hanover Park",
@@ -84,7 +84,97 @@
    "F Nel",
    "L Somi",
    "Club Ref"
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-10",
+   "19:00",
+   "Stephanian Ottery",
+   "Green Point",
+   "R Kalamdien",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-11",
+   "19:00",
+   "Clyde Pinelands",
+   "Magic Ladies",
+   "L Montanus",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-11",
+   "19:00",
+   "Green Point",
+   "Bellville City",
+   "R Arendse",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-11",
+   "19:00",
+   "Saxon Rovers",
+   "Hanover Park",
+   "A Adams",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-11",
+   "19:00",
+   "U C T",
+   "Meadowridge",
+   "D Motseo",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-11",
+   "19:30",
+   "Fish Hoek",
+   "Northpine United",
+   "M Swartz",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-11",
+   "20:30",
+   "U C T",
+   "FN Rangers",
+   "S Maphempeni",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-13",
+   "13:00",
+   "Magic Ladies",
+   "Stephanian Ottery",
+   "N Dunshire",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-11",
+   "19:30",
+   "Bothasig",
+   "Norway Parks",
+   "G Brown",
+   "",
+   ""
   ]
  ],
- "week_label": "2026-09-08 to 2026-09-11"
+ "week_label": "2026-09-08 to 2026-09-13"
 }
