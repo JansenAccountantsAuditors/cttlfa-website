@@ -1847,12 +1847,23 @@
     doc.text(doc.splitTextToSize('Please quote this reference on every payment. Queries: '+(S.org_contact||''), (W-M)-rx-14), rx, payY+50);
   }
 
-  async function debFetchStatement(c){ var r=await sb.rpc('deb_statement',{p_key:c.club_key}); if(r.error) throw r.error; return r.data||{}; }
+  async function debFetchStatement(c, opts){ opts=opts||{}; var body={p_key:c.club_key}; if(opts.from) body.p_from=opts.from; if(opts.to) body.p_to=opts.to; var r=await sb.rpc('deb_statement',body); if(r.error) throw r.error; return r.data||{}; }
+  function debStmtPeriodOpts(){
+    var sel=document.getElementById('debStmtPeriod'); var v=sel?sel.value:'fy';
+    function fyStart(d){ var y=d.getFullYear(); return (d.getMonth()>=10)?new Date(y,10,1):new Date(y-1,10,1); }
+    function iso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+    var now=new Date();
+    if(v==='pfy'){ var s=fyStart(now); return {from:iso(new Date(s.getFullYear()-1,10,1)), to:iso(new Date(s.getFullYear(),9,31))}; }
+    if(v==='12m'){ var f=new Date(now); f.setFullYear(f.getFullYear()-1); return {from:iso(f), to:iso(now)}; }
+    if(v==='all'){ return {from:'2000-01-01'}; }
+    if(v==='custom'){ var ff=document.getElementById('debStmtFrom'), tt=document.getElementById('debStmtTo'); var o={}; if(ff&&ff.value)o.from=ff.value; if(tt&&tt.value)o.to=tt.value; return o; }
+    return {};
+  }
 
   async function debStatementPDF(c, opts){
     opts=opts||{};
     var stx,S;
-    try{ stx=await debFetchStatement(c); S=await debGetSettings(); }
+    try{ stx=await debFetchStatement(c, opts); S=await debGetSettings(); }
     catch(e){ if(!opts.silent) alert('Could not build the statement: '+(e.message||e)); return null; }
     var JSc=window.jspdf&&window.jspdf.jsPDF; if(!JSc){ alert('PDF engine not loaded — reload the page.'); return null; }
     var doc=new JSc({unit:'pt',format:'a4',compress:true});
@@ -2395,7 +2406,12 @@
     h+='</div><div class="deb-col">';
     // RIGHT: recommended step + actions
     h+='<div class="deb-rec"><div class="deb-rec-h">Recommended next step'+(rec.a?'<span class="deb-rec-art">'+esc(rec.a)+'</span>':'')+'</div><div class="deb-rec-t">'+esc(rec.t)+'</div><div class="deb-rec-b">'+rec.b+'</div>';
-    h+='<div class="deb-rec-acts"><button class="btn gold sm" id="debStmt">Statement (PDF)</button>'+(bal>0.01?'<button class="btn ghost sm" id="debCopy">Copy '+((DEB_ST[c.status]||['message'])[0]).toLowerCase()+'</button>':'')+'<button class="btn ghost sm" id="debCorrHere">Correspondence…</button></div></div>';
+    h+='<div class="deb-rec-acts">'
+      +'<label style="font-size:11px;color:#59666b;display:inline-flex;align-items:center;gap:4px">Period <select id="debStmtPeriod" style="font-size:12px;padding:3px 5px;border:1px solid #d2d8e4;border-radius:5px"><option value="fy">This financial year</option><option value="pfy">Previous financial year</option><option value="12m">Last 12 months</option><option value="all">All history</option><option value="custom">Custom…</option></select></label>'
+      +'<span id="debStmtCustom" style="display:none;font-size:11px;color:#59666b">from <input type="date" id="debStmtFrom" style="font-size:12px;padding:2px 4px;border:1px solid #d2d8e4;border-radius:5px"> to <input type="date" id="debStmtTo" style="font-size:12px;padding:2px 4px;border:1px solid #d2d8e4;border-radius:5px"></span>'
+      +'<button class="btn gold sm" id="debStmt">Statement (PDF)</button>'
+      +(bal>0.01?'<button class="btn ghost sm" id="debCopy">Copy '+((DEB_ST[c.status]||['message'])[0]).toLowerCase()+'</button>':'')
+      +'<button class="btn ghost sm" id="debCorrHere">Correspondence…</button></div></div>';
     if(canW){
       h+='<div class="deb-sec">Working status</div><div style="margin-bottom:10px">'+debSCselect(sc,'id="debSC" data-k="'+esc(c.club_key)+'"')+'<span class="hint" style="font-size:11px;margin-left:8px">Sets the chasing cadence; separate from the constitutional step.</span></div>';
       h+='<div class="deb-sec">Log a note</div>'
@@ -2421,7 +2437,8 @@
     var _ce=document.getElementById('debCtEdit'); if(_ce) _ce.onclick=function(){ var v=document.getElementById('debCtView'),f=document.getElementById('debCtForm'); if(v)v.style.display='none'; if(f)f.style.display='block'; };
     var _cx=document.getElementById('debCtCancel'); if(_cx) _cx.onclick=function(){ var v=document.getElementById('debCtView'),f=document.getElementById('debCtForm'); if(f)f.style.display='none'; if(v)v.style.display='block'; };
     var _cs=document.getElementById('debCtSave'); if(_cs) _cs.onclick=async function(){ var b=this; b.disabled=true; var msg=document.getElementById('debCtMsg'); if(msg)msg.textContent='Saving…'; try{ await sb.rpc('deb_contact_set',{p_key:c.club_key,p_name:document.getElementById('debCtName').value,p_email:document.getElementById('debCtEmail').value,p_cc:document.getElementById('debCtCc').value,p_phone:document.getElementById('debCtPhone').value}); _deb=null; debOpenClub(key); }catch(e){ alert('Could not save contact: '+(e.message||e)); b.disabled=false; if(msg)msg.textContent=''; } };
-    var _bs=document.getElementById('debStmt'); if(_bs) _bs.onclick=async function(){ var b=this; b.disabled=true; var t=b.textContent; b.textContent='Generating…'; try{ await debStatementPDF(c); }catch(e){ alert('Statement error: '+(e.message||e)); } b.textContent=t; b.disabled=false; };
+    var _spd=document.getElementById('debStmtPeriod'); if(_spd) _spd.onchange=function(){ var cu=document.getElementById('debStmtCustom'); if(cu) cu.style.display=(this.value==='custom')?'inline':'none'; };
+    var _bs=document.getElementById('debStmt'); if(_bs) _bs.onclick=async function(){ var b=this; b.disabled=true; var t=b.textContent; b.textContent='Generating…'; try{ await debStatementPDF(c, debStmtPeriodOpts()); }catch(e){ alert('Statement error: '+(e.message||e)); } b.textContent=t; b.disabled=false; };
     var cp=document.getElementById('debCopy'); if(cp) cp.onclick=function(){ try{navigator.clipboard.writeText(debReminderText(c));}catch(e){} this.textContent='Copied'; var b=this; setTimeout(function(){b.textContent='Copy '+((DEB_ST[c.status]||['message'])[0]).toLowerCase();},1300); };
     var ch=document.getElementById('debCorrHere'); if(ch) ch.onclick=function(){ debModalClose(); setTimeout(debOpenCorr,140); };
     var scs=document.getElementById('debSC'); if(scs) scs.onchange=async function(){ try{ await sb.rpc('deb_set_status',{p_key:c.club_key,p_name:c.name,p_colour:this.value}); _deb=null; }catch(e){ alert('Could not set status: '+(e.message||e)); } };
