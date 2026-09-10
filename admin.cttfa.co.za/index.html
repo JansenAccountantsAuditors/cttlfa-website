@@ -1701,44 +1701,120 @@
   }
   function debTodayISO(){ return new Date().toLocaleDateString('en-CA',{timeZone:'Africa/Johannesburg'}); }
 
-  function debOOCGate(clubs){
+  // ===== 11h00 Monday–Friday daily run (trigger engine + morning briefing) =====
+  // Fires on first sign-in on a weekday from 11:00 SAST, once a day. It builds
+  // the day's correspondence run through the server engine (deb_corr_build:
+  // same 40/47/54-day + R500 stage logic, 25-day de-dup so nothing sends twice),
+  // then presents routine tiers for sending and holds every Out of Compliance
+  // club for individual confirmation before any notice issues.
+  async function debMorningRun(deb){
     var canW=(meRole==='administrator'||meRole==='staff'); if(!canW) return;
-    var pending=(clubs||[]).filter(function(c){ return c.stage==='ooc' && !c.ooc; });
-    if(!pending.length) return;
+    var now=new Date();
+    var wd=now.toLocaleDateString('en-US',{timeZone:'Africa/Johannesburg',weekday:'short'});
+    var hr=parseInt(now.toLocaleString('en-GB',{timeZone:'Africa/Johannesburg',hour:'2-digit',hour12:false}),10);
+    if(wd==='Sat'||wd==='Sun') return;      // Monday to Friday only
+    if(!(hr>=11)) return;                    // trigger runs at 11h00
     var today=debTodayISO();
-    try{ if(localStorage.getItem('debOOCGateDay')===today) return; }catch(e){}
-    var m=debModal(); var st={};
-    function close(){ try{ localStorage.setItem('debOOCGateDay',today); }catch(e){} debModalClose(); if(Object.keys(st).length){ renderDebtors(true); } }
+    try{ if(localStorage.getItem('debMorningDay')===today) return; }catch(e){}
+
+    // Build or fetch today's run
+    var run=null;
+    try{ var r=await sb.rpc('deb_corr_latest'); if(!r.error) run=r.data; }catch(e){}
+    var rd=run&&run.meta&&run.meta.run_date;
+    if(!(run&&run.meta&&run.meta.run_id) || String(rd)!==String(today)){
+      try{ var rb=await sb.rpc('deb_corr_build',{p_run_date:today}); if(!rb.error) run=rb.data; }catch(e){}
+    }
+    var items=(run&&run.items)||[];
+    var auto=items.filter(function(x){ return x.policy==='auto' && x.state==='pending'; });
+    var ooc =items.filter(function(x){ return x.policy==='approval' && x.state==='pending'; });
+    if(!auto.length && !ooc.length){ try{ localStorage.setItem('debMorningDay',today); }catch(e){} return; }
+
+    var cfg={}; try{ var stt=await debSendSetup(true); cfg=(stt&&stt.config)||{}; }catch(e){}
+    var test=(cfg.test_mode!==false);
+    var autoDaily=(cfg.auto_daily===true);
+    try{ localStorage.setItem('debMorningDay',today); }catch(e){}
+
+    var m=debModal(); var stA={}, stO={}; var closed=false;
+    function fullClub(k){ return ((deb&&deb.clubs)||[]).filter(function(x){return x.club_key===k;})[0]||null; }
+    function tierName(t){ return (DEB_TIERS[t]||{}).label||t; }
+    function close(){ if(closed) return; closed=true; debModalClose(); if(Object.keys(stA).length||Object.keys(stO).length){ renderDebtors(true); } }
+
+    async function sendAuto(){
+      for(var i=0;i<auto.length;i++){ var it=auto[i]; if(stA[it.id]) continue;
+        stA[it.id]='sending'; draw();
+        var c=fullClub(it.club_key)||{club_key:it.club_key,name:it.name,code:it.code,bal:it.bal,cur:it.cur,over:it.over,status:it.status};
+        try{ await debSendOne(c,it.tier); try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'sent'}); }catch(e){} stA[it.id]='sent'; }
+        catch(e){ try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'failed',p_error:String(e.message||e).slice(0,300)}); }catch(e2){} stA[it.id]='failed'; }
+        draw();
+      }
+    }
+
     function draw(){
-      var rows=pending.map(function(c){
-        var s=st[c.club_key]; var arr=dR(c.over,false);
-        var age=(c.age!=null?c.age:''); var pd=(age?(age-30):'');
-        var reason='Oldest open item '+(age||'54+')+' days old'+(pd!==''?' ('+pd+' past due)':'')+', '+arr+' overdue &mdash; Rules 10.2.3 / 10.8.';
+      var aRows=auto.map(function(it){
+        var s=stA[it.id];
+        var badge = s==='sent' ? '<span class="deb-gate-state sent">Sent (test)</span>'
+                  : s==='failed' ? '<span class="deb-gate-state held" style="color:#9A3130">Failed</span>'
+                  : s==='sending' ? '<span class="hint">Sending…</span>'
+                  : '<span class="hint" style="font-size:11px">queued</span>';
+        return '<div class="deb-gate-row'+(s==='sent'||s==='failed'?' done':'')+'"><div class="deb-gate-main"><span class="nm">'+esc(it.name)+'</span><span class="cd">'+esc(it.code||'')+'</span><div class="rs" style="color:#59667c">'+debCorrTierChip(it.tier)+' &middot; '+esc(it.reason||tierName(it.tier))+'</div></div><div class="deb-gate-arr" style="color:#1e456e">'+dR(it.bal)+'</div><div class="deb-gate-act">'+badge+'</div></div>';
+      }).join('');
+      var oRows=ooc.map(function(it){
+        var s=stO[it.id]; var arr=dR(it.over,false);
         var act = s==='sent' ? '<span class="deb-gate-state sent">Issued (test)</span>'
                 : s==='held' ? '<span class="deb-gate-state held">Held for review</span>'
-                : '<button class="btn sm" data-send="'+esc(c.club_key)+'">Confirm &amp; issue</button> <button class="deb-linkbtn" data-hold="'+esc(c.club_key)+'">Hold</button>';
-        return '<div class="deb-gate-row'+(s?' done':'')+'"><div class="deb-gate-main"><span class="nm">'+esc(c.name)+'</span><span class="cd">'+esc(c.code||'')+'</span><div class="rs">'+reason+'</div></div><div class="deb-gate-arr">'+arr+'</div><div class="deb-gate-act">'+act+'</div></div>';
+                : '<button class="btn sm" data-osend="'+it.id+'">Confirm &amp; issue</button> <button class="deb-linkbtn" data-ohold="'+it.id+'">Hold</button>';
+        return '<div class="deb-gate-row'+(s?' done':'')+'"><div class="deb-gate-main"><span class="nm">'+esc(it.name)+'</span><span class="cd">'+esc(it.code||'')+'</span><div class="rs">'+esc(it.reason||'')+'</div></div><div class="deb-gate-arr">'+arr+'</div><div class="deb-gate-act">'+act+'</div></div>';
       }).join('');
-      m.innerHTML='<div class="deb-mhead"><div><h3>Out of Compliance &mdash; confirm before issue</h3><div class="dsub">As at '+dDateTimeZA(new Date().toISOString())+' &middot; '+pending.length+' club'+(pending.length>1?'s':'')+' meet the trigger. No notice goes out until you confirm each one.</div></div><button class="dx" id="debGateX" aria-label="Close">&times;</button></div>'
-        +'<div class="deb-mbody">'
-        +'<div class="deb-gate" style="margin-bottom:12px">Every send is in <b>test mode</b> and reaches the Treasurer only. Confirming records the club Out of Compliance with <b>today</b> as the effective date and issues the notice. Hold to deal with a club later.</div>'
-        +'<div class="deb-gate-clubs">'+rows+'</div>'
-        +'<div class="deb-corr-actions" style="justify-content:flex-end;margin-top:12px"><button class="btn ghost" id="debGateLater">Close &mdash; decide later</button></div>'
-        +'<p class="hint" style="font-size:11px;margin-top:8px">This confirmation appears once when you first open the dashboard each day. Held clubs remain on the dashboard.</p></div>';
-      var x=document.getElementById('debGateX'); if(x) x.onclick=close;
-      var later=document.getElementById('debGateLater'); if(later) later.onclick=close;
-      Array.prototype.forEach.call(m.querySelectorAll('[data-hold]'),function(b){ b.onclick=function(){ st[b.dataset.hold]='held'; draw(); }; });
-      Array.prototype.forEach.call(m.querySelectorAll('[data-send]'),function(b){ b.onclick=async function(){
-        var key=b.dataset.send, c=pending.filter(function(x){return x.club_key===key;})[0]; if(!c) return;
+
+      var h='<div class="deb-mhead"><div><h3>Daily run &mdash; 11:00 SAST</h3><div class="dsub">'+esc(now.toLocaleDateString('en-ZA',{timeZone:'Africa/Johannesburg',weekday:'long',day:'2-digit',month:'long',year:'numeric'}))+' &middot; '+(test?'test mode &mdash; every email reaches the Treasurer only':'LIVE &mdash; emails go to clubs')+'</div></div><button class="dx" id="debMrX" aria-label="Close">&times;</button></div><div class="deb-mbody">';
+
+      h+='<div class="deb-sec">Routine correspondence <span class="hint" style="font-weight:400">('+auto.length+')</span></div>';
+      if(!auto.length){ h+='<p class="hint" style="font-size:12px">No statements, reminders or final reminders fall due today.</p>'; }
+      else{
+        h+='<p class="hint" style="font-size:11px;margin:-2px 0 8px">Monthly statements, payment reminders and final reminders. Each carries the branded statement PDF and is logged for the audit file. De-duplicated against the last 25 days, so nothing is sent twice.</p>';
+        h+='<div class="deb-gate-clubs">'+aRows+'</div>';
+        var allDone=auto.every(function(it){ return stA[it.id]==='sent'||stA[it.id]==='failed'; });
+        if(!allDone){
+          if(autoDaily){ h+='<p class="hint" style="font-size:11px;margin-top:8px">Sending automatically…</p>'; }
+          else{ h+='<div class="deb-corr-actions" style="justify-content:space-between;align-items:center;margin-top:10px;gap:12px"><label class="hint" style="display:flex;align-items:center;gap:6px;font-size:11.5px"><input type="checkbox" id="debAutoDaily"> Send these automatically at 11:00 in future</label><button class="btn gold sm" id="debSendRoutine">Send '+auto.length+' routine email'+(auto.length>1?'s':'')+' now</button></div>'; }
+        }
+      }
+
+      h+='<div class="deb-sec" style="margin-top:16px">Out of Compliance &mdash; confirm before issue <span class="hint" style="font-weight:400">('+ooc.length+')</span></div>';
+      if(!ooc.length){ h+='<p class="hint" style="font-size:12px">No club reaches the Out of Compliance trigger today.</p>'; }
+      else{
+        h+='<p class="hint" style="font-size:11px;margin:-2px 0 8px">Each club below has passed the final-reminder stage (Rules 10.2.3 / 10.8). Placing a club Out of Compliance is a governed step, so confirm each one. Confirming records the effective date as <b>today</b> and issues the notice; holding leaves the club for review.</p>';
+        h+='<div class="deb-gate-clubs">'+oRows+'</div>';
+      }
+
+      h+='<div class="deb-corr-actions" style="justify-content:flex-end;margin-top:14px"><button class="btn ghost" id="debMrDone">Close</button></div>';
+      h+='<p class="hint" style="font-size:11px;margin-top:8px">This briefing opens once when you first sign in on a weekday from 11:00. '+(test?'Nothing reaches clubs while the module is in test mode.':'')+' Held or unsent items stay on the dashboard and in Correspondence.</p></div>';
+      m.innerHTML=h;
+
+      var x=document.getElementById('debMrX'); if(x) x.onclick=close;
+      var d=document.getElementById('debMrDone'); if(d) d.onclick=close;
+      var sr=document.getElementById('debSendRoutine'); if(sr) sr.onclick=async function(){ this.disabled=true; this.textContent='Sending…'; await sendAuto(); };
+      var ad=document.getElementById('debAutoDaily'); if(ad) ad.onchange=async function(){ var v=this.checked; try{ await sb.rpc('deb_send_config_set',{p:{auto_daily:v}}); autoDaily=v; }catch(e){ alert('Could not save: '+(e.message||e)); this.checked=!v; } };
+      Array.prototype.forEach.call(m.querySelectorAll('[data-ohold]'),function(b){ b.onclick=function(){ stO[Number(b.dataset.ohold)]='held'; draw(); }; });
+      Array.prototype.forEach.call(m.querySelectorAll('[data-osend]'),function(b){ b.onclick=async function(){
+        var id=Number(b.dataset.osend), it=ooc.filter(function(x){return x.id===id;})[0]; if(!it) return;
         b.disabled=true; b.textContent='Issuing…';
+        var c=fullClub(it.club_key)||{club_key:it.club_key,name:it.name,code:it.code,bal:it.bal,over:it.over,status:it.status};
         try{
-          await sb.rpc('deb_ooc_place',{p_key:key,p_route:'notice',p_started_on:debTodayISO(),p_amount:Number(c.over)||null,p_notice_ref:null,p_note:'Confirmed via morning gate'});
-          await debSendOne(c,'ooc'); st[key]='sent';
+          await sb.rpc('deb_ooc_place',{p_key:it.club_key,p_route:'notice',p_started_on:today,p_amount:Number(it.over)||null,p_notice_ref:null,p_note:'Confirmed via 11:00 daily run'});
+          await debSendOne(c,'ooc');
+          try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'sent'}); }catch(e){}
+          stO[id]='sent';
         }catch(e){ alert('Could not issue: '+(e.message||e)); b.disabled=false; b.textContent='Confirm & issue'; return; }
         draw();
       }; });
     }
+
     draw();
+    if(autoDaily && auto.length){
+      var guard=false; try{ guard=(localStorage.getItem('debMorningAutoDay')===today); }catch(e){}
+      if(!guard){ try{ localStorage.setItem('debMorningAutoDay',today); }catch(e){} sendAuto(); }
+    }
   }
 
   function debFlowchartSVG(){
@@ -1843,7 +1919,7 @@
     if(!_deb || _deb.empty){ root.innerHTML='<div class="card"><h3>Club Debtors</h3><p class="hint">No Sage extract has been loaded yet.</p></div>'; return; }
     debRender();
     try{ debStartClock(); }catch(e){}
-    try{ debOOCGate(_deb.clubs||[]); }catch(e){}
+    try{ debMorningRun(_deb); }catch(e){}
   }
 
   function debRender(){
