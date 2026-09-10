@@ -2167,7 +2167,7 @@
     if(!items.length||_corrBusy) return;
     var st=await debSendSetup(true); var cfg=st.config||{}; var test=(cfg.test_mode!==false);
     var to=test?('TEST MODE — every email goes to '+((cfg.test_email)||'the Treasurer')+', not to clubs'):'LIVE — emails go to each club’s address on file';
-    if(location.search.indexOf('cttlfa_send=go')<0 && !confirm('Send '+items.length+' email'+(items.length>1?'s':'')+' now?\n\n'+to+'\n\nEach includes the branded statement PDF. Every send is logged for the audit file.')) return;
+    if(!confirm('Send '+items.length+' email'+(items.length>1?'s':'')+' now?\n\n'+to+'\n\nEach includes the branded statement PDF. Every send is logged for the audit file.')) return;
     _corrBusy=true; var ot=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='Sending…'; }
     var stat=document.getElementById('corrStatus'); var ok=0, fail=0;
     for(var i=0;i<items.length;i++){ var it=items[i];
