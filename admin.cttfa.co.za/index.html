@@ -1760,10 +1760,12 @@
       }).join('');
       var oRows=ooc.map(function(it){
         var s=stO[it.id]; var arr=dR(it.over,false);
-        var act = s==='sent' ? '<span class="deb-gate-state sent">Issued (test)</span>'
+        var fc=fullClub(it.club_key); var already=!!(fc&&fc.ooc);
+        var tag=already?' <span title="Already Out of Compliance — the original effective date is preserved" style="font-size:10px;font-weight:700;color:#7a5312;background:#FBF1DD;border-radius:4px;padding:1px 6px;margin-left:5px">already out — reminder</span>':'';
+        var act = s==='sent' ? '<span class="deb-gate-state sent">'+(already?'Reminder issued (test)':'Issued (test)')+'</span>'
                 : s==='held' ? '<span class="deb-gate-state held">Held for review</span>'
-                : '<button class="btn sm" data-osend="'+it.id+'">Confirm &amp; issue</button> <button class="deb-linkbtn" data-ohold="'+it.id+'">Hold</button>';
-        return '<div class="deb-gate-row'+(s?' done':'')+'"><div class="deb-gate-main"><span class="nm">'+esc(it.name)+'</span><span class="cd">'+esc(it.code||'')+'</span><div class="rs">'+esc(it.reason||'')+'</div></div><div class="deb-gate-arr">'+arr+'</div><div class="deb-gate-act">'+act+'</div></div>';
+                : '<button class="btn sm" data-osend="'+it.id+'">'+(already?'Re-issue notice':'Confirm &amp; issue')+'</button> <button class="deb-linkbtn" data-ohold="'+it.id+'">Hold</button>';
+        return '<div class="deb-gate-row'+(s?' done':'')+'"><div class="deb-gate-main"><span class="nm">'+esc(it.name)+'</span><span class="cd">'+esc(it.code||'')+'</span>'+tag+'<div class="rs">'+esc(it.reason||'')+'</div></div><div class="deb-gate-arr">'+arr+'</div><div class="deb-gate-act">'+act+'</div></div>';
       }).join('');
 
       var h='<div class="deb-mhead"><div><h3>Daily run &mdash; 11:00 SAST</h3><div class="dsub">'+esc(now.toLocaleDateString('en-ZA',{timeZone:'Africa/Johannesburg',weekday:'long',day:'2-digit',month:'long',year:'numeric'}))+' &middot; '+(test?'test mode &mdash; every email reaches the Treasurer only':'LIVE &mdash; emails go to clubs')+'</div></div><button class="dx" id="debMrX" aria-label="Close">&times;</button></div><div class="deb-mbody">';
