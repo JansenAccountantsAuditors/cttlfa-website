@@ -2062,20 +2062,21 @@
     var clubs=(_deb.clubs||[]).filter(function(c){ if(_debStatus&&c.stage!==_debStatus)return false; if(_debQ&&(c.name.toLowerCase().indexOf(_debQ)<0&&String(c.code||'').toLowerCase().indexOf(_debQ)<0&&String(c.suburb||'').toLowerCase().indexOf(_debQ)<0))return false; return true; });
     clubs.sort(function(a,b){ var x=a[_debSort],y=b[_debSort]; if(typeof x==='string'){x=x.toLowerCase();y=(y||'').toLowerCase();} return x<y?-_debDir:x>y?_debDir:0; });
     function mbar(c){ if(c.bal<=0) return ''; var t=Number(c.cur)+Number(c.b30)+Number(c.b60)+Number(c.b90)+Number(c.b120)||1; return '<span class="deb-mbar">'+DEB_BK.map(function(b){var w=Math.max(0,Number(c[b[0]]))/t*100;return w>0?'<i style="width:'+w+'%;background:'+b[2]+'"></i>':'';}).join('')+'</span>'; }
-    var cols=[['name','Club',0],['code','Code',0],['bal','Balance',1],['over60','Overdue (60+)',1],['stage','Stage',0],['coll','Logged',0],['last_receipt_days','Last rcpt',1]];
+    var cols=[['name','Club',0],['code','Code',0],['club_type','Type',0],['bal','Balance',1],['over60','Overdue (60+)',1],['stage','Stage',0],['coll','Logged',0],['last_receipt_days','Last rcpt',1]];
     var h='<table class="deb-table"><thead><tr>'+cols.map(function(c){return '<th'+(c[2]?' class="num"':'')+' data-k="'+c[0]+'">'+c[1]+(_debSort===c[0]?(_debDir<0?' ▾':' ▴'):'')+'</th>';}).join('')+'</tr></thead><tbody>';
     clubs.forEach(function(c){
       var logged=c.ooc?'<span class="deb-tag" style="background:#FBECEA;color:#8a3c17" title="Placed Out of Compliance'+(c.ooc_since?' on '+dDateZA(c.ooc_since):'')+'">Placed OOC</span>':(c.payment_plan?'<span class="deb-tag" style="background:#E7F5EC;color:#1c5136">On plan</span>':(c.coll_step?'<span class="deb-tag" style="background:#EEF2F8;color:#33415c">'+esc(c.coll_step.replace(/_/g,' '))+'</span>':'<span class="hint" style="font-size:11px">–</span>'));
       h+='<tr class="deb-click" data-key="'+esc(c.club_key)+'" tabindex="0">'
         +'<td>'+debSCdot(c.status_colour)+'<b>'+esc(c.name)+'</b>'+(c.suburb?'<div class="hint" style="font-size:11px">'+esc(c.suburb)+'</div>':'')+'</td>'
         +'<td class="hint">'+esc(c.code||'–')+'</td>'
+        +'<td>'+dTypeChip(c.club_type||'unknown')+'</td>'
         +'<td class="num"><b>'+dR(c.bal)+'</b> '+mbar(c)+'</td>'
         +'<td class="num">'+dR(c.over60)+'</td>'
         +'<td>'+dStage(c.stage)+'</td>'
         +'<td>'+logged+'</td>'
         +'<td class="num">'+(Number(c.last_receipt_days)>=999?'–':c.last_receipt_days+'d')+'</td></tr>';
     });
-    h+='</tbody><tfoot><tr><td><b>'+clubs.length+' clubs</b></td><td></td><td class="num"><b>'+dR(clubs.reduce(function(a,c){return a+Number(c.bal);},0))+'</b></td><td class="num">'+dR(clubs.reduce(function(a,c){return a+Number(c.over60);},0))+'</td><td></td><td></td><td></td></tr></tfoot></table>';
+    h+='</tbody><tfoot><tr><td><b>'+clubs.length+' clubs</b></td><td></td><td></td><td class="num"><b>'+dR(clubs.reduce(function(a,c){return a+Number(c.bal);},0))+'</b></td><td class="num">'+dR(clubs.reduce(function(a,c){return a+Number(c.over60);},0))+'</td><td></td><td></td><td></td></tr></tfoot></table>';
     var w=$("debTbl"); w.innerHTML=h;
     Array.prototype.forEach.call(w.querySelectorAll('th[data-k]'),function(th){ th.onclick=function(){ var k=th.dataset.k; if(_debSort===k)_debDir=-_debDir; else {_debSort=k;_debDir=(k==='name'||k==='code'||k==='stage'||k==='coll')?1:-1;} debTable(); }; });
     Array.prototype.forEach.call(w.querySelectorAll('.deb-click'),function(tr){ tr.onclick=function(){ debOpenClub(tr.dataset.key); }; tr.onkeydown=function(e){ if(e.key==='Enter'){e.preventDefault();debOpenClub(tr.dataset.key);} }; });
@@ -2083,6 +2084,7 @@
 
   function debReminderText(c){
     var nm=c.name, ref=c.code||'', st=c.stage;
+    if(st==='ooc' && c.club_type==='guest') return 'Dear '+nm+' Committee,\n\nYour club takes part in CTTLFA competitions as a guest club and is not a member of the Association. The account is in arrears: '+dR(c.over60)+' has aged to 120 days and older on a balance of '+dR(c.bal)+', despite prior statements and reminders. As a guest club, the Association’s constitutional compliance consequences do not apply to you. Please note, however, that a guest club whose account is left unsettled and Out of Compliance will not be considered for participation in CTTLFA competitions in the following season.\n\nPlease settle the outstanding amount without delay, using club code '+ref+' as the payment reference; banking details are on the attached statement.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
     if(st==='ooc') return 'Dear '+nm+' Committee,\n\nThe club account is Out of Compliance. '+dR(c.over60)+' has aged to 120 days and older on a balance of '+dR(c.bal)+', having passed the statement, payment-reminder and final-reminder stages without settlement or an approved arrangement. In terms of Rule 10.2.3, the club is served this Out of Compliance notice and remains out of compliance until the overdue amount is settled. While out of compliance, the consequences in Rule 16.4.2.6 apply. A written payment arrangement under Article 7.11.16 may still be applied for.\n\nPlease attend to this without delay to restore the club’s good standing.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
     if(st==='final') return 'Dear '+nm+' Committee,\n\nThis is a final payment reminder. '+dR(c.over60)+' has now aged to 90 days and older on a balance of '+dR(c.bal)+'. Please settle within 7 days, or put a written payment arrangement under Article 7.11.16 in place, failing which the account will be placed Out of Compliance.\n\nBanking details are on the attached statement; please use club code '+ref+' as the reference.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
     if(st==='reminder') return 'Dear '+nm+' Committee,\n\nA payment reminder that '+dR(c.bal)+' is outstanding, of which '+dR(c.over60)+' has aged to 60 days and older in the ageing (Rule 10.2). Please settle at your convenience using club code '+ref+' as the payment reference; banking details are on the attached statement. A written arrangement may be applied for under Article 7.11.16.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
@@ -2885,6 +2887,10 @@
       return '<div class="deb-noterow'+(done?' done':'')+'"><div>'+pr+esc(n.note||'')+'</div><div class="deb-notemeta">'+dDateZA(n.at)+(n.by?' · '+esc(n.by):'')+(n.follow_up?' · follow-up '+dDateZA(n.follow_up):'')+(done?' · done':' · <button class="deb-linkbtn" data-done="'+n.id+'">mark done</button>')+'</div></div>';
     }).join('');
   }
+  var DEB_TYPE={full:['Full member','#E7F5EC','#1c5136'],associate:['Associate','#E8F0FA','#1e456e'],guest:['Guest club','#FBF1DD','#7a5312'],other:['Other / internal','#EEF2F8','#59666b'],unknown:['Type unset','#F3EFE3','#8a6d1f']};
+  function dTypeChipLite(t){ var mm=DEB_TYPE[t]||DEB_TYPE.unknown; return '<span class="deb-hpill" title="Membership type — drives how compliance notices are handled">'+esc(mm[0])+'</span>'; }
+  function dTypeChip(t){ var mm=DEB_TYPE[t]||DEB_TYPE.unknown; return '<span class="deb-typechip" style="background:'+mm[1]+';color:'+mm[2]+'">'+esc(mm[0])+'</span>'; }
+  var DEB_STG_OPTS=[['statement','On statement'],['reminder','Payment reminder'],['final','Final reminder'],['ooc','Out of Compliance due'],['plan','Payment arrangement'],['paidup','Paid up'],['credit','In credit']];
   async function debOpenClub(key){
     var c=(_deb.clubs||[]).filter(function(x){return x.club_key===key;})[0]; if(!c) return;
     var canW=canEdit('debtors');
@@ -2894,25 +2900,65 @@
     var data={}; try{ var r0=await sb.rpc('deb_club',{p_key:key}); if(!r0.error&&r0.data) data=r0.data; }catch(e){}
     var facts=data.facts||{}, coll=data.collection||{}, acts=data.actions||[], notes=data.notes||[], sends=data.sends||[];
     var sc=coll.status_colour||'unmarked';
+    var ctype=c.club_type||data.club_type||'unknown';
+    var ctypeSrc=data.club_type_source||c.club_type_source;
+    var isGuest=(ctype==='guest');
     var bal=Number(c.bal)||0, cur=Number(c.cur)||0, over=Number(c.over)||0;
     var over60=(c.over60!=null)?Number(c.over60):Math.max(0,Math.min(Number(c.b60||0)+Number(c.b90||0)+Number(c.b120||0), bal));
     var tot=cur+Number(c.b30)+Number(c.b60)+Number(c.b90)+Number(c.b120); if(bal<0) tot=Math.abs(bal);
     var rec=debRecStep(c, facts.oldest_open_days);
     var gate=(bal>10000)||(Number(c.b120)>5000);
     var txbal=facts.tx_balance, recon=(txbal==null)?null:(Math.abs(Number(txbal)-bal)<=0.01);
-    // header
-    var oocChip=c.ooc?'<span class="deb-oocchip" title="You have placed this club Out of Compliance. Consequences under Rule 16.4.2.6 apply from this date until the arrears are settled.">Placed OOC'+(c.ooc_since?' '+dDateZA(c.ooc_since):'')+'</span>':'';
-    var h='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">'+(c.code?esc(c.code)+' · ':'')+(c.suburb?esc(c.suburb)+' · ':'')+(c.active?'active member':'dormant account')+'  '+dStageLite(c.stage)+'  '+debSCpillLite(sc)+oocChip+'</div></div><button class="dx" id="debX" aria-label="Close">×</button></div>';
+    var stageComputed=c.stage_computed||c.stage;
+    var overridden=!!c.stage_overridden;
+    var openNotes=notes.filter(function(n){return n.status==='open';}).length;
+    var _ct=data.contact||null, _ref=esc(c.code||c.name.replace(/[^A-Za-z]/g,'').slice(0,6).toUpperCase());
+    var oocChip=c.ooc?'<span class="deb-oocchip" title="You have placed this club Out of Compliance. Consequences apply from this date until the arrears are settled.">Placed OOC'+(c.ooc_since?' '+dDateZA(c.ooc_since):'')+'</span>':'';
+    var ovBadge=overridden?'<span class="deb-ovbadge" title="Stage manually overridden. The calculated stage is '+esc(dStageLabel(stageComputed))+'.">override</span>':'';
+    // ===== header =====
+    var h='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">'+(c.code?esc(c.code)+' · ':'')+(c.suburb?esc(c.suburb)+' · ':'')+dTypeChipLite(ctype)+'  '+dStageLite(c.stage)+ovBadge+'  '+debSCpillLite(sc)+oocChip+'</div></div><button class="dx" id="debX" aria-label="Close">×</button></div>';
     h+='<div class="deb-mbody">';
-    // stat tiles: total / current / overdue
+    // tiles
     h+='<div class="deb-tiles">'
       +'<div class="deb-tile"><div class="k">Total balance</div><div class="v'+(bal>0?' bad':'')+'">'+dR(bal)+'</div><div class="s">as at '+dDateZA((_deb.snapshot&&_deb.snapshot.as_at))+'</div></div>'
       +'<div class="deb-tile"><div class="k">Current (within 30 days)</div><div class="v">'+dR(cur)+'</div><div class="s">not yet due</div></div>'
       +'<div class="deb-tile"><div class="k">Overdue (60 days +, net)</div><div class="v'+(over60>0?' bad':'')+'">'+dR(over60)+'</div><div class="s">'+(bal>0?Math.round(over60/bal*100)+'% of the balance · 30-day band excluded':'—')+'</div></div>'
       +'</div>';
     if(gate) h+='<div class="deb-gate">High-value account · Balance over R10 000 or 120-day balance over R5 000. Confirm the Finance / Management Committee has sighted this account before any write-off or settlement concession.</div>';
-    h+='<div class="deb-cockpit"><div class="deb-col">';
-    // LEFT: ageing
+    if(isGuest) h+='<div class="deb-guestbar"><span class="gb-tag">Guest club</span><div>Not a member of the CTTLFA. Compliance notices carry <b>no constitutional forfeit or penalty</b>, and there is limited recourse. Our rule: a guest that is placed Out of Compliance and left unsettled is <b>not considered to return the following season</b>. Recover the debt and record the decision.</div></div>';
+    // ===== tab bar =====
+    h+='<div class="deb-tabs" role="tablist">'
+      +'<button class="deb-tab on" data-tab="overview">Overview</button>'
+      +'<button class="deb-tab" data-tab="tx">Transactions'+((data.transactions||[]).length?' <span class="deb-tabn">'+data.transactions.length+'</span>':'')+'</button>'
+      +'<button class="deb-tab" data-tab="corr">Correspondence'+(sends.length?' <span class="deb-tabn">'+sends.length+'</span>':'')+'</button>'
+      +'<button class="deb-tab" data-tab="log">Notes &amp; log'+(openNotes?' <span class="deb-tabn">'+openNotes+'</span>':'')+'</button>'
+      +'</div>';
+    // ===================== OVERVIEW =====================
+    h+='<div class="deb-tabpanel on" data-panel="overview"><div class="deb-cockpit"><div class="deb-col">';
+    // recommended next step + primary actions
+    h+='<div class="deb-rec"><div class="deb-rec-h">Recommended next step'+(rec.a?'<span class="deb-rec-art">'+esc(rec.a)+'</span>':'')+'</div><div class="deb-rec-t">'+esc(rec.t)+'</div><div class="deb-rec-b">'+rec.b+'</div>'
+      +'<div class="deb-rec-acts">'
+      +'<button class="btn gold sm" id="debStmt">Statement (PDF)</button>'
+      +'<button class="btn ghost sm" id="debGoCorr">Correspondence →</button>'
+      +(canW?'<button class="btn ghost sm" id="debWriteEmail" title="Write a free-form email to this club. Sent on the CTTLFA letterhead, BCC to the treasurer mailbox.">Write email…</button>':'')
+      +'</div></div>';
+    // stage control
+    h+='<div class="deb-sec">Constitutional stage</div>';
+    if(canW){
+      h+='<div class="deb-stagectl">'
+        +'<select id="debStageSel" aria-label="Stage">'+DEB_STG_OPTS.map(function(o){return '<option value="'+o[0]+'"'+(c.stage===o[0]?' selected':'')+'>'+esc(o[1])+'</option>';}).join('')+'</select>'
+        +'<span class="hint" id="debStageCalc">Calculated: <b>'+esc(dStageLabel(stageComputed))+'</b>'+(overridden?' · currently overridden':'')+'</span>'
+        +'<div id="debStageReasonWrap" style="display:none;width:100%;margin-top:6px">'
+          +'<textarea id="debStageReason" class="deb-note-ta" style="min-height:44px" placeholder="Why are you overriding the stage? Required — recorded with your name and the date."></textarea>'
+        +'</div>'
+        +'<div style="width:100%;margin-top:6px"><button class="btn sm" id="debStageSave" style="display:none">Save stage</button> <span class="hint" id="debStageMsg" style="font-size:11px"></span></div>'
+        +'</div>';
+      if(overridden) h+='<div class="deb-ovinfo">Overridden to <b>'+esc(dStageLabel(c.stage))+'</b>'+(c.stage_override_by?' by '+esc(c.stage_override_by):'')+(c.stage_override_at?' · '+dDateZA(c.stage_override_at):'')+(c.stage_override_reason?'<br><span class="hint">“'+esc(c.stage_override_reason)+'”</span>':'')+'</div>';
+    } else {
+      h+='<div class="hint" style="font-size:12px">'+esc(dStageLabel(c.stage))+(overridden?' · manually overridden (calculated: '+esc(dStageLabel(stageComputed))+')':' · calculated from the ageing')+'</div>';
+      if(overridden&&c.stage_override_reason) h+='<div class="deb-ovinfo"><span class="hint">“'+esc(c.stage_override_reason)+'”'+(c.stage_override_by?' — '+esc(c.stage_override_by):'')+(c.stage_override_at?', '+dDateZA(c.stage_override_at):'')+'</span></div>';
+    }
+    // ageing
     h+='<div class="deb-sec">Ageing</div>';
     if(bal>0) h+='<div class="deb-agebar" style="height:26px;margin-bottom:6px">'+DEB_BK.map(function(b){var v=Number(c[b[0]]),w=tot?Math.max(0,v)/tot*100:0;return w>0?'<span style="background:'+b[2]+';width:'+w+'%">'+(w>13?dR(v):'')+'</span>':'';}).join('')+'</div>';
     h+='<table class="deb-agetbl"><tbody>'
@@ -2924,6 +2970,18 @@
       +'<tr class="tot"><td>Overdue for action (60 days +, net)</td><td class="num">'+dR(over60)+'</td></tr>'
       +'<tr class="tot"><td>Total balance</td><td class="num">'+dR(bal)+'</td></tr>'
       +'</tbody></table>';
+    h+='</div><div class="deb-col">';
+    // club type control
+    h+='<div class="deb-sec">Club type</div>';
+    if(canW){
+      h+='<div class="deb-typectl">'
+        +'<select id="debTypeSel" aria-label="Club type">'+[['full','Full member'],['associate','Associate'],['guest','Guest club'],['other','Other / internal'],['unknown','Type unset']].map(function(o){return '<option value="'+o[0]+'"'+(ctype===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join('')+'</select>'
+        +'<span class="hint" id="debTypeSrc">'+(ctypeSrc==='manual'?('set manually'+(data.club_type_by?' by '+esc(data.club_type_by):'')):'from the voting register')+'</span>'
+        +' <span class="hint" id="debTypeMsg" style="font-size:11px"></span>'
+        +'</div>';
+    } else {
+      h+='<div>'+dTypeChip(ctype)+' <span class="hint" style="font-size:11px">'+(ctypeSrc==='manual'?'set manually':'from the voting register')+'</span></div>';
+    }
     // account facts
     h+='<div class="deb-sec">Account facts <span class="hint" style="font-weight:400">&middot; from the transaction ledger, exported '+dDateZA(data.ledger_export_at)+'</span></div>';
     if(facts.has_tx){
@@ -2935,28 +2993,16 @@
         +'<span>Received this year (ledger)</span><b>'+dR(facts.received_ytd)+'</b>'
         +'<span>Ledger balance at export</span><b>'+dR(txbal)+'</b>'
         +'<span>Movement since export</span><b>'+(unimp===null?'–':(Math.abs(unimp)<=0.01?'<span style="color:#1c5136">none — in sync</span>':(unimp<0?'<span style="color:#1c5136">'+dR(Math.abs(unimp))+' received/reduced</span>':'<span style="color:#9A3130">'+dR(unimp)+' invoiced/added</span>')))+'</b></div>';
-      h+='<p class="hint" style="font-size:11px;margin:4px 0 0">The balance and ageing tiles above are the live Sage position (as at '+dDateZA((_deb.snapshot&&_deb.snapshot.as_at))+'). The figures here are as at the last manual ledger export; any movement since then is already in the balance above but is not yet itemised in the history below.</p>';
-    } else { h+='<p class="hint" style="font-size:12px">No transaction history is loaded for this club yet. Balance and ageing above come from the live Sage Days-Outstanding report.</p>'; }
-    // transaction history (from ledger export)
-    if((data.transactions||[]).length){
-      h+='<div class="deb-sec">Transaction history <span class="hint" style="font-weight:400">&middot; ledger exported '+dDateZA(data.ledger_export_at)+'</span></div>';
-      h+='<div class="deb-txwrap"><table class="deb-txtbl"><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>'
-        +data.transactions.map(function(t){ return '<tr><td>'+dDateZA(t.tx_date)+'</td><td>'+esc(t.tx_type||'')+'</td><td class="rf">'+esc(t.reference||t.description||'')+'</td><td class="num">'+(t.debit?dR(t.debit):'')+'</td><td class="num">'+(t.credit?dR(t.credit):'')+'</td><td class="num">'+dR(t.balance)+'</td></tr>'; }).join('')
-        +'</tbody></table></div>'
-        +'<p class="hint" style="font-size:11px;margin:4px 0 0">Most recent '+data.transactions.length+' entries from the Sage ledger export. For a full statement that reconciles to the live balance, use Statement (PDF).</p>';
-    }
-    var _ct=data.contact||null, _ref=esc(c.code||c.name.replace(/[^A-Za-z]/g,'').slice(0,6).toUpperCase());
-    h+='<div class="deb-sec">Club contact'+(canW?' <button class="deb-linkbtn" id="debCtEdit">edit</button>':'')+'</div>';
-    h+='<div id="debCtView">';
+    } else { h+='<p class="hint" style="font-size:12px">No transaction history is loaded for this club yet. Balance and ageing come from the live Sage Days-Outstanding report.</p>'; }
+    // contact
+    h+='<div class="deb-sec">Club contact'+(canW?' <button class="deb-linkbtn" id="debCtEdit">edit</button>':'')+'</div><div id="debCtView">';
     if(_ct&&(_ct.name||_ct.email||_ct.phone||_ct.cc_email)){
       h+='<div class="deb-kv"><span>Contact</span><b>'+(_ct.name?esc(_ct.name):'–')+'</b>'
         +'<span>Email</span><b>'+(_ct.email?'<a href="mailto:'+esc(_ct.email)+'">'+esc(_ct.email)+'</a>':'<span style="color:#9A3130">not captured</span>')+'</b>'
         +(_ct.cc_email?'<span>CC</span><b><a href="mailto:'+esc(_ct.cc_email)+'">'+esc(_ct.cc_email)+'</a></b>':'')
         +'<span>Phone</span><b>'+(_ct.phone?'<a href="tel:'+esc(_ct.phone)+'">'+esc(_ct.phone)+'</a>':'–')+'</b></div>';
       h+='<div class="hint" style="font-size:11px;margin-top:4px">Source: Sage customer listing'+(_ct.updated_by?' · '+esc(_ct.updated_by):'')+(_ct.updated_at?' · '+dDateZA(_ct.updated_at):'')+'</div>';
-    } else {
-      h+='<p class="hint" style="font-size:12px">No contact captured yet.'+(canW?' Use edit to add the club’s contact person and email.':'')+'</p>';
-    }
+    } else { h+='<p class="hint" style="font-size:12px">No contact captured yet.'+(canW?' Use edit to add the club’s contact person and email.':'')+'</p>'; }
     h+='</div>';
     if(canW){
       h+='<div id="debCtForm" style="display:none;margin-top:4px">'
@@ -2967,28 +3013,41 @@
         +'<div><button class="btn sm" id="debCtSave">Save contact</button> <button class="btn ghost sm" id="debCtCancel">Cancel</button> <span class="hint" id="debCtMsg" style="font-size:11px"></span></div></div>';
     }
     h+='<div class="deb-contact" style="margin-top:8px">Payment reference: <b>'+_ref+'</b></div>';
-    h+='</div><div class="deb-col">';
-    // RIGHT: recommended step + actions
-    h+='<div class="deb-rec"><div class="deb-rec-h">Recommended next step'+(rec.a?'<span class="deb-rec-art">'+esc(rec.a)+'</span>':'')+'</div><div class="deb-rec-t">'+esc(rec.t)+'</div><div class="deb-rec-b">'+rec.b+'</div>';
-    h+='<div class="deb-rec-acts">'
-      +'<label style="font-size:11px;color:#59666b;display:inline-flex;align-items:center;gap:4px">Period <select id="debStmtPeriod" style="font-size:12px;padding:3px 5px;border:1px solid #d2d8e4;border-radius:5px"><option value="fy">This financial year</option><option value="pfy">Previous financial year</option><option value="12m">Last 12 months</option><option value="all">All history</option><option value="custom">Custom…</option></select></label>'
-      +'<span id="debStmtCustom" style="display:none;font-size:11px;color:#59666b">from <input type="date" id="debStmtFrom" style="font-size:12px;padding:2px 4px;border:1px solid #d2d8e4;border-radius:5px"> to <input type="date" id="debStmtTo" style="font-size:12px;padding:2px 4px;border:1px solid #d2d8e4;border-radius:5px"></span>'
-      +'<button class="btn gold sm" id="debStmt">Statement (PDF)</button>'
+    h+='</div></div></div>';
+    // ===================== TRANSACTIONS =====================
+    h+='<div class="deb-tabpanel" data-panel="tx">';
+    h+='<div class="deb-txhead"><div class="deb-sec" style="margin:0">Transaction history <span class="hint" style="font-weight:400">&middot; ledger exported '+dDateZA(data.ledger_export_at)+'</span></div><button class="btn gold sm" id="debStmt2">Statement (PDF)</button></div>';
+    if((data.transactions||[]).length){
+      h+='<div class="deb-txwrap deb-txwrap-lg"><table class="deb-txtbl deb-txtbl-lg"><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>'
+        +data.transactions.map(function(t){ var isRcpt=(Number(t.credit)>0); return '<tr'+(isRcpt?' class="rcpt"':'')+'><td>'+dDateZA(t.tx_date)+'</td><td>'+esc(t.tx_type||'')+'</td><td class="rf">'+esc(t.reference||t.description||'')+'</td><td class="num">'+(t.debit?dR(t.debit):'')+'</td><td class="num">'+(t.credit?dR(t.credit):'')+'</td><td class="num">'+dR(t.balance)+'</td></tr>'; }).join('')
+        +'</tbody></table></div>'
+        +'<p class="hint" style="font-size:11px;margin:6px 0 0">Most recent '+data.transactions.length+' entries from the Sage ledger export. Receipts are shaded. For a full statement that reconciles to the live balance, use Statement (PDF).</p>';
+    } else { h+='<p class="hint" style="font-size:12px">No transaction ledger is loaded for this club yet. The balance and ageing come from the live Sage Days-Outstanding report; run a Sage fetch to itemise the ledger.</p>'; }
+    h+='</div>';
+    // ===================== CORRESPONDENCE =====================
+    h+='<div class="deb-tabpanel" data-panel="corr">';
+    h+='<div class="deb-sec">Send</div>'
+      +'<div class="deb-corrbar">'
+      +'<label class="hint" style="display:inline-flex;align-items:center;gap:4px">Period <select id="debStmtPeriod" style="font-size:12px;padding:4px 6px;border:1px solid #d2d8e4;border-radius:5px"><option value="fy">This financial year</option><option value="pfy">Previous financial year</option><option value="12m">Last 12 months</option><option value="all">All history</option><option value="custom">Custom…</option></select></label>'
+      +'<span id="debStmtCustom" style="display:none;font-size:11px;color:#59666b">from <input type="date" id="debStmtFrom" style="font-size:12px;padding:3px 4px;border:1px solid #d2d8e4;border-radius:5px"> to <input type="date" id="debStmtTo" style="font-size:12px;padding:3px 4px;border:1px solid #d2d8e4;border-radius:5px"></span>'
+      +'<button class="btn gold sm" id="debStmt3">Statement (PDF)</button>'
       +(bal>0.01?'<button class="btn ghost sm" id="debCopy" title="Copy the '+esc(dStageLabel(c.stage).toLowerCase())+' letter text to paste elsewhere">Copy letter</button>':'')
-      +'<button class="btn ghost sm" id="debCorrHere">Correspondence…</button>'
-      +(canW?'<button class="btn ghost sm" id="debWriteEmail" title="Write a free-form email to this club — a payment reminder in your own words, or anything else. Sent on the CTTLFA letterhead, BCC to the treasurer mailbox.">Write email…</button>':'')
-      +'</div></div>';
+      +'<button class="btn ghost sm" id="debCorrHere">Structured notice…</button>'
+      +(canW?'<button class="btn ghost sm" id="debWriteEmail2">Write email…</button>':'')
+      +'</div>';
+    h+='<div class="deb-sec">Correspondence sent <span class="hint" style="font-weight:400">('+sends.length+')</span></div>'
+      +'<p class="hint" style="font-size:11px;margin:-2px 0 6px">Audit trail of every email issued to this club from the platform — kept for DC and query evidence. A copy of each is held in the treasurer and ops mailboxes (BCC).</p>'
+      +'<div id="debSendLog" class="hint" style="font-size:12px">'+(sends.length?sends.map(function(s){ var lbl=(DEB_TIERS[s.trigger]||{}).label||(s.trigger||'email'); var col=(s.status==='sent')?'#296944':((s.status==='error'||s.status==='no_key'||s.status==='no_email')?'#9A3130':'#59666b'); return '<div class="deb-logrow"><b>'+esc(lbl)+'</b> · '+dDateTimeZA(s.at)+' · '+esc(s.to||'—')+' · <span style="color:'+col+';font-weight:700">'+esc(s.status)+'</span>'+(s.test?' · <span class="hint">test</span>':'')+(s.by?' · '+esc(s.by):'')+'</div>';}).join(''):'No emails sent from the platform yet.')+'</div>';
+    h+='</div>';
+    // ===================== NOTES & LOG =====================
+    h+='<div class="deb-tabpanel" data-panel="log"><div class="deb-cockpit"><div class="deb-col">';
     if(canW){
-      h+='<div class="deb-sec">Working status</div><div style="margin-bottom:10px">'+debSCselect(sc,'id="debSC" data-k="'+esc(c.club_key)+'"')+'<span class="hint" style="font-size:11px;margin-left:8px">Sets the chasing cadence; separate from the constitutional step.</span></div>';
+      h+='<div class="deb-sec">Working status</div><div style="margin-bottom:10px">'+debSCselect(sc,'id="debSC" data-k="'+esc(c.club_key)+'"')+'<span class="hint" style="font-size:11px;margin-left:8px">Sets the chasing cadence; separate from the constitutional stage.</span></div>';
       h+='<div class="deb-sec">Log a note</div>'
         +'<textarea id="debNote" class="deb-note-ta" placeholder="Call note, promise to pay, action taken…"></textarea>'
         +'<div class="deb-noteopts"><label>Follow-up <input type="date" id="debNoteFU"></label><label>Promise R <input type="number" id="debNotePA" step="0.01" style="width:90px"></label><label>by <input type="date" id="debNotePD"></label><button class="btn sm" id="debNoteAdd">Add note</button></div>';
     }
-    h+='<div class="deb-sec">Notes'+(notes.length?' <span class="hint" style="font-weight:400">('+notes.filter(function(n){return n.status==='open';}).length+' open)</span>':'')+'</div><div id="debNotes">'+debNotesHtml(notes)+'</div>';
-    h+='<div class="deb-sec">Correspondence sent <span class="hint" style="font-weight:400">('+sends.length+')</span></div>'
-      +'<p class="hint" style="font-size:11px;margin:-2px 0 6px">Audit trail of every email issued to this club from the platform — kept for DC and query evidence. A copy of each is also held in the treasurer and ops mailboxes (BCC).</p>'
-      +'<div id="debSendLog" class="hint" style="font-size:12px">'+(sends.length?sends.map(function(s){ var lbl=(DEB_TIERS[s.trigger]||{}).label||(s.trigger||'email'); var col=(s.status==='sent')?'#296944':((s.status==='error'||s.status==='no_key'||s.status==='no_email')?'#9A3130':'#59666b'); return '<div class="deb-logrow"><b>'+esc(lbl)+'</b> · '+dDateTimeZA(s.at)+' · '+esc(s.to||'—')+' · <span style="color:'+col+';font-weight:700">'+esc(s.status)+'</span>'+(s.test?' · <span class="hint">test</span>':'')+(s.by?' · '+esc(s.by):'')+'</div>';}).join(''):'No emails sent from the platform yet.')+'</div>';
-    h+='<div class="deb-sec">Collection history</div><div id="debLog" class="hint" style="font-size:12px">'+(acts.length?acts.map(function(a){return '<div class="deb-logrow"><b>'+esc((a.action||'').replace(/_/g,' '))+'</b> · '+dDateZA(a.at)+(a.detail?' · '+esc(a.detail):'')+'</div>';}).join(''):'No actions logged yet.')+'</div>';
+    h+='<div class="deb-sec">Notes'+(notes.length?' <span class="hint" style="font-weight:400">('+openNotes+' open)</span>':'')+'</div><div id="debNotes">'+debNotesHtml(notes)+'</div>';
     if(canW && bal>0){
       h+='<div class="deb-sec">Log an action</div><div class="deb-acts">'
         +'<button class="btn ghost sm" data-act="statement_sent">Statement sent</button>'
@@ -2998,18 +3057,45 @@
         +'<button class="btn ghost sm" data-act="plan_approved">Record payment plan</button>'
         +'</div>';
     }
+    h+='</div><div class="deb-col">';
+    h+='<div class="deb-sec">Collection history</div><div id="debLog" class="hint" style="font-size:12px">'+(acts.length?acts.map(function(a){return '<div class="deb-logrow"><b>'+esc((a.action||'').replace(/_/g,' '))+'</b> · '+dDateZA(a.at)+(a.detail?' · '+esc(a.detail):'')+'</div>';}).join(''):'No actions logged yet.')+'</div>';
     h+='<p class="hint" style="font-size:11px;margin-top:12px">Notes and actions are recorded against this club with your name and the date, for the audit file. A follow-up date puts the note on the Action Queue.</p>';
     h+='</div></div></div>';
+    h+='</div>';
     m.innerHTML=h;
+    // ===== wiring =====
     document.getElementById('debX').onclick=debModalClose;
+    // tabs
+    Array.prototype.forEach.call(m.querySelectorAll('.deb-tab'),function(tb){ tb.onclick=function(){
+      Array.prototype.forEach.call(m.querySelectorAll('.deb-tab'),function(x){x.classList.toggle('on',x===tb);});
+      var pn=tb.dataset.tab; Array.prototype.forEach.call(m.querySelectorAll('.deb-tabpanel'),function(p){p.classList.toggle('on',p.dataset.panel===pn);});
+      var bd=m.querySelector('.deb-mbody'); if(bd) bd.scrollTop=0;
+    }; });
+    function goCorrTab(){ var t=m.querySelector('.deb-tab[data-tab="corr"]'); if(t) t.click(); }
+    // statement buttons (three entry points)
+    function wireStmt(id){ var b=document.getElementById(id); if(b) b.onclick=async function(){ var bb=this,t=bb.textContent; bb.disabled=true; bb.textContent='Generating…'; try{ await debStatementPDF(c, debStmtPeriodOpts()); }catch(e){ alert('Statement error: '+(e.message||e)); } bb.textContent=t; bb.disabled=false; }; }
+    wireStmt('debStmt'); wireStmt('debStmt2'); wireStmt('debStmt3');
+    var _spd=document.getElementById('debStmtPeriod'); if(_spd) _spd.onchange=function(){ var cu=document.getElementById('debStmtCustom'); if(cu) cu.style.display=(this.value==='custom')?'inline':'none'; };
+    var _gc=document.getElementById('debGoCorr'); if(_gc) _gc.onclick=goCorrTab;
+    var cp=document.getElementById('debCopy'); if(cp) cp.onclick=function(){ try{navigator.clipboard.writeText(debReminderText(c));}catch(e){} this.textContent='Copied'; var b=this; setTimeout(function(){b.textContent='Copy letter';},1300); };
+    var ch=document.getElementById('debCorrHere'); if(ch) ch.onclick=function(){ debModalClose(); setTimeout(debOpenCorr,140); };
+    Array.prototype.forEach.call(m.querySelectorAll('#debWriteEmail,#debWriteEmail2'),function(we){ we.onclick=function(){ debComposeEmail(c); }; });
+    // stage override
+    var ss=document.getElementById('debStageSel'), sSave=document.getElementById('debStageSave'), sRW=document.getElementById('debStageReasonWrap'), sMsg=document.getElementById('debStageMsg');
+    if(ss){ ss.onchange=function(){ var v=ss.value; var diff=(v!==stageComputed); if(sRW) sRW.style.display=diff?'block':'none'; if(sSave) sSave.style.display=(v!==c.stage||diff)?'inline-block':'none'; if(sMsg) sMsg.textContent = diff?'This overrides the calculated stage.':'This reverts to the calculated stage.'; }; }
+    if(sSave){ sSave.onclick=async function(){ var v=ss.value; sSave.disabled=true; if(sMsg) sMsg.textContent='Saving…'; try{
+        if(v===stageComputed){ await sb.rpc('deb_stage_override_clear',{p_key:c.club_key,p_name:c.name,p_reason:(document.getElementById('debStageReason')||{}).value||null}); }
+        else { var rsn=((document.getElementById('debStageReason')||{}).value||'').trim(); if(!rsn){ if(sMsg) sMsg.textContent='A reason is required.'; sSave.disabled=false; return; } var rr=await sb.rpc('deb_stage_override_set',{p_key:c.club_key,p_name:c.name,p_stage:v,p_reason:rsn}); if(rr.error) throw rr.error; }
+        _deb=null; await renderDebtors(true); debOpenClub(key);
+      }catch(e){ if(sMsg) sMsg.textContent='Could not save: '+(e.message||e); sSave.disabled=false; } }; }
+    // club type
+    var ts=document.getElementById('debTypeSel'), tMsg=document.getElementById('debTypeMsg');
+    if(ts){ ts.onchange=async function(){ var v=ts.value; ts.disabled=true; if(tMsg) tMsg.textContent='Saving…'; try{ var rr=await sb.rpc('deb_club_type_set',{p_key:c.club_key,p_name:c.name,p_type:v}); if(rr.error) throw rr.error; if(tMsg) tMsg.textContent='Saved'; _deb=null; await renderDebtors(true); debOpenClub(key); }catch(e){ if(tMsg) tMsg.textContent='Could not save: '+(e.message||e); ts.disabled=false; } }; }
+    // contact edit
     var _ce=document.getElementById('debCtEdit'); if(_ce) _ce.onclick=function(){ var v=document.getElementById('debCtView'),f=document.getElementById('debCtForm'); if(v)v.style.display='none'; if(f)f.style.display='block'; };
     var _cx=document.getElementById('debCtCancel'); if(_cx) _cx.onclick=function(){ var v=document.getElementById('debCtView'),f=document.getElementById('debCtForm'); if(f)f.style.display='none'; if(v)v.style.display='block'; };
     var _cs=document.getElementById('debCtSave'); if(_cs) _cs.onclick=async function(){ var b=this; b.disabled=true; var msg=document.getElementById('debCtMsg'); if(msg)msg.textContent='Saving…'; try{ await sb.rpc('deb_contact_set',{p_key:c.club_key,p_name:document.getElementById('debCtName').value,p_email:document.getElementById('debCtEmail').value,p_cc:document.getElementById('debCtCc').value,p_phone:document.getElementById('debCtPhone').value}); _deb=null; debOpenClub(key); }catch(e){ alert('Could not save contact: '+(e.message||e)); b.disabled=false; if(msg)msg.textContent=''; } };
-    var _spd=document.getElementById('debStmtPeriod'); if(_spd) _spd.onchange=function(){ var cu=document.getElementById('debStmtCustom'); if(cu) cu.style.display=(this.value==='custom')?'inline':'none'; };
-    var _bs=document.getElementById('debStmt'); if(_bs) _bs.onclick=async function(){ var b=this; b.disabled=true; var t=b.textContent; b.textContent='Generating…'; try{ await debStatementPDF(c, debStmtPeriodOpts()); }catch(e){ alert('Statement error: '+(e.message||e)); } b.textContent=t; b.disabled=false; };
-    var cp=document.getElementById('debCopy'); if(cp) cp.onclick=function(){ try{navigator.clipboard.writeText(debReminderText(c));}catch(e){} this.textContent='Copied'; var b=this; setTimeout(function(){b.textContent='Copy letter';},1300); };
-    var ch=document.getElementById('debCorrHere'); if(ch) ch.onclick=function(){ debModalClose(); setTimeout(debOpenCorr,140); };
-    var we=document.getElementById('debWriteEmail'); if(we) we.onclick=function(){ debComposeEmail(c); };
+    // working status + notes + actions
     var scs=document.getElementById('debSC'); if(scs) scs.onchange=async function(){ try{ await sb.rpc('deb_set_status',{p_key:c.club_key,p_name:c.name,p_colour:this.value}); _deb=null; }catch(e){ alert('Could not set status: '+(e.message||e)); } };
     var na=document.getElementById('debNoteAdd'); if(na) na.onclick=async function(){ var nt=document.getElementById('debNote').value.trim(); if(!nt){ alert('Type a note first.'); return; } var fu=document.getElementById('debNoteFU').value||null; var pa=document.getElementById('debNotePA').value||null; var pd=document.getElementById('debNotePD').value||null; this.disabled=true; try{ await sb.rpc('deb_add_note',{p_key:c.club_key,p_name:c.name,p_note:nt,p_follow_up:fu,p_promise_amount:pa,p_promise_date:pd}); _deb=null; debOpenClub(key); }catch(e){ alert('Could not add note: '+(e.message||e)); this.disabled=false; } };
     Array.prototype.forEach.call(m.querySelectorAll('#debNotes [data-done]'),function(b){ b.onclick=async function(){ try{ await sb.rpc('deb_note_done',{p_id:Number(b.dataset.done)}); debOpenClub(key); }catch(e){ alert('Could not update: '+(e.message||e)); } }; });
@@ -3952,6 +4038,34 @@
 
 <!-- ===== Mobile pass: full Admin Centre phone friendliness. Appended last so it
      wins the cascade over every earlier stylesheet without editing them. ===== -->
+<style id="deb-clubpro">
+.deb-modal{width:min(1360px,97vw);max-height:96vh}
+.deb-tabs{display:flex;gap:4px;border-bottom:1px solid #E3E8F0;margin:8px 0 16px;flex-wrap:wrap}
+.deb-tab{border:0;background:transparent;font-weight:700;text-transform:uppercase;letter-spacing:.03em;font-size:12.5px;color:#59666B;padding:9px 14px;cursor:pointer;border-bottom:2.5px solid transparent;border-radius:8px 8px 0 0}
+.deb-tab:hover{background:#F4F7FA;color:#33415c}
+.deb-tab.on{color:var(--navy,#071A4A);border-bottom-color:var(--gold,#D0982F)}
+.deb-tabn{display:inline-block;min-width:16px;padding:0 5px;border-radius:9px;background:#EEF2F8;color:#59666B;font-size:10.5px;font-weight:700;line-height:16px;text-align:center;vertical-align:middle}
+.deb-tab.on .deb-tabn{background:var(--navy,#071A4A);color:#fff}
+.deb-tabpanel{display:none}
+.deb-tabpanel.on{display:block}
+.deb-typechip{display:inline-block;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:2px 8px;border-radius:20px}
+.deb-ovbadge{display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:2px 7px;border-radius:20px;background:#9F6621;color:#fff;margin-left:2px;vertical-align:middle}
+.deb-guestbar{display:flex;gap:12px;align-items:flex-start;background:#FBF1DD;border:1px solid #e6d3a3;border-left:4px solid #9F6621;border-radius:10px;padding:11px 14px;margin:0 0 14px;font-size:12.5px;line-height:1.5;color:#5f4410}
+.deb-guestbar .gb-tag{flex:none;background:#9F6621;color:#fff;font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:10.5px;border-radius:5px;padding:3px 8px;margin-top:1px}
+.deb-guestbar b{color:#5f4410}
+.deb-stagectl,.deb-typectl{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:6px}
+.deb-stagectl select,.deb-typectl select{padding:7px 9px;font-size:13px;border:1px solid #D3DBDE;border-radius:7px;background:#fff}
+.deb-ovinfo{background:#FBF7EC;border:1px solid #ecdcb6;border-radius:8px;padding:7px 10px;font-size:12px;color:#5f4410;margin:2px 0 6px}
+.deb-txhead{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.deb-txwrap-lg{max-height:62vh;overflow:auto;border:1px solid #E3E8F0;border-radius:10px}
+.deb-txtbl-lg{width:100%;border-collapse:collapse;font-size:13px}
+.deb-txtbl-lg thead th{position:sticky;top:0;background:#F7FAFC;text-align:left;color:#59666B;font-size:11px;text-transform:uppercase;letter-spacing:.3px;padding:9px 10px;border-bottom:1px solid #E3E8F0}
+.deb-txtbl-lg td{padding:8px 10px;border-bottom:1px solid #F0F3F8;vertical-align:top}
+.deb-txtbl-lg td.num,.deb-txtbl-lg th.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.deb-txtbl-lg td.rf{color:#33415c}
+.deb-txtbl-lg tr.rcpt{background:#F3FAF5}
+.deb-corrbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px}
+</style>
 <style id="mobile-pass">
 html,body{max-width:100%;overflow-x:hidden}
 img,svg,canvas{max-width:100%;height:auto}
