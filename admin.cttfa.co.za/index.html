@@ -1672,10 +1672,10 @@
     ooc:['Out of Compliance','#F8E7E5','#7a2320','#9A3130'],
     plan:['Payment arrangement','#E8F0FA','#1e456e','#2F6FB0']};
   var DEB_STG_GUIDE={
-    statement:'Within terms or below the R500 floor. Carry on the monthly statement (Art 7.11.14); no chasing due.',
-    reminder:'Oldest item 40+ days from invoice (10+ past due). Issue the payment reminder (Rule 10.2); club may apply for a written arrangement (Art 7.11.16).',
-    final:'Oldest item 47+ days (17+ past due). Issue the final reminder with a 7-day grace, before the account goes Out of Compliance.',
-    ooc:'Oldest item 54+ days (24+ past due). Issue the Out of Compliance notice (Rules 10.2.3 / 10.8; consequences under Rule 16.4.2.6); the club is out of compliance until settled or an arrangement is approved. Approval-gated.',
+    statement:'Within terms, or under R500 of 60-day-and-older money. Carry on the monthly statement (Art 7.11.14); no chasing due. Current-month and 30-day invoicing is not treated as overdue.',
+    reminder:'R500 or more now sitting 60 days and older (net of payments). Issue the payment reminder (Rule 10.2); club may apply for a written arrangement (Art 7.11.16).',
+    final:'Overdue money has reached 90 days and older. Issue the final reminder with a 7-day grace, before the account goes Out of Compliance.',
+    ooc:'Overdue money has reached 120 days and older. Issue the Out of Compliance notice (Rules 10.2.3 / 10.8; consequences under Rule 16.4.2.6); the club is out of compliance until settled or an arrangement is approved. Approval-gated.',
     plan:'On an approved payment arrangement (Art 7.11.16). Send the instalment reminder; monitor adherence.',
     credit:'The account is in credit. Confirm the credit is genuine before any refund or set-off.',
     paidup:'Nothing outstanding. No action due.'};
@@ -1830,7 +1830,7 @@
         +'<text x="'+(x+w/2)+'" y="'+(y+39)+'" text-anchor="middle" font-size="10" fill="'+sc+'">'+sub+'</text>';
     }
     function gate(y,txt){ return '<text x="146" y="'+y+'" font-size="10" fill="#59667c">'+txt+'</text>'; }
-    var s='<svg class="deb-fchart" viewBox="0 0 480 738" role="img" aria-label="Flowchart of the debtor correspondence process: monthly statement, then payment reminder at 40 days, final reminder at 47 days, and Out of Compliance at 54 days, with off-ramps to account settled and payment arrangement, and a referral to the Management Committee on a second notice in a season.">';
+    var s='<svg class="deb-fchart" viewBox="0 0 480 738" role="img" aria-label="Flowchart of the debtor correspondence process: monthly statement, then payment reminder once overdue money reaches 60 days, final reminder at 90 days, and Out of Compliance at 120 days, with off-ramps to account settled and payment arrangement, and a referral to the Management Committee on a second notice in a season.">';
     s+='<defs>'
       +'<marker id="arwg" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#5A667C"/></marker>'
       +'<marker id="arwGr" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1C7C4A"/></marker>'
@@ -1846,15 +1846,15 @@
     s+='<line x1="238" y1="167" x2="255" y2="167" stroke="#1C7C4A" stroke-width="2" marker-end="url(#arwGr)"/>';
     s+='<line x1="238" y1="291" x2="255" y2="291" stroke="#2F6FB0" stroke-width="2" marker-end="url(#arwBl)"/>';
     // gate labels
-    s+=gate(108,'40 days &middot; 10 past due');
-    s+=gate(232,'47 days &middot; 17 past due');
-    s+=gate(356,'54 days &middot; 24 past due');
+    s+=gate(108,'overdue 60 days +');
+    s+=gate(232,'overdue 90 days +');
+    s+=gate(356,'overdue 120 days +');
     s+=gate(600,'2nd notice in a season');
     // spine nodes
     s+=nd(24,16,214,'#EEF2F8','#B4C0D4','Monthly statement','#3a4761','Art 7.11.14 &middot; Day 10','#5a6678');
-    s+=nd(24,140,214,'#FBF1DD','#E4C88C','Payment reminder','#7a5312','Rule 10.2 &middot; Day 40','#8a6a2e');
-    s+=nd(24,264,214,'#FBEBE0','#E8B89C','Final reminder','#8a3c17','Rule 10.2.3 &middot; Day 47 &middot; 7-day grace','#95562f');
-    s+=nd(24,388,214,'#F8E7E5','#E3B0AC','Out of Compliance','#7a2320','Rules 10.2.3 / 10.8 &middot; Day 54','#94413d');
+    s+=nd(24,140,214,'#FBF1DD','#E4C88C','Payment reminder','#7a5312','Rule 10.2 &middot; 60 days +','#8a6a2e');
+    s+=nd(24,264,214,'#FBEBE0','#E8B89C','Final reminder','#8a3c17','Rule 10.2.3 &middot; 90 days + &middot; 7-day grace','#95562f');
+    s+=nd(24,388,214,'#F8E7E5','#E3B0AC','Out of Compliance','#7a2320','Rules 10.2.3 / 10.8 &middot; 120 days +','#94413d');
     s+=nd(24,512,214,'#FFF4F3','#E3B0AC','Consequences apply','#7a2320','Rule 16.4.2.6 &middot; until settled','#94413d');
     s+=nd(24,660,214,'#071A4A','#071A4A','Management Committee','#ffffff','Rule 10.2.4 &middot; 2nd notice','#c7d2ec');
     // branch nodes
@@ -1872,36 +1872,36 @@
        treat:'Standard monthly cycle. The club has 30 days to query an invoice (Art 7.11.15) before it is deemed correct and due.',
        auth:'Art 7.11.14'},
       {nm:'Payment reminder',tb:'#FBF1DD',tf:'#7a5312',
-       trig:'Oldest unpaid invoice reaches 40 days from invoice (10 days past the 30-day term), with R500+ overdue.',
+       trig:'Overdue money reaches 60 days and older in the Sage ageing (R500 or more), net of payments.',
        gets:'Courtesy reminder with the statement attached.',
        treat:'First graduated notice. The payment-plan route under Art 7.11.16 is offered here.',
        auth:'Rule 10.2'},
       {nm:'Final reminder',tb:'#FBEBE0',tf:'#8a3c17',
-       trig:'Oldest unpaid invoice reaches 47 days and is still unsettled.',
+       trig:'Overdue money reaches 90 days and older and is still unsettled.',
        gets:'Final reminder with a 7-day grace, statement attached.',
        treat:'The last notice before the account goes Out of Compliance.',
        auth:'Rule 10.2.3'},
       {nm:'Out of Compliance',tb:'#F8E7E5',tf:'#7a2320',
-       trig:'Oldest invoice reaches 54 days, R500+ still overdue and the grace has expired.',
+       trig:'Overdue money reaches 120 days and older, R500 or more still owing and the grace has expired.',
        gets:'Out of Compliance notice.',
        treat:'Served notice. Disciplinary consequences under Rule 16.4.2.6 apply until the arrears are settled. Not a Management Committee referral on the first occurrence.',
        auth:'Rules 10.2.3 &amp; 10.8'}
     ];
     var h='';
-    h+='<p class="plead">Debtor collections follow a fixed, constitutional cadence &mdash; not ad-hoc chasing. Every club starts on the monthly statement and only moves to the next step as its oldest unpaid invoice ages. The path is the same for every club, so the treatment is consistent and defensible.</p>';
+    h+='<p class="plead">Debtor collections follow a fixed, constitutional cadence &mdash; not ad-hoc chasing. Every club starts on the monthly statement and only moves to the next step as its overdue money ages through the Sage bands. Current-month and 30-day invoicing is not treated as overdue, so a club is never chased for an invoice that has only just fallen due. The path is the same for every club, so the treatment is consistent and defensible.</p>';
     h+='<h4>The flow at a glance</h4>';
     h+=debFlowchartSVG();
     h+='<p class="deb-fcap">Follow the spine downward. A club leaves the path the moment it pays in full or an approved payment arrangement is in place; it only reaches Out of Compliance after the statement, the reminder and the final reminder have all passed unpaid.</p>';
     h+='<div class="deb-flow-notes"><div class="deb-fnote"><b>Payment arrangement (the off-ramp).</b> A club in genuine difficulty may apply for a written payment plan &mdash; a letter on club letterhead, signed by the chairman, with three months&rsquo; bank statements and the latest annual financial statements. While an approved plan is honoured, the club is not escalated. (Art 7.11.16)</div><div class="deb-fnote"><b>A second time in one season.</b> If a club is served a second Out of Compliance notice in the same season, it is summoned to appear before the Management Committee for action. The first notice is a Treasurer-served step, not a Mancom referral. (Rule 10.2.4)</div></div>';
     h+='<h4>The Out of Compliance trigger, exactly</h4>';
-    h+='<div class="deb-trigbox"><div class="th">An account is placed Out of Compliance only when both of these are true on the day the run is built:</div><ol><li>the club&rsquo;s <b>oldest unpaid invoice has reached 54 days</b> from its invoice date &mdash; 24 days past the 30-day payment term under Rule 10.2; <b>and</b></li><li>Sage shows a <b>real overdue amount of R500 or more</b> on the account.</li></ol><p style="font-size:11.5px;color:#7a2320;margin:9px 0 0;line-height:1.5">The R500 floor is a materiality threshold approved by Fincom in April 2026. It stops an old unallocated receipt or a trivial balance from tipping a club into Out of Compliance &mdash; which is why an account can carry an old ledger item and still correctly sit on &ldquo;statement&rdquo;.</p></div>';
+    h+='<div class="deb-trigbox"><div class="th">An account is placed Out of Compliance only when both of these are true on the day the run is built:</div><ol><li>the account carries <b>R500 or more that has aged to 120 days and older</b> in the Sage ageing &mdash; the overdue balance has passed through the reminder (60 days) and final-reminder (90 days) stages and is still owing; <b>and</b></li><li>that overdue figure, <b>capped at the club&rsquo;s net balance</b>, is still R500 or more.</li></ol><p style="font-size:11.5px;color:#7a2320;margin:9px 0 0;line-height:1.5">Two deliberate protections sit inside this rule. <b>Only the 60-day-and-older bands count as overdue.</b> At month-end Sage rolls the current month into the 30-day band, so an invoice raised in early September dated 31 August lands in &ldquo;30 days&rdquo; while barely a week old &mdash; counting it would be unfair, so it is excluded. And the overdue figure is <b>capped at the net balance</b>: where a payment has been allocated to a recent invoice, or an adjustment sits on the account, an older invoice can still show open in the ageing while the club owes less overall &mdash; the cap means we never chase more than is genuinely owed. The R500 floor is a materiality threshold approved by Fincom in April 2026.</p></div>';
     h+='<h4>What each step means, and where it comes from</h4>';
     h+='<div class="deb-proctblwrap"><table class="deb-proctbl"><thead><tr><th>Stage</th><th>When (trigger)</th><th>What the club receives</th><th>Treatment</th><th>Authority</th></tr></thead><tbody>';
     h+=STG.map(function(s){ return '<tr><td><span class="stgtag" style="background:'+s.tb+';color:'+s.tf+'">'+s.nm+'</span></td><td>'+s.trig+'</td><td>'+s.gets+'</td><td>'+s.treat+'</td><td class="auth">'+s.auth+'</td></tr>'; }).join('');
     h+='<tr><td><span class="stgtag" style="background:#E8F0FA;color:#1e456e">Payment arrangement</span></td><td>Club on an approved written plan.</td><td>Instalment reminder as each agreed date falls due.</td><td>Monitored for adherence. A missed agreed payment places the club automatically out of compliance from the plan approval date, without further notice (Art 7.11.17).</td><td class="auth">Art 7.11.16</td></tr>';
     h+='</tbody></table></div>';
     h+='<h4>Why a club can be Out of Compliance &mdash; and the route we follow</h4>';
-    h+='<p class="deb-route">No club is placed Out of Compliance without warning. It has first had its monthly statement (Art 7.11.14); then a payment reminder once its oldest invoice passed 40 days; then a final reminder with a seven-day grace at 47 days. Only when the oldest invoice reaches 54 days &mdash; 24 days past the 30-day term &mdash; with R500 or more genuinely overdue and the grace expired, is the Out of Compliance notice issued. By that point the club has received a statement, a reminder and a final warning, and has had every opportunity to settle or to apply for a payment plan under Art 7.11.16.</p>';
+    h+='<p class="deb-route">No club is placed Out of Compliance without warning. It has first had its monthly statement (Art 7.11.14); then a payment reminder once its overdue money reached 60 days and older; then a final reminder with a seven-day grace once that money reached 90 days. Only when the overdue balance reaches 120 days and older &mdash; with R500 or more still genuinely owing, capped at the net balance, and the grace expired &mdash; is the Out of Compliance notice issued. By that point the club has received a statement, a reminder and a final warning, and has had every opportunity to settle or to apply for a payment plan under Art 7.11.16.</p>';
     h+='<h4>What Out of Compliance means for the club (Rule 16.4.2.6)</h4>';
     h+='<ul class="deb-cons"><li>The club may not become involved in the affairs of the Association.</li><li>It may not accumulate points, and upcoming fixtures are forfeited.</li><li>Historic results stand, but a 3-point deduction is applied to each game from the date the club went out of compliance.</li><li>It may not proceed with knockout-competition fixtures, and forfeits those matches.</li><li>Juniors may still play scheduled league fixtures (with no accumulation of points) and continue in the knockout competition.</li><li>The club remains out of compliance until the arrears are settled (Rule 10.2.3).</li></ul>';
     h+='<p class="deb-authlist"><b>Authorities.</b> Constitution Articles 7.11.14 (monthly statements), 7.11.15 (30-day query window), 7.11.16 (payment plans) and 7.11.17 (approved-plan breach). Rules and Regulations 10.2 to 10.2.4, 10.3 and 10.8 (payment terms, the out-of-compliance notice, and the repeat-offence referral to the Management Committee). Disciplinary Rule 16.4.2.6 (the consequences of being out of compliance). The R500 materiality threshold was approved by Fincom in April 2026.</p>';
@@ -1932,13 +1932,14 @@
     var root=$("debtorsRoot"); var s=_deb.snapshot, clubs=_deb.clubs||[], st=_deb.statuses||{};
     var canW=(meRole==='administrator'||meRole==='staff');
     var owing=clubs.filter(function(c){return c.bal>0;});
-    var over=Number(s.buckets&&s.buckets.over||0);
+    var over=Number(s.over60_total||0);
     var susp=clubs.filter(function(c){return c.status==='Suspension review';});
     var ooc=clubs.filter(function(c){return c.ooc;});
     var plans=clubs.filter(function(c){return c.payment_plan;});
     var stg=function(k){return clubs.filter(function(c){return c.stage===k;});};
     var stOOC=stg('ooc'), stFinal=stg('final'), stReminder=stg('reminder'), stStatement=stg('statement'), stPlan=stg('plan');
     var stSum=function(a){return a.reduce(function(x,c){return x+Number(c.bal);},0);};
+    var stSum60=function(a){return a.reduce(function(x,c){return x+Number(c.over60||0);},0);};
     // most recent statement / reminder across clubs
     var lastStmt=null,lastRem=null;
     clubs.forEach(function(c){ if(c.statement_last&&(!lastStmt||c.statement_last>lastStmt))lastStmt=c.statement_last; if(c.reminder_last&&(!lastRem||c.reminder_last>lastRem))lastRem=c.reminder_last; });
@@ -1961,17 +1962,17 @@
     // KPI row
     h+='<div class="deb-kpis">'
       +debKpi('Owed by clubs in arrears',dR(s.pos_total),owing.length+' owing · '+(s.n_credit||0)+' in credit · '+(s.n_paidup||0)+' paid up','lead')
-      +debKpi('Overdue (30 days +)',dR(over),dPc(s.pos_total?over/s.pos_total*100:0)+' of what is owed','bad')
+      +debKpi('Overdue (60 days +)',dR(over),dPc(s.pos_total?over/s.pos_total*100:0)+' of what is owed, net of payments','bad')
       +debKpi('Net trade debtors',dR(s.net_total),'after '+dR(-s.credit_total)+' in credits','')
-      +debKpi('Out of Compliance',stOOC.length+'',dR(stSum(stOOC))+' · 54+ days, held for approval','bad')
+      +debKpi('Out of Compliance',stOOC.length+'',dR(stSum60(stOOC))+' · 120+ days, held for approval','bad')
       +'</div>';
     // constitutional compliance
     h+='<div class="card"><h3>Constitutional management</h3><p class="hint" style="margin:-2px 0 10px">Are we managing debtors as the CTTLFA Constitution requires? Actions are logged on each club; this panel rolls them up.</p>';
     h+='<div class="deb-comp">'
       +debComp('Monthly statement (Art 7.11.14)', lastStmt?('Last logged '+dDateZA(lastStmt)):'Not yet logged', lastStmt?'ok':'due','Every debtor, on the 10th. '+stStatement.length+' club'+(stStatement.length===1?'':'s')+' on statement only.')
-      +debComp('Payment reminder (Rule 10.2)', stReminder.length? (stReminder.length+' due · '+dR(stSum(stReminder))) : 'None due', stReminder.length?'due':'ok','Oldest item 40+ days from invoice (10+ past due). Auto-send.')
-      +debComp('Final reminder (7-day grace)', stFinal.length? (stFinal.length+' due · '+dR(stSum(stFinal))) : 'None due', stFinal.length?'due':'ok','Oldest item 47+ days (17+ past due). Last chance before Out of Compliance.')
-      +debComp('Out of Compliance (Rules 10.2.3 / 10.8)', stOOC.length? (stOOC.length+' club'+(stOOC.length>1?'s':'')+' · '+dR(stSum(stOOC))) : 'None', stOOC.length?'bad':'ok','Oldest item 54+ days (24+ past due). Served notice; consequences under Rule 16.4.2.6. Held for your approval — Mancom only on a second notice in a season (Rule 10.2.4).')
+      +debComp('Payment reminder (Rule 10.2)', stReminder.length? (stReminder.length+' due · '+dR(stSum60(stReminder))) : 'None due', stReminder.length?'due':'ok','Overdue money now 60 days and older in the Sage ageing, net of payments. Auto-send.')
+      +debComp('Final reminder (7-day grace)', stFinal.length? (stFinal.length+' due · '+dR(stSum60(stFinal))) : 'None due', stFinal.length?'due':'ok','Overdue money now 90 days and older. Last chance before Out of Compliance.')
+      +debComp('Out of Compliance (Rules 10.2.3 / 10.8)', stOOC.length? (stOOC.length+' club'+(stOOC.length>1?'s':'')+' · '+dR(stSum60(stOOC))) : 'None', stOOC.length?'bad':'ok','Overdue money now 120 days and older. Served notice; consequences under Rule 16.4.2.6. Held for your approval — Mancom only on a second notice in a season (Rule 10.2.4).')
       +debComp('Payment arrangement (Art 7.11.16)', (plans.length||stPlan.length)? ((plans.length||stPlan.length)+' active') : 'None recorded', (plans.length||stPlan.length)?'ok':'muted','Written application, chair-signed, with bank statements and AFS. Instalment reminders auto-send.')
       +'</div></div>';
     // ageing bar
@@ -1986,7 +1987,7 @@
       +'<div style="display:flex;gap:8px;flex-wrap:wrap"><input id="debQ" type="search" placeholder="Search club or code…" style="width:200px;padding:8px 10px" value="'+esc(_debQ)+'">'
       +'<select id="debStatusF" style="width:auto;padding:8px 10px"><option value="">All stages</option>'+[['statement','On statement'],['reminder','Payment reminder'],['final','Final reminder'],['ooc','Out of Compliance'],['plan','Payment arrangement'],['paidup','Paid up'],['credit','In credit']].map(function(x){return '<option value="'+x[0]+'"'+(x[0]===_debStatus?' selected':'')+'>'+x[1]+'</option>';}).join('')+'</select></div></div>'
       +'<div class="deb-tblwrap" id="debTbl"></div>'
-      +'<p class="hint" style="font-size:11.5px;margin:8px 0 0">Click a club for its account, ageing and recommended step. The stage is the correspondence step due &mdash; driven by the oldest open item&rsquo;s invoice age and the Sage overdue amount. Hover any stage pill for what to do at that step.</p></div>';
+      +'<p class="hint" style="font-size:11.5px;margin:8px 0 0">Click a club for its account, ageing and recommended step. The stage is the correspondence step due &mdash; driven by the 60-day-and-older overdue balance in the Sage ageing, capped at the net balance so payments and adjustments are not over-chased. Hover any stage pill for what to do at that step.</p></div>';
     root.innerHTML=h;
     $("debRefresh").onclick=function(){ renderDebtors(true); };
     var _gd=$("debGuide"); if(_gd) _gd.onclick=function(){ debOpenGuide(); };
@@ -2044,7 +2045,7 @@
     var clubs=(_deb.clubs||[]).filter(function(c){ if(_debStatus&&c.stage!==_debStatus)return false; if(_debQ&&(c.name.toLowerCase().indexOf(_debQ)<0&&String(c.code||'').toLowerCase().indexOf(_debQ)<0&&String(c.suburb||'').toLowerCase().indexOf(_debQ)<0))return false; return true; });
     clubs.sort(function(a,b){ var x=a[_debSort],y=b[_debSort]; if(typeof x==='string'){x=x.toLowerCase();y=(y||'').toLowerCase();} return x<y?-_debDir:x>y?_debDir:0; });
     function mbar(c){ if(c.bal<=0) return ''; var t=Number(c.cur)+Number(c.b30)+Number(c.b60)+Number(c.b90)+Number(c.b120)||1; return '<span class="deb-mbar">'+DEB_BK.map(function(b){var w=Math.max(0,Number(c[b[0]]))/t*100;return w>0?'<i style="width:'+w+'%;background:'+b[2]+'"></i>':'';}).join('')+'</span>'; }
-    var cols=[['name','Club',0],['code','Code',0],['bal','Balance',1],['over','Overdue',1],['stage','Stage',0],['coll','Logged',0],['last_receipt_days','Last rcpt',1]];
+    var cols=[['name','Club',0],['code','Code',0],['bal','Balance',1],['over60','Overdue (60+)',1],['stage','Stage',0],['coll','Logged',0],['last_receipt_days','Last rcpt',1]];
     var h='<table class="deb-table"><thead><tr>'+cols.map(function(c){return '<th'+(c[2]?' class="num"':'')+' data-k="'+c[0]+'">'+c[1]+(_debSort===c[0]?(_debDir<0?' ▾':' ▴'):'')+'</th>';}).join('')+'</tr></thead><tbody>';
     clubs.forEach(function(c){
       var logged=c.ooc?'<span class="deb-tag" style="background:#FBECEA;color:#8a3c17">Out of compliance</span>':(c.payment_plan?'<span class="deb-tag" style="background:#E7F5EC;color:#1c5136">On plan</span>':(c.coll_step?'<span class="deb-tag" style="background:#EEF2F8;color:#33415c">'+esc(c.coll_step.replace(/_/g,' '))+'</span>':'<span class="hint" style="font-size:11px">–</span>'));
@@ -2052,12 +2053,12 @@
         +'<td>'+debSCdot(c.status_colour)+'<b>'+esc(c.name)+'</b>'+(c.suburb?'<div class="hint" style="font-size:11px">'+esc(c.suburb)+'</div>':'')+'</td>'
         +'<td class="hint">'+esc(c.code||'–')+'</td>'
         +'<td class="num"><b>'+dR(c.bal)+'</b> '+mbar(c)+'</td>'
-        +'<td class="num">'+dR(c.over)+'</td>'
+        +'<td class="num">'+dR(c.over60)+'</td>'
         +'<td>'+dStage(c.stage)+'</td>'
         +'<td>'+logged+'</td>'
         +'<td class="num">'+(Number(c.last_receipt_days)>=999?'–':c.last_receipt_days+'d')+'</td></tr>';
     });
-    h+='</tbody><tfoot><tr><td><b>'+clubs.length+' clubs</b></td><td></td><td class="num"><b>'+dR(clubs.reduce(function(a,c){return a+Number(c.bal);},0))+'</b></td><td class="num">'+dR(clubs.reduce(function(a,c){return a+Number(c.over);},0))+'</td><td></td><td></td><td></td></tr></tfoot></table>';
+    h+='</tbody><tfoot><tr><td><b>'+clubs.length+' clubs</b></td><td></td><td class="num"><b>'+dR(clubs.reduce(function(a,c){return a+Number(c.bal);},0))+'</b></td><td class="num">'+dR(clubs.reduce(function(a,c){return a+Number(c.over60);},0))+'</td><td></td><td></td><td></td></tr></tfoot></table>';
     var w=$("debTbl"); w.innerHTML=h;
     Array.prototype.forEach.call(w.querySelectorAll('th[data-k]'),function(th){ th.onclick=function(){ var k=th.dataset.k; if(_debSort===k)_debDir=-_debDir; else {_debSort=k;_debDir=(k==='name'||k==='code'||k==='stage'||k==='coll')?1:-1;} debTable(); }; });
     Array.prototype.forEach.call(w.querySelectorAll('.deb-click'),function(tr){ tr.onclick=function(){ debOpenClub(tr.dataset.key); }; tr.onkeydown=function(e){ if(e.key==='Enter'){e.preventDefault();debOpenClub(tr.dataset.key);} }; });
@@ -2065,9 +2066,9 @@
 
   function debReminderText(c){
     var nm=c.name, ref=c.code||'', st=c.stage;
-    if(st==='ooc') return 'Dear '+nm+' Committee,\n\nThe club account is Out of Compliance. '+dR(c.over)+' is overdue on a balance of '+dR(c.bal)+', having passed the statement, payment-reminder and final-reminder stages without settlement or an approved arrangement. In terms of Rule 10.2.3, the club is served this Out of Compliance notice and remains out of compliance until the overdue amount is settled. While out of compliance, the consequences in Rule 16.4.2.6 apply. A written payment arrangement under Article 7.11.16 may still be applied for.\n\nPlease attend to this without delay to restore the club’s good standing.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
-    if(st==='final') return 'Dear '+nm+' Committee,\n\nThis is a final payment reminder. '+dR(c.over)+' remains overdue on a balance of '+dR(c.bal)+'. Please settle within 7 days, or put a written payment arrangement under Article 7.11.16 in place, failing which the account will be placed Out of Compliance.\n\nBanking details are on the attached statement; please use club code '+ref+' as the reference.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
-    if(st==='reminder') return 'Dear '+nm+' Committee,\n\nA payment reminder that '+dR(c.bal)+' is outstanding, of which '+dR(c.over)+' is past the 30-day terms (Rule 10.2). Please settle at your convenience using club code '+ref+' as the payment reference; banking details are on the attached statement. A written arrangement may be applied for under Article 7.11.16.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
+    if(st==='ooc') return 'Dear '+nm+' Committee,\n\nThe club account is Out of Compliance. '+dR(c.over60)+' has aged to 120 days and older on a balance of '+dR(c.bal)+', having passed the statement, payment-reminder and final-reminder stages without settlement or an approved arrangement. In terms of Rule 10.2.3, the club is served this Out of Compliance notice and remains out of compliance until the overdue amount is settled. While out of compliance, the consequences in Rule 16.4.2.6 apply. A written payment arrangement under Article 7.11.16 may still be applied for.\n\nPlease attend to this without delay to restore the club’s good standing.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
+    if(st==='final') return 'Dear '+nm+' Committee,\n\nThis is a final payment reminder. '+dR(c.over60)+' has now aged to 90 days and older on a balance of '+dR(c.bal)+'. Please settle within 7 days, or put a written payment arrangement under Article 7.11.16 in place, failing which the account will be placed Out of Compliance.\n\nBanking details are on the attached statement; please use club code '+ref+' as the reference.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
+    if(st==='reminder') return 'Dear '+nm+' Committee,\n\nA payment reminder that '+dR(c.bal)+' is outstanding, of which '+dR(c.over60)+' has aged to 60 days and older in the ageing (Rule 10.2). Please settle at your convenience using club code '+ref+' as the payment reference; banking details are on the attached statement. A written arrangement may be applied for under Article 7.11.16.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
     return 'Dear '+nm+' Committee,\n\nPlease find your statement of account attached, reflecting a balance of '+dR(c.bal)+'. Please use club code '+ref+' as the payment reference; banking details are on the statement.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
   }
 
@@ -2209,7 +2210,7 @@
       right:'PAYMENT ARRANGEMENT REMINDER'}
   };
   function debLetterBody(c, tier){
-    var bal=debAmtR(c.bal), over=debAmtR(c.over), ref=c.code||c.name;
+    var bal=debAmtR(c.bal), over=debAmtR(c.over60!=null?c.over60:c.over), ref=c.code||c.name;
     var d90=debAmtR(Number(c.b90)+Number(c.b120));
     if(tier==='statement'){
       return c.bal>0.01
@@ -2220,7 +2221,7 @@
            'The account is settled and no payment is due. The statement is provided for the club’s records.'];
     }
     if(tier==='reminder'){
-      return ['This is a payment reminder that the club account reflects '+bal+' outstanding, of which '+over+' is now past the 30-day terms under Rule 10.2.',
+      return ['This is a payment reminder that the club account reflects '+bal+' outstanding, of which '+over+' has aged to 60 days and older in the ageing under Rule 10.2.',
         'We would appreciate settlement without delay. Banking details appear on the statement and the club code '+ref+' should be used as the payment reference. Should the club be unable to settle in full, a written payment arrangement may be applied for under Article 7.11.16.',
         'Should the amount already have been paid, kindly disregard this reminder and accept our thanks.'];
     }
@@ -2262,7 +2263,7 @@
     doc.autoTable({ startY:y+9, margin:{left:M+14,right:M+14}, theme:'plain',
       styles:{fontSize:9,cellPadding:{top:1.5,bottom:1.5,left:0,right:0}},
       columnStyles:{0:{textColor:DEB_MUTED,cellWidth:120},1:{halign:'right',fontStyle:'bold',textColor:DEB_INK,cellWidth:110,cellPadding:{top:1.5,bottom:1.5,right:24,left:0}},2:{textColor:DEB_MUTED,cellWidth:110,cellPadding:{top:1.5,bottom:1.5,left:12,right:0}},3:{halign:'right',fontStyle:'bold',textColor:DEB_INK}},
-      body:[['Balance outstanding', debAmtR(c.bal), 'Overdue (30+ days)', debAmtR(c.over)],
+      body:[['Balance outstanding', debAmtR(c.bal), 'Overdue (60+ days)', debAmtR(c.over60!=null?c.over60:c.over)],
             ['Payment reference', (c.code||c.name), 'Status', (c.status||'')]] });
     y+=58+14;
     var bank=debBankLines(S);
@@ -2695,7 +2696,7 @@
     var ref=c.code||c.name;
     return String(t||'')
       .replace(/{club}/g, c.name).replace(/{code}/g, ref)
-      .replace(/{balance}/g, dR(c.bal,false)).replace(/{overdue}/g, dR(c.over,false))
+      .replace(/{balance}/g, dR(c.bal,false)).replace(/{overdue}/g, dR(c.over60!=null?c.over60:c.over,false))
       .replace(/{as_at}/g, dDateZA((_deb&&_deb.snapshot&&_deb.snapshot.as_at)||(c.as_at)))
       .replace(/{banking}/g, (S&&S.bank_details)||'');
   }
@@ -2792,15 +2793,17 @@
   }
 
   function debRecStep(c, age){
-    var s=c.status, over=Number(c.over)||0, bal=Number(c.bal)||0;
-    if(s==='Credit') return {t:'Account in credit',b:'The club has overpaid or holds a credit. Confirm it is genuine before any refund or set-off; no collection step is due.',a:''};
-    if(bal<=0||s==='Paid up') return {t:'Account settled',b:'Nothing outstanding. No action due.',a:''};
-    if(over<500) return {t:'Statement only',b:'Nothing material is overdue — the account is within the 30-day terms or the overdue amount is below the R500 floor. Carry on the monthly statement.',a:'Art 7.11.14'};
-    age=Number(age)||0; var pd=age?(age-30):null;
-    if(age>=54) return {t:'Out of Compliance',b:'The oldest open item is '+age+' days old ('+pd+' past due), past the final-reminder stage. Issue the Out of Compliance notice — the club is out of compliance until the '+dR(over)+' overdue is settled or a written arrangement under Art 7.11.16 is approved.',a:'Rules 10.2.3 / 10.8 · consequences 16.4.2.6'};
-    if(age>=47) return {t:'Final payment reminder due',b:'The oldest open item is '+age+' days old ('+pd+' past due). Issue the final reminder with a 7-day grace on the '+dR(over)+' overdue, before the account goes Out of Compliance.',a:'Rule 10.2'};
-    if(age>=40) return {t:'Payment reminder due',b:'The oldest open item is '+age+' days old ('+pd+' past due). Issue the payment reminder for the '+dR(over)+' overdue; the club may apply for a written arrangement under Art 7.11.16.',a:'Rule 10.2 / Art 7.11.16'};
-    return {t:'Statement only — approaching reminder',b:'Materially overdue but the oldest open item is under 40 days. Carry on the monthly statement; the payment reminder falls due at 40 days from invoice.',a:'Art 7.11.14'};
+    var stage=c.stage, over=Number(c.over60||0);
+    switch(stage){
+      case 'credit': return {t:'Account in credit',b:'The club has overpaid or holds a credit. Confirm it is genuine before any refund or set-off; no collection step is due.',a:''};
+      case 'paidup': return {t:'Account settled',b:'Nothing outstanding. No action due.',a:''};
+      case 'plan': return {t:'Payment arrangement',b:'The club is on an approved written arrangement (Art 7.11.16). Send the instalment reminder as each date falls due and monitor adherence.',a:'Art 7.11.16'};
+      case 'statement': return {t:'Statement only',b:'Nothing 60 days or older is materially overdue — the account is within terms, or the 60-day-and-older balance (net of payments) is below the R500 floor. Carry on the monthly statement. Current-month and 30-day invoicing is not treated as overdue.',a:'Art 7.11.14'};
+      case 'reminder': return {t:'Payment reminder due',b:'The overdue balance has reached 60 days and older ('+dR(over)+', net of payments). Issue the payment reminder; the club may apply for a written arrangement under Art 7.11.16.',a:'Rule 10.2 / Art 7.11.16'};
+      case 'final': return {t:'Final payment reminder due',b:'The overdue balance has reached 90 days and older ('+dR(over)+'). Issue the final reminder with a 7-day grace, before the account goes Out of Compliance.',a:'Rule 10.2'};
+      case 'ooc': return {t:'Out of Compliance',b:'The overdue balance has reached 120 days and older ('+dR(over)+'), past the final-reminder stage. Issue the Out of Compliance notice — the club is out of compliance until the '+dR(over)+' overdue is settled or a written arrangement under Art 7.11.16 is approved.',a:'Rules 10.2.3 / 10.8 · consequences 16.4.2.6'};
+      default: return {t:'Statement only',b:'Carry on the monthly statement.',a:'Art 7.11.14'};
+    }
   }
   function debNotesHtml(notes){
     if(!notes||!notes.length) return '<span class="hint" style="font-size:12px">No notes yet.</span>';
@@ -2820,6 +2823,7 @@
     var facts=data.facts||{}, coll=data.collection||{}, acts=data.actions||[], notes=data.notes||[], sends=data.sends||[];
     var sc=coll.status_colour||'unmarked';
     var bal=Number(c.bal)||0, cur=Number(c.cur)||0, over=Number(c.over)||0;
+    var over60=(c.over60!=null)?Number(c.over60):Math.max(0,Math.min(Number(c.b60||0)+Number(c.b90||0)+Number(c.b120||0), bal));
     var tot=cur+Number(c.b30)+Number(c.b60)+Number(c.b90)+Number(c.b120); if(bal<0) tot=Math.abs(bal);
     var rec=debRecStep(c, facts.oldest_open_days);
     var gate=(bal>10000)||(Number(c.b120)>5000);
@@ -2831,7 +2835,7 @@
     h+='<div class="deb-tiles">'
       +'<div class="deb-tile"><div class="k">Total balance</div><div class="v'+(bal>0?' bad':'')+'">'+dR(bal)+'</div><div class="s">as at '+dDateZA((_deb.snapshot&&_deb.snapshot.as_at))+'</div></div>'
       +'<div class="deb-tile"><div class="k">Current (within 30 days)</div><div class="v">'+dR(cur)+'</div><div class="s">not yet due</div></div>'
-      +'<div class="deb-tile"><div class="k">Overdue (30 days and older)</div><div class="v'+(over>0?' bad':'')+'">'+dR(over)+'</div><div class="s">'+(bal>0?Math.round(over/bal*100)+'% of the balance':'—')+'</div></div>'
+      +'<div class="deb-tile"><div class="k">Overdue (60 days +, net)</div><div class="v'+(over60>0?' bad':'')+'">'+dR(over60)+'</div><div class="s">'+(bal>0?Math.round(over60/bal*100)+'% of the balance · 30-day band excluded':'—')+'</div></div>'
       +'</div>';
     if(gate) h+='<div class="deb-gate">High-value account · Balance over R10 000 or 120-day balance over R5 000. Confirm the Finance / Management Committee has sighted this account before any write-off or settlement concession.</div>';
     h+='<div class="deb-cockpit"><div class="deb-col">';
@@ -2844,7 +2848,7 @@
       +'<tr class="od"><td>61–90 days</td><td class="num">'+dR(c.b60)+'</td></tr>'
       +'<tr class="od"><td>91–120 days</td><td class="num">'+dR(c.b90)+'</td></tr>'
       +'<tr class="od"><td>120 days and older</td><td class="num">'+dR(c.b120)+'</td></tr>'
-      +'<tr class="tot"><td>Overdue (30 days +)</td><td class="num">'+dR(over)+'</td></tr>'
+      +'<tr class="tot"><td>Overdue for action (60 days +, net)</td><td class="num">'+dR(over60)+'</td></tr>'
       +'<tr class="tot"><td>Total balance</td><td class="num">'+dR(bal)+'</td></tr>'
       +'</tbody></table>';
     // account facts
