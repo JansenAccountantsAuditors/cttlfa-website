@@ -663,6 +663,7 @@
           <a href="#h-mod-webstats">Website Analytics</a>
           <a href="#h-mod-disc">Discipline, Referees &amp; Cards</a>
           <a href="#h-mod-fincom">Fincom Dashboard</a>
+          <a href="#h-mod-debtors">Club Debtors</a>
           <a href="#h-mod-fixtures">Fixtures &amp; Results</a>
           <a href="#h-mod-site">Live Website</a>
           <a href="#h-users">Managing users</a>
@@ -692,7 +693,7 @@
           <li><b>Fincom.</b> Sees only the Fincom Dashboard, and only to view it. Nothing else in the Admin Centre is shown to a Fincom user. Use this for Finance Committee members who need the packs but not the rest.</li>
           <li><b>Viewer.</b> Sees everything, view only. Cannot change anything. Use this for members who need sight of the information without editing rights.</li>
         </ol>
-        <p><b>Editable areas for Staff.</b> For a Staff user, an administrator ticks which areas they may edit (Voting, Registrations, Website Admin, Discipline, Fincom, Fixtures, Live site). A Staff user still sees every area; the ticks decide only what they can change. Anything not ticked is view only for them.</p>
+        <p><b>Editable areas for Staff.</b> For a Staff user, an administrator ticks which areas they may edit (Voting, Registrations, Website Admin, Discipline, Fincom, Club Debtors, Fixtures, Live site). A Staff user still sees every area; the ticks decide only what they can change. Anything not ticked is view only for them.</p>
         <p class="sub">A change to someone's access takes effect the next time they sign in. An administrator cannot remove their own administrator rights or deactivate their own account, which prevents an accidental lock-out.</p>
       </div>
 
@@ -747,6 +748,14 @@
         <p><b>What it is:</b> the Finance Committee operating dashboard, now hosted inside the Admin Centre. It covers the Fincom mandate and scope, the KPI summary, the 2026 budget and its monthly phasing, debtors, compliance, the work plan and meeting rhythm, and a document library holding the monthly Mancom packs, the budgets, the finance policy manual and the debtor-system review.</p>
         <p><b>Where:</b> Home &rarr; Fincom Dashboard, which opens the gated page inside the Admin Centre (no separate site). <b>Who:</b> administrators and any user given <b>Fincom</b> area access on the Mancom users page. Everyone else does not see the card at all.</p>
         <p><b>Security:</b> the figures and documents are not on any public address. They are served only to a signed-in user who has Fincom access; the document links are secure, single-session links that expire after an hour. The old public <span class="kk">cttfafincom.tiiny.site</span> version has been retired in favour of this.</p>
+      </div>
+
+      <div class="card help-card" id="h-mod-debtors">
+        <h3>Club Debtors</h3>
+        <p><b>What it is:</b> the live club debtor dashboard, drawn from Sage. It shows each club's balance and ageing, who has paid and who is behind, the constitutional collection cadence, the statement and reminder letters, and the out-of-compliance register for Mancom. Balances and the transaction ledger refresh from Sage on demand, and every figure ties back to the club statement.</p>
+        <p><b>Where:</b> Home &rarr; Club Debtors. <b>Who:</b> everyone signed in can see it. Editing, meaning logging notes and actions, setting the working status, placing or clearing out of compliance, editing club contacts, running correspondence and sending emails, is limited to administrators and to Staff who have been given <b>Club Debtors</b> edit access on the Users page. Everyone else sees it view only.</p>
+        <p><b>Overdue and out of compliance:</b> only amounts in the 60 day and older buckets count as overdue, so a club is not treated as behind for the current month's invoice. Out of compliance is shown as an indicator of who has reached the trigger, not a statement of fact. A club is only actually out of compliance once you place it there, which is a governed decision recorded against the club with the date.</p>
+        <p><b>Sending emails:</b> the email layer is in test mode until Mancom approves go-live. In test mode every email, whether a structured statement or reminder or a free-form message you write from the club profile, is delivered to the Treasurer only and not to the club, with a copy kept in the treasurer mailbox. Once live, the same emails go to each club's address on file, copied to the treasurer and ops mailboxes. Every email issued is kept in the club's correspondence trail for the audit file.</p>
       </div>
 
       <div class="card help-card" id="h-mod-fixtures">
@@ -1005,7 +1014,7 @@
   }
 
   /* ---------- tabs ---------- */
-  var ALL_AREAS=["voting","registrations","webadmin","discipline","fincom","fixtures","site"];
+  var ALL_AREAS=["voting","registrations","webadmin","discipline","fincom","debtors","fixtures","site"];
   /* Visibility: Fincom users see ONLY the Fincom dashboard; everyone else sees all areas. */
   function canSee(area){ if(!area) return true; if(meRole==="fincom") return area==="fincom"; return true; }
   /* Edit rights: administrators edit everything; staff edit only their ticked areas; viewers and fincom edit nothing. */
@@ -1486,8 +1495,8 @@
   }
 
   /* ---------- users ---------- */
-  var AREA_LABELS={voting:"Voting",registrations:"Registrations",webadmin:"Website Admin",discipline:"Discipline",fincom:"Fincom",fixtures:"Fixtures",site:"Live site"};
-  var AREA_ORDER=["voting","registrations","webadmin","discipline","fincom","fixtures","site"];
+  var AREA_LABELS={voting:"Voting",registrations:"Registrations",webadmin:"Website Admin",discipline:"Discipline",fincom:"Fincom",debtors:"Club Debtors",fixtures:"Fixtures",site:"Live site"};
+  var AREA_ORDER=["voting","registrations","webadmin","discipline","fincom","debtors","fixtures","site"];
   var _uEditing=null;
   async function loadUsers(){
     var l=$("usersList"); if(!l) return;
@@ -1720,7 +1729,7 @@
   // then presents routine tiers for sending and holds every Out of Compliance
   // club for individual confirmation before any notice issues.
   async function debMorningRun(deb){
-    var canW=(meRole==='administrator'||meRole==='staff'); if(!canW) return;
+    var canW=canEdit('debtors'); if(!canW) return;
     var now=new Date();
     var wd=now.toLocaleDateString('en-US',{timeZone:'Africa/Johannesburg',weekday:'short'});
     var hr=parseInt(now.toLocaleString('en-GB',{timeZone:'Africa/Johannesburg',hour:'2-digit',hour12:false}),10);
@@ -1938,7 +1947,7 @@
 
   function debRender(){
     var root=$("debtorsRoot"); var s=_deb.snapshot, clubs=_deb.clubs||[], st=_deb.statuses||{};
-    var canW=(meRole==='administrator'||meRole==='staff');
+    var canW=canEdit('debtors');
     var owing=clubs.filter(function(c){return c.bal>0;});
     var over=Number(s.over60_total||0);
     var susp=clubs.filter(function(c){return c.status==='Suspension review';});
@@ -2319,7 +2328,7 @@
   }
   var _corrTier='statement', _corrSel={}, _corrInclStmt=true;
   function debOpenCorr(){
-    var canW=(meRole==='administrator'||meRole==='staff'); if(!canW) return;
+    var canW=canEdit('debtors'); if(!canW) return;
     var scrim=document.getElementById('debScrim')||(function(){var d=document.createElement('div');d.id='debScrim';d.className='deb-scrim';document.body.appendChild(d);d.onclick=debClose;return d;})();
     var dr=document.getElementById('debDrawer')||(function(){var d=document.createElement('aside');d.id='debDrawer';d.className='deb-drawer';document.body.appendChild(d);return d;})();
     _corrSel={}; debCorrDraw(dr); dr.classList.add('on'); scrim.classList.add('on');
@@ -2568,7 +2577,7 @@
   }
   function debDeskDraw(){
     var m=document.getElementById('debModal'); if(!m) return;
-    var canW=(meRole==='administrator'||meRole==='staff');
+    var canW=canEdit('debtors');
     var rows=_deskRows.filter(function(c){ if(_deskOwing && !(Number(c.bal)>0.01)) return false; if(_deskQ){var q=_deskQ;return c.name.toLowerCase().indexOf(q)>=0||String(c.code||'').toLowerCase().indexOf(q)>=0;} return true; });
     var h='<div class="deb-mhead"><div><h3>Collections Desk</h3><div class="dsub">Your working list — status, notes and follow-ups per club</div></div><button class="dx" id="deskX" aria-label="Close">×</button></div>';
     h+='<div class="deb-mtools"><input id="deskQ" type="search" placeholder="Search club or code…" value="'+esc(_deskQ)+'"><label class="deb-chk"><input type="checkbox" id="deskOwing"'+(_deskOwing?' checked':'')+'> Owing only</label><span class="hint" style="font-size:12px">'+rows.length+' clubs · set a status and log a note; a follow-up date puts it on the Action Queue</span></div>';
@@ -2604,7 +2613,7 @@
   }
   function debQueueDraw(){
     var m=document.getElementById('debModal'); if(!m) return;
-    var canW=(meRole==='administrator'||meRole==='staff');
+    var canW=canEdit('debtors');
     function grp(b){ return _queue.filter(function(x){return x.bucket===b;}); }
     var over=grp('overdue'), today=grp('today'), up=grp('upcoming');
     function sec(title,arr,tone){
@@ -2878,7 +2887,7 @@
   }
   async function debOpenClub(key){
     var c=(_deb.clubs||[]).filter(function(x){return x.club_key===key;})[0]; if(!c) return;
-    var canW=(meRole==='administrator'||meRole==='staff');
+    var canW=canEdit('debtors');
     var m=debModal();
     m.innerHTML='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">Loading the account…</div></div><button class="dx" id="debX" aria-label="Close">×</button></div><div class="deb-mbody"></div>';
     var _x0=document.getElementById('debX'); if(_x0) _x0.onclick=debModalClose;
