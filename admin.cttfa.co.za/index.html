@@ -2931,6 +2931,50 @@
   function dTypeChipLite(t){ var mm=DEB_TYPE[t]||DEB_TYPE.unknown; return '<span class="deb-hpill" title="Membership type — drives how compliance notices are handled">'+esc(mm[0])+'</span>'; }
   function dTypeChip(t){ var mm=DEB_TYPE[t]||DEB_TYPE.unknown; return '<span class="deb-typechip" style="background:'+mm[1]+';color:'+mm[2]+'">'+esc(mm[0])+'</span>'; }
   var DEB_STG_OPTS=[['statement','On statement'],['reminder','Payment reminder'],['final','Final reminder'],['ooc','Out of Compliance due'],['plan','Payment arrangement'],['paidup','Paid up'],['credit','In credit']];
+  function _debFixKeys(c){
+    var keys=[];
+    function add(x){ x=normClub(x); if(x&&x.length>=3&&keys.indexOf(x)<0) keys.push(x); }
+    add(c.name);
+    if(c.code){ var mm=String(c.code).match(/^[A-Za-z]+/); if(mm) add(mm[0]); }
+    try{ (CLUB_ALIAS||[]).forEach(function(a){ if(normClub(a[1])===normClub(c.name)) add(a[0]); }); }catch(e){}
+    return keys;
+  }
+  function _debTeamMatches(team, keys){
+    var nt=normClub(team); if(!nt) return false;
+    for(var i=0;i<keys.length;i++){ var k=keys[i]; if(!k) continue;
+      if(nt===k) return true;
+      if(k.length>=4 && nt.indexOf(k)===0) return true;
+      if(nt.length>=4 && k.indexOf(nt)===0) return true;
+    }
+    return false;
+  }
+  async function debClubFixtures(c){
+    var s; try{ s=await fetchSeason(); }catch(e){ return {err:'Could not reach the league fixtures feed right now.'}; }
+    var L=(s&&s.leagues)||{}; var keys=_debFixKeys(c);
+    var yr=(new Date()).getFullYear();
+    var MON={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+    var today=new Date(); today.setHours(0,0,0,0);
+    function parseDate(ds){ var pp=String(ds||'').trim().split(/\s+/); if(pp.length<2) return null; var d=parseInt(pp[0],10), mo=MON[pp[1]]; if(isNaN(d)||mo==null) return null; var dt=new Date(yr,mo,d); if(dt.getTime()<today.getTime()-200*86400000) dt=new Date(yr+1,mo,d); return dt; }
+    var out=[];
+    Object.keys(L).forEach(function(lk){ var v=L[lk]||{}; var lname=v.name||lk; var isJnr=/under|u\s?\d{1,2}\b/i.test(lname)||/under/i.test(v.group||'');
+      (v.fixtures||[]).forEach(function(f){ if(!Array.isArray(f)) return; var home=f[0],away=f[1],ds=f[2],tm=f[3],venue=f[4];
+        if(String(home).toLowerCase().indexOf('bye')>=0||String(away).toLowerCase().indexOf('bye')>=0) return;
+        var mh=_debTeamMatches(home,keys), ma=_debTeamMatches(away,keys); if(!mh&&!ma) return;
+        var dt=parseDate(ds); if(!dt||dt.getTime()<today.getTime()) return;
+        out.push({date:dt, days:Math.round((dt-today)/86400000), ds:ds, tm:tm, league:lname, junior:isJnr, opp:(mh?away:home), ha:(mh?'H':'A'), venue:venue});
+      });
+    });
+    out.sort(function(a,b){return a.date-b.date;});
+    return {fixtures:out.slice(0,24)};
+  }
+  function debFixHtml(r, c){
+    if(r.err) return '<p class="hint" style="font-size:12px">'+esc(r.err)+'</p>';
+    var fx=r.fixtures||[]; if(!fx.length) return '<p class="hint" style="font-size:12px">No upcoming fixtures matched this club on the league site. The club may have no scheduled matches, or its league team name differs from the account name — check the league site directly.</p>';
+    var isOOC=(c.ooc||c.stage==='ooc');
+    return '<div class="deb-fixwrap">'+fx.map(function(f){ var soon=f.days<=7; var risk=isOOC&&soon&&!f.junior;
+      return '<div class="deb-fixrow'+(soon?' soon':'')+'"><span class="fx-d">'+esc(f.ds)+(f.tm?' <span class="fx-t">'+esc(f.tm)+'</span>':'')+'</span><span class="fx-ha">'+(f.ha==='H'?'vs':'@')+'</span><span class="fx-opp">'+esc(f.opp)+'</span><span class="fx-lg">'+esc(f.league)+(f.junior?' · junior':'')+'</span>'+(risk?'<span class="fx-risk">forfeit risk</span>':(soon?'<span class="fx-soon">≤7 days</span>':''))+'</div>';
+    }).join('')+'</div>'+(isOOC?'<p class="hint" style="font-size:11px;margin:6px 0 0">While Out of Compliance, senior fixtures within 7 days are at forfeit risk (recorded 3-0, Rule 8.1.2, with a 3-point deduction); junior fixtures may be played. Fixtures are matched to the club by name and should be confirmed against the league site.</p>':'<p class="hint" style="font-size:11px;margin:6px 0 0">Matched to the club by name from the league site; confirm against the site before relying on it for a notice.</p>');
+  }
   async function debOpenClub(key){
     var c=(_deb.clubs||[]).filter(function(x){return x.club_key===key;})[0]; if(!c) return;
     var canW=canEdit('debtors');
@@ -3053,7 +3097,10 @@
         +'<div><button class="btn sm" id="debCtSave">Save contact</button> <button class="btn ghost sm" id="debCtCancel">Cancel</button> <span class="hint" id="debCtMsg" style="font-size:11px"></span></div></div>';
     }
     h+='<div class="deb-contact" style="margin-top:8px">Payment reference: <b>'+_ref+'</b></div>';
-    h+='</div></div></div>';
+    h+='</div></div>';
+    h+='<div class="deb-sec">Upcoming fixtures'+(isGuest?' <span class="hint" style="font-weight:400">&middot; guest — matches may be impacted, limited recourse</span>':'')+'</div>';
+    h+='<div id="debFixBody"><p class="hint" style="font-size:12px">Loading fixtures…</p></div>';
+    h+='</div>';
     // ===================== TRANSACTIONS =====================
     h+='<div class="deb-tabpanel" data-panel="tx">';
     h+='<div class="deb-txhead">'
@@ -3108,6 +3155,7 @@
     m.innerHTML=h;
     // ===== wiring =====
     document.getElementById('debX').onclick=debModalClose;
+    debClubFixtures(c).then(function(r){ var el=document.getElementById('debFixBody'); if(el) el.innerHTML=debFixHtml(r,c); }).catch(function(){ var el=document.getElementById('debFixBody'); if(el) el.innerHTML='<p class="hint" style="font-size:12px">Fixtures unavailable.</p>'; });
     // tabs
     Array.prototype.forEach.call(m.querySelectorAll('.deb-tab'),function(tb){ tb.onclick=function(){
       Array.prototype.forEach.call(m.querySelectorAll('.deb-tab'),function(x){x.classList.toggle('on',x===tb);});
@@ -4118,6 +4166,17 @@
 .deb-txactions{display:flex;gap:8px;flex-wrap:wrap}
 .deb-txtbl-lg td.ds{color:#2b3a45;max-width:280px;white-space:normal}
 .deb-txtbl-lg tr.opn td{background:#EFF4F7;font-weight:700;color:var(--navy,#071A4A)}
+.deb-fixwrap{border:1px solid #E3E8F0;border-radius:10px;overflow:hidden}
+.deb-fixrow{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #F0F3F8;font-size:12.5px;flex-wrap:wrap}
+.deb-fixrow:last-child{border-bottom:0}
+.deb-fixrow.soon{background:#FBF7EC}
+.deb-fixrow .fx-d{font-weight:700;color:var(--navy,#071A4A);min-width:104px}
+.deb-fixrow .fx-t{font-weight:400;color:#59666b}
+.deb-fixrow .fx-ha{color:#59666b;font-size:11px;text-transform:uppercase}
+.deb-fixrow .fx-opp{font-weight:600;flex:1;min-width:120px}
+.deb-fixrow .fx-lg{color:#59666b;font-size:11px}
+.deb-fixrow .fx-risk{background:#9A3130;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:2px 7px;border-radius:20px}
+.deb-fixrow .fx-soon{background:#FBF1DD;color:#7a5312;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:2px 7px;border-radius:20px}
 </style>
 <style id="mobile-pass">
 html,body{max-width:100%;overflow-x:hidden}
