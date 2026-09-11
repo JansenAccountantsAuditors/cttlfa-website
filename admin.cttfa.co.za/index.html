@@ -1684,6 +1684,10 @@
   function dDateZA(iso){ if(!iso) return '–'; var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],a=String(iso).slice(0,10).split('-'); return parseInt(a[2],10)+' '+M[parseInt(a[1],10)-1]+' '+a[0]; }
   function dDateTimeZA(iso){ if(!iso) return '–'; var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; var d=new Date(String(iso).replace(' ','T')); if(isNaN(d.getTime())) return dDateZA(iso); return d.getDate()+' '+M[d.getMonth()]+' '+d.getFullYear()+' '+('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
   function dAgo(d){ d=Number(d); if(!d&&d!==0) return '–'; if(d>=999) return 'no receipt on record'; if(d<=0) return 'today'; if(d===1) return 'yesterday'; return d+' days ago'; }
+  // Data-freshness helpers: Sage fetch stamp (SAST) and how old the last real movement is.
+  function dSastStamp(iso){ if(!iso) return '–'; var d=new Date(String(iso).replace(' ','T')); if(isNaN(d.getTime())) return dDateZA(iso); var M=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']; try{ var pp=new Intl.DateTimeFormat('en-GB',{timeZone:'Africa/Johannesburg',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(d); var g={}; pp.forEach(function(x){g[x.type]=x.value;}); return parseInt(g.day,10)+' '+M[parseInt(g.month,10)-1]+' '+g.year+' '+g.hour+':'+g.minute+' SAST'; }catch(e){ return dDateTimeZA(iso); } }
+  function dDaysSinceSAST(iso){ if(!iso) return null; var a=String(iso).slice(0,10); var d1=new Date(a+'T00:00:00Z'), d0=new Date(debTodayISO()+'T00:00:00Z'); if(isNaN(d1.getTime())) return null; return Math.round((d0-d1)/86400000); }
+  function debFreshTag(iso){ var n=dDaysSinceSAST(iso); if(n===null) return ''; var lbl=(n<=0?'today':(n===1?'yesterday':n+' days ago')); if(n>3){ return ' <span style="color:#9f6621;font-weight:600" title="The most recent Sage movement is '+n+' days old. A fetch today does not add movements Sage has not yet captured.">('+lbl+' &mdash; Sage may be behind)</span>'; } return ' <span class="hint" style="font-weight:400">('+lbl+')</span>'; }
 
   var _debClockTimer=null;
   function debStartClock(){
@@ -1949,7 +1953,9 @@
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost sm" id="debGuide" title="How the debtor process works and how it aligns to the Constitution">Process guide</button><button class="btn gold sm" id="debFetch" title="Pull the latest balances from Sage">Fetch from Sage</button>'+((meRole==='administrator'||meRole==='staff')?'<button class="btn gold sm" id="debQueue" title="Follow-ups due">Action Queue'+debAQBadge()+'</button><button class="btn ghost sm" id="debDesk" title="Collections working list">Collections Desk</button><button class="btn ghost sm" id="debCorr" title="Statements and notices">Correspondence</button>':'')+'<button class="btn ghost sm" id="debRefresh" title="Reload from the database">Reload</button></div>'
       +'<span class="hint" id="debFetchStatus" style="font-size:11.5px;text-align:right"></span></div></div>'
       +'<div class="deb-prov"><span class="warn">Management-prepared, unaudited</span>'
-      +'<span>As at <b>'+dDateZA(s.as_at)+'</b></span><span>Source: <b>Sage Business Cloud</b>, extracted '+dDateZA(s.extracted_at)+'</span>'
+      +'<span>Fetched from Sage: <b>'+dSastStamp(s.extracted_at)+'</b></span>'
+      +'<span>Last movement in Sage: <b>'+dDateZA(s.last_tx||s.ledger_to||s.as_at)+'</b>'+debFreshTag(s.last_tx||s.ledger_to||s.as_at)+'</span>'
+      +'<span>Last receipt: <b>'+dDateZA(s.last_receipt)+'</b></span>'
       +'<span>Reconciled to Sage: <b>'+(s.reconciled?'yes':'no')+'</b></span><span>FY ending <b>31 October</b></span><span>Classification: <b>Confidential</b></span></div>'
       +(s.recon_note?'<p class="hint" style="margin:6px 0 0;font-size:12px">'+esc(s.recon_note)+'</p>':'')+'</div>';
     // KPI row
