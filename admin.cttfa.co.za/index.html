@@ -257,7 +257,15 @@
 .deb-gate-arr{flex:none;text-align:right;font-weight:800;color:#9A3130;font-variant-numeric:tabular-nums;min-width:86px}
 .deb-gate-act{flex:none;display:flex;gap:6px;align-items:center}
 .deb-gate-state{font-size:11px;font-weight:700}
-.deb-gate-state.sent{color:#1c5136}.deb-gate-state.held{color:#7a5312}</style>
+.deb-gate-state.sent{color:#1c5136}.deb-gate-state.held{color:#7a5312}
+.deb-txwrap{max-height:230px;overflow:auto;border:1px solid #E3E8F0;border-radius:8px;margin-top:4px}
+.deb-txtbl{width:100%;border-collapse:collapse;font-size:11.5px}
+.deb-txtbl thead th{position:sticky;top:0;background:#F3F6FB;color:#33415c;text-align:left;font-weight:700;padding:5px 8px;border-bottom:1px solid #E3E8F0;white-space:nowrap}
+.deb-txtbl td{padding:4px 8px;border-bottom:1px solid #EEF2F8;white-space:nowrap}
+.deb-txtbl td.num,.deb-txtbl th.num{text-align:right;font-variant-numeric:tabular-nums}
+.deb-txtbl td.rf{color:#59666b;max-width:150px;overflow:hidden;text-overflow:ellipsis}
+.deb-txtbl tbody tr:hover td{background:#F7FAFC}
+.deb-oocchip{display:inline-block;font-size:10px;font-weight:700;color:#7a2320;background:#F8E7E5;border:1px solid #E3B0AC;border-radius:5px;padding:1px 7px;margin-left:6px}</style>
 
 <!-- LOGIN -->
 <div class="login" id="loginView">
@@ -1669,13 +1677,13 @@
     statement:['On statement','#EEF2F8','#3a4761','#8A97AE'],
     reminder:['Payment reminder','#FBF1DD','#7a5312','#B7791F'],
     final:['Final reminder','#FBEBE0','#8a3c17','#C05621'],
-    ooc:['Out of Compliance','#F8E7E5','#7a2320','#9A3130'],
+    ooc:['Out of Compliance due','#F8E7E5','#7a2320','#9A3130'],
     plan:['Payment arrangement','#E8F0FA','#1e456e','#2F6FB0']};
   var DEB_STG_GUIDE={
     statement:'Within terms, or under R500 of 60-day-and-older money. Carry on the monthly statement (Art 7.11.14); no chasing due. Current-month and 30-day invoicing is not treated as overdue.',
     reminder:'R500 or more now sitting 60 days and older (net of payments). Issue the payment reminder (Rule 10.2); club may apply for a written arrangement (Art 7.11.16).',
     final:'Overdue money has reached 90 days and older. Issue the final reminder with a 7-day grace, before the account goes Out of Compliance.',
-    ooc:'Overdue money has reached 120 days and older. Issue the Out of Compliance notice (Rules 10.2.3 / 10.8; consequences under Rule 16.4.2.6); the club is out of compliance until settled or an arrangement is approved. Approval-gated.',
+    ooc:'Indicator only: overdue money has reached 120 days and older, so an Out of Compliance notice is due for your decision. The club is NOT out of compliance until you place it. Placing it (Rules 10.2.3 / 10.8) starts the consequences under Rule 16.4.2.6 from the effective date. Approval-gated.',
     plan:'On an approved payment arrangement (Art 7.11.16). Send the instalment reminder; monitor adherence.',
     credit:'The account is in credit. Confirm the credit is genuine before any refund or set-off.',
     paidup:'Nothing outstanding. No action due.'};
@@ -1954,17 +1962,17 @@
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost sm" id="debGuide" title="How the debtor process works and how it aligns to the Constitution">Process guide</button><button class="btn gold sm" id="debFetch" title="Pull the latest balances from Sage">Fetch from Sage</button>'+((meRole==='administrator'||meRole==='staff')?'<button class="btn gold sm" id="debQueue" title="Follow-ups due">Action Queue'+debAQBadge()+'</button><button class="btn ghost sm" id="debDesk" title="Collections working list">Collections Desk</button><button class="btn ghost sm" id="debCorr" title="Statements and notices">Correspondence</button>':'')+'<button class="btn ghost sm" id="debRefresh" title="Reload from the database">Reload</button></div>'
       +'<span class="hint" id="debFetchStatus" style="font-size:11.5px;text-align:right"></span></div></div>'
       +'<div class="deb-prov"><span class="warn">Management-prepared, unaudited</span>'
-      +'<span>Fetched from Sage: <b>'+dSastStamp(s.extracted_at)+'</b></span>'
-      +'<span>Last movement in Sage: <b>'+dDateZA(s.last_tx||s.ledger_to||s.as_at)+'</b>'+debFreshTag(s.last_tx||s.ledger_to||s.as_at)+'</span>'
-      +'<span>Last receipt: <b>'+dDateZA(s.last_receipt)+'</b></span>'
-      +'<span>Reconciled to Sage: <b>'+(s.reconciled?'yes':'no')+'</b></span><span>FY ending <b>31 October</b></span><span>Classification: <b>Confidential</b></span></div>'
-      +(s.recon_note?'<p class="hint" style="margin:6px 0 0;font-size:12px">'+esc(s.recon_note)+'</p>':'')+'</div>';
+      +'<span>Sage ageing fetched: <b>'+dSastStamp(s.extracted_at)+'</b></span>'
+      +'<span>Balances as at: <b>'+dDateZA(s.as_at)+'</b></span>'
+      +'<span>Transaction detail exported: <b>'+dDateZA(s.tx_exported)+'</b>'+debFreshTag(s.tx_exported)+'</span>'
+      +'<span>FY ending <b>31 October</b></span><span>Classification: <b>Confidential</b></span></div>'
+      +'<p class="hint" style="margin:6px 0 0;font-size:12px">The live balance and ageing come from the automated Sage fetch. The itemised transaction detail is a separate manual export, so it can lag between exports; where it does, each club&rsquo;s statement reconciles to the fetched Sage balance.'+(s.recon_note?' '+esc(s.recon_note):'')+'</p></div>';
     // KPI row
     h+='<div class="deb-kpis">'
       +debKpi('Owed by clubs in arrears',dR(s.pos_total),owing.length+' owing · '+(s.n_credit||0)+' in credit · '+(s.n_paidup||0)+' paid up','lead')
       +debKpi('Overdue (60 days +)',dR(over),dPc(s.pos_total?over/s.pos_total*100:0)+' of what is owed, net of payments','bad')
       +debKpi('Net trade debtors',dR(s.net_total),'after '+dR(-s.credit_total)+' in credits','')
-      +debKpi('Out of Compliance',stOOC.length+'',dR(stSum60(stOOC))+' · 120+ days, held for approval','bad')
+      +debKpi('Out of Compliance due',stOOC.length+'',dR(stSum60(stOOC))+' · reached the 120-day trigger, awaiting your decision'+((s.n_placed_ooc||0)?' · '+s.n_placed_ooc+' placed':''),'bad')
       +'</div>';
     // constitutional compliance
     h+='<div class="card"><h3>Constitutional management</h3><p class="hint" style="margin:-2px 0 10px">Are we managing debtors as the CTTLFA Constitution requires? Actions are logged on each club; this panel rolls them up.</p>';
@@ -1972,7 +1980,7 @@
       +debComp('Monthly statement (Art 7.11.14)', lastStmt?('Last logged '+dDateZA(lastStmt)):'Not yet logged', lastStmt?'ok':'due','Every debtor, on the 10th. '+stStatement.length+' club'+(stStatement.length===1?'':'s')+' on statement only.')
       +debComp('Payment reminder (Rule 10.2)', stReminder.length? (stReminder.length+' due · '+dR(stSum60(stReminder))) : 'None due', stReminder.length?'due':'ok','Overdue money now 60 days and older in the Sage ageing, net of payments. Auto-send.')
       +debComp('Final reminder (7-day grace)', stFinal.length? (stFinal.length+' due · '+dR(stSum60(stFinal))) : 'None due', stFinal.length?'due':'ok','Overdue money now 90 days and older. Last chance before Out of Compliance.')
-      +debComp('Out of Compliance (Rules 10.2.3 / 10.8)', stOOC.length? (stOOC.length+' club'+(stOOC.length>1?'s':'')+' · '+dR(stSum60(stOOC))) : 'None', stOOC.length?'bad':'ok','Overdue money now 120 days and older. Served notice; consequences under Rule 16.4.2.6. Held for your approval — Mancom only on a second notice in a season (Rule 10.2.4).')
+      +debComp('Out of Compliance notice due (Rules 10.2.3 / 10.8)', stOOC.length? (stOOC.length+' club'+(stOOC.length>1?'s':'')+' reaching trigger · '+dR(stSum60(stOOC))) : 'None', stOOC.length?'bad':'ok','Indicator: overdue money now 120 days and older. A notice is due for your decision — a club is not Out of Compliance until you place it. Consequences under Rule 16.4.2.6 run from the effective date you set. Mancom only on a second notice in a season (Rule 10.2.4).'+((s.n_placed_ooc||0)?' '+s.n_placed_ooc+' club'+(s.n_placed_ooc>1?'s':'')+' currently placed.':''))
       +debComp('Payment arrangement (Art 7.11.16)', (plans.length||stPlan.length)? ((plans.length||stPlan.length)+' active') : 'None recorded', (plans.length||stPlan.length)?'ok':'muted','Written application, chair-signed, with bank statements and AFS. Instalment reminders auto-send.')
       +'</div></div>';
     // ageing bar
@@ -2048,7 +2056,7 @@
     var cols=[['name','Club',0],['code','Code',0],['bal','Balance',1],['over60','Overdue (60+)',1],['stage','Stage',0],['coll','Logged',0],['last_receipt_days','Last rcpt',1]];
     var h='<table class="deb-table"><thead><tr>'+cols.map(function(c){return '<th'+(c[2]?' class="num"':'')+' data-k="'+c[0]+'">'+c[1]+(_debSort===c[0]?(_debDir<0?' ▾':' ▴'):'')+'</th>';}).join('')+'</tr></thead><tbody>';
     clubs.forEach(function(c){
-      var logged=c.ooc?'<span class="deb-tag" style="background:#FBECEA;color:#8a3c17">Out of compliance</span>':(c.payment_plan?'<span class="deb-tag" style="background:#E7F5EC;color:#1c5136">On plan</span>':(c.coll_step?'<span class="deb-tag" style="background:#EEF2F8;color:#33415c">'+esc(c.coll_step.replace(/_/g,' '))+'</span>':'<span class="hint" style="font-size:11px">–</span>'));
+      var logged=c.ooc?'<span class="deb-tag" style="background:#FBECEA;color:#8a3c17" title="Placed Out of Compliance'+(c.ooc_since?' on '+dDateZA(c.ooc_since):'')+'">Placed OOC</span>':(c.payment_plan?'<span class="deb-tag" style="background:#E7F5EC;color:#1c5136">On plan</span>':(c.coll_step?'<span class="deb-tag" style="background:#EEF2F8;color:#33415c">'+esc(c.coll_step.replace(/_/g,' '))+'</span>':'<span class="hint" style="font-size:11px">–</span>'));
       h+='<tr class="deb-click" data-key="'+esc(c.club_key)+'" tabindex="0">'
         +'<td>'+debSCdot(c.status_colour)+'<b>'+esc(c.name)+'</b>'+(c.suburb?'<div class="hint" style="font-size:11px">'+esc(c.suburb)+'</div>':'')+'</td>'
         +'<td class="hint">'+esc(c.code||'–')+'</td>'
@@ -2801,7 +2809,7 @@
       case 'statement': return {t:'Statement only',b:'Nothing 60 days or older is materially overdue — the account is within terms, or the 60-day-and-older balance (net of payments) is below the R500 floor. Carry on the monthly statement. Current-month and 30-day invoicing is not treated as overdue.',a:'Art 7.11.14'};
       case 'reminder': return {t:'Payment reminder due',b:'The overdue balance has reached 60 days and older ('+dR(over)+', net of payments). Issue the payment reminder; the club may apply for a written arrangement under Art 7.11.16.',a:'Rule 10.2 / Art 7.11.16'};
       case 'final': return {t:'Final payment reminder due',b:'The overdue balance has reached 90 days and older ('+dR(over)+'). Issue the final reminder with a 7-day grace, before the account goes Out of Compliance.',a:'Rule 10.2'};
-      case 'ooc': return {t:'Out of Compliance',b:'The overdue balance has reached 120 days and older ('+dR(over)+'), past the final-reminder stage. Issue the Out of Compliance notice — the club is out of compliance until the '+dR(over)+' overdue is settled or a written arrangement under Art 7.11.16 is approved.',a:'Rules 10.2.3 / 10.8 · consequences 16.4.2.6'};
+      case 'ooc': return {t:'Out of Compliance notice due',b:'Indicator only: the overdue balance has reached 120 days and older ('+dR(over)+'), past the final-reminder stage, so a notice is due for your decision. The club is not Out of Compliance until you place it. Once placed, it stays out of compliance until the '+dR(over)+' is settled or a written arrangement under Art 7.11.16 is approved.',a:'Rules 10.2.3 / 10.8 · consequences 16.4.2.6'};
       default: return {t:'Statement only',b:'Carry on the monthly statement.',a:'Art 7.11.14'};
     }
   }
@@ -2829,7 +2837,8 @@
     var gate=(bal>10000)||(Number(c.b120)>5000);
     var txbal=facts.tx_balance, recon=(txbal==null)?null:(Math.abs(Number(txbal)-bal)<=0.01);
     // header
-    var h='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">'+(c.code?esc(c.code)+' · ':'')+(c.suburb?esc(c.suburb)+' · ':'')+(c.active?'active member':'dormant account')+'  '+dStageLite(c.stage)+'  '+debSCpillLite(sc)+'</div></div><button class="dx" id="debX" aria-label="Close">×</button></div>';
+    var oocChip=c.ooc?'<span class="deb-oocchip" title="You have placed this club Out of Compliance. Consequences under Rule 16.4.2.6 apply from this date until the arrears are settled.">Placed OOC'+(c.ooc_since?' '+dDateZA(c.ooc_since):'')+'</span>':'';
+    var h='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">'+(c.code?esc(c.code)+' · ':'')+(c.suburb?esc(c.suburb)+' · ':'')+(c.active?'active member':'dormant account')+'  '+dStageLite(c.stage)+'  '+debSCpillLite(sc)+oocChip+'</div></div><button class="dx" id="debX" aria-label="Close">×</button></div>';
     h+='<div class="deb-mbody">';
     // stat tiles: total / current / overdue
     h+='<div class="deb-tiles">'
@@ -2852,15 +2861,26 @@
       +'<tr class="tot"><td>Total balance</td><td class="num">'+dR(bal)+'</td></tr>'
       +'</tbody></table>';
     // account facts
-    h+='<div class="deb-sec">Account facts</div>';
+    h+='<div class="deb-sec">Account facts <span class="hint" style="font-weight:400">&middot; from the transaction ledger, exported '+dDateZA(data.ledger_export_at)+'</span></div>';
     if(facts.has_tx){
-      h+='<div class="deb-kv"><span>Last receipt</span><b>'+(facts.last_receipt?dDateZA(facts.last_receipt):'–')+'</b>'
-        +'<span>Oldest open item</span><b>'+(facts.oldest_open_days!=null?facts.oldest_open_days+' days':'–')+(Number(facts.oldest_open_days)>730?' <span style="color:#9A3130">· prescription risk</span>':'')+'</b>'
+      var unimp=(txbal==null)?null:(bal-Number(txbal));
+      h+='<div class="deb-kv"><span>Last receipt (ledger)</span><b>'+(facts.last_receipt?dDateZA(facts.last_receipt):'–')+'</b>'
+        +'<span>Oldest open item (ledger)</span><b>'+(facts.oldest_open_days!=null?facts.oldest_open_days+' days':'–')+(Number(facts.oldest_open_days)>730?' <span style="color:#9A3130">· prescription risk</span>':'')+'</b>'
         +'<span>Invoices (life)</span><b>'+(facts.invoices_life||0)+'</b>'
-        +'<span>Billed this year</span><b>'+dR(facts.billed_ytd)+'</b>'
-        +'<span>Received this year</span><b>'+dR(facts.received_ytd)+'</b>'
-        +'<span>Ledger vs Sage ageing</span><b>'+(recon===null?'–':(recon?'<span style="color:#1c5136">In sync</span>':'<span style="color:#9A3130">differs by '+dR(Number(txbal)-bal)+'</span>'))+'</b></div>';
+        +'<span>Billed this year (ledger)</span><b>'+dR(facts.billed_ytd)+'</b>'
+        +'<span>Received this year (ledger)</span><b>'+dR(facts.received_ytd)+'</b>'
+        +'<span>Ledger balance at export</span><b>'+dR(txbal)+'</b>'
+        +'<span>Movement since export</span><b>'+(unimp===null?'–':(Math.abs(unimp)<=0.01?'<span style="color:#1c5136">none — in sync</span>':(unimp<0?'<span style="color:#1c5136">'+dR(Math.abs(unimp))+' received/reduced</span>':'<span style="color:#9A3130">'+dR(unimp)+' invoiced/added</span>')))+'</b></div>';
+      h+='<p class="hint" style="font-size:11px;margin:4px 0 0">The balance and ageing tiles above are the live Sage position (as at '+dDateZA((_deb.snapshot&&_deb.snapshot.as_at))+'). The figures here are as at the last manual ledger export; any movement since then is already in the balance above but is not yet itemised in the history below.</p>';
     } else { h+='<p class="hint" style="font-size:12px">No transaction history is loaded for this club yet. Balance and ageing above come from the live Sage Days-Outstanding report.</p>'; }
+    // transaction history (from ledger export)
+    if((data.transactions||[]).length){
+      h+='<div class="deb-sec">Transaction history <span class="hint" style="font-weight:400">&middot; ledger exported '+dDateZA(data.ledger_export_at)+'</span></div>';
+      h+='<div class="deb-txwrap"><table class="deb-txtbl"><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>'
+        +data.transactions.map(function(t){ return '<tr><td>'+dDateZA(t.tx_date)+'</td><td>'+esc(t.tx_type||'')+'</td><td class="rf">'+esc(t.reference||t.description||'')+'</td><td class="num">'+(t.debit?dR(t.debit):'')+'</td><td class="num">'+(t.credit?dR(t.credit):'')+'</td><td class="num">'+dR(t.balance)+'</td></tr>'; }).join('')
+        +'</tbody></table></div>'
+        +'<p class="hint" style="font-size:11px;margin:4px 0 0">Most recent '+data.transactions.length+' entries from the Sage ledger export. For a full statement that reconciles to the live balance, use Statement (PDF).</p>';
+    }
     var _ct=data.contact||null, _ref=esc(c.code||c.name.replace(/[^A-Za-z]/g,'').slice(0,6).toUpperCase());
     h+='<div class="deb-sec">Club contact'+(canW?' <button class="deb-linkbtn" id="debCtEdit">edit</button>':'')+'</div>';
     h+='<div id="debCtView">';
