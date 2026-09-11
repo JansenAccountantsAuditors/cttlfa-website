@@ -3949,3 +3949,76 @@
   (async function(){ var s=await sb.auth.getSession(); if(s.data && s.data.session){ await afterLogin(); } })();
 })();
 </script>
+
+<!-- ===== Mobile pass: full Admin Centre phone friendliness. Appended last so it
+     wins the cascade over every earlier stylesheet without editing them. ===== -->
+<style id="mobile-pass">
+html,body{max-width:100%;overflow-x:hidden}
+img,svg,canvas{max-width:100%;height:auto}
+iframe{max-width:100%}
+/* Wide tables scroll inside their own container; columns stay aligned because the
+   table keeps its native layout. */
+.tscroll{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.tscroll>table{margin-bottom:0}
+
+@media(max-width:760px){
+  .main .wrap{padding:14px 12px}
+  .wrap{padding:16px 12px}
+  .subnav-inner{padding-left:12px;padding-right:12px}
+  .card{padding:15px 14px;border-radius:13px}
+  /* A wide table fills the screen when it can, and scrolls sideways only when its
+     own content needs more room. */
+  .tscroll>table{width:auto;min-width:100%}
+  /* Multi-column splits that had no phone rule collapse to a single column. */
+  #tab-registrations .reg-cycles{grid-template-columns:1fr}
+  [style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr!important}
+  [style*="grid-template-columns: 1fr 1fr"]{grid-template-columns:1fr!important}
+  [style*="grid-template-columns:210px"]{grid-template-columns:1fr!important}
+  [style*="grid-template-columns:1.4fr"]{grid-template-columns:1fr!important}
+  /* Toolbars, search boxes and add-forms go full width and wrap cleanly. */
+  .deb-mtools{gap:8px}
+  .deb-mtools input[type=search]{width:100%}
+  .uadd input,.uadd select{flex:1 1 100%;min-width:0}
+  /* Comfortable tap targets. */
+  .btn.sm{min-height:40px}
+  .snav{min-height:40px}
+  /* Tooltip bubbles never exceed the screen. */
+  .help-bubble{max-width:88vw}
+  /* Plain centre-screen modals use the height they need and scroll inside. */
+  .modal{max-height:88vh;overflow:auto}
+}
+@media(max-width:420px){
+  .topbar{padding:12px 12px;gap:8px}
+  .card{padding:13px 11px}
+  .btn{font-size:14px;padding:11px 14px}
+  .deb-tiles{gap:8px}
+}
+</style>
+<script>
+/* Wrap every table (static, or rendered later when a tab opens) in a horizontal
+   scroll container, so no wide table can force the whole page sideways on a phone.
+   The table keeps its native layout, so column alignment is preserved. */
+(function(){
+  function wrapOne(t){
+    if(!t || t.nodeType!==1 || t.tagName!=='TABLE' || t.getAttribute('data-tw')) return;
+    var pr=t.parentNode; if(!pr){ return; }
+    t.setAttribute('data-tw','1');
+    if(pr.classList && (pr.classList.contains('tscroll')||pr.classList.contains('deb-txwrap')||pr.classList.contains('deb-proctblwrap'))) return;
+    var w=document.createElement('div'); w.className='tscroll';
+    pr.insertBefore(w,t); w.appendChild(t);
+  }
+  function scan(root){ try{ (root||document).querySelectorAll('table:not([data-tw])').forEach(wrapOne); }catch(e){} }
+  scan(document);
+  try{
+    var mo=new MutationObserver(function(muts){
+      for(var i=0;i<muts.length;i++){ var a=muts[i].addedNodes; if(!a) continue;
+        for(var j=0;j<a.length;j++){ var n=a[j]; if(!n||n.nodeType!==1) continue;
+          if(n.tagName==='TABLE') wrapOne(n); else if(n.querySelectorAll) scan(n);
+        }
+      }
+    });
+    if(document.body) mo.observe(document.body,{childList:true,subtree:true});
+  }catch(e){}
+  document.addEventListener('DOMContentLoaded',function(){ scan(document); });
+})();
+</script>
