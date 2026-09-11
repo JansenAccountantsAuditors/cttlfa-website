@@ -2074,7 +2074,7 @@
         +'<td class="num">'+dR(c.over60)+'</td>'
         +'<td>'+dStage(c.stage)+'</td>'
         +'<td>'+logged+'</td>'
-        +'<td class="num">'+(Number(c.last_receipt_days)>=999?'–':c.last_receipt_days+'d')+'</td></tr>';
+        +'<td class="num">'+(c.last_receipt?dDateZA(c.last_receipt):(Number(c.last_receipt_days)>=999?'–':c.last_receipt_days+'d'))+'</td></tr>';
     });
     h+='</tbody><tfoot><tr><td><b>'+clubs.length+' clubs</b></td><td></td><td></td><td class="num"><b>'+dR(clubs.reduce(function(a,c){return a+Number(c.bal);},0))+'</b></td><td class="num">'+dR(clubs.reduce(function(a,c){return a+Number(c.over60);},0))+'</td><td></td><td></td><td></td></tr></tfoot></table>';
     var w=$("debTbl"); w.innerHTML=h;
@@ -2189,6 +2189,46 @@
     doc.text(doc.splitTextToSize('Please quote this reference on every payment. Queries: '+(S.org_contact||''), (W-M)-rx-14), rx, payY+50);
   }
 
+  function debShortType(x){ x=x||''; var mm={'Tax Invoice':'Invoice','Customer Receipt':'Receipt','Customer Adjustment':'Adjustment','Credit Note':'Credit note','Opening Balance':'Opening','Customer Journal':'Journal','Supplier Invoice':'Invoice'}; return mm[x]||x; }
+  function debTxTableHtml(rows){
+    if(!rows||!rows.length) return '<p class="hint" style="font-size:12px">No transactions in this period.</p>';
+    return '<div class="deb-txwrap deb-txwrap-lg"><table class="deb-txtbl deb-txtbl-lg"><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th>Description</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>'
+      +rows.map(function(t){ var isR=Number(t.credit)>0; return '<tr'+(t.is_opening?' class="opn"':(isR?' class="rcpt"':''))+'><td>'+(t.is_opening?'Opening':dDateZA(t.tx_date))+'</td><td>'+esc(debShortType(t.tx_type))+'</td><td class="rf">'+esc(t.reference||'')+'</td><td class="ds">'+esc(t.description||'')+'</td><td class="num">'+(t.debit!=null?dR(t.debit):'')+'</td><td class="num">'+(t.credit!=null?dR(t.credit):'')+'</td><td class="num">'+dR(t.balance)+'</td></tr>'; }).join('')
+      +'</tbody></table></div>';
+  }
+  function debTxPeriodOpts(){
+    var sel=document.getElementById('debTxPeriod'); var v=sel?sel.value:'fy';
+    function fyStart(d){ var y=d.getFullYear(); return (d.getMonth()>=10)?new Date(y,10,1):new Date(y-1,10,1); }
+    function iso(d){ return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2); }
+    var now=new Date();
+    if(v==='pfy'){ var s=fyStart(now); return {from:iso(new Date(s.getFullYear()-1,10,1)), to:iso(new Date(s.getFullYear(),9,31)), label:'previous financial year'}; }
+    if(v==='12m'){ var f=new Date(now); f.setFullYear(f.getFullYear()-1); return {from:iso(f), to:iso(now), label:'last 12 months'}; }
+    if(v==='all'){ return {from:'2000-01-01', label:'full history'}; }
+    if(v==='custom'){ var ff=(document.getElementById('debTxFrom')||{}).value||null, tt=(document.getElementById('debTxTo')||{}).value||null; return {from:ff||'2000-01-01', to:tt||undefined, label:'selected period'}; }
+    return {from:iso(fyStart(now)), label:'this financial year'};
+  }
+  async function debRenderTxTable(c, opts){
+    var el=document.getElementById('debTxBody'); if(!el) return;
+    el.innerHTML='<p class="hint" style="font-size:12px">Loading transactions…</p>';
+    try{ var stx=await debFetchStatement(c, opts||{}); var rows=(stx.rows||[]);
+      el.innerHTML=debTxTableHtml(rows)+'<p class="hint" style="font-size:11px;margin:6px 0 0">'+rows.length+' entries'+((opts&&opts.label)?' · '+opts.label:'')+'. From the Sage ledger; receipts shaded. Invoice descriptions come from Sage and populate on the next fetch.</p>';
+    }catch(e){ el.innerHTML='<p class="hint" style="font-size:12px">Could not load transactions: '+esc(e.message||e)+'</p>'; }
+  }
+  async function debEmailStatement(c, opts){
+    var st; try{ st=await debSendSetup(); }catch(e){ alert('Could not load email settings: '+(e.message||e)); return; }
+    var S=st.settings||{}, cfg=st.config||{}, test=(cfg.test_mode!==false);
+    var period=(opts&&opts.label)?opts.label:'current';
+    if(!(await debConfirm('Email the '+period+' statement to '+c.name+'?\n\n'+(test?('TEST MODE — delivered to '+((cfg.test_email)||'the Treasurer')+', not the club.'):'Delivered to the club’s address on file.')+' A copy is BCC’d to the treasurer mailbox.','Send statement'))) return;
+    var b64=null,pname=null;
+    try{ var doc=await debStatementPDF(c, Object.assign({doc:true,silent:true}, opts||{})); if(doc){ b64=doc.output('datauristring').split(',')[1]; pname='CTTLFA Statement - '+String(c.name).replace(/[^A-Za-z0-9 ]/g,'').trim()+'.pdf'; } }catch(e){ alert('Could not build the statement: '+(e.message||e)); return; }
+    if(!b64){ alert('Could not build the statement PDF.'); return; }
+    var text='Dear '+c.name+' Committee,\n\nPlease find attached the club’s statement of account'+((opts&&opts.label)?' ('+opts.label+')':'')+', reflecting a balance of '+dR(c.bal)+'. Please use club code '+(c.code||c.name)+' as the payment reference; banking details are on the statement.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
+    var html=debEmailHtml(text, S, {attached:true});
+    try{ var r=await sb.functions.invoke('deb-send',{ body:{ club_key:c.club_key, name:c.name, code:c.code, trigger:'statement', subject:'Statement of account — '+c.name+(c.code?' ('+c.code+')':''), html:html, text:text, pdf_base64:b64, pdf_name:pname } });
+      if(r.error) throw new Error(r.error.message||r.error); if(r.data&&r.data.ok===false) throw new Error(r.data.error||'send failed');
+      alert('Statement '+(test?'delivered to the Treasurer (test mode).':'sent to the club.')); _deb=null;
+    }catch(e){ alert('Could not send the statement: '+(e.message||e)); }
+  }
   async function debFetchStatement(c, opts){ opts=opts||{}; var body={p_key:c.club_key}; if(opts.from) body.p_from=opts.from; if(opts.to) body.p_to=opts.to; var r=await sb.rpc('deb_statement',body); if(r.error) throw r.error; return r.data||{}; }
   function debStmtPeriodOpts(){
     var sel=document.getElementById('debStmtPeriod'); var v=sel?sel.value:'fy';
@@ -3016,13 +3056,16 @@
     h+='</div></div></div>';
     // ===================== TRANSACTIONS =====================
     h+='<div class="deb-tabpanel" data-panel="tx">';
-    h+='<div class="deb-txhead"><div class="deb-sec" style="margin:0">Transaction history <span class="hint" style="font-weight:400">&middot; ledger exported '+dDateZA(data.ledger_export_at)+'</span></div><button class="btn gold sm" id="debStmt2">Statement (PDF)</button></div>';
-    if((data.transactions||[]).length){
-      h+='<div class="deb-txwrap deb-txwrap-lg"><table class="deb-txtbl deb-txtbl-lg"><thead><tr><th>Date</th><th>Type</th><th>Reference</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>'
-        +data.transactions.map(function(t){ var isRcpt=(Number(t.credit)>0); return '<tr'+(isRcpt?' class="rcpt"':'')+'><td>'+dDateZA(t.tx_date)+'</td><td>'+esc(t.tx_type||'')+'</td><td class="rf">'+esc(t.reference||t.description||'')+'</td><td class="num">'+(t.debit?dR(t.debit):'')+'</td><td class="num">'+(t.credit?dR(t.credit):'')+'</td><td class="num">'+dR(t.balance)+'</td></tr>'; }).join('')
-        +'</tbody></table></div>'
-        +'<p class="hint" style="font-size:11px;margin:6px 0 0">Most recent '+data.transactions.length+' entries from the Sage ledger export. Receipts are shaded. For a full statement that reconciles to the live balance, use Statement (PDF).</p>';
-    } else { h+='<p class="hint" style="font-size:12px">No transaction ledger is loaded for this club yet. The balance and ageing come from the live Sage Days-Outstanding report; run a Sage fetch to itemise the ledger.</p>'; }
+    h+='<div class="deb-txhead">'
+      +'<div class="deb-txfilter"><label class="hint" style="display:inline-flex;align-items:center;gap:5px">Period '
+        +'<select id="debTxPeriod"><option value="fy">This financial year</option><option value="pfy">Previous financial year</option><option value="12m">Last 12 months</option><option value="all">All history</option><option value="custom">Custom…</option></select></label>'
+        +'<span id="debTxCustom" style="display:none;font-size:11px;color:#59666b">from <input type="date" id="debTxFrom" style="font-size:12px;padding:3px 4px;border:1px solid #d2d8e4;border-radius:5px"> to <input type="date" id="debTxTo" style="font-size:12px;padding:3px 4px;border:1px solid #d2d8e4;border-radius:5px"> <button class="btn ghost sm" id="debTxApply">Apply</button></span>'
+      +'</div>'
+      +'<div class="deb-txactions"><button class="btn gold sm" id="debStmt2">Statement (PDF)</button>'
+      +(canW?'<button class="btn ghost sm" id="debEmailStmt" title="Email this statement (for the chosen period) to the club — BCC the treasurer mailbox. Respects test mode.">Email statement…</button>':'')
+      +'</div>'
+    +'</div>';
+    h+='<div id="debTxBody"><p class="hint" style="font-size:12px">Loading transactions…</p></div>';
     h+='</div>';
     // ===================== CORRESPONDENCE =====================
     h+='<div class="deb-tabpanel" data-panel="corr">';
@@ -3069,13 +3112,17 @@
     Array.prototype.forEach.call(m.querySelectorAll('.deb-tab'),function(tb){ tb.onclick=function(){
       Array.prototype.forEach.call(m.querySelectorAll('.deb-tab'),function(x){x.classList.toggle('on',x===tb);});
       var pn=tb.dataset.tab; Array.prototype.forEach.call(m.querySelectorAll('.deb-tabpanel'),function(p){p.classList.toggle('on',p.dataset.panel===pn);});
+      if(pn==='tx' && !m._txLoaded){ m._txLoaded=true; debRenderTxTable(c, debTxPeriodOpts()); }
       var bd=m.querySelector('.deb-mbody'); if(bd) bd.scrollTop=0;
     }; });
     function goCorrTab(){ var t=m.querySelector('.deb-tab[data-tab="corr"]'); if(t) t.click(); }
-    // statement buttons (three entry points)
-    function wireStmt(id){ var b=document.getElementById(id); if(b) b.onclick=async function(){ var bb=this,t=bb.textContent; bb.disabled=true; bb.textContent='Generating…'; try{ await debStatementPDF(c, debStmtPeriodOpts()); }catch(e){ alert('Statement error: '+(e.message||e)); } bb.textContent=t; bb.disabled=false; }; }
-    wireStmt('debStmt'); wireStmt('debStmt2'); wireStmt('debStmt3');
+    // statement buttons (overview + correspondence use the corr period; transactions uses its own)
+    function stmtBtn(id, optsFn){ var b=document.getElementById(id); if(b) b.onclick=async function(){ var bb=this,t=bb.textContent; bb.disabled=true; bb.textContent='Generating…'; try{ await debStatementPDF(c, optsFn()); }catch(e){ alert('Statement error: '+(e.message||e)); } bb.textContent=t; bb.disabled=false; }; }
+    stmtBtn('debStmt', debStmtPeriodOpts); stmtBtn('debStmt3', debStmtPeriodOpts); stmtBtn('debStmt2', debTxPeriodOpts);
     var _spd=document.getElementById('debStmtPeriod'); if(_spd) _spd.onchange=function(){ var cu=document.getElementById('debStmtCustom'); if(cu) cu.style.display=(this.value==='custom')?'inline':'none'; };
+    var _txp=document.getElementById('debTxPeriod'); if(_txp) _txp.onchange=function(){ var cu=document.getElementById('debTxCustom'); if(cu) cu.style.display=(this.value==='custom')?'inline':'none'; if(this.value!=='custom') debRenderTxTable(c, debTxPeriodOpts()); };
+    var _txa=document.getElementById('debTxApply'); if(_txa) _txa.onclick=function(){ debRenderTxTable(c, debTxPeriodOpts()); };
+    var _es=document.getElementById('debEmailStmt'); if(_es) _es.onclick=async function(){ this.disabled=true; try{ await debEmailStatement(c, debTxPeriodOpts()); }catch(e){ alert(e.message||e); } this.disabled=false; };
     var _gc=document.getElementById('debGoCorr'); if(_gc) _gc.onclick=goCorrTab;
     var cp=document.getElementById('debCopy'); if(cp) cp.onclick=function(){ try{navigator.clipboard.writeText(debReminderText(c));}catch(e){} this.textContent='Copied'; var b=this; setTimeout(function(){b.textContent='Copy letter';},1300); };
     var ch=document.getElementById('debCorrHere'); if(ch) ch.onclick=function(){ debModalClose(); setTimeout(debOpenCorr,140); };
@@ -4065,6 +4112,12 @@
 .deb-txtbl-lg td.rf{color:#33415c}
 .deb-txtbl-lg tr.rcpt{background:#F3FAF5}
 .deb-corrbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:14px}
+.deb-txhead{align-items:flex-end}
+.deb-txfilter{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.deb-txfilter select{padding:5px 7px;font-size:12px;border:1px solid #D3DBDE;border-radius:6px;background:#fff}
+.deb-txactions{display:flex;gap:8px;flex-wrap:wrap}
+.deb-txtbl-lg td.ds{color:#2b3a45;max-width:280px;white-space:normal}
+.deb-txtbl-lg tr.opn td{background:#EFF4F7;font-weight:700;color:var(--navy,#071A4A)}
 </style>
 <style id="mobile-pass">
 html,body{max-width:100%;overflow-x:hidden}
