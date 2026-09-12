@@ -346,7 +346,7 @@
       #tab-home .hic{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;color:#fff}
       #tab-home .hic svg{width:24px;height:24px;stroke:#fff;fill:none;stroke-width:2}
       #tab-home .hic.voting{background:#071A4A} #tab-home .hic.reg{background:#123FB5} #tab-home .hic.fix{background:#4F6D7F} #tab-home .hic.web{background:#2f7d57}
-      #tab-home .hic.disc{background:#9a3130} #tab-home .hic.fincom{background:#9f6621} #tab-home .hic.fin{background:#6b5b2a} #tab-home .hic.site{background:#0C2461} #tab-home .hic.stats{background:#0a7d55} #tab-home .hic.portal{background:#0e7490}
+      #tab-home .hic.disc{background:#9a3130} #tab-home .hic.fincom{background:#9f6621} #tab-home .hic.fin{background:#6b5b2a} #tab-home .hic.site{background:#0C2461} #tab-home .hic.stats{background:#0a7d55} #tab-home .hic.portal{background:#0e7490} #tab-home .hic.clubdb{background:#5b3fa0}
       #tab-home .hfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
       #tab-home .hchip{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:3px 8px;border-radius:20px}
       #tab-home .hchip.live{background:#e6efe9;color:#1c7c4a} #tab-home .hchip.ext{background:#EEF2FA;color:var(--muted)} #tab-home .hchip.soon{background:#FBF0D8;color:#9f6621}
@@ -366,6 +366,7 @@
         <div class="hmod" data-area="fincom"><div class="hic fincom"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div><h3>Fincom Dashboard</h3><p>The Finance Committee operating dashboard — mandate, budget, monthly phasing, debtors, compliance and the Mancom packs. Restricted to Fincom members.</p><div class="hfoot"><span class="hchip live">Live · restricted</span><button class="btn gold sm" data-goto="fincom">Open</button></div></div>
         <div class="hmod" data-area="debtors"><div class="hic fin"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Club Debtors</h3><p>Live club debtor balances from Sage — ageing, who is paying, the constitutional collection cadence, and the out-of-compliance register for Mancom.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="debtors">Open</button></div></div>
         <div class="hmod" data-area="clubportal"><div class="hic portal"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div><h3>Club Portal</h3><p>The club-facing side of the association at club.cttfa.co.za — each club signs in to see its own account, statement, status and fixtures. Preview any club&rsquo;s view and manage who has access.</p><div class="hfoot"><span class="hchip ext">In testing</span><button class="btn gold sm" data-goto="clubportal">Open</button></div></div>
+        <div class="hmod" data-area="clubdb"><div class="hic clubdb"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg></div><h3>Club Database</h3><p>The one place every club maps together &mdash; register, Sage, contacts, portal, registrations and the website/LeagueRepublic names &mdash; so you can see at a glance what is linked and what is missing.</p><div class="hfoot"><span class="hchip live">New</span><button class="btn gold sm" data-goto="clubdb">Open</button></div></div>
         <div class="hmod" data-area="site"><div class="hic site"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg></div><h3>Live Website</h3><p>Open the public cttfa.co.za site as members and the public see it — fixtures, clubs, news and more.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.cttfa.co.za" target="_blank" rel="noopener">Open</a></div></div>
         <div class="hmod" data-area="webstats"><div class="hic stats"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg></div><h3>Website Analytics</h3><p>Live Google Analytics for the public cttfa.co.za site — visitors, sources, top pages and countries, with your own date range.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="webstats">Open</button></div></div>
       </div>
@@ -422,6 +423,11 @@
     <!-- CLUB PORTAL (admin console for the club-facing site) -->
     <section id="tab-clubportal" class="hidden">
       <div id="clubPortalRoot"><div class="card"><p class="hint">Loading the Club Portal console&hellip;</p></div></div>
+    </section>
+
+    <!-- CLUB DATABASE (central club mapping across all systems) -->
+    <section id="tab-clubdb" class="hidden">
+      <div id="clubDbRoot"><div class="card"><p class="hint">Loading the Club Database&hellip;</p></div></div>
     </section>
 
     <!-- WEBSITE ANALYTICS (embedded Looker Studio, live GA4) -->
@@ -1025,14 +1031,14 @@
   function canSee(area){ if(!area) return true; if(meRole==="fincom") return area==="fincom"; return true; }
   /* Edit rights: administrators edit everything; staff edit only their ticked areas; viewers and fincom edit nothing. */
   function canEdit(area){ if(!area) return false; if(meRole==="administrator") return true; if(meRole==="staff") return (((me&&me.modules)||[]).indexOf(area)>=0); return false; }
-  function tabArea(name){ if(["meetings","accredit","compliance","motions","live","audit"].indexOf(name)>=0) return "voting"; if(name==="registrations") return "registrations"; if(name==="webadmin") return "webadmin"; if(name==="fincom") return "fincom"; if(name==="webstats") return "webstats"; if(name==="debtors") return "debtors"; if(name==="clubportal") return "debtors"; return null; }
+  function tabArea(name){ if(["meetings","accredit","compliance","motions","live","audit"].indexOf(name)>=0) return "voting"; if(name==="registrations") return "registrations"; if(name==="webadmin") return "webadmin"; if(name==="fincom") return "fincom"; if(name==="webstats") return "webstats"; if(name==="debtors") return "debtors"; if(name==="clubportal") return "debtors"; if(name==="clubdb") return "debtors"; return null; }
   function goTab(name){
     if(meRole==="fincom") name="fincom";
     var _a=tabArea(name); if(_a && !canSee(_a)) name="home";
     var votingSubs=["meetings","accredit","compliance","motions","live","audit"];
     var sideActive=(name==="users")?"users":(name==="help")?"help":"home";
     Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav"),function(x){x.classList.toggle("on",x.dataset.tab===sideActive);});
-    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom","webstats","debtors","clubportal"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
+    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom","webstats","debtors","clubportal","clubdb"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
     var sub=$("votingSubnav"); if(sub){ var inV=votingSubs.indexOf(name)>=0; sub.style.display=inV?"":"none"; Array.prototype.forEach.call(sub.querySelectorAll(".subtab"),function(x){x.classList.toggle("on",x.dataset.tab===name);}); }
     var _mp=$("meetingPick"); if(_mp) _mp.style.display=(["meetings","accredit","compliance","motions","live"].indexOf(name)>=0)?"":"none";
     if(name!=="accredit") stopCiTimer();
@@ -1050,6 +1056,7 @@
     if(name==="webstats" && typeof renderWebstats==="function") renderWebstats();
     if(name==="debtors" && typeof renderDebtors==="function") renderDebtors();
     if(name==="clubportal" && typeof renderClubPortal==="function") renderClubPortal();
+    if(name==="clubdb" && typeof renderClubDatabase==="function") renderClubDatabase();
     try{ window.scrollTo(0,0); }catch(e){}
   }
   Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav, #votingSubnav .subtab"),function(t){
@@ -2069,6 +2076,102 @@
     debRender();
     try{ debStartClock(); }catch(e){}
     try{ debMorningRun(_deb); }catch(e){}
+  }
+
+  // ===================== CLUB DATABASE (central mapping) =====================
+  var _cdb=null, _cdbFilter='all', _cdbQ='';
+  async function renderClubDatabase(){
+    var root=$("clubDbRoot"); if(!root) return;
+    if(!(meRole==='administrator'||meRole==='staff'||canSee('debtors'))){ root.innerHTML='<div class="card"><h3>Club Database</h3><p class="hint">Restricted. Ask an administrator for access.</p></div>'; return; }
+    root.innerHTML='<div class="card"><p class="hint">Loading the Club Database&hellip;</p></div>';
+    try{ var r=await sb.rpc('club_master_full'); if(r.error) throw r.error; _cdb=r.data||{}; }
+    catch(e){ root.innerHTML='<div class="card"><p class="hint">Could not load the Club Database: '+esc(e.message||e)+'</p></div>'; return; }
+    cdbDraw();
+  }
+  function cdbChip(ok, textOk, textGap){
+    return ok
+      ? '<span style="font-size:11.5px;font-weight:700;color:#1c5136;background:#E7F5EC;border-radius:20px;padding:2px 9px;white-space:nowrap">'+textOk+'</span>'
+      : '<span style="font-size:11.5px;font-weight:700;color:#8a3c17;background:#FBECEA;border-radius:20px;padding:2px 9px;white-space:nowrap">'+textGap+'</span>';
+  }
+  function cdbDraw(){
+    var root=$("clubDbRoot"); var d=_cdb||{}, s=d.summary||{}, um=d.unmatched||{};
+    var h='<div class="card" style="background:var(--navy);color:#fff;margin-bottom:12px"><div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center"><div style="flex:1;min-width:240px"><h2 style="color:#fff;margin:0 0 4px;font-family:var(--head)">Club Database</h2><div style="color:#C7D2EC;font-size:13.5px">Every club, mapped across the register, Sage, contacts, the portal, player registrations and the website / LeagueRepublic names. One place to see what is linked and what is missing.</div></div></div>'
+      +'<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.16);font-size:12px;color:#C7D2EC">Registered clubs: <b style="color:#fff">'+(s.register_clubs||0)+'</b> ('+(s.n_full||0)+' full, '+(s.n_associate||0)+' associate) &middot; Player season '+esc(d.season||'')+' &middot; Sage as at '+dDateZA(d.as_at)+'</div></div>';
+    var gaps=[['no_sage','No Sage account',s.no_sage],['dup_sage','On two Sage accounts',s.dup_sage],['no_contact','No contact email',s.no_contact],['no_portal','No portal login',s.no_portal],['no_website','Not on website list',s.no_website],['no_lr','No LeagueRepublic name',s.no_lr],['no_players','No '+esc(d.season||'')+' players',s.no_players]];
+    h+='<div class="card" style="margin-bottom:12px"><div class="deb-sec" style="margin-top:0;border-top:0;padding-top:0">Gaps to resolve</div><div style="display:flex;flex-wrap:wrap;gap:8px">';
+    gaps.forEach(function(g){ var n=Number(g[2])||0; var on=(_cdbFilter===g[0]); h+='<button class="cdb-gap" data-gap="'+g[0]+'" style="border:1px solid '+(n?'#E4B4AE':'var(--line)')+';background:'+(on?'#071A4A':(n?'#FBECEA':'#fff'))+';color:'+(on?'#fff':(n?'#8a3c17':'var(--muted)'))+';border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">'+esc(g[1])+': '+n+'</button>'; });
+    h+='<button class="cdb-gap" data-gap="all" style="border:1px solid var(--line);background:'+(_cdbFilter==='all'?'#071A4A':'#fff')+';color:'+(_cdbFilter==='all'?'#fff':'var(--muted)')+';border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">Show all</button></div></div>';
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><h3 style="margin:0">Registered clubs &mdash; system map</h3><input id="cdbQ" type="search" placeholder="Search club or code&hellip;" style="width:220px;padding:8px 10px" value="'+esc(_cdbQ)+'"></div>'
+      +'<div class="tscroll"><table class="deb-table"><thead><tr><th>Club</th><th>Sage code</th><th>Contact</th><th class="num">Portal</th><th class="num">Players</th><th>Website</th><th>League name</th></tr></thead><tbody id="cdbBody"></tbody></table></div>'
+      +'<p class="hint" style="font-size:11.5px;margin:8px 0 0">Click a club to see how it is known in every system. Green means linked; amber means missing or needs attention.</p></div>';
+    h+=cdbUnmatched(um);
+    root.innerHTML=h;
+    Array.prototype.forEach.call(root.querySelectorAll('.cdb-gap'),function(b){ b.onclick=function(){ _cdbFilter=b.dataset.gap; cdbDraw(); }; });
+    var q=$("cdbQ"); if(q){ q.oninput=function(){ _cdbQ=this.value.trim().toLowerCase(); cdbBody(); }; }
+    cdbBody();
+  }
+  function cdbBody(){
+    var body=$("cdbBody"); if(!body) return; var clubs=(_cdb&&_cdb.clubs)||[];
+    var rows=clubs.filter(function(c){
+      if(_cdbQ){ if((c.name||'').toLowerCase().indexOf(_cdbQ)<0 && String((c.sage&&c.sage.code)||'').toLowerCase().indexOf(_cdbQ)<0) return false; }
+      if(_cdbFilter!=='all'){ var f=c.flags||{}; if(!f[_cdbFilter]) return false; }
+      return true;
+    });
+    if(!rows.length){ body.innerHTML='<tr><td colspan="7" class="hint" style="padding:14px">No club matches this filter.</td></tr>'; return; }
+    body.innerHTML=rows.map(function(c){
+      var sg=c.sage||{}, w=c.website||{}, f=c.flags||{};
+      var typeChip='<span class="deb-tag" style="background:'+(c.type==='full'?'#E8F0FA':'#FBF1DD')+';color:'+(c.type==='full'?'#1e456e':'#7a5312')+'">'+esc(c.type)+'</span>';
+      var sageCell=sg.linked?('<b>'+esc(sg.code||'')+'</b>'+(f.dup_sage?' <span title="Two Sage accounts for this club" style="font-size:10px;color:#8a3c17;background:#FBECEA;border-radius:4px;padding:1px 5px">2 accounts</span>':'')):cdbChip(false,'','no account');
+      return '<tr class="cdb-row" data-k="'+esc(c.register_id)+'" style="cursor:pointer">'
+        +'<td><b>'+esc(c.name)+'</b> '+typeChip+'</td>'
+        +'<td>'+sageCell+'</td>'
+        +'<td>'+(c.contact_email?cdbChip(true,'yes',''):cdbChip(false,'','missing'))+'</td>'
+        +'<td class="num">'+(c.portal_logins>0?c.portal_logins:cdbChip(false,'','0'))+'</td>'
+        +'<td class="num">'+(c.players>0?c.players:'<span class="hint">0</span>')+'</td>'
+        +'<td>'+(w.name?cdbChip(true,'listed',''):cdbChip(false,'','missing'))+'</td>'
+        +'<td>'+(w.name?(w.has_lr?cdbChip(true,'mapped',''):cdbChip(false,'','no alias')):'<span class="hint">&ndash;</span>')+'</td></tr>';
+    }).join('');
+    Array.prototype.forEach.call(body.querySelectorAll('.cdb-row'),function(tr){ tr.onclick=function(){ cdbOpenClub(tr.dataset.k); }; });
+  }
+  function cdbUnmatched(um){
+    um=um||{};
+    function list(title,note,items,render){
+      var n=(items||[]).length;
+      var h='<div class="card" style="margin-bottom:12px"><div class="deb-sec" style="margin-top:0;border-top:0;padding-top:0">'+esc(title)+' <span class="hint" style="font-weight:400">('+n+')</span></div><p class="hint" style="font-size:12px;margin:0 0 8px">'+note+'</p>';
+      if(!n){ h+='<p class="hint" style="font-size:12.5px">None &mdash; all linked.</p>'; }
+      else { h+='<div class="tscroll"><table class="deb-table">'+render(items)+'</table></div>'; }
+      return h+'</div>';
+    }
+    var seas=esc((_cdb&&_cdb.season)||'');
+    var h=list('Sage accounts not linked to a member club','Sage customer accounts not mapped to a registered club &mdash; guest teams, dormant or duplicate accounts. Link or retire them in Sage.',um.sage_accounts,function(items){
+      return '<thead><tr><th>Sage account</th><th>Key</th><th>Type</th><th class="num">Balance</th></tr></thead><tbody>'+items.map(function(x){return '<tr><td>'+esc(x.name||'')+'</td><td class="hint">'+esc(x.club_key||'')+'</td><td>'+esc(x.club_type||'')+'</td><td class="num">'+dR(x.balance)+'</td></tr>';}).join('')+'</tbody>';
+    });
+    h+=list('Website clubs not matched to the register','Clubs on the public website / LeagueRepublic list that do not match a registered club by name &mdash; either a name variant to align or a non-member.',um.website_clubs,function(items){
+      return '<thead><tr><th>Website club</th><th>Type</th><th class="num">Teams 2026</th></tr></thead><tbody>'+items.map(function(x){return '<tr><td>'+esc(x.name||'')+'</td><td>'+esc(x.type||'')+'</td><td class="num">'+esc(x.teams||'')+'</td></tr>';}).join('')+'</tbody>';
+    });
+    h+=list('Registration names not mapped to a club','Player-registration club names in '+seas+' not linked to a registered club, so their players are not counted to a club.',um.reg_names,function(items){
+      return '<thead><tr><th>Registration name</th><th class="num">Players</th></tr></thead><tbody>'+items.map(function(x){return '<tr><td>'+esc(x.name||'')+'</td><td class="num">'+esc(x.players||0)+'</td></tr>';}).join('')+'</tbody>';
+    });
+    return h;
+  }
+  function cdbOpenClub(regId){
+    var c=((_cdb&&_cdb.clubs)||[]).filter(function(x){return String(x.register_id)===String(regId);})[0]; if(!c) return;
+    var sg=c.sage||{}, w=c.website||{}, f=c.flags||{}, lr=(w.lr_aliases||[]);
+    var m=debModal();
+    function row(k,v){ return '<tr><td style="color:var(--muted);padding:5px 12px 5px 0;white-space:nowrap;vertical-align:top">'+esc(k)+'</td><td style="padding:5px 0"><b>'+v+'</b></td></tr>'; }
+    var body='<table style="width:100%;border-collapse:collapse;font-size:13px">'
+      +row('Voting register', esc(c.name)+' &middot; '+esc(c.type)+' &middot; '+c.weight+' vote'+(c.weight>1?'s':''))
+      +row('Sage / debtors', sg.linked?(esc(sg.code||'')+' &middot; '+(sg.n_accounts>1?(sg.n_accounts+' accounts: '+esc((sg.keys||[]).join(', '))):esc((sg.keys||[])[0]||''))+' &middot; balance '+dR(sg.balance)):'<span style="color:#8a3c17">No Sage account</span>')
+      +row('Contact', c.contact_email?esc(c.contact_email):'<span style="color:#8a3c17">None on record</span>')
+      +row('Portal logins', c.portal_logins>0?(c.portal_logins+' active'):'<span style="color:#8a3c17">None</span>')
+      +row('Player registrations', (c.players||0)+' in '+esc((_cdb&&_cdb.season)||''))
+      +row('Website', w.name?(esc(w.name)+(w.suburb?(' &middot; '+esc(w.suburb)):'')+(w.teams?(' &middot; '+esc(w.teams)+' teams'):'')):'<span style="color:#8a3c17">Not on the website list</span>')
+      +row('LeagueRepublic', lr.length?esc(lr.join(', ')):'<span style="color:#8a3c17">No alias mapped</span>')
+      +'</table>';
+    var gaps=[]; if(f.no_sage)gaps.push('No Sage account'); if(f.dup_sage)gaps.push('On two Sage accounts'); if(f.no_contact)gaps.push('No contact email'); if(f.no_portal)gaps.push('No portal login'); if(f.no_website)gaps.push('Not on the website list'); if(f.no_lr)gaps.push('No LeagueRepublic alias'); if(f.no_players)gaps.push('No '+((_cdb&&_cdb.season)||'')+' players');
+    var gapHtml=gaps.length?('<div style="background:#FBECEA;border:1px solid #f0cfcd;border-radius:10px;padding:10px 12px;margin-top:12px;font-size:12.5px;color:#8a3c17"><b>Gaps:</b> '+gaps.map(esc).join(' &middot; ')+'</div>'):'<div style="background:#E7F5EC;border:1px solid #BFE3CC;border-radius:10px;padding:10px 12px;margin-top:12px;font-size:12.5px;color:#14462b">Fully linked across all systems.</div>';
+    m.innerHTML='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">How this club is known across every system</div></div><button class="dx" id="cdbX" aria-label="Close">&times;</button></div><div class="deb-mbody">'+body+gapHtml+'</div>';
+    var x=document.getElementById('cdbX'); if(x) x.onclick=debModalClose;
   }
 
   // ---- Data-freshness banner: warns when the Sage fetch is older than the
