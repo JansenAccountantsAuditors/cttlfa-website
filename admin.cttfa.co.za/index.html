@@ -2169,11 +2169,11 @@
   }
 
   function debTable(){
-    var clubs=(_deb.clubs||[]).filter(function(c){ if(Math.abs(Number(c.bal||0))<0.005 && (c.active===false || (c.club_type && c.club_type!=='full' && c.club_type!=='associate')) && !debCashByKey(c.club_key)) return false; if(_debStatus&&c.stage!==_debStatus)return false; if(_debQ&&(c.name.toLowerCase().indexOf(_debQ)<0&&String(c.code||'').toLowerCase().indexOf(_debQ)<0&&String(c.suburb||'').toLowerCase().indexOf(_debQ)<0))return false; return true; });
+    var clubs=(_deb.clubs||[]).filter(function(c){ if(!c.is_member && Math.abs(Number(c.bal||0))<0.005 && !debCashByKey(c.club_key)) return false; if(_debStatus&&c.stage!==_debStatus)return false; if(_debQ&&(c.name.toLowerCase().indexOf(_debQ)<0&&String(c.code||'').toLowerCase().indexOf(_debQ)<0&&String(c.suburb||'').toLowerCase().indexOf(_debQ)<0))return false; return true; });
     clubs.sort(function(a,b){ var x=a[_debSort],y=b[_debSort]; if(typeof x==='string'){x=x.toLowerCase();y=(y||'').toLowerCase();} return x<y?-_debDir:x>y?_debDir:0; });
     function mbar(c){ if(c.bal<=0) return ''; var t=Number(c.cur)+Number(c.b30)+Number(c.b60)+Number(c.b90)+Number(c.b120)||1; return '<span class="deb-mbar">'+DEB_BK.map(function(b){var w=Math.max(0,Number(c[b[0]]))/t*100;return w>0?'<i style="width:'+w+'%;background:'+b[2]+'"></i>':'';}).join('')+'</span>'; }
-    var cols=[['name','Club',0],['code','Code',0],['club_type','Type',0],['bal','Balance',1],['over60','Overdue (60+)',1],['stage','Stage',0],['coll','Logged',0],['last_receipt_days','Last rcpt',1]];
-    var h='<table class="deb-table"><thead><tr>'+cols.map(function(c){return '<th'+(c[2]?' class="num"':'')+' data-k="'+c[0]+'">'+c[1]+(_debSort===c[0]?(_debDir<0?' ▾':' ▴'):'')+'</th>';}).join('')+'</tr></thead><tbody>';
+    var cols=[['name','Club',0],['code','Code',0],['club_type','Type',0],['bal','Balance',1],['over60','Overdue (60+)',1],['stage','Stage',0],['coll','Collections',0,'Logged collections workflow: the correspondence step reached (statement, reminder, final reminder), On plan where a written arrangement is in place, or Placed OOC once served Out of Compliance'],['last_receipt_days','Last rcpt',1]];
+    var h='<table class="deb-table"><thead><tr>'+cols.map(function(c){return '<th'+(c[2]?' class="num"':'')+' data-k="'+c[0]+'"'+(c[3]?' title="'+esc(c[3])+'"':'')+'>'+c[1]+(_debSort===c[0]?(_debDir<0?' ▾':' ▴'):'')+'</th>';}).join('')+'</tr></thead><tbody>';
     clubs.forEach(function(c){
       var logged=c.ooc?'<span class="deb-tag" style="background:#FBECEA;color:#8a3c17" title="Placed Out of Compliance'+(c.ooc_since?' on '+dDateZA(c.ooc_since):'')+'">Placed OOC</span>':(c.payment_plan?'<span class="deb-tag" style="background:#E7F5EC;color:#1c5136">On plan</span>':(c.coll_step?'<span class="deb-tag" style="background:#EEF2F8;color:#33415c">'+esc(c.coll_step.replace(/_/g,' '))+'</span>':'<span class="hint" style="font-size:11px">–</span>'));
       h+='<tr class="deb-click" data-key="'+esc(c.club_key)+'" tabindex="0">'
@@ -2186,7 +2186,14 @@
         +'<td>'+logged+'</td>'
         +'<td class="num">'+(c.last_receipt?dDateZA(c.last_receipt):(Number(c.last_receipt_days)>=999?'–':c.last_receipt_days+'d'))+'</td></tr>';
     });
-    h+='</tbody><tfoot><tr><td><b>'+clubs.length+' clubs</b></td><td></td><td></td><td class="num"><b>'+dR(clubs.reduce(function(a,c){return a+Number(c.bal);},0))+'</b></td><td class="num">'+dR(clubs.reduce(function(a,c){return a+Number(c.over60);},0))+'</td><td></td><td></td><td></td></tr></tfoot></table>';
+    var _mem=clubs.filter(function(c){return c.is_member;}).length;
+    var _oth=clubs.length-_mem;
+    var _s=_deb.snapshot||{}, _rt=_s.n_members_total||50, _rf=_s.n_members_full||0, _ra=_s.n_members_assoc||0;
+    var _filt=(_debStatus||_debQ);
+    var _foot=_filt
+      ? (_mem+' of '+_rt+' registered members shown'+(_oth?' · '+_oth+' guest/other':''))
+      : (_rt+' registered members ('+_rf+' full, '+_ra+' associate)'+(_oth?' · '+_oth+' guest/other account'+(_oth>1?'s':''):''));
+    h+='</tbody><tfoot><tr><td colspan="3"><b>'+_foot+'</b></td><td class="num"><b>'+dR(clubs.reduce(function(a,c){return a+Number(c.bal);},0))+'</b></td><td class="num">'+dR(clubs.reduce(function(a,c){return a+Number(c.over60);},0))+'</td><td colspan="3"></td></tr></tfoot></table>';
     var w=$("debTbl"); w.innerHTML=h;
     Array.prototype.forEach.call(w.querySelectorAll('th[data-k]'),function(th){ th.onclick=function(){ var k=th.dataset.k; if(_debSort===k)_debDir=-_debDir; else {_debSort=k;_debDir=(k==='name'||k==='code'||k==='stage'||k==='coll')?1:-1;} debTable(); }; });
     Array.prototype.forEach.call(w.querySelectorAll('.deb-click'),function(tr){ tr.onclick=function(){ debOpenClub(tr.dataset.key); }; tr.onkeydown=function(e){ if(e.key==='Enter'){e.preventDefault();debOpenClub(tr.dataset.key);} }; });
