@@ -2169,7 +2169,7 @@
   }
 
   function debTable(){
-    var clubs=(_deb.clubs||[]).filter(function(c){ if(c.active===false && Math.abs(Number(c.bal||0))<0.005) return false; if(_debStatus&&c.stage!==_debStatus)return false; if(_debQ&&(c.name.toLowerCase().indexOf(_debQ)<0&&String(c.code||'').toLowerCase().indexOf(_debQ)<0&&String(c.suburb||'').toLowerCase().indexOf(_debQ)<0))return false; return true; });
+    var clubs=(_deb.clubs||[]).filter(function(c){ if(Math.abs(Number(c.bal||0))<0.005 && (c.active===false || (c.club_type && c.club_type!=='full' && c.club_type!=='associate')) && !debCashByKey(c.club_key)) return false; if(_debStatus&&c.stage!==_debStatus)return false; if(_debQ&&(c.name.toLowerCase().indexOf(_debQ)<0&&String(c.code||'').toLowerCase().indexOf(_debQ)<0&&String(c.suburb||'').toLowerCase().indexOf(_debQ)<0))return false; return true; });
     clubs.sort(function(a,b){ var x=a[_debSort],y=b[_debSort]; if(typeof x==='string'){x=x.toLowerCase();y=(y||'').toLowerCase();} return x<y?-_debDir:x>y?_debDir:0; });
     function mbar(c){ if(c.bal<=0) return ''; var t=Number(c.cur)+Number(c.b30)+Number(c.b60)+Number(c.b90)+Number(c.b120)||1; return '<span class="deb-mbar">'+DEB_BK.map(function(b){var w=Math.max(0,Number(c[b[0]]))/t*100;return w>0?'<i style="width:'+w+'%;background:'+b[2]+'"></i>':'';}).join('')+'</span>'; }
     var cols=[['name','Club',0],['code','Code',0],['club_type','Type',0],['bal','Balance',1],['over60','Overdue (60+)',1],['stage','Stage',0],['coll','Logged',0],['last_receipt_days','Last rcpt',1]];
