@@ -2065,6 +2065,7 @@
     }
     if(!_deb || _deb.empty){ root.innerHTML='<div class="card"><h3>Club Debtors</h3><p class="hint">No Sage extract has been loaded yet.</p></div>'; return; }
     await debLoadSync();
+    try{ await debSendSetup(); }catch(e){}
     debRender();
     try{ debStartClock(); }catch(e){}
     try{ debMorningRun(_deb); }catch(e){}
@@ -2126,8 +2127,13 @@
     var lastStmt=null,lastRem=null;
     clubs.forEach(function(c){ if(c.statement_last&&(!lastStmt||c.statement_last>lastStmt))lastStmt=c.statement_last; if(c.reminder_last&&(!lastRem||c.reminder_last>lastRem))lastRem=c.reminder_last; });
     var h='';
-    // NOT-LIVE notice
-    h+='<div class="deb-notlive"><span class="nl-tag">Not live</span><div><b>Automated correspondence is not live yet &mdash; pending Mancom approval.</b> This module is in final testing ahead of the Management Committee meeting on Tuesday 15 September 2026. The balances, ageing and stages shown are the real Sage figures, but no correspondence goes out to clubs. Every send is in test mode and reaches the Treasurer only. Nagging Panda remains the live collections system until Mancom approves the switch.</div></div>';
+    // Correspondence mode notice — reflects the live deb_send_config state.
+    var _liveMode=!!(_sendSetup && _sendSetup.config && _sendSetup.config.test_mode===false);
+    if(_liveMode){
+      h+='<div style="background:#E7F5EC;border:1px solid #BFE3CC;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start"><span style="font-size:11px;font-weight:700;letter-spacing:.3px;background:#1c5136;color:#fff;border-radius:6px;padding:3px 8px;white-space:nowrap">LIVE</span><div style="font-size:13px;color:#14462b"><b>Correspondence is live.</b> Statements, reminders and notices now go to clubs&rsquo; real email addresses on file, with the Treasurer and ops copied on every send. Nothing sends automatically &mdash; each batch is sent by hand, and a club holding unallocated cash or out of sync with Sage is held back until that is cleared. Balances and ageing come straight from Sage.</div></div>';
+    } else {
+      h+='<div class="deb-notlive"><span class="nl-tag">Test mode</span><div><b>Correspondence is in test mode.</b> Balances, ageing and stages are the real Sage figures, but no correspondence goes out to clubs &mdash; every send reaches the Treasurer only. Switch to live in Email setup when ready.</div></div>';
+    }
     // data-freshness / stale-fetch warning
     h+=debStaleBanner(s);
     // header + provenance
