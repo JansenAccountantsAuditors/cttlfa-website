@@ -2200,9 +2200,13 @@
   }
 
   function debReminderText(c){
-    var nm=c.name, ref=c.code||'', st=c.stage;
-    if(st==='ooc' && c.club_type==='guest') return 'Dear '+nm+' Committee,\n\nYour club takes part in CTTLFA competitions as a guest club and is not a member of the Association. The account is in arrears: '+dR(c.over60)+' has aged to 120 days and older on a balance of '+dR(c.bal)+', despite prior statements and reminders. As a guest club, the Association’s constitutional compliance consequences do not apply to you. Please note, however, that a guest club whose account is left unsettled and Out of Compliance will not be considered for participation in CTTLFA competitions in the following season.\n\nPlease settle the outstanding amount without delay, using club code '+ref+' as the payment reference; banking details are on the attached statement.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
-    if(st==='ooc') return 'Dear '+nm+' Committee,\n\nThe club account is Out of Compliance. '+dR(c.over60)+' has aged to 120 days and older on a balance of '+dR(c.bal)+', having passed the statement, payment-reminder and final-reminder stages without settlement or an approved arrangement. In terms of Rule 10.2.3, the club is served this Out of Compliance notice and remains out of compliance until the overdue amount is settled. While out of compliance, the consequences in Rule 16.4.2.6 apply. A written payment arrangement under Article 7.11.16 may still be applied for.\n\nPlease attend to this without delay to restore the club’s good standing.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
+    var nm=c.name, ref=c.code||'', st=c.stage, guest=(c.club_type==='guest'||c.is_guest);
+    if(guest){
+      if(st==='ooc' || st==='final') return 'Dear '+nm+' Committee,\n\nYour team takes part in CTTLFA competitions as a guest team and is not a member of the Association. Your account is in arrears: '+dR(c.over60)+' has aged to 120 days and older on a balance of '+dR(c.bal)+', despite prior statements and reminders. As a guest team, the Association’s constitutional compliance consequences do not apply to your team. A guest team whose account is left unsettled will not be considered for participation in CTTLFA competitions in the following season.\n\nPlease settle the outstanding amount without delay, using code '+ref+' as the payment reference; banking details are on the attached statement.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
+      if(st==='reminder') return 'Dear '+nm+' Committee,\n\nA payment reminder that '+dR(c.bal)+' is outstanding on your account, of which '+dR(c.over60)+' is past the 30-day terms. Your team takes part as a guest team and is not a member of the Association, so the constitutional compliance process does not apply; we ask only that the account is settled on the same terms as all participating teams. Please settle using code '+ref+' as the payment reference; banking details are on the attached statement.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
+      return 'Dear '+nm+' Committee,\n\nPlease find your statement of account attached, reflecting a balance of '+dR(c.bal)+'. Please use code '+ref+' as the payment reference; banking details are on the statement.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
+    }
+    if(st==='ooc') return 'Dear '+nm+' Committee,\n\nThe club account is Out of Compliance. '+dR(c.over60)+' has aged to 120 days and older on a balance of '+dR(c.bal)+', having passed the statement, payment-reminder and final-reminder stages without settlement or an approved arrangement. In terms of Rule 10.2.3, the club is served this Out of Compliance notice and remains out of compliance until the overdue amount is settled. While out of compliance, the consequences in Rule 16.4.2.6 apply. A payment arrangement can no longer be entered into at this stage; the arrears must be settled in full to restore compliance.\n\nPlease attend to this without delay to restore the club’s good standing.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
     if(st==='final') return 'Dear '+nm+' Committee,\n\nThis is a final payment reminder. '+dR(c.over60)+' has now aged to 90 days and older on a balance of '+dR(c.bal)+'. Please settle within 7 days, or put a written payment arrangement under Article 7.11.16 in place, failing which the account will be placed Out of Compliance.\n\nBanking details are on the attached statement; please use club code '+ref+' as the reference.\n\nRegards,\nTreasurer, Cape Town Tygerberg LFA';
     if(st==='reminder') return 'Dear '+nm+' Committee,\n\nA payment reminder that '+dR(c.bal)+' is outstanding, of which '+dR(c.over60)+' has aged to 60 days and older in the ageing (Rule 10.2). Please settle at your convenience using club code '+ref+' as the payment reference; banking details are on the attached statement. A written arrangement may be applied for under Article 7.11.16.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
     return 'Dear '+nm+' Committee,\n\nPlease find your statement of account attached, reflecting a balance of '+dR(c.bal)+'. Please use club code '+ref+' as the payment reference; banking details are on the statement.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
@@ -2388,6 +2392,23 @@
   function debLetterBody(c, tier){
     var bal=debAmtR(c.bal), over=debAmtR(c.over60!=null?c.over60:c.over), ref=c.code||c.name;
     var d90=debAmtR(Number(c.b90)+Number(c.b120));
+    var guest=(c.club_type==='guest'||c.is_guest);
+    if(guest){
+      if(tier==='ooc' || tier==='final') return [
+        'Your team takes part in CTTLFA competitions as a guest team and is not a member of the Association. The account is in arrears, with '+over+' aged to 120 days and older on a balance of '+bal+', despite prior statements and reminders.',
+        'As a guest team, the Association’s constitutional compliance consequences do not apply to your team. A guest team whose account is left unsettled will not be considered for participation in CTTLFA competitions in the following season.',
+        'Please settle the outstanding amount without delay, using code '+ref+' as the payment reference; banking details appear on the statement.'];
+      if(tier==='reminder') return [
+        'This is a payment reminder that the account reflects '+bal+' outstanding, of which '+over+' is past the 30-day terms.',
+        'Your team takes part as a guest team and is not a member of the Association, so the constitutional compliance process does not apply; we ask only that the account is settled on the same terms as all participating teams. Banking details appear on the statement and code '+ref+' should be used as the payment reference.',
+        'Should the amount already have been paid, kindly disregard this reminder and accept our thanks.'];
+      return c.bal>0.01
+        ? ['Please find enclosed your team’s current statement of account with the Association, reflecting a balance of '+bal+'.',
+           'We would be grateful if the outstanding amount could be settled at your earliest convenience. Banking details appear on the statement, and code '+ref+' should be used as the payment reference.',
+           'Should payment already have been made, kindly disregard this letter and accept our thanks.']
+        : ['Please find enclosed your team’s current statement of account with the Association.',
+           'The account is settled and no payment is due. The statement is provided for your team’s records.'];
+    }
     if(tier==='statement'){
       return c.bal>0.01
         ? ['Please find enclosed the club’s current statement of account with the Association, reflecting a balance of '+bal+'.',
@@ -2413,11 +2434,13 @@
     }
     return ['The club account is Out of Compliance. '+over+' is overdue on a balance of '+bal+', having passed the statement, payment-reminder and final-reminder stages without settlement or an approved payment arrangement.',
       'In terms of Rule 10.2.3 of the Association’s Rules and Regulations, the club is served this Out of Compliance notice and remains out of compliance until the overdue amount is settled. While out of compliance, the consequences in Rule 16.4.2.6 apply, including that the club may not accumulate points and forfeits upcoming fixtures, with a three-point deduction per game from the date of non-compliance.',
-      'A written payment arrangement under Article 7.11.16 may still be applied for. Please attend to this without delay to restore the club’s good standing.'];
+      'A payment arrangement can no longer be entered into at this stage; the arrears must be settled in full and proof of payment provided to the Treasurer, from which date the club’s good standing is restored, forward only. Please attend to this without delay.'];
   }
   function debRenderLetterInto(doc, c, S, tierKey){
     var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=40;
     var T=DEB_TIERS[tierKey]||DEB_TIERS.reminder;
+    var _guest=(c.club_type==='guest'||c.is_guest);
+    if(_guest && tierKey==='ooc'){ T={key:T.key,label:T.label,action:T.action,subject:'Overdue account',right:'OVERDUE ACCOUNT'}; }
     var todayZA=dDateZA(new Date().toISOString().slice(0,10));
     var ruleY=debLetterhead(doc,S,T.right);
     var y=ruleY+22;
@@ -2426,7 +2449,7 @@
     doc.setTextColor.apply(doc,DEB_INK); doc.setFont('helvetica','bold'); doc.setFontSize(10);
     doc.text('The Committee', M, y); doc.text(c.name+(c.code?'  ('+c.code+')':''), M, y+14);
     doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor.apply(doc,DEB_MUTED);
-    doc.text('Delivered by email to the club’s registered contact.', M, y+27);
+    doc.text('Delivered by email to the '+(_guest?'team':'club')+'’s registered contact.', M, y+27);
     y+=48;
     doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor.apply(doc,DEB_NAVY);
     doc.text(doc.splitTextToSize(T.subject, W-2*M), M, y); y+=20;
@@ -2888,7 +2911,9 @@
   async function debSendOne(c, trigger){
     if(!_deb||!_deb.clubs){ try{ var _rr=await sb.rpc('deb_dashboard'); if(!_rr.error&&_rr.data) _deb=_rr.data; }catch(e){} }
     var _full=((_deb&&_deb.clubs)||[]).filter(function(x){return x.club_key===c.club_key;})[0]; if(_full) c=_full;
-    var st=await debSendSetup(); var S=st.settings||{}; var tpl=st.tplMap[trigger]||{};
+    var st=await debSendSetup(); var S=st.settings||{};
+    var _tk=trigger; if((c.club_type==='guest'||c.is_guest)&&st.tplMap[trigger+'_guest'])_tk=trigger+'_guest';
+    var tpl=st.tplMap[_tk]||{};
     var subject=debFill(tpl.subject||'Statement of account — {club} ({code})', c, S);
     var text=debFill(tpl.body||'Please find your statement attached.', c, S);
     var html=debEmailHtml(text, S);
