@@ -2774,6 +2774,48 @@
   }
   function debModalClose(){ var m=document.getElementById('debModal'),s=document.getElementById('debMScrim'); if(m)m.classList.remove('on'); if(s)s.classList.remove('on'); }
 
+  // ---- Club portal preview: render exactly what a club sees, admin-gated, read-only ----
+  async function debPortalPreview(clubKey, name){
+    var ov=document.createElement('div'); ov.id='debPvOv';
+    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(7,26,74,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;font-family:Inter,Arial,Helvetica,sans-serif';
+    ov.onclick=function(e){ if(e.target===ov && ov.parentNode) document.body.removeChild(ov); };
+    ov.innerHTML='<div style="width:100%;max-width:900px">'
+      +'<div style="display:flex;align-items:center;gap:12px;color:#fff;margin-bottom:12px">'
+        +'<div style="flex:1"><div style="font-weight:800;font-size:16px">Club portal preview</div>'
+        +'<div style="font-size:12.5px;color:#cfd8ee">What '+esc(name)+' sees when it signs in at club.cttfa.co.za. Read-only.</div></div>'
+        +'<button id="debPvX" style="background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer">Close</button></div>'
+      +'<div id="debPvBody" style="background:#F4F6FB;border-radius:16px;padding:16px;max-width:430px;margin:0 auto;box-shadow:0 20px 60px rgba(0,0,0,.35)"><div style="text-align:center;color:#59666B;padding:40px 0">Loading the club&rsquo;s view&hellip;</div></div></div>';
+    document.body.appendChild(ov);
+    document.getElementById('debPvX').onclick=function(){ if(ov.parentNode) document.body.removeChild(ov); };
+    var d={}; try{ var r=await sb.rpc('deb_portal_preview',{p_club:clubKey}); if(r.error) throw r.error; d=r.data||{}; }
+    catch(e){ document.getElementById('debPvBody').innerHTML='<div style="padding:20px;color:#9A3130">Could not load the preview: '+esc(e.message||e)+'</div>'; return; }
+    var H=d.home||{}, L=d.ledger||[]; var bal=Number(H.balance)||0, over=Number(H.over)||0, ag=H.ageing||{};
+    function mny(n){ return dR(n); }
+    var pill = H.out_of_compliance?'<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#fbeceb;color:#9A3130">Out of compliance</span>'
+      : bal<0?'<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#eef2fb;color:#071A4A">In credit</span>'
+      : over>0?'<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#fbf1e2;color:#9F6621">Amount overdue</span>'
+      : '<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#e7f4ec;color:#1f7a4d">Up to date</span>';
+    var html='<div style="background:#071A4A;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px">'
+      +'<img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" width="34" height="34" style="border-radius:7px;background:#fff;display:block">'
+      +'<div><div style="color:#fff;font-weight:800;font-size:13px;line-height:1.1">Cape Town Tygerberg LFA</div><div style="color:#B7C4E6;font-size:11px">'+esc(H.name||name)+'</div></div></div>';
+    if(H.out_of_compliance){ html+='<div style="background:#fbeceb;border:1px solid #f0cfcd;border-radius:10px;padding:12px 14px;margin-top:12px"><b style="color:#9A3130">Your club is Out of Compliance.</b><div style="font-size:12.5px;color:#6a2321;margin-top:4px">'+mny(over>0?over:bal)+' outstanding'+(H.ooc_since?' since '+dDateZA(H.ooc_since):'')+'. Settle in full and send proof of payment to restore good standing.</div></div>'; }
+    html+='<div style="background:#071A4A;color:#fff;border-radius:12px;padding:16px;margin-top:12px"><div style="font-size:12px;color:#B7C4E6">Balance on your account</div>'
+      +'<div style="font-size:28px;font-weight:800;margin:2px 0;font-variant-numeric:tabular-nums">'+mny(bal)+'</div><div style="margin-top:6px">'+pill+'</div>'
+      +'<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.16);font-size:12px;color:#cfd8ee">Payment reference <b style="color:#fff">'+esc(H.code||'')+'</b>'+(H.as_at?' &middot; as at '+dDateZA(H.as_at):'')+'</div></div>';
+    var bands=[['Current',ag.current,false],['30 days',ag.d30,false],['60 days',ag.d60,true],['90 days',ag.d90,true],['120 days +',ag.d120,true]];
+    var mx=Math.max(1,Math.max.apply(null,bands.map(function(b){return Math.abs(Number(b[1])||0);})));
+    html+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:12px;padding:14px;margin-top:12px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#59666B;margin-bottom:10px">How your balance is aged</div>';
+    bands.forEach(function(b){ var v=Number(b[1])||0,w=Math.round(Math.abs(v)/mx*100); html+='<div style="display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12.5px"><span style="width:66px;color:#59666B">'+b[0]+'</span><span style="flex:1;height:9px;background:#F4F6FB;border-radius:5px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:'+(b[2]?'#D0982F':'#071A4A')+'"></i></span><span style="width:90px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">'+mny(v)+'</span></div>'; });
+    html+='</div>';
+    html+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:12px;padding:14px;margin-top:12px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#59666B;margin-bottom:8px">Recent statement lines</div>';
+    var last=L.slice(-8);
+    if(!last.length){ html+='<div style="font-size:12.5px;color:#59666B">No transactions on record.</div>'; }
+    else { html+='<table style="width:100%;border-collapse:collapse;font-size:11.5px">'; last.forEach(function(t){ html+='<tr style="border-bottom:1px solid #eef1f6"><td style="padding:5px 2px;color:#59666B">'+(t.opening?'Opening':dDateZA(t.date))+'</td><td style="padding:5px 2px">'+esc(String(t.type||'').slice(0,14))+'</td><td style="padding:5px 2px;text-align:right;font-variant-numeric:tabular-nums">'+mny(t.balance)+'</td></tr>'; }); html+='</table>'; }
+    html+='</div>';
+    html+='<div style="font-size:11px;color:#59666B;text-align:center;margin-top:12px">'+(H.has_portal_access?'This club has a contact email with portal access.':'No portal login yet &mdash; add a contact email to this club in Sage to grant access.')+'</div>';
+    document.getElementById('debPvBody').innerHTML=html;
+  }
+
   // ---- Collections Desk ----
   var _deskRows=null, _deskQ='', _deskOwing=true;
   async function debOpenDesk(){
@@ -3229,6 +3271,7 @@
       +'<div class="deb-rec-acts">'
       +'<button class="btn gold sm" id="debStmt">Statement (PDF)</button>'
       +'<button class="btn ghost sm" id="debGoCorr">Correspondence →</button>'
+      +'<button class="btn ghost sm" id="debPvBtn" title="Open a read-only preview of exactly what this club sees when it signs in to the Club Portal.">Preview club portal</button>'
       +(canW?'<button class="btn ghost sm" id="debWriteEmail" title="Write a free-form email to this club. Sent on the CTTLFA letterhead, BCC to the treasurer mailbox.">Write email…</button>':'')
       +'</div></div>';
     // stage control
@@ -3377,6 +3420,7 @@
     var _txa=document.getElementById('debTxApply'); if(_txa) _txa.onclick=function(){ debRenderTxTable(c, debTxPeriodOpts()); };
     var _es=document.getElementById('debEmailStmt'); if(_es) _es.onclick=async function(){ this.disabled=true; try{ await debEmailStatement(c, debTxPeriodOpts()); }catch(e){ alert(e.message||e); } this.disabled=false; };
     var _gc=document.getElementById('debGoCorr'); if(_gc) _gc.onclick=goCorrTab;
+    var _pv=document.getElementById('debPvBtn'); if(_pv) _pv.onclick=function(){ debPortalPreview(c.club_key, c.name); };
     var cp=document.getElementById('debCopy'); if(cp) cp.onclick=function(){ try{navigator.clipboard.writeText(debReminderText(c));}catch(e){} this.textContent='Copied'; var b=this; setTimeout(function(){b.textContent='Copy letter';},1300); };
     var ch=document.getElementById('debCorrHere'); if(ch) ch.onclick=function(){ debModalClose(); setTimeout(debOpenCorr,140); };
     Array.prototype.forEach.call(m.querySelectorAll('#debWriteEmail,#debWriteEmail2'),function(we){ we.onclick=function(){ debComposeEmail(c); }; });
