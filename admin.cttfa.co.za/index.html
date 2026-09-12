@@ -1724,7 +1724,27 @@
       +' The live balances and ageing are current; only the itemised detail behind these clubs’ statements lags. Fetch from Sage to refresh the detail before relying on those statements.';
     return '<span class="deb-sync warn" title="'+esc(t2)+'"><span class="dot"></span>'+y.n_out+' club'+(y.n_out===1?'':'s')+' out of sync</span>';
   }
-  async function debLoadSync(){ try{ var rs=await sb.rpc('deb_sync_status'); _debSync=(rs&&!rs.error)?rs.data:null; }catch(e){ _debSync=null; } }
+  var _debCash=null;
+  async function debLoadSync(){
+    try{
+      var res=await Promise.all([sb.rpc('deb_sync_status'), sb.rpc('deb_cash_on_account')]);
+      _debSync=(res[0]&&!res[0].error)?res[0].data:null;
+      _debCash=(res[1]&&!res[1].error)?res[1].data:null;
+    }catch(e){ _debSync=null; _debCash=null; }
+  }
+  function debCashByKey(k){ if(!_debCash||!_debCash.rows) return null; for(var i=0;i<_debCash.rows.length;i++){ if(_debCash.rows[i].club_key===k) return _debCash.rows[i]; } return null; }
+  function debCashPanel(){
+    var d=_debCash; if(!d||!d.n_clubs) return '';
+    var rows=(d.rows||[]).map(function(c){
+      var det=(c.detail||[]).map(function(x){return dDateZA(x.date)+' &middot; '+esc(x.ref||'')+' &middot; '+dR(x.amount);}).join('<br>');
+      return '<tr><td>'+esc(c.name||c.code||c.club_key)+(c.code?' <span class="hint" style="font-weight:400">'+esc(c.code)+'</span>':'')+'</td>'
+        +'<td class="num">'+dR(c.amount)+'</td><td class="hint" style="font-size:11px">'+(det||'&ndash;')+'</td></tr>';
+    }).join('');
+    return '<div class="card deb-coa"><div class="deb-coa-h"><h3 style="margin:0">Cash on account &mdash; needs allocation</h3>'
+      +'<span class="deb-coa-tot">'+dR(d.total)+' &middot; '+d.n_clubs+' club'+(d.n_clubs===1?'':'s')+'</span></div>'
+      +'<p class="hint" style="margin:4px 0 10px;max-width:95ch">These clubs have paid money that is sitting in Sage not matched to any invoice &mdash; an over-payment or a standing credit. Sage does not apply it to new invoices on its own. Clear it in Sage: <b>Contacts &rarr; Customers</b>, open the club, <b>Manage &rarr; Account Allocation</b>, tick the receipt and the open invoices so <b>Left to Allocate</b> is zero, then Save. It clears from this list on the next fetch.</p>'
+      +'<div class="tscroll"><table class="deb-table"><thead><tr><th>Club</th><th class="num">Cash on account</th><th>Unallocated receipt(s)</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+  }
   function debProvNote(s){
     var base='The live balance and ageing come from the automated Sage fetch. ';
     var mid;
@@ -2017,6 +2037,8 @@
       +debKpi('Net trade debtors',dR(s.net_total),'after '+dR(-s.credit_total)+' in credits','')
       +debKpi('Out of Compliance due',stOOC.length+'',dR(stSum60(stOOC))+' · reached the 120-day trigger, awaiting your decision'+((s.n_placed_ooc||0)?' · '+s.n_placed_ooc+' placed':''),'bad')
       +'</div>';
+    // cash on account — clubs holding unallocated cash to clear in Sage
+    h+=debCashPanel();
     // constitutional compliance
     h+='<div class="card"><h3>Constitutional management</h3><p class="hint" style="margin:-2px 0 10px">Are we managing debtors as the CTTLFA Constitution requires? Actions are logged on each club; this panel rolls them up.</p>';
     h+='<div class="deb-comp">'
@@ -3044,6 +3066,11 @@
       +'</div>';
     if(gate) h+='<div class="deb-gate">High-value account · Balance over R10 000 or 120-day balance over R5 000. Confirm the Finance / Management Committee has sighted this account before any write-off or settlement concession.</div>';
     if(isGuest) h+='<div class="deb-guestbar"><span class="gb-tag">Guest club</span><div>Not a member of the CTTLFA. Compliance notices carry <b>no constitutional forfeit or penalty</b>, and there is limited recourse. Our rule: a guest that is placed Out of Compliance and left unsettled is <b>not considered to return the following season</b>. Recover the debt and record the decision.</div></div>';
+    // cash on account for this club (unallocated receipt sitting in Sage)
+    var _coa=debCashByKey(c.club_key);
+    if(_coa) h+='<div class="deb-guestbar" style="border-color:#EED9AC;background:#FBF7EC">'
+      +'<span class="gb-tag" style="background:#C0791C">Cash on account</span>'
+      +'<div><b>'+dR(_coa.amount)+'</b> has been received and is sitting in Sage unmatched to invoices. Sage will not apply it to new invoices on its own. Allocate it against this club&rsquo;s open invoices in Sage: <b>Contacts &rarr; Customers</b>, open the club, <b>Manage &rarr; Account Allocation</b>, tick the receipt and the invoices so Left to Allocate is zero, then Save.</div></div>';
     // ===== tab bar =====
     h+='<div class="deb-tabs" role="tablist">'
       +'<button class="deb-tab on" data-tab="overview">Overview</button>'
@@ -4220,6 +4247,11 @@
 .deb-sync.warn .dot{background:#C0791C;box-shadow:0 0 0 3px rgba(192,121,28,.16)}
 .deb-sync.na{background:#EEF2F8;border-color:#D8E0EC;color:#59667B}
 .deb-sync.na .dot{background:#8A97AE}
+/* Cash on account worklist — the club's own money sitting unallocated (caution, not adverse) */
+.deb-coa{border-left:3px solid #C0791C}
+.deb-coa-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.deb-coa-tot{font-weight:700;color:#7a4d10;background:#FBF1DD;border:1px solid #EED9AC;border-radius:999px;padding:3px 12px;font-size:12.5px;white-space:nowrap}
+.deb-coa-chip{display:inline-flex;align-items:center;gap:6px;background:#FBF1DD;border:1px solid #EED9AC;color:#7a4d10;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600}
 </style>
 <style id="mobile-pass">
 html,body{max-width:100%;overflow-x:hidden}
