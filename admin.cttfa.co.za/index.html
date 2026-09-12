@@ -2433,7 +2433,7 @@
         'Should the instalment already have been paid, kindly disregard this reminder and accept our thanks.'];
     }
     return ['The club account is Out of Compliance. '+over+' is overdue on a balance of '+bal+', having passed the statement, payment-reminder and final-reminder stages without settlement or an approved payment arrangement.',
-      'In terms of Rule 10.2.3 of the Association’s Rules and Regulations, the club is served this Out of Compliance notice and remains out of compliance until the overdue amount is settled. While out of compliance, the consequences in Rule 16.4.2.6 apply, including that the club may not accumulate points and forfeits upcoming fixtures, with a three-point deduction per game from the date of non-compliance.',
+      'In terms of Rule 10.2.3 of the Association’s Rules and Regulations, the club is served this Out of Compliance notice and remains out of compliance until the overdue amount is settled. While out of compliance, the consequences in Rule 16.4.2.6 apply, including that the club may not become involved in the affairs of the Association, may not accumulate points and forfeits upcoming fixtures, with a three-point deduction applied to each game from the date of non-compliance.',
       'A payment arrangement can no longer be entered into at this stage; the arrears must be settled in full and proof of payment provided to the Treasurer, from which date the club’s good standing is restored, forward only. Please attend to this without delay.'];
   }
   function debRenderLetterInto(doc, c, S, tierKey){
@@ -2463,7 +2463,7 @@
       styles:{fontSize:9,cellPadding:{top:1.5,bottom:1.5,left:0,right:0}},
       columnStyles:{0:{textColor:DEB_MUTED,cellWidth:120},1:{halign:'right',fontStyle:'bold',textColor:DEB_INK,cellWidth:110,cellPadding:{top:1.5,bottom:1.5,right:24,left:0}},2:{textColor:DEB_MUTED,cellWidth:110,cellPadding:{top:1.5,bottom:1.5,left:12,right:0}},3:{halign:'right',fontStyle:'bold',textColor:DEB_INK}},
       body:[['Balance outstanding', debAmtR(c.bal), 'Overdue (60+ days)', debAmtR(c.over60!=null?c.over60:c.over)],
-            ['Payment reference', (c.code||c.name), 'Status', dStageLabel(c.stage)]] });
+            ['Payment reference', (c.code||c.name), 'Status', (_guest?'Overdue account':dStageLabel(c.stage))]] });
     y+=58+14;
     var bank=debBankLines(S);
     doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,DEB_NAVY); doc.text('Payment details', M, y); y+=13;
@@ -2906,7 +2906,7 @@
     return '<div style="font-family:Arial,Helvetica,sans-serif;color:#0B1220;max-width:620px;margin:0 auto">'
       +'<div style="background:#071A4A;padding:14px 20px;border-radius:8px 8px 0 0"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse"><tr><td style="vertical-align:middle;padding-right:12px"><img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" width="46" height="46" alt="CTTLFA" style="display:block;border-radius:6px;background:#ffffff"></td><td style="vertical-align:middle"><div style="color:#ffffff;font-size:15px;font-weight:bold;line-height:1.2">Cape Town Tygerberg Local Football Association</div><div style="color:#B7C4E6;font-size:12px;margin-top:2px">Finance Office</div></td></tr></table></div>'
       +'<div style="border:1px solid #E3E8F0;border-top:0;border-radius:0 0 8px 8px;padding:18px 20px;font-size:14px">'+paras
-      +'<hr style="border:0;border-top:1px solid #eee;margin:14px 0"><div style="font-size:11px;color:#59666B">Issued by the Treasurer of the Cape Town Tygerberg LFA. Queries to '+((S&&S.reply_to)||'treasurer@cttfa.co.za')+'.'+((opts&&opts.attached===false)?'':' Your statement is attached.')+'</div></div></div>';
+      +'<hr style="border:0;border-top:1px solid #eee;margin:14px 0"><div style="font-size:11px;color:#59666B">Issued by the Treasurer of the Cape Town Tygerberg LFA. Queries to '+((S&&S.reply_to)||'treasurer@cttfa.co.za')+'.'+((opts&&opts.attached===false)?'':(' '+((opts&&opts.docs==='both')?'Your statement and a signed copy of this notice are attached.':'Your statement is attached.')))+'</div></div></div>';
   }
   async function debSendOne(c, trigger){
     if(!_deb||!_deb.clubs){ try{ var _rr=await sb.rpc('deb_dashboard'); if(!_rr.error&&_rr.data) _deb=_rr.data; }catch(e){} }
@@ -2916,10 +2916,20 @@
     var tpl=st.tplMap[_tk]||{};
     var subject=debFill(tpl.subject||'Statement of account — {club} ({code})', c, S);
     var text=debFill(tpl.body||'Please find your statement attached.', c, S);
-    var html=debEmailHtml(text, S);
-    var b64=null, pname=null;
-    try{ var doc=await debStatementPDF(c,{doc:true}); if(doc){ b64=doc.output('datauristring').split(',')[1]; pname='CTTLFA Statement - '+(String(c.name).replace(/[^A-Za-z0-9 ]/g,'').trim())+'.pdf'; } }catch(e){}
-    var r=await sb.functions.invoke('deb-send',{ body:{ club_key:c.club_key, name:c.name, code:c.code, trigger:trigger, subject:subject, html:html, text:text, pdf_base64:b64, pdf_name:pname } });
+    var _withLetter=(_tk==='ooc' || _tk==='ooc_guest' || trigger==='ooc');
+    var html=debEmailHtml(text, S, {docs:(_withLetter?'both':undefined)});
+    var cleanNm=String(c.name).replace(/[^A-Za-z0-9 ]/g,'').trim();
+    var atts=[];
+    try{ var doc=await debStatementPDF(c,{doc:true}); if(doc){ atts.push({name:'CTTLFA Statement - '+cleanNm+'.pdf', base64:doc.output('datauristring').split(',')[1]}); } }catch(e){}
+    // The OOC notice carries the pre-approved formal letter alongside the statement (two attachments).
+    if(_tk==='ooc' || _tk==='ooc_guest' || trigger==='ooc'){
+      try{ var LS=await debGetSettings(); var JSc=window.jspdf&&window.jspdf.jsPDF;
+        if(JSc){ var ldoc=new JSc({unit:'pt',format:'a4',compress:true}); debRenderLetterInto(ldoc, c, LS, 'ooc');
+          var lguest=(c.club_type==='guest'||c.is_guest);
+          atts.push({name:'CTTLFA '+(lguest?'Overdue Account':'Out of Compliance Notice')+' - '+cleanNm+'.pdf', base64:ldoc.output('datauristring').split(',')[1]}); }
+      }catch(e){}
+    }
+    var r=await sb.functions.invoke('deb-send',{ body:{ club_key:c.club_key, name:c.name, code:c.code, trigger:trigger, subject:subject, html:html, text:text, attachments:atts } });
     if(r.error) throw new Error(r.error.message||r.error);
     if(r.data && r.data.ok===false) throw new Error(r.data.error||'send failed');
     return r.data;
