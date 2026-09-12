@@ -1706,6 +1706,38 @@
   function dDaysSinceSAST(iso){ if(!iso) return null; var a=String(iso).slice(0,10); var d1=new Date(a+'T00:00:00Z'), d0=new Date(debTodayISO()+'T00:00:00Z'); if(isNaN(d1.getTime())) return null; return Math.round((d0-d1)/86400000); }
   function debFreshTag(iso){ var n=dDaysSinceSAST(iso); if(n===null) return ''; var lbl=(n<=0?'today':(n===1?'yesterday':n+' days ago')); if(n>3){ return ' <span style="color:#9f6621;font-weight:600" title="The most recent Sage movement is '+n+' days old. A fetch today does not add movements Sage has not yet captured.">('+lbl+' &mdash; Sage may be behind)</span>'; } return ' <span class="hint" style="font-weight:400">('+lbl+')</span>'; }
 
+  // Sage-sync indicator: is the itemised transaction detail the same information Sage
+  // currently shows? deb_sync_status compares each club's ledger close to the live ageing.
+  var _debSync=null;
+  function debSyncPill(){
+    var y=_debSync;
+    if(!y){ return '<span class="deb-sync na" title="Sync status could not be read. Reload to try again."><span class="dot"></span>Sync status unavailable</span>'; }
+    if(y.in_sync){
+      var t='Every club’s itemised transaction detail matches the live Sage balance'
+        +(y.n_clubs?(' ('+y.n_clubs+' clubs)'):'')+'. The statements and notices you send reflect exactly what is in Sage.'
+        +(y.ledger_extracted_at?(' Transaction detail as at '+dSastStamp(y.ledger_extracted_at)+'.'):'');
+      return '<span class="deb-sync ok" title="'+esc(t)+'"><span class="dot"></span>In sync with Sage</span>';
+    }
+    var w=y.worst, wtxt='';
+    if(w){ wtxt=' Largest difference: '+esc(w.name)+' — Sage shows '+dR(w.ageing)+', the transaction detail shows '+dR(w.ledger_close)+'.'; }
+    var t2=y.n_out+' club'+(y.n_out===1?'':'s')+' changed in Sage since the transaction detail was last exported.'+wtxt
+      +' The live balances and ageing are current; only the itemised detail behind these clubs’ statements lags. Fetch from Sage to refresh the detail before relying on those statements.';
+    return '<span class="deb-sync warn" title="'+esc(t2)+'"><span class="dot"></span>'+y.n_out+' club'+(y.n_out===1?'':'s')+' out of sync</span>';
+  }
+  async function debLoadSync(){ try{ var rs=await sb.rpc('deb_sync_status'); _debSync=(rs&&!rs.error)?rs.data:null; }catch(e){ _debSync=null; } }
+  function debProvNote(s){
+    var base='The live balance and ageing come from the automated Sage fetch. ';
+    var mid;
+    if(_debSync && _debSync.in_sync){
+      mid='The itemised transaction detail currently matches the live Sage balance for every club, so the statements and notices you send reflect exactly what is in Sage.';
+    } else if(_debSync && _debSync.n_out>0){
+      mid='The itemised transaction detail is a separate export, and '+_debSync.n_out+' club'+(_debSync.n_out===1?' has':'s have')+' changed in Sage since it was last taken; those clubs’ statements catch up on the next fetch. Every other club reconciles to Sage.';
+    } else {
+      mid='The itemised transaction detail is a separate export, so it can lag; where it does, each club’s statement reconciles to the fetched Sage balance.';
+    }
+    return base+mid+(s && s.recon_note?' '+esc(s.recon_note):'');
+  }
+
   var _debClockTimer=null;
   function debStartClock(){
     if(_debClockTimer){ clearInterval(_debClockTimer); _debClockTimer=null; }
@@ -1940,6 +1972,7 @@
       catch(e){ root.innerHTML='<div class="card"><p class="hint">Could not load: '+esc(e.message||e)+'</p></div>'; return; }
     }
     if(!_deb || _deb.empty){ root.innerHTML='<div class="card"><h3>Club Debtors</h3><p class="hint">No Sage extract has been loaded yet.</p></div>'; return; }
+    await debLoadSync();
     debRender();
     try{ debStartClock(); }catch(e){}
     try{ debMorningRun(_deb); }catch(e){}
@@ -1968,6 +2001,7 @@
       +'<div><h3 style="margin:0 0 3px">Club Debtors</h3><p class="hint" style="margin:0;max-width:80ch">Who owes the Association, how old the money is, and whether we are chasing it the way the Constitution requires. Balances and ageing come straight from Sage.</p></div>'
       +'<div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">'
       +'<div class="deb-clock" id="debClock" title="Cape Town time — the working date and time that stamps a trigger and the letter"><span class="cd">&mdash;</span><span class="ct">&mdash;</span></div>'
+      +debSyncPill()
       +'<div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn ghost sm" id="debGuide" title="How the debtor process works and how it aligns to the Constitution">Process guide</button><button class="btn gold sm" id="debFetch" title="Pull the latest balances from Sage">Fetch from Sage</button>'+((meRole==='administrator'||meRole==='staff')?'<button class="btn gold sm" id="debQueue" title="Follow-ups due">Action Queue'+debAQBadge()+'</button><button class="btn ghost sm" id="debDesk" title="Collections working list">Collections Desk</button><button class="btn ghost sm" id="debCorr" title="Statements and notices">Correspondence</button>':'')+'<button class="btn ghost sm" id="debRefresh" title="Reload from the database">Reload</button></div>'
       +'<span class="hint" id="debFetchStatus" style="font-size:11.5px;text-align:right"></span></div></div>'
       +'<div class="deb-prov"><span class="warn">Management-prepared, unaudited</span>'
@@ -1975,7 +2009,7 @@
       +'<span>Balances as at: <b>'+dDateZA(s.as_at)+'</b></span>'
       +'<span>Transaction detail exported: <b>'+dDateZA(s.tx_exported)+'</b>'+debFreshTag(s.tx_exported)+'</span>'
       +'<span>FY ending <b>31 October</b></span><span>Classification: <b>Confidential</b></span></div>'
-      +'<p class="hint" style="margin:6px 0 0;font-size:12px">The live balance and ageing come from the automated Sage fetch. The itemised transaction detail is a separate manual export, so it can lag between exports; where it does, each club&rsquo;s statement reconciles to the fetched Sage balance.'+(s.recon_note?' '+esc(s.recon_note):'')+'</p></div>';
+      +'<p class="hint" style="margin:6px 0 0;font-size:12px">'+debProvNote(s)+'</p></div>';
     // KPI row
     h+='<div class="deb-kpis">'
       +debKpi('Owed by clubs in arrears',dR(s.pos_total),owing.length+' owing · '+(s.n_credit||0)+' in credit · '+(s.n_paidup||0)+' paid up','lead')
@@ -4177,6 +4211,15 @@
 .deb-fixrow .fx-lg{color:#59666b;font-size:11px}
 .deb-fixrow .fx-risk{background:#9A3130;color:#fff;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:2px 7px;border-radius:20px}
 .deb-fixrow .fx-soon{background:#FBF1DD;color:#7a5312;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:2px 7px;border-radius:20px}
+/* Sage sync indicator — colour is paired with a labelled word and a dot shape, never colour alone */
+.deb-sync{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;border:1px solid;line-height:1.2;white-space:nowrap;cursor:help}
+.deb-sync .dot{width:9px;height:9px;border-radius:50%;flex:0 0 auto}
+.deb-sync.ok{background:#E7F5EC;border-color:#B7E0C4;color:#1c5136}
+.deb-sync.ok .dot{background:#1C7C4A;box-shadow:0 0 0 3px rgba(28,124,74,.16)}
+.deb-sync.warn{background:#FBF1DD;border-color:#EED9AC;color:#7a4d10}
+.deb-sync.warn .dot{background:#C0791C;box-shadow:0 0 0 3px rgba(192,121,28,.16)}
+.deb-sync.na{background:#EEF2F8;border-color:#D8E0EC;color:#59667B}
+.deb-sync.na .dot{background:#8A97AE}
 </style>
 <style id="mobile-pass">
 html,body{max-width:100%;overflow-x:hidden}
