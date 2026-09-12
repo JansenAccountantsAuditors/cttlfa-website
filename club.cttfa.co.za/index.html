@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CTTLFA Club Portal</title>
+<link rel="icon" href="https://admin.cttfa.co.za/cttlfa-logo.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#071A4A; --navy2:#0B2461; --gold:#D0982F; --gold-deep:#996A16;
+    --ink:#0B1220; --muted:#59666B; --hair:#E3E8F0; --surface:#F4F6FB; --card:#ffffff;
+    --good:#1f7a4d; --good-bg:#e7f4ec; --warn:#9F6621; --warn-bg:#fbf1e2; --bad:#9A3130; --bad-bg:#fbeceb;
+    --r:14px; --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{font-family:var(--font);color:var(--ink);background:var(--surface);-webkit-font-smoothing:antialiased;line-height:1.5}
+  a{color:var(--navy)}
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px}
+  .tabnum{font-variant-numeric:tabular-nums lining-nums}
+  /* ---------- top bar ---------- */
+  header.top{background:var(--navy);color:#fff}
+  .top .wrap{display:flex;align-items:center;gap:12px;padding:12px 16px}
+  .top img{width:40px;height:40px;border-radius:8px;background:#fff;display:block;flex:0 0 auto}
+  .top .t1{font-weight:800;font-size:15px;line-height:1.15;letter-spacing:.2px}
+  .top .t2{font-size:12px;color:#B7C4E6;margin-top:1px}
+  .top .spacer{flex:1}
+  .signout{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:8px;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+  .signout:hover{background:rgba(255,255,255,.2)}
+  /* ---------- auth ---------- */
+  .auth{min-height:calc(100vh - 120px);display:flex;align-items:flex-start;justify-content:center;padding:32px 16px}
+  .authcard{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);max-width:420px;width:100%;padding:26px 24px;box-shadow:0 6px 26px rgba(7,26,74,.06)}
+  .authcard h1{font-size:19px;margin:0 0 4px}
+  .authcard p.sub{color:var(--muted);font-size:14px;margin:0 0 20px}
+  .seg{display:flex;background:var(--surface);border:1px solid var(--hair);border-radius:10px;padding:4px;margin-bottom:18px}
+  .seg button{flex:1;border:0;background:transparent;font:inherit;font-weight:600;font-size:13px;color:var(--muted);padding:8px 6px;border-radius:7px;cursor:pointer}
+  .seg button[aria-selected="true"]{background:var(--navy);color:#fff}
+  label.fld{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
+  input[type=email],input[type=password]{width:100%;padding:12px 12px;border:1px solid var(--hair);border-radius:10px;font:inherit;font-size:15px;background:#fff}
+  input:focus{outline:2px solid var(--navy);outline-offset:1px;border-color:var(--navy)}
+  .btn{width:100%;margin-top:18px;background:var(--navy);color:#fff;border:0;border-radius:10px;padding:13px;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
+  .btn:hover{background:var(--navy2)}
+  .btn[disabled]{opacity:.6;cursor:default}
+  .link{background:none;border:0;color:var(--navy);font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:6px 0;margin-top:10px}
+  .msg{margin-top:14px;font-size:13.5px;padding:10px 12px;border-radius:9px;display:none}
+  .msg.err{display:block;background:var(--bad-bg);color:var(--bad);border:1px solid #f0cfcd}
+  .msg.ok{display:block;background:var(--good-bg);color:var(--good);border:1px solid #cfe7d9}
+  .msg.info{display:block;background:#eef2fb;color:var(--navy);border:1px solid #d6def2}
+  .fineprint{margin-top:16px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.5}
+  /* ---------- app ---------- */
+  .tabs{display:flex;gap:4px;padding:12px 16px 0;max-width:760px;margin:0 auto;overflow-x:auto}
+  .tabs button{border:0;background:transparent;font:inherit;font-weight:600;font-size:14px;color:var(--muted);padding:10px 14px;border-radius:9px 9px 0 0;cursor:pointer;white-space:nowrap}
+  .tabs button[aria-selected="true"]{color:var(--navy);background:var(--card);border:1px solid var(--hair);border-bottom-color:var(--card)}
+  main{padding:16px 0 48px}
+  .card{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);padding:20px;margin-bottom:16px}
+  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 14px}
+  /* balance hero */
+  .hero{background:var(--navy);color:#fff;border:0}
+  .hero .lbl{font-size:13px;color:#B7C4E6}
+  .hero .amt{font-size:34px;font-weight:800;margin:4px 0 2px;letter-spacing:-.5px}
+  .hero .note{font-size:13px;color:#cfd8ee}
+  .hero .code{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.16);font-size:13px;color:#cfd8ee}
+  .hero .code b{color:#fff;font-weight:700;letter-spacing:.5px}
+  .pill{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-top:2px}
+  .pill.good{background:var(--good-bg);color:var(--good)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.credit{background:#eef2fb;color:var(--navy)}
+  /* ooc banner */
+  .ooc{background:var(--bad-bg);border:1px solid #f0cfcd;border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .ooc b{color:var(--bad)} .ooc p{margin:6px 0 0;font-size:13.5px;color:#6a2321}
+  /* ageing */
+  .agerow{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:13.5px}
+  .agerow .k{width:74px;color:var(--muted);flex:0 0 auto}
+  .agerow .bar{flex:1;height:10px;background:var(--surface);border-radius:6px;overflow:hidden}
+  .agerow .bar i{display:block;height:100%;background:var(--navy);border-radius:6px}
+  .agerow.over .bar i{background:var(--gold)}
+  .agerow .v{width:96px;text-align:right;font-weight:600;flex:0 0 auto}
+  /* facts */
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .fact .fl{font-size:12px;color:var(--muted)} .fact .fv{font-weight:700;margin-top:2px}
+  .bank{white-space:pre-line;font-size:13.5px;color:var(--ink);background:var(--surface);border-radius:10px;padding:12px 14px}
+  /* table */
+  .tblwrap{overflow-x:auto}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--hair);white-space:nowrap}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums lining-nums}
+  tr.rcpt td{background:#f3f8f4}
+  td.desc{white-space:normal;min-width:180px}
+  /* fixtures */
+  .fx{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--hair)}
+  .fx .d{width:56px;flex:0 0 auto;text-align:center}
+  .fx .d .dd{font-size:18px;font-weight:800;line-height:1} .fx .d .mm{font-size:11px;color:var(--muted);text-transform:uppercase}
+  .fx .m{flex:1}.fx .m .tm{font-weight:600;font-size:14px}.fx .m .cp{font-size:12px;color:var(--muted);margin-top:2px}
+  .freshbar{font-size:12px;color:var(--muted);text-align:center;padding:10px 16px 0}
+  .foot{font-size:11.5px;color:var(--muted);text-align:center;padding:18px 16px 8px;line-height:1.6}
+  .loading{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
+  [hidden]{display:none!important}
+  @media(max-width:520px){ .facts{grid-template-columns:1fr} .hero .amt{font-size:30px} }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" alt="CTTLFA">
+    <div>
+      <div class="t1">Cape Town Tygerberg LFA</div>
+      <div class="t2" id="topSub">Club Portal</div>
+    </div>
+    <div class="spacer"></div>
+    <button class="signout" id="btnSignout" hidden>Sign out</button>
+  </div>
+</header>
+
+<!-- ============ AUTH ============ -->
+<section class="auth" id="authView">
+  <div class="authcard">
+    <h1 id="authTitle">Club sign in</h1>
+    <p class="sub" id="authSub">Sign in to view your club's account, statement and fixtures.</p>
+    <div class="seg" role="tablist">
+      <button role="tab" id="segSignin" aria-selected="true" onclick="setMode('signin')">Sign in</button>
+      <button role="tab" id="segFirst" aria-selected="false" onclick="setMode('first')">First time</button>
+    </div>
+    <form id="authForm" onsubmit="return false">
+      <label class="fld" for="email">Club email address</label>
+      <input type="email" id="email" autocomplete="email" placeholder="you@yourclub.co.za" required>
+      <label class="fld" for="pw" id="pwLabel">Password</label>
+      <input type="password" id="pw" autocomplete="current-password" placeholder="Your password" required>
+      <button class="btn" id="authBtn" type="submit">Sign in</button>
+      <button class="link" id="forgotBtn" type="button" onclick="doForgot()">Forgot your password?</button>
+    </form>
+    <div class="msg" id="authMsg"></div>
+    <p class="fineprint">Access is granted to the contact email addresses your club has on record with the LFA office. To add or change who has access, contact the Treasurer at treasurer@cttfa.co.za.</p>
+  </div>
+</section>
+
+<!-- ============ APP ============ -->
+<div id="appView" hidden>
+  <div class="tabs" role="tablist">
+    <button role="tab" id="tabOverviewBtn" aria-selected="true" onclick="showTab('overview')">Overview</button>
+    <button role="tab" id="tabStatementBtn" aria-selected="false" onclick="showTab('statement')">Statement</button>
+    <button role="tab" id="tabFixturesBtn" aria-selected="false" onclick="showTab('fixtures')">Fixtures</button>
+  </div>
+  <main class="wrap">
+    <div id="tab-overview">
+      <div class="loading" id="ovLoading">Loading your club account…</div>
+      <div id="ovBody" hidden></div>
+    </div>
+    <div id="tab-statement" hidden>
+      <div class="card">
+        <h2>Statement of account</h2>
+        <div class="loading" id="stLoading">Loading transactions…</div>
+        <div class="tblwrap" id="stWrap" hidden><table id="stTbl"></table></div>
+      </div>
+    </div>
+    <div id="tab-fixtures" hidden>
+      <div class="card">
+        <h2>Upcoming fixtures</h2>
+        <div class="loading" id="fxLoading">Loading fixtures…</div>
+        <div id="fxBody" hidden></div>
+      </div>
+    </div>
+    <div class="foot">Cape Town Tygerberg Local Football Association · Club Portal. Figures reflect the club's account as recorded with the LFA and are management-prepared and unaudited. Queries: treasurer@cttfa.co.za.</div>
+  </main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+/* ---------------- config ---------------- */
+var CONFIG = {
+  SUPA_URL: 'https://fbbbsvkshajollduapaw.supabase.co',
+  SUPA_ANON: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiYmJzdmtzaGFqb2xsZHVhcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODYyODgsImV4cCI6MjEwMzY2MjI4OH0.8heeqe-03Mji2NgHt17ZOCoctijRhF78cHvSQkrUUi0',
+  SEASON_URL: 'https://www.cttfa.co.za/season.json',
+  SITE_URL: 'https://club.cttfa.co.za'
+};
+var sb = window.supabase.createClient(CONFIG.SUPA_URL, CONFIG.SUPA_ANON);
+var mode = 'signin';
+var HOME = null;
+
+/* ---------------- helpers ---------------- */
+function el(id){return document.getElementById(id);}
+function money(n){ n=Number(n)||0; var neg=n<0; var v=Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,' '); return (neg?'(R ':'R ')+v+(neg?')':''); }
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function showMsg(kind,text){ var m=el('authMsg'); m.className='msg '+kind; m.textContent=text; }
+function clearMsg(){ var m=el('authMsg'); m.className='msg'; m.textContent=''; }
+function dateZA(s){ if(!s) return ''; var d=new Date(s); if(isNaN(d)) return s; return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getFullYear(); }
+
+/* ---------------- auth UI ---------------- */
+function setMode(m){
+  mode=m; clearMsg();
+  el('segSignin').setAttribute('aria-selected', m==='signin');
+  el('segFirst').setAttribute('aria-selected', m==='first');
+  if(m==='signin'){
+    el('authTitle').textContent='Club sign in';
+    el('authSub').textContent="Sign in to view your club's account, statement and fixtures.";
+    el('pwLabel').textContent='Password';
+    el('pw').autocomplete='current-password'; el('pw').placeholder='Your password';
+    el('authBtn').textContent='Sign in'; el('forgotBtn').hidden=false;
+  } else {
+    el('authTitle').textContent='Set up your access';
+    el('authSub').textContent='First time here? Enter your club email and choose a password.';
+    el('pwLabel').textContent='Choose a password';
+    el('pw').autocomplete='new-password'; el('pw').placeholder='At least 8 characters';
+    el('authBtn').textContent='Create access'; el('forgotBtn').hidden=true;
+  }
+}
+el('authForm').addEventListener('submit', function(){ mode==='signin'?doSignin():doFirst(); });
+
+async function doSignin(){
+  clearMsg();
+  var email=el('email').value.trim().toLowerCase(), pw=el('pw').value;
+  if(!email||!pw){ showMsg('err','Enter your email and password.'); return; }
+  el('authBtn').disabled=true;
+  var r=await sb.auth.signInWithPassword({email:email,password:pw});
+  el('authBtn').disabled=false;
+  if(r.error){ showMsg('err', /invalid/i.test(r.error.message)?'That email and password do not match. If this is your first time, choose “First time” above.':r.error.message); return; }
+  boot();
+}
+
+async function doFirst(){
+  clearMsg();
+  var email=el('email').value.trim().toLowerCase(), pw=el('pw').value;
+  if(!email){ showMsg('err','Enter your club email address.'); return; }
+  if(!pw||pw.length<8){ showMsg('err','Choose a password of at least 8 characters.'); return; }
+  el('authBtn').disabled=true;
+  // gate to known club contacts before creating anything
+  var known=await sb.rpc('portal_email_known',{p_email:email});
+  if(known.error){ el('authBtn').disabled=false; showMsg('err','Could not verify your email right now. Please try again.'); return; }
+  if(known.data!==true){
+    el('authBtn').disabled=false;
+    showMsg('err','This email is not linked to a club on record with the LFA. Ask the Treasurer (treasurer@cttfa.co.za) to add it to your club in Sage.');
+    return;
+  }
+  var r=await sb.auth.signUp({email:email,password:pw,options:{emailRedirectTo:CONFIG.SITE_URL}});
+  el('authBtn').disabled=false;
+  if(r.error){
+    if(/already/i.test(r.error.message)){ showMsg('info','You already have access. Switch to “Sign in”, or use “Forgot your password?”.'); setMode('signin'); }
+    else showMsg('err', r.error.message);
+    return;
+  }
+  if(r.data && r.data.session){ boot(); }          // confirmation off → straight in
+  else { showMsg('ok','Almost there. We have sent a confirmation link to '+email+'. Click it, then come back and sign in.'); }
+}
+
+async function doForgot(){
+  clearMsg();
+  var email=el('email').value.trim().toLowerCase();
+  if(!email){ showMsg('err','Enter your club email first, then tap “Forgot your password?”.'); return; }
+  var r=await sb.auth.resetPasswordForEmail(email,{redirectTo:CONFIG.SITE_URL});
+  if(r.error){ showMsg('err', r.error.message); return; }
+  showMsg('ok','If that email has access, a password-reset link is on its way to '+email+'.');
+}
+
+el('btnSignout').addEventListener('click', async function(){ await sb.auth.signOut(); location.reload(); });
+
+/* ---------------- app ---------------- */
+function showTab(t){
+  ['overview','statement','fixtures'].forEach(function(x){
+    el('tab-'+x).hidden = (x!==t);
+    el('tab'+x.charAt(0).toUpperCase()+x.slice(1)+'Btn').setAttribute('aria-selected', x===t);
+  });
+  if(t==='statement' && !showTab._st){ showTab._st=true; loadStatement(); }
+  if(t==='fixtures' && !showTab._fx){ showTab._fx=true; loadFixtures(); }
+}
+
+async function boot(){
+  el('authView').hidden=true; el('appView').hidden=false; el('btnSignout').hidden=false;
+  var r=await sb.rpc('portal_home');
+  if(r.error){ el('ovLoading').textContent='Could not load your account: '+r.error.message; return; }
+  HOME=r.data||{};
+  if(HOME.authorised===false){
+    el('ovLoading').innerHTML='Your sign-in worked, but your email is not yet linked to a club on record with the LFA.<br><br>Please ask the Treasurer (treasurer@cttfa.co.za) to add your email to your club in Sage, then sign in again.';
+    el('tabStatementBtn').hidden=true; el('tabFixturesBtn').hidden=true;
+    return;
+  }
+  el('topSub').textContent=HOME.name||'Club Portal';
+  renderOverview();
+}
+
+function statusPill(){
+  var s=(HOME.status||'').toLowerCase(), bal=Number(HOME.balance)||0;
+  if(HOME.out_of_compliance) return '<span class="pill bad">Out of compliance</span>';
+  if(bal<0) return '<span class="pill credit">In credit</span>';
+  if((Number(HOME.over)||0)>0) return '<span class="pill warn">Amount overdue</span>';
+  if(bal<=0) return '<span class="pill good">Up to date</span>';
+  return '<span class="pill warn">Balance owing</span>';
+}
+
+function renderOverview(){
+  var bal=Number(HOME.balance)||0, over=Number(HOME.over)||0, ag=HOME.ageing||{};
+  var note = bal>0 ? (over>0? money(over)+' of this is overdue' : 'Payable to the Association') : (bal<0? 'Your club is in credit' : 'Account settled — thank you');
+  var html='';
+  if(HOME.out_of_compliance){
+    html+='<div class="ooc"><b>Your club is currently Out of Compliance.</b><p>An amount of '+money(over>0?over:bal)+' is outstanding'+(HOME.ooc_since?(' (since '+dateZA(HOME.ooc_since)+')'):'')+'. Settle the arrears in full and send proof of payment to the Treasurer to restore your club’s good standing.</p></div>';
+  }
+  // hero
+  html+='<div class="card hero">'
+      +'<div class="lbl">Balance on your account</div>'
+      +'<div class="amt tabnum">'+money(bal)+'</div>'
+      +'<div class="note">'+esc(note)+'</div>'
+      +'<div style="margin-top:10px">'+statusPill()+'</div>'
+      +'<div class="code">Payment reference &nbsp; <b>'+esc(HOME.code||'')+'</b>'+(HOME.as_at?(' &nbsp;·&nbsp; as at '+dateZA(HOME.as_at)):'')+'</div>'
+    +'</div>';
+  // ageing
+  var bands=[['Current',ag.current,false],['30 days',ag.d30,false],['60 days',ag.d60,true],['90 days',ag.d90,true],['120 days +',ag.d120,true]];
+  var max=Math.max(1, Math.max.apply(null,bands.map(function(b){return Math.abs(Number(b[1])||0);})));
+  html+='<div class="card"><h2>How your balance is aged</h2>';
+  bands.forEach(function(b){ var v=Number(b[1])||0; var w=Math.round(Math.abs(v)/max*100);
+    html+='<div class="agerow'+(b[2]?' over':'')+'"><span class="k">'+b[0]+'</span><span class="bar"><i style="width:'+w+'%"></i></span><span class="v tabnum">'+money(v)+'</span></div>'; });
+  html+='<p style="font-size:12px;color:var(--muted);margin:12px 0 0">Amounts in the 60, 90 and 120-day columns are overdue under the 30-day payment terms.</p></div>';
+  // facts + banking
+  html+='<div class="card"><h2>Account details</h2><div class="facts">'
+      +'<div class="fact"><div class="fl">Club</div><div class="fv">'+esc(HOME.name||'')+'</div></div>'
+      +'<div class="fact"><div class="fl">Payment reference</div><div class="fv">'+esc(HOME.code||'')+'</div></div>'
+      +'<div class="fact"><div class="fl">Last statement</div><div class="fv">'+(HOME.statement_last?dateZA(HOME.statement_last):'—')+'</div></div>'
+      +'<div class="fact"><div class="fl">Last receipt</div><div class="fv">'+(HOME.last_receipt_days!=null?(HOME.last_receipt_days+' days ago'):'—')+'</div></div>'
+    +'</div>';
+  if(HOME.bank_details){ html+='<div style="margin-top:14px"><div class="fl" style="font-size:12px;color:var(--muted);margin-bottom:6px">Banking details — please quote your payment reference</div><div class="bank">'+esc(HOME.bank_details)+'</div></div>'; }
+  html+='</div>';
+  el('ovBody').innerHTML=html; el('ovLoading').hidden=true; el('ovBody').hidden=false;
+}
+
+async function loadStatement(){
+  var r=await sb.rpc('portal_ledger');
+  if(r.error){ el('stLoading').textContent='Could not load transactions: '+r.error.message; return; }
+  var rows=r.data||[];
+  var h='<thead><tr><th>Date</th><th>Reference</th><th>Type</th><th class="desc">Description</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>';
+  if(!rows.length){ h+='<tr><td colspan="7" style="color:var(--muted)">No transactions on record.</td></tr>'; }
+  rows.forEach(function(t){ var rcpt=Number(t.credit)>0;
+    h+='<tr'+(rcpt?' class="rcpt"':'')+'><td>'+(t.opening?'Opening':dateZA(t.date))+'</td><td>'+esc(t.reference)+'</td><td>'+esc(t.type)+'</td><td class="desc">'+esc(t.description)+'</td>'
+      +'<td class="num">'+(t.debit!=null?money(t.debit).replace('R ',''):'')+'</td><td class="num">'+(t.credit!=null?money(t.credit).replace('R ',''):'')+'</td><td class="num">'+money(t.balance).replace('R ','')+'</td></tr>'; });
+  h+='</tbody>';
+  el('stTbl').innerHTML=h; el('stLoading').hidden=true; el('stWrap').hidden=false;
+}
+
+/* fixtures: best-effort match of season.json to this club (public data). Robust mapping arrives with the club master. */
+function norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\b(fc|afc|football club|club|the|cttlfa|cttfa)\b/g,' ').replace(/\s+/g,' ').trim(); }
+function clubTokens(){ var n=norm(HOME.name); return n.split(' ').filter(function(w){return w.length>=4;}); }
+function teamMatches(team){ var t=norm(team); var toks=clubTokens(); if(!toks.length) return false; return toks.some(function(w){ return t.indexOf(w)>=0; }); }
+async function loadFixtures(){
+  var data=null;
+  try{ var res=await fetch(CONFIG.SEASON_URL,{cache:'no-store'}); data=await res.json(); }catch(e){ el('fxLoading').textContent='Fixtures are not available right now.'; return; }
+  var list=[];
+  (function collect(o){ if(!o) return; if(Array.isArray(o)){ o.forEach(collect); return; }
+    if(typeof o==='object'){
+      var home=o.home||o.homeTeam||o.home_team||o.h||o.teamA, away=o.away||o.awayTeam||o.away_team||o.a||o.teamB;
+      var date=o.date||o.kickoff||o.datetime||o.ko||o.matchDate;
+      if((home||away)&&date){ list.push({home:home,away:away,date:date,comp:o.competition||o.league||o.comp||o.division||''}); }
+      Object.keys(o).forEach(function(k){ collect(o[k]); });
+    }
+  })(data);
+  var now=new Date(); now.setHours(0,0,0,0);
+  var mine=list.filter(function(f){ var d=new Date(f.date); return !isNaN(d)&&d>=now&&(teamMatches(f.home)||teamMatches(f.away)); })
+               .sort(function(a,b){return new Date(a.date)-new Date(b.date);}).slice(0,20);
+  el('fxLoading').hidden=true; el('fxBody').hidden=false;
+  if(!mine.length){ el('fxBody').innerHTML='<p style="color:var(--muted);font-size:14px;margin:0">We could not confidently match upcoming fixtures to your club yet. Team-to-club linking is being finalised and your fixtures will appear here shortly.</p>'; return; }
+  var h='';
+  mine.forEach(function(f){ var d=new Date(f.date);
+    h+='<div class="fx"><div class="d"><div class="dd">'+d.getDate()+'</div><div class="mm">'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+'</div></div>'
+      +'<div class="m"><div class="tm">'+esc(f.home||'')+' v '+esc(f.away||'')+'</div><div class="cp">'+esc(f.comp||'Fixture')+'</div></div></div>'; });
+  h+='<p style="font-size:11.5px;color:var(--muted);margin:12px 0 0">Best match to your club from the published fixtures list. Report anything that looks wrong to the LFA office.</p>';
+  el('fxBody').innerHTML=h;
+}
+
+/* ---------------- start ---------------- */
+(async function(){
+  setMode('signin');
+  var s=await sb.auth.getSession();
+  if(s.data && s.data.session){ boot(); }
+})();
+</script>
+</body>
+</html>
