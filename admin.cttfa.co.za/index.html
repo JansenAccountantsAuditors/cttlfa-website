@@ -2929,11 +2929,26 @@
   }
   function debEmailHtml(textBody, S, opts){
     var e=function(x){return String(x).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');};
-    var paras=e(textBody).split(/\n\n+/).map(function(p){return '<p style="margin:0 0 12px;line-height:1.5">'+p.replace(/\n/g,'<br>')+'</p>';}).join('');
-    return '<div style="font-family:Arial,Helvetica,sans-serif;color:#0B1220;max-width:620px;margin:0 auto">'
-      +'<div style="background:#071A4A;padding:14px 20px;border-radius:8px 8px 0 0"><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse"><tr><td style="vertical-align:middle;padding-right:12px"><img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" width="46" height="46" alt="CTTLFA" style="display:block;border-radius:6px;background:#ffffff"></td><td style="vertical-align:middle"><div style="color:#ffffff;font-size:15px;font-weight:bold;line-height:1.2">Cape Town Tygerberg Local Football Association</div><div style="color:#B7C4E6;font-size:12px;margin-top:2px">Finance Office</div></td></tr></table></div>'
-      +'<div style="border:1px solid #E3E8F0;border-top:0;border-radius:0 0 8px 8px;padding:18px 20px;font-size:14px">'+paras
-      +'<hr style="border:0;border-top:1px solid #eee;margin:14px 0"><div style="font-size:11px;color:#59666B">Issued by the Treasurer of the Cape Town Tygerberg LFA. Queries to '+((S&&S.reply_to)||'treasurer@cttfa.co.za')+'.'+((opts&&opts.attached===false)?'':(' '+((opts&&opts.docs==='both')?'Your statement and a signed copy of this notice are attached.':'Your statement is attached.')))+'</div></div></div>';
+    // Outlook desktop renders HTML mail through the Word engine: it ignores <style> blocks and
+    // strips background colours off <div>. So the shell is table-based with bgcolor attributes and
+    // every text element carries its own inline colour, font and size. This renders identically in
+    // webmail (Roundcube), Gmail, Apple Mail and classic Outlook.
+    var FONT='font-family:Arial,Helvetica,sans-serif';
+    var paras=e(textBody).split(/\n\n+/).map(function(p){return '<p style="margin:0 0 12px;'+FONT+';font-size:14px;line-height:1.55;color:#0B1220">'+p.replace(/\n/g,'<br>')+'</p>';}).join('');
+    var reply=(S&&S.reply_to)||'treasurer@cttfa.co.za';
+    var attnote=(opts&&opts.attached===false)?'':(' '+((opts&&opts.docs==='both')?'Your statement and a signed copy of this notice are attached.':'Your statement is attached.'));
+    return ''
+      +'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;background-color:#f4f6fb;margin:0;padding:0"><tr><td align="center" style="padding:16px 10px">'
+      +'<table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:620px;max-width:620px;'+FONT+'">'
+      +'<tr><td bgcolor="#071A4A" style="background-color:#071A4A;padding:14px 20px;border-radius:8px 8px 0 0">'
+      +'<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse"><tr>'
+      +'<td width="46" style="width:46px;padding-right:12px;vertical-align:middle"><img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" width="46" height="46" alt="CTTLFA" style="display:block;border:0;border-radius:6px;background-color:#ffffff"></td>'
+      +'<td style="vertical-align:middle"><div style="color:#ffffff;font-size:15px;font-weight:bold;line-height:1.2;'+FONT+'">Cape Town Tygerberg Local Football Association</div><div style="color:#B7C4E6;font-size:12px;margin-top:2px;'+FONT+'">Finance Office</div></td>'
+      +'</tr></table></td></tr>'
+      +'<tr><td bgcolor="#ffffff" style="background-color:#ffffff;border:1px solid #E3E8F0;border-top:0;border-radius:0 0 8px 8px;padding:18px 20px">'+paras
+      +'<hr style="border:0;border-top:1px solid #eeeeee;margin:14px 0">'
+      +'<div style="font-size:11px;line-height:1.5;color:#59666B;'+FONT+'">Issued by the Treasurer of the Cape Town Tygerberg LFA. Queries to '+reply+'.'+attnote+'</div>'
+      +'</td></tr></table></td></tr></table>';
   }
   async function debSendOne(c, trigger){
     if(!_deb||!_deb.clubs){ try{ var _rr=await sb.rpc('deb_dashboard'); if(!_rr.error&&_rr.data) _deb=_rr.data; }catch(e){} }
