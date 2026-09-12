@@ -2829,18 +2829,18 @@
     if(!(meRole==='administrator'||meRole==='staff'||canSee('debtors'))){ root.innerHTML='<div class="card"><p class="hint">The Club Portal console is available to Mancom and finance users.</p></div>'; return; }
     root.innerHTML='<div class="card"><p class="hint">Loading the Club Portal console&hellip;</p></div>';
     if(!_deb||!_deb.clubs){ try{ var rr=await sb.rpc('deb_dashboard'); if(!rr.error&&rr.data) _deb=rr.data; }catch(e){} }
-    var clubs=((_deb&&_deb.clubs)||[]).slice();
+    var clubs=((_deb&&_deb.clubs)||[]).filter(function(c){ return c.club_type==='full'||c.club_type==='associate'; }); // registered LFA member clubs only
     var amap={}; try{ var am=await sb.rpc('portal_access_map'); if(!am.error) amap=am.data||{}; }catch(e){}
     var withA=clubs.filter(function(c){return amap[c.club_key];}).length, total=clubs.length;
     var h='<div class="card" style="background:var(--navy);color:#fff">'
       +'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px">'
         +'<div style="flex:1;min-width:220px"><h2 style="color:#fff;margin:0 0 4px;font-family:var(--head)">Club Portal</h2>'
-        +'<div style="color:#C7D2EC;font-size:13.5px">The club-facing side of the association. Each club signs in at <b style="color:#fff">club.cttfa.co.za</b> to see its own account, statement, status and fixtures &mdash; its own data only.</div></div>'
+        +'<div style="color:#C7D2EC;font-size:13.5px">The club-facing side of the association. Each registered member club signs in at <b style="color:#fff">club.cttfa.co.za</b> to see its own account, statement, status and fixtures &mdash; its own data only.</div></div>'
         +'<a class="btn gold sm" href="https://club.cttfa.co.za" target="_blank" rel="noopener">Open live portal &#8599;</a></div>'
       +'<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.16);font-size:12.5px;color:#C7D2EC"><b style="color:#fff">In testing &mdash; not yet announced to clubs.</b> Live and ready for Mancom review; clubs will be told once Mancom is satisfied there are no issues.</div></div>';
     h+='<div class="card"><div class="deb-sec" style="margin-top:0;border-top:0;padding-top:0">Portal access</div>'
       +'<p class="hint" style="font-size:13px;margin:0 0 10px">Access is granted to the contact email addresses each club has on record in Sage. Sage is the master: add or remove an email on the club in Sage and it syncs to the portal. To give the coach, secretary or chair access, add their email as a contact on that club in Sage.</p>'
-      +'<div style="display:flex;gap:24px;flex-wrap:wrap;font-size:14px"><div><b style="font-size:24px;font-family:var(--head)">'+withA+'</b> of '+total+' clubs have a login email</div><div><b style="font-size:24px;font-family:var(--head)">'+(total-withA)+'</b> still need an email in Sage</div></div>';
+      +'<div style="display:flex;gap:24px;flex-wrap:wrap;font-size:14px"><div><b style="font-size:24px;font-family:var(--head)">'+withA+'</b> of '+total+' registered clubs have a login email</div><div><b style="font-size:24px;font-family:var(--head)">'+(total-withA)+'</b> still need an email in Sage</div></div>';
     var without=clubs.filter(function(c){return !amap[c.club_key];});
     if(without.length){ h+='<details style="margin-top:10px"><summary style="cursor:pointer;font-size:13px;color:var(--navy);font-weight:600">Clubs without portal access ('+without.length+')</summary><div style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.9">'+without.map(function(c){return esc(c.name);}).join(' &middot; ')+'</div></details>'; }
     h+='</div>';
