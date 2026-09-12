@@ -1165,19 +1165,37 @@
     missing.forEach(function(c){ have[c.id]=true; });
     complianceMap=have;
   }
+  // Finance/OOC status per club from the canonical club master (keyed by register id).
+  var _clubFin=null;
+  async function loadClubFinance(){
+    try{
+      var r=await sb.rpc('club_master');
+      if(!r.error && r.data){ var m={}; (r.data.clubs||[]).forEach(function(c){ m[c.register_id]={ooc:!!c.out_of_compliance, overdue:Number(c.overdue)||0, balance:Number(c.balance)||0}; }); _clubFin=m; }
+    }catch(e){ _clubFin=null; }
+  }
   function renderCompliancePage(){
     var need=!curMeeting;
     $("complianceNeedsMeeting").classList.toggle("hidden",!need);
     $("complianceBody").classList.toggle("hidden",need);
     if(need) return;
-    loadComplianceMap().then(renderCompliance);
+    Promise.all([loadComplianceMap(), loadClubFinance()]).then(renderCompliance);
+  }
+  function finChip(cid){
+    var f=_clubFin && _clubFin[cid]; if(!f) return '';
+    if(f.ooc) return ' <span class="tag" style="background:#FBECEA;color:#8a3c17" title="The club has an active Out of Compliance episode on its account in the Club Debtors module (live Sage).">Finance: Out of Compliance</span>';
+    if(f.overdue>0) return ' <span class="tag" style="background:#FCF3D8;color:#7a5312" title="Overdue balance 60 days and older on the club account (live Sage).">Finance: in arrears '+dR(f.overdue)+'</span>';
+    return ' <span class="tag" style="background:#E7F5EC;color:#1c5136" title="No overdue balance on the club account (live Sage).">Finance: clear</span>';
   }
   function renderCompliance(){
     var l=$("complianceList");
     var byName=clubs.slice().sort(function(a,b){return a.name.localeCompare(b.name);});
-    l.innerHTML=byName.map(function(c){
+    var nOOC=byName.filter(function(c){ var f=_clubFin&&_clubFin[c.id]; return f&&f.ooc; }).length;
+    var note='<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;font-size:12.5px;color:var(--muted)">'
+      +'<span>Finance status is read live from the Club Debtors module (Sage). '+(nOOC?('<b style="color:#8a3c17">'+nOOC+' club'+(nOOC===1?'':'s')+' Out of Compliance on account.</b>'):'No club is Out of Compliance on account.')+' It is shown to inform the decision; it does not change accreditation on its own.</span>'
+      +((nOOC&&!compLocked)?'<button class="btn ghost sm" id="compApplyOOC">Mark finance Out-of-Compliance clubs not compliant</button>':'')+'</div>';
+    l.innerHTML=note+byName.map(function(c){
       var comp=(complianceMap[c.id]!==false);
-      return '<div class="comp-row"><span><b>'+esc(c.name)+'</b> <span class="tag '+(c.type==="full"?"full":"assoc")+'">'+c.type+'</span></span>'+
+      return '<div class="comp-row"><span><b>'+esc(c.name)+'</b> <span class="tag '+(c.type==="full"?"full":"assoc")+'">'+c.type+'</span>'+finChip(c.id)+'</span>'+
         '<select data-comp="'+c.id+'" class="'+(comp?"comp-yes":"comp-no")+'"'+(compLocked?' disabled':'')+'>'+
         '<option value="yes"'+(comp?' selected':'')+'>Compliant</option>'+
         '<option value="no"'+(!comp?' selected':'')+'>Not compliant</option></select></div>';
@@ -1185,6 +1203,7 @@
     Array.prototype.forEach.call(l.querySelectorAll("[data-comp]"),function(s){
       s.onchange=function(){ this.className=(this.value==="yes")?"comp-yes":"comp-no"; complianceMap[this.dataset.comp]=(this.value==="yes"); updateCompCounts(); };
     });
+    var _ao=$("compApplyOOC"); if(_ao) _ao.onclick=function(){ byName.forEach(function(c){ var f=_clubFin&&_clubFin[c.id]; if(f&&f.ooc) complianceMap[c.id]=false; }); renderCompliance(); };
     $("saveCompliance").disabled=compLocked;
     $("compLockTag").innerHTML=compLocked?'<span class="tag closed">locked</span>':'';
     $("compMsg").textContent=compLocked?"Locked, a vote has been started.":"";
@@ -2051,6 +2070,46 @@
     try{ debMorningRun(_deb); }catch(e){}
   }
 
+  // ---- Data-freshness banner: warns when the Sage fetch is older than the
+  // twice-weekly cadence, so nobody relies on or sends off stale figures.
+  function debStaleBanner(s){
+    var n=dDaysSinceSAST(s&&s.extracted_at);
+    if(n===null || n<=4) return '';
+    var strong=n>8;
+    var bg=strong?'#FBECEA':'#FCF3D8', bd=strong?'#E4B4AE':'#E7D3A8', col=strong?'#8a3c17':'#7a5312';
+    return '<div style="background:'+bg+';border:1px solid '+bd+';border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start">'
+      +'<span style="font-size:11px;font-weight:700;letter-spacing:.3px;background:'+col+';color:#fff;border-radius:6px;padding:3px 8px;white-space:nowrap">'+(strong?'DATA STALE':'CHECK FRESHNESS')+'</span>'
+      +'<div style="font-size:13px;color:'+col+'"><b>Sage was last fetched '+n+' days ago.</b> The balances and ageing on this page are from that fetch. The automated fetch runs twice a week (Tuesday and Friday); if it has not run, the office-PC agent may be off or signed out of Sage. Press <b>Fetch from Sage</b> to refresh before relying on these figures or sending anything.</div></div>';
+  }
+  // ---- Next best actions: a priority-ordered worklist derived from the live
+  // position. Cash and out-of-sync clubs come first because reminders and
+  // notices are held for those clubs until they are cleared (the send-guard).
+  function debNextActions(){
+    var s=(_deb&&_deb.snapshot)||{}, clubs=(_deb&&_deb.clubs)||[];
+    var stg=function(k){return clubs.filter(function(c){return c.stage===k;});};
+    var stOOC=stg('ooc'), stFinal=stg('final'), stReminder=stg('reminder');
+    var sum60=function(a){return a.reduce(function(x,c){return x+Number(c.over60||0);},0);};
+    var acts=[];
+    var nfetch=dDaysSinceSAST(s.extracted_at);
+    if(nfetch!==null && nfetch>4){ acts.push({p:1,t:'Fetch from Sage',d:'The last fetch was '+nfetch+' days ago. Refresh before you rely on these figures.',b:'Fetch from Sage',fn:'fetch',tone:'bad'}); }
+    if(_debSync && _debSync.n_out>0){ acts.push({p:2,t:_debSync.n_out+' club'+(_debSync.n_out===1?'':'s')+' out of sync with Sage',d:'The itemised detail behind these clubs’ statements lags the live balance. Fetch from Sage to refresh it.',b:'Fetch from Sage',fn:'fetch',tone:'due'}); }
+    if(_debCash && _debCash.n_clubs>0){ acts.push({p:3,t:'Allocate '+dR(_debCash.total)+' of unallocated cash',d:_debCash.n_clubs+' club'+(_debCash.n_clubs===1?'':'s')+' paid money not yet matched to invoices in Sage. Allocate it so a club is not chased for money already paid.',b:'Cash on account',fn:'cash',tone:'due'}); }
+    if(stOOC.length){ acts.push({p:4,t:stOOC.length+' club'+(stOOC.length===1?'':'s')+' at the Out of Compliance trigger',d:dR(sum60(stOOC))+' overdue 120 days and older. A notice is due for your decision — a club is not Out of Compliance until you place it.',b:'Open correspondence',fn:'corr',tone:'bad'}); }
+    if(stFinal.length){ acts.push({p:5,t:stFinal.length+' final reminder'+(stFinal.length===1?'':'s')+' due',d:dR(sum60(stFinal))+' overdue 90 days and older — the last step before Out of Compliance.',b:'Open correspondence',fn:'corr',tone:'due'}); }
+    if(stReminder.length){ acts.push({p:6,t:stReminder.length+' payment reminder'+(stReminder.length===1?'':'s')+' due',d:dR(sum60(stReminder))+' overdue 60 days and older.',b:'Open correspondence',fn:'corr',tone:'due'}); }
+    acts.sort(function(a,b){return a.p-b.p;});
+    var body;
+    if(!acts.length){ body='<p class="hint" style="margin:0">Nothing needs attention right now. Balances are current, in sync with Sage, no unallocated cash, and no correspondence is due.</p>'; }
+    else{
+      body=acts.map(function(a){
+        return '<div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)">'
+          +'<div style="flex:1"><div style="font-weight:700;color:var(--navy);font-size:13.5px">'+esc(a.t)+'</div><div class="hint" style="font-size:12px;margin-top:2px">'+a.d+'</div></div>'
+          +(canEdit('debtors')?'<button class="btn ghost sm deb-na-btn" data-na="'+a.fn+'" style="white-space:nowrap">'+esc(a.b)+'</button>':'')
+          +'</div>'; }).join('');
+    }
+    return '<div class="card" style="margin-bottom:12px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><h3 style="margin:0">Next best actions</h3>'+(acts.length?'<span class="deb-tabn">'+acts.length+'</span>':'')+'</div>'
+      +'<p class="hint" style="font-size:11.5px;margin:0 0 4px">In priority order. Clear unallocated cash and any out-of-sync clubs first — reminders and notices are held for those clubs until you do.</p>'+body+'</div>';
+  }
   function debRender(){
     var root=$("debtorsRoot"); var s=_deb.snapshot, clubs=_deb.clubs||[], st=_deb.statuses||{};
     var canW=canEdit('debtors');
@@ -2069,6 +2128,8 @@
     var h='';
     // NOT-LIVE notice
     h+='<div class="deb-notlive"><span class="nl-tag">Not live</span><div><b>Automated correspondence is not live yet &mdash; pending Mancom approval.</b> This module is in final testing ahead of the Management Committee meeting on Tuesday 15 September 2026. The balances, ageing and stages shown are the real Sage figures, but no correspondence goes out to clubs. Every send is in test mode and reaches the Treasurer only. Nagging Panda remains the live collections system until Mancom approves the switch.</div></div>';
+    // data-freshness / stale-fetch warning
+    h+=debStaleBanner(s);
     // header + provenance
     h+='<div class="card deb-headcard" style="margin-bottom:12px">'
       +'<div class="deb-head">'
@@ -2098,6 +2159,8 @@
       +debKpi('Net trade debtors',dR(s.net_total),'after '+dR(-s.credit_total)+' in credits','')
       +debKpi('Out of Compliance due',stOOC.length+'',dR(stSum60(stOOC))+' · reached the 120-day trigger, awaiting your decision'+((s.n_placed_ooc||0)?' · '+s.n_placed_ooc+' placed':''),'bad')
       +'</div>';
+    // next best actions (priority worklist)
+    h+=debNextActions();
     // ageing bar + table (each band opens the clubs in it)
     var bt=DEB_BK.reduce(function(a,b){return a+Number(s.buckets[b[0]]||0);},0);
     h+='<div class="card"><div class="deb-age-h"><h3 style="margin:0">Debtors ageing</h3><span class="hint">Sage Days Outstanding &middot; as at <b>'+dDateZA(s.as_at)+'</b></span></div>'
@@ -2129,6 +2192,7 @@
     var _dct=$("debConstit"); if(_dct) _dct.onclick=function(){ debOpenConstit(); };
     Array.prototype.forEach.call(document.querySelectorAll('.deb-ageband'),function(tr){ var go=function(){ debOpenAgeBand(tr.getAttribute('data-band'), tr.getAttribute('data-label')); }; tr.onclick=go; tr.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } }; });
     $("debFetch").onclick=debFetchFromSage;
+    Array.prototype.forEach.call(document.querySelectorAll('.deb-na-btn'),function(b){ b.onclick=function(){ var f=b.dataset.na; if(f==='fetch') debFetchFromSage(); else if(f==='cash') debOpenCash(); else if(f==='corr') debOpenCorr(); }; });
     var q=$("debQ"); q.oninput=function(){ _debQ=this.value.trim().toLowerCase(); debTable(); };
     $("debStatusF").onchange=function(){ _debStatus=this.value; debTable(); };
     var _ap=$("debAgePDF"); if(_ap) _ap.onclick=function(){ debAgeAnalysisPDF(); };
