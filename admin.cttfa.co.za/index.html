@@ -1743,6 +1743,37 @@
     }catch(e){ _debSync=null; _debCash=null; }
   }
   function debCashByKey(k){ if(!_debCash||!_debCash.rows) return null; for(var i=0;i<_debCash.rows.length;i++){ if(_debCash.rows[i].club_key===k) return _debCash.rows[i]; } return null; }
+  // ---- Pre-send guard --------------------------------------------------------
+  // Never chase a club, or place it Out of Compliance, while it is holding
+  // unallocated cash in Sage (it may already have paid) or while its itemised
+  // transaction detail is out of sync with the live Sage balance. Applies to the
+  // chasing tiers only; a plain monthly statement is informational and is not
+  // gated. OOC is never issued automatically — the guard is enforced inside
+  // debSendOne so no path, auto or manual, can bypass it without an explicit
+  // treasurer override.
+  var DEB_GUARD_TIERS={reminder:1, final:1, ooc:1, plan:1};
+  async function debEnsureGuardData(){ if(_debCash===null || _debSync===null){ try{ await debLoadSync(); }catch(e){} } }
+  function debSendGuard(c, trigger){
+    var out={block:false, reasons:[], coa:null, outOfSync:false};
+    if(!c || !DEB_GUARD_TIERS[trigger]) return out;
+    var coa=debCashByKey(c.club_key);
+    if(coa && Number(coa.amount)>0){
+      out.block=true; out.coa=coa;
+      out.reasons.push('This club is holding '+dR(coa.amount)+' of unallocated cash in Sage, so it may already have paid. Allocate the receipt in Sage (Account Allocation) before chasing it or placing it Out of Compliance.');
+    }
+    if(_debSync && _debSync.out_keys && _debSync.out_keys.indexOf(c.club_key)>=0){
+      out.outOfSync=true; out.block=true;
+      out.reasons.push('This club’s itemised transaction detail is out of sync with the live Sage balance. Fetch from Sage first so the statement and notice reflect exactly what Sage shows.');
+    }
+    return out;
+  }
+  async function debGuardConfirm(c, trigger){
+    await debEnsureGuardData();
+    var g=debSendGuard(c, trigger);
+    if(!g.block) return true;
+    var head=(trigger==='ooc'?'Out of Compliance is on hold':'This '+((DEB_TIERS[trigger]||{}).label||'email').toLowerCase()+' is on hold')+' for '+c.name+'.';
+    return await debConfirm(head+'\n\n'+g.reasons.join('\n\n')+'\n\nSend anyway?', 'Send anyway');
+  }
   function debCashBadge(){ var d=_debCash; return (d&&d.n_clubs)?' <span class="deb-tabn">'+d.n_clubs+'</span>':''; }
   function debCashBody(d){
     if(!d||!d.n_clubs) return '<p class="hint">No club is holding unallocated cash. Nothing to allocate.</p>';
@@ -1831,10 +1862,12 @@
     function close(){ if(closed) return; closed=true; debModalClose(); if(Object.keys(stA).length||Object.keys(stO).length){ renderDebtors(true); } }
 
     async function sendAuto(){
+      await debEnsureGuardData();
       for(var i=0;i<auto.length;i++){ var it=auto[i]; if(stA[it.id]) continue;
-        stA[it.id]='sending'; draw();
         var c=fullClub(it.club_key)||{club_key:it.club_key,name:it.name,code:it.code,bal:it.bal,cur:it.cur,over:it.over,status:it.status};
-        try{ await debSendOne(c,it.tier); try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'sent'}); }catch(e){} stA[it.id]='sent'; }
+        if(debSendGuard(c,it.tier).block){ stA[it.id]='held'; draw(); continue; }
+        stA[it.id]='sending'; draw();
+        try{ await debSendOne(c,it.tier,{bypassGuard:true}); try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'sent'}); }catch(e){} stA[it.id]='sent'; }
         catch(e){ try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'failed',p_error:String(e.message||e).slice(0,300)}); }catch(e2){} stA[it.id]='failed'; }
         draw();
       }
@@ -1844,10 +1877,11 @@
       var aRows=auto.map(function(it){
         var s=stA[it.id];
         var badge = s==='sent' ? '<span class="deb-gate-state sent">Sent (test)</span>'
+                  : s==='held' ? '<span class="deb-gate-state held" title="Unallocated cash in Sage, or itemised detail out of sync — allocate or fetch from Sage first">Held &mdash; review</span>'
                   : s==='failed' ? '<span class="deb-gate-state held" style="color:#9A3130">Failed</span>'
                   : s==='sending' ? '<span class="hint">Sending…</span>'
                   : '<span class="hint" style="font-size:11px">queued</span>';
-        return '<div class="deb-gate-row'+(s==='sent'||s==='failed'?' done':'')+'"><div class="deb-gate-main"><span class="nm">'+esc(it.name)+'</span><span class="cd">'+esc(it.code||'')+'</span><div class="rs" style="color:#59667c">'+debCorrTierChip(it.tier)+' &middot; '+esc(it.reason||tierName(it.tier))+'</div></div><div class="deb-gate-arr" style="color:#1e456e">'+dR(it.bal)+'</div><div class="deb-gate-act">'+badge+'</div></div>';
+        return '<div class="deb-gate-row'+(s==='sent'||s==='failed'||s==='held'?' done':'')+'"><div class="deb-gate-main"><span class="nm">'+esc(it.name)+'</span><span class="cd">'+esc(it.code||'')+'</span><div class="rs" style="color:#59667c">'+debCorrTierChip(it.tier)+' &middot; '+esc(it.reason||tierName(it.tier))+'</div></div><div class="deb-gate-arr" style="color:#1e456e">'+dR(it.bal)+'</div><div class="deb-gate-act">'+badge+'</div></div>';
       }).join('');
       var oRows=ooc.map(function(it){
         var s=stO[it.id]; var arr=dR(it.over,false);
@@ -1891,11 +1925,12 @@
       Array.prototype.forEach.call(m.querySelectorAll('[data-ohold]'),function(b){ b.onclick=function(){ stO[Number(b.dataset.ohold)]='held'; draw(); }; });
       Array.prototype.forEach.call(m.querySelectorAll('[data-osend]'),function(b){ b.onclick=async function(){
         var id=Number(b.dataset.osend), it=ooc.filter(function(x){return x.id===id;})[0]; if(!it) return;
-        b.disabled=true; b.textContent='Issuing…';
         var c=fullClub(it.club_key)||{club_key:it.club_key,name:it.name,code:it.code,bal:it.bal,over:it.over,status:it.status};
+        if(!(await debGuardConfirm(c,'ooc'))){ stO[id]='held'; draw(); return; }
+        b.disabled=true; b.textContent='Issuing…';
         try{
           await sb.rpc('deb_ooc_place',{p_key:it.club_key,p_route:'notice',p_started_on:today,p_amount:Number(it.over)||null,p_notice_ref:null,p_note:'Confirmed via 11:00 daily run'});
-          await debSendOne(c,'ooc');
+          await debSendOne(c,'ooc',{bypassGuard:true});
           try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'sent'}); }catch(e){}
           stO[id]='sent';
         }catch(e){ alert('Could not issue: '+(e.message||e)); b.disabled=false; b.textContent='Confirm & issue'; return; }
@@ -2743,17 +2778,22 @@
     items=(items||[]).filter(function(it){ return it.state==='pending'||it.state==='approved'; });
     if(!items.length||_corrBusy) return;
     var st=await debSendSetup(true); var cfg=st.config||{}; var test=(cfg.test_mode!==false);
+    await debEnsureGuardData();
+    var held=[], sendItems=[];
+    items.forEach(function(it){ if(debSendGuard({club_key:it.club_key}, it.tier).block){ held.push(it); } else { sendItems.push(it); } });
+    if(!sendItems.length){ await debConfirm(held.length+' item'+(held.length>1?'s are':' is')+' held — each club is holding unallocated cash in Sage, or its itemised detail is out of sync. Allocate the cash or fetch from Sage, then try again. Nothing was sent.', 'OK'); return; }
     var to=test?('TEST MODE — every email goes to '+((cfg.test_email)||'the Treasurer')+', not to clubs'):'LIVE — emails go to each club’s address on file';
-    if(!(await debConfirm('Send '+items.length+' email'+(items.length>1?'s':'')+' now?\n\n'+to+'\n\nEach includes the branded statement PDF. Every send is logged for the audit file.', 'Send '+items.length+' now'))) return;
+    var heldNote=held.length?('\n\n'+held.length+' item'+(held.length>1?'s':'')+' held (unallocated cash in Sage or detail out of sync) and skipped. Review each from its club profile.'):'';
+    if(!(await debConfirm('Send '+sendItems.length+' email'+(sendItems.length>1?'s':'')+' now?\n\n'+to+'\n\nEach includes the branded statement PDF. Every send is logged for the audit file.'+heldNote, 'Send '+sendItems.length+' now'))) return;
     _corrBusy=true; var ot=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='Sending…'; }
     var stat=document.getElementById('corrStatus'); var ok=0, fail=0;
-    for(var i=0;i<items.length;i++){ var it=items[i];
-      if(stat) stat.textContent='Sending '+(i+1)+' of '+items.length+': '+it.name+'…';
+    for(var i=0;i<sendItems.length;i++){ var it=sendItems[i];
+      if(stat) stat.textContent='Sending '+(i+1)+' of '+sendItems.length+': '+it.name+'…';
       var c=((_deb&&_deb.clubs)||[]).filter(function(x){return x.club_key===it.club_key;})[0] || {club_key:it.club_key,name:it.name,code:it.code,bal:it.bal,cur:it.cur,over:it.over,status:it.status};
-      try{ await debSendOne(c, it.tier); ok++; try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'sent'}); }catch(e){} }
+      try{ await debSendOne(c, it.tier, {bypassGuard:true}); ok++; try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'sent'}); }catch(e){} }
       catch(e){ fail++; try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'failed',p_error:String(e.message||e).slice(0,300)}); }catch(e2){} }
     }
-    if(stat) stat.textContent='Sent '+ok+(fail?(' · '+fail+' failed'):'')+(test?' (test mode — delivered to the Treasurer)':'')+'.';
+    if(stat) stat.textContent='Sent '+ok+(fail?(' · '+fail+' failed'):'')+(held.length?(' · '+held.length+' held'):'')+(test?' (test mode — delivered to the Treasurer)':'')+'.';
     try{ var r2=await sb.rpc('deb_corr_latest'); if(!r2.error) _corrRunData=r2.data||_corrRunData; }catch(e){}
     _corrBusy=false; debCorrMonthlyBody(dr); _deb=null;
   }
@@ -3039,9 +3079,14 @@
       +'<div style="font-size:11px;line-height:1.5;color:#59666B;'+FONT+'">Issued by the Treasurer of the Cape Town Tygerberg LFA. Queries to '+reply+'.'+attnote+'</div>'
       +'</td></tr></table></td></tr></table>';
   }
-  async function debSendOne(c, trigger){
+  async function debSendOne(c, trigger, opts){
     if(!_deb||!_deb.clubs){ try{ var _rr=await sb.rpc('deb_dashboard'); if(!_rr.error&&_rr.data) _deb=_rr.data; }catch(e){} }
     var _full=((_deb&&_deb.clubs)||[]).filter(function(x){return x.club_key===c.club_key;})[0]; if(_full) c=_full;
+    if(!(opts&&opts.bypassGuard)){
+      await debEnsureGuardData();
+      var _g=debSendGuard(c, trigger);
+      if(_g.block) throw new Error('Send held: '+_g.reasons.join(' '));
+    }
     var st=await debSendSetup(); var S=st.settings||{};
     var _tk=trigger; if((c.club_type==='guest'||c.is_guest)&&st.tplMap[trigger+'_guest'])_tk=trigger+'_guest';
     var tpl=st.tplMap[_tk]||{};
@@ -3085,10 +3130,12 @@
     var noteTxt=test
       ? 'TEST MODE — this email is delivered to '+esc(testTo)+' only, not to the club. A copy is kept in the treasurer mailbox (BCC).'
       : 'LIVE — this email goes to '+esc(c.name)+'’s address on file, copied to the treasurer and ops mailboxes (BCC).';
+    var _coaC=debCashByKey(c.club_key);
+    var coaNote=(_coaC&&Number(_coaC.amount)>0)?'<div class="deb-cmp-note" style="background:#FBF1DD;border-color:#E7D3A8;color:#7a5312;margin-top:8px">Heads up: this club is holding '+dR(_coaC.amount)+' of unallocated cash in Sage. If you are writing to chase payment, allocate the receipt in Sage first — it may already have paid.</div>':'';
     ov.innerHTML='<div class="deb-cmp-card" role="dialog" aria-modal="true" aria-label="Write email to '+esc(c.name)+'">'
       +'<div class="deb-cmp-h"><h4>Write to '+esc(c.name)+'</h4><div class="dsub">Free-form email · '+esc(c.code||'')+' · balance '+dR(c.bal)+'</div></div>'
       +'<div class="deb-cmp-b">'
-        +'<div class="deb-cmp-note'+(test?'':' live')+'">'+noteTxt+'</div>'
+        +'<div class="deb-cmp-note'+(test?'':' live')+'">'+noteTxt+'</div>'+coaNote
         +'<label class="fl" for="cmpSubj">Subject</label>'
         +'<input type="text" id="cmpSubj" value="'+esc('CTTLFA — '+c.name)+'" style="margin-bottom:14px">'
         +'<label class="fl" for="cmpBody">Message</label>'
@@ -3124,15 +3171,25 @@
   async function debSendRun(clubs, trigger, statusEl){
     var st=await debSendSetup(true); var test=(st.config&&st.config.test_mode!==false);
     var to=test?('TEST MODE — every email goes to '+((st.config&&st.config.test_email)||'the Treasurer')+', not to clubs'):'LIVE — emails go to each club’s address on file';
-    if(!(await debConfirm('Send '+clubs.length+' '+((DEB_TIERS[trigger]||{}).label||'email').toLowerCase()+' email'+(clubs.length>1?'s':'')+'?\n\n'+to+'\n\nEach email includes the branded statement PDF.', 'Send '+clubs.length+' now'))) return;
-    var ok=0, fail=0;
-    for(var i=0;i<clubs.length;i++){ var c=clubs[i];
-      if(statusEl) statusEl.textContent='Sending '+(i+1)+' of '+clubs.length+': '+c.name+'…';
-      try{ await debSendOne(c, trigger); ok++; }catch(e){ fail++; if(statusEl) statusEl.textContent='Error on '+c.name+': '+(e.message||e); }
+    var sendable=clubs, held=[];
+    if(DEB_GUARD_TIERS[trigger]){
+      await debEnsureGuardData(); sendable=[];
+      clubs.forEach(function(c){ if(debSendGuard(c,trigger).block){ held.push(c); } else { sendable.push(c); } });
     }
-    if(statusEl) statusEl.textContent='Sent '+ok+(fail?(' · '+fail+' failed'):'')+(test?' (test mode — delivered to the Treasurer)':'')+'.';
+    if(!sendable.length){
+      await debConfirm((held.length||clubs.length)+' club'+((held.length||clubs.length)>1?'s are':' is')+' held — each is holding unallocated cash in Sage, or its itemised detail is out of sync. Allocate the cash or fetch from Sage, then try again. Nothing was sent.', 'OK');
+      return {ok:0,fail:0,held:held.length};
+    }
+    var heldNote=held.length?('\n\n'+held.length+' club'+(held.length>1?'s':'')+' held (unallocated cash in Sage or detail out of sync) and will be skipped. Review each from its club profile.'):'';
+    if(!(await debConfirm('Send '+sendable.length+' '+((DEB_TIERS[trigger]||{}).label||'email').toLowerCase()+' email'+(sendable.length>1?'s':'')+'?\n\n'+to+'\n\nEach email includes the branded statement PDF.'+heldNote, 'Send '+sendable.length+' now'))) return;
+    var ok=0, fail=0;
+    for(var i=0;i<sendable.length;i++){ var c=sendable[i];
+      if(statusEl) statusEl.textContent='Sending '+(i+1)+' of '+sendable.length+': '+c.name+'…';
+      try{ await debSendOne(c, trigger, {bypassGuard:true}); ok++; }catch(e){ fail++; if(statusEl) statusEl.textContent='Error on '+c.name+': '+(e.message||e); }
+    }
+    if(statusEl) statusEl.textContent='Sent '+ok+(fail?(' · '+fail+' failed'):'')+(held.length?(' · '+held.length+' held'):'')+(test?' (test mode — delivered to the Treasurer)':'')+'.';
     _deb=null;
-    return {ok:ok,fail:fail};
+    return {ok:ok,fail:fail,held:held.length};
   }
 
   // ---- Email setup modal ----
