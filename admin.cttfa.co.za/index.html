@@ -2226,15 +2226,17 @@
       +debComp('Payment arrangement (Art 7.11.16)', (plans.length||stPlan.length)? ((plans.length||stPlan.length)+' active') : 'None recorded', (plans.length||stPlan.length)?'ok':'muted','Written application, chair-signed, with bank statements and AFS. Instalment reminders auto-send.')
       +'</div>';
   }
-  function debOpenConstit(){
+  async function debOpenConstit(){
+    await debEnsureDeb();
     var m=debModal();
     m.innerHTML='<div class="deb-mhead"><div><h3>Constitutional management</h3><div class="dsub">The debtor-management position against the CTTLFA Constitution</div></div><button class="dx" id="debCtX" aria-label="Close">&times;</button></div><div class="deb-mbody">'+debConstitBody()+'</div>';
     var x=document.getElementById('debCtX'); if(x) x.onclick=debModalClose;
   }
   // ---- Ageing band drill-down (click a band -> the clubs in it) ----
-  function debOpenAgeBand(key,label){
-    var s=_deb.snapshot||{};
-    var clubs=(_deb.clubs||[]).filter(function(c){return Number(c[key]||0)>0.005;}).sort(function(a,b){return Number(b[key])-Number(a[key]);});
+  async function debOpenAgeBand(key,label){
+    await debEnsureDeb();
+    var s=(_deb&&_deb.snapshot)||{};
+    var clubs=((_deb&&_deb.clubs)||[]).filter(function(c){return Number(c[key]||0)>0.005;}).sort(function(a,b){return Number(b[key])-Number(a[key]);});
     var tot=clubs.reduce(function(x,c){return x+Number(c[key]||0);},0);
     var rows=clubs.map(function(c){return '<tr class="deb-drow" data-key="'+esc(c.club_key)+'"><td>'+esc(c.name)+(c.code?' <span class="hint" style="font-weight:400">'+esc(c.code)+'</span>':'')+'</td><td class="num">'+dR(c[key])+'</td><td class="num">'+dR(c.bal)+'</td></tr>';}).join('');
     var m=debModal();
@@ -2640,7 +2642,7 @@
 
   // ---- correspondence drawer ----
   function debCorrScope(tierKey){
-    var clubs=(_deb.clubs||[]);
+    var clubs=((_deb&&_deb.clubs)||[]);
     if(tierKey==='statement') return clubs.filter(function(c){return c.bal>0.01;});
     if(tierKey==='reminder') return clubs.filter(function(c){return c.stage==='reminder';});
     if(tierKey==='final') return clubs.filter(function(c){return c.stage==='final';});
@@ -2648,8 +2650,9 @@
     return [];
   }
   var _corrTier='statement', _corrSel={}, _corrInclStmt=true;
-  function debOpenCorr(){
+  async function debOpenCorr(){
     var canW=canEdit('debtors'); if(!canW) return;
+    await debEnsureDeb();
     var scrim=document.getElementById('debScrim')||(function(){var d=document.createElement('div');d.id='debScrim';d.className='deb-scrim';document.body.appendChild(d);d.onclick=debClose;return d;})();
     var dr=document.getElementById('debDrawer')||(function(){var d=document.createElement('aside');d.id='debDrawer';d.className='deb-drawer';document.body.appendChild(d);return d;})();
     _corrSel={}; debCorrDraw(dr); dr.classList.add('on'); scrim.classList.add('on');
@@ -3391,8 +3394,14 @@
       return '<div class="deb-fixrow'+(soon?' soon':'')+'"><span class="fx-d">'+esc(f.ds)+(f.tm?' <span class="fx-t">'+esc(f.tm)+'</span>':'')+'</span><span class="fx-ha">'+(f.ha==='H'?'vs':'@')+'</span><span class="fx-opp">'+esc(f.opp)+'</span><span class="fx-lg">'+esc(f.league)+(f.junior?' · junior':'')+'</span>'+(risk?'<span class="fx-risk">forfeit risk</span>':(soon?'<span class="fx-soon">≤7 days</span>':''))+'</div>';
     }).join('')+'</div>'+(isOOC?'<p class="hint" style="font-size:11px;margin:6px 0 0">While Out of Compliance, senior fixtures within 7 days are at forfeit risk (recorded 3-0, Rule 8.1.2, with a 3-point deduction); junior fixtures may be played. Fixtures are matched to the club by name and should be confirmed against the league site.</p>':'<p class="hint" style="font-size:11px;margin:6px 0 0">Matched to the club by name from the league site; confirm against the site before relying on it for a notice.</p>');
   }
+  // After any send the dashboard cache (_deb) is cleared to force a refresh.
+  // These openers run from click handlers on an already-rendered page, so they
+  // must re-fetch if the cache is empty, otherwise the click throws on _deb.clubs
+  // and the page appears frozen until a manual refresh.
+  async function debEnsureDeb(){ if(!_deb || !_deb.clubs){ try{ var _rr=await sb.rpc('deb_dashboard'); if(!_rr.error&&_rr.data) _deb=_rr.data; }catch(e){} } }
   async function debOpenClub(key){
-    var c=(_deb.clubs||[]).filter(function(x){return x.club_key===key;})[0]; if(!c) return;
+    await debEnsureDeb();
+    var c=((_deb&&_deb.clubs)||[]).filter(function(x){return x.club_key===key;})[0]; if(!c) return;
     var canW=canEdit('debtors');
     var m=debModal();
     m.innerHTML='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">Loading the account…</div></div><button class="dx" id="debX" aria-label="Close">×</button></div><div class="deb-mbody"></div>';
