@@ -2026,7 +2026,7 @@
     clubs.forEach(function(c){ if(c.statement_last&&(!lastStmt||c.statement_last>lastStmt))lastStmt=c.statement_last; if(c.reminder_last&&(!lastRem||c.reminder_last>lastRem))lastRem=c.reminder_last; });
     var h='';
     // NOT-LIVE notice
-    h+='<div class="deb-notlive"><span class="nl-tag">Not live</span><div><b>Automated correspondence is not live yet &mdash; pending Mancom approval.</b> This module is in final testing ahead of the Management Committee meeting on Tuesday 13 September 2026. The balances, ageing and stages shown are the real Sage figures, but no correspondence goes out to clubs. Every send is in test mode and reaches the Treasurer only. Nagging Panda remains the live collections system until Mancom approves the switch.</div></div>';
+    h+='<div class="deb-notlive"><span class="nl-tag">Not live</span><div><b>Automated correspondence is not live yet &mdash; pending Mancom approval.</b> This module is in final testing ahead of the Management Committee meeting on Tuesday 15 September 2026. The balances, ageing and stages shown are the real Sage figures, but no correspondence goes out to clubs. Every send is in test mode and reaches the Treasurer only. Nagging Panda remains the live collections system until Mancom approves the switch.</div></div>';
     // header + provenance
     h+='<div class="card deb-headcard" style="margin-bottom:12px">'
       +'<div class="deb-head">'
@@ -2436,7 +2436,7 @@
       'In terms of Rule 10.2.3 of the Association’s Rules and Regulations, the club is served this Out of Compliance notice and remains out of compliance until the overdue amount is settled. While out of compliance, the consequences in Rule 16.4.2.6 apply, including that the club may not become involved in the affairs of the Association, may not accumulate points and forfeits upcoming fixtures, with a three-point deduction applied to each game from the date of non-compliance.',
       'A payment arrangement can no longer be entered into at this stage; the arrears must be settled in full and proof of payment provided to the Treasurer, from which date the club’s good standing is restored, forward only. Please attend to this without delay.'];
   }
-  function debRenderLetterInto(doc, c, S, tierKey){
+  function debRenderLetterInto(doc, c, S, tierKey, fx7){
     var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=40;
     var T=DEB_TIERS[tierKey]||DEB_TIERS.reminder;
     var _guest=(c.club_type==='guest'||c.is_guest);
@@ -2465,6 +2465,31 @@
       body:[['Balance outstanding', debAmtR(c.bal), 'Overdue (60+ days)', debAmtR(c.over60!=null?c.over60:c.over)],
             ['Payment reference', (c.code||c.name), 'Status', (_guest?'Overdue account':dStageLabel(c.stage))]] });
     y+=58+14;
+    // Fixtures within the next seven days — member OOC notice only (guests carry no constitutional forfeit).
+    if(tierKey==='ooc' && !_guest && Array.isArray(fx7)){
+      doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor.apply(doc,DEB_NAVY);
+      doc.text('Fixtures in the next seven days', M, y); y+=6;
+      if(fx7.length){
+        var fxBody=fx7.map(function(f){
+          var when=(f.ds||'')+(f.tm?'  '+f.tm:'');
+          var match=(f.ha==='H'?'vs ':'at ')+String(f.opp||'');
+          var treat=f.junior?'Junior — may be played, no points':'Senior — forfeited 3-0 (Rule 8.1.2) if not settled before kick-off';
+          return [when, match, String(f.league||''), treat];
+        });
+        doc.autoTable({ startY:y+4, margin:{left:M,right:M}, theme:'grid',
+          head:[['Date','Match','Division','Treatment while Out of Compliance']],
+          styles:{fontSize:8.3,cellPadding:3,textColor:DEB_INK,lineColor:DEB_HAIR,lineWidth:0.4,overflow:'linebreak'},
+          headStyles:{fillColor:DEB_NAVY,textColor:255,fontStyle:'bold',fontSize:8.3},
+          columnStyles:{0:{cellWidth:92},1:{cellWidth:120},2:{cellWidth:110},3:{cellWidth:'auto'}} });
+        y=doc.lastAutoTable.finalY+8;
+        doc.setFont('helvetica','normal'); doc.setFontSize(7.8); doc.setTextColor.apply(doc,DEB_MUTED);
+        var fnote='Senior fixtures within seven days of the effective date are forfeited and recorded 3-0 (Rule 8.1.2), with a three-point deduction, unless the arrears are settled before kick-off. Junior fixtures may be played but earn no points. Fixtures are drawn from the league site and should be confirmed against it.';
+        var fl=doc.splitTextToSize(fnote, W-2*M); doc.text(fl, M, y); y+=fl.length*10+10;
+      } else {
+        doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor.apply(doc,DEB_INK);
+        doc.text('No senior or junior fixtures fall within the next seven days of this notice.', M, y+12); y+=26;
+      }
+    }
     var bank=debBankLines(S);
     doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,DEB_NAVY); doc.text('Payment details', M, y); y+=13;
     doc.setFont('helvetica','normal'); doc.setFontSize(8.5); doc.setTextColor.apply(doc,DEB_INK);
@@ -2489,7 +2514,8 @@
       if(tierKey==='statement'){
         var stx=await debFetchStatement(c); debRenderStatementInto(doc,c,stx,S);
       } else {
-        debRenderLetterInto(doc,c,S,tierKey);
+        var fx7b=(tierKey==='ooc' && !(c.club_type==='guest'||c.is_guest)) ? await debOOCFixtures7(c) : null;
+        debRenderLetterInto(doc,c,S,tierKey,fx7b);
         if(includeStatement){ doc.addPage(); var st2=await debFetchStatement(c); debRenderStatementInto(doc,c,st2,S); }
       }
     }
@@ -2924,8 +2950,9 @@
     // The OOC notice carries the pre-approved formal letter alongside the statement (two attachments).
     if(_tk==='ooc' || _tk==='ooc_guest' || trigger==='ooc'){
       try{ var LS=await debGetSettings(); var JSc=window.jspdf&&window.jspdf.jsPDF;
-        if(JSc){ var ldoc=new JSc({unit:'pt',format:'a4',compress:true}); debRenderLetterInto(ldoc, c, LS, 'ooc');
-          var lguest=(c.club_type==='guest'||c.is_guest);
+        var lguest=(c.club_type==='guest'||c.is_guest);
+        var lfx=lguest?null:await debOOCFixtures7(c);
+        if(JSc){ var ldoc=new JSc({unit:'pt',format:'a4',compress:true}); debRenderLetterInto(ldoc, c, LS, 'ooc', lfx);
           atts.push({name:'CTTLFA '+(lguest?'Overdue Account':'Out of Compliance Notice')+' - '+cleanNm+'.pdf', base64:ldoc.output('datauristring').split(',')[1]}); }
       }catch(e){}
     }
@@ -3119,6 +3146,10 @@
     });
     out.sort(function(a,b){return a.date-b.date;});
     return {fixtures:out.slice(0,24)};
+  }
+  // Senior and junior fixtures falling within the next seven days — for the OOC notice.
+  async function debOOCFixtures7(c){
+    try{ var r=await debClubFixtures(c); return (r&&r.fixtures||[]).filter(function(f){return f.days>=0 && f.days<=7;}); }catch(e){ return []; }
   }
   function debFixHtml(r, c){
     if(r.err) return '<p class="hint" style="font-size:12px">'+esc(r.err)+'</p>';
