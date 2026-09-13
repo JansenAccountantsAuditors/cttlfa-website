@@ -3497,10 +3497,11 @@
   }
   async function debSendComposed(c, subject, bodyText, attachStmt, S, customAtt){
     var html=debEmailHtml(bodyText, S, {attached:(customAtt? false : !!attachStmt)});
-    var b64=null, pname=null;
-    if(customAtt && customAtt.base64){ b64=customAtt.base64; pname=customAtt.name||'Attachment.pdf'; }
-    else if(attachStmt){ try{ var doc=await debStatementPDF(c,{doc:true}); if(doc){ b64=doc.output('datauristring').split(',')[1]; pname='CTTLFA Statement - '+(String(c.name).replace(/[^A-Za-z0-9 ]/g,'').trim())+'.pdf'; } }catch(e){} }
-    var r=await sb.functions.invoke('deb-send',{ body:{ club_key:c.club_key, name:c.name, code:c.code, trigger:'custom', subject:subject, html:html, text:bodyText, pdf_base64:b64, pdf_name:pname } });
+    var body={ club_key:c.club_key, name:c.name, code:c.code, trigger:'custom', subject:subject, html:html, text:bodyText };
+    if(customAtt && customAtt.url){ body.pdf_url=customAtt.url; body.pdf_url_name=customAtt.name||'Attachment.pdf'; }
+    else if(customAtt && customAtt.base64){ body.pdf_base64=customAtt.base64; body.pdf_name=customAtt.name||'Attachment.pdf'; }
+    else if(attachStmt){ try{ var doc=await debStatementPDF(c,{doc:true}); if(doc){ body.pdf_base64=doc.output('datauristring').split(',')[1]; body.pdf_name='CTTLFA Statement - '+(String(c.name).replace(/[^A-Za-z0-9 ]/g,'').trim())+'.pdf'; } }catch(e){} }
+    var r=await sb.functions.invoke('deb-send',{ body:body });
     if(r.error) throw new Error(r.error.message||r.error);
     if(r.data && r.data.ok===false) throw new Error(r.data.error||'send failed');
     return r.data;
@@ -3564,7 +3565,8 @@
       var b=this, sEl=ov.querySelector('#cmpStatus'); var t0=b.textContent; b.disabled=true; b.textContent='Sending…'; if(sEl) sEl.textContent='';
       try{
         var customAtt=null;
-        if(hasAtt){ b.textContent='Preparing attachment…'; var b64=await debUrlToB64(prep.att_url); customAtt={name:(prep.att_name||'Attachment.pdf'), base64:b64}; b.textContent='Sending…'; }
+        if(hasAtt){ customAtt={url:prep.att_url, name:(prep.att_name||'Attachment.pdf')}; }
+        else if(prep && prep.att_base64){ customAtt={base64:prep.att_base64, name:(prep.att_name||'Attachment.pdf')}; }
         await debSendComposed(c, subj, msg, att, S, customAtt);
         if(prep && !test){ try{ await sb.rpc('deb_prepared_clear',{p_club_key:c.club_key}); }catch(e){} }
         if(sEl) sEl.textContent='Sent'+(test?' — delivered to the Treasurer (test mode)':'')+'.';
