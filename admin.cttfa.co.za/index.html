@@ -2237,8 +2237,10 @@
         +'<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><input id="cdbAliasIn" placeholder="Add another name for this club" style="flex:1;min-width:220px;padding:8px 10px"><button class="btn ghost sm" id="cdbAliasAdd">Add name</button></div>'
         +'<label style="display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;cursor:pointer"><input type="checkbox" id="cdbVer"'+(c.verified?' checked':'')+'> <b>Reviewed &amp; verified</b> &mdash; this club is correctly mapped across every system</label>';
     }
-    m.innerHTML='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">How this club is known across every system</div></div><button class="dx" id="cdbX" aria-label="Close">&times;</button></div><div class="deb-mbody">'+body+gapHtml+editHtml+'</div>';
+    var pvKey=(sg.keys&&sg.keys.length)?sg.keys[0]:null;
+    m.innerHTML='<div class="deb-mhead"><div><h3>'+esc(c.name)+'</h3><div class="dsub">How this club is known across every system</div></div><div style="display:flex;gap:8px;align-items:center">'+(pvKey?'<button class="btn ghost sm" id="cdbPvBtn">Preview portal</button>':'')+'<button class="dx" id="cdbX" aria-label="Close">&times;</button></div></div><div class="deb-mbody">'+body+gapHtml+editHtml+'</div>';
     var x=document.getElementById('cdbX'); if(x) x.onclick=debModalClose;
+    var pvb=document.getElementById('cdbPvBtn'); if(pvb) pvb.onclick=function(){ debPortalPreview(pvKey, c.name); };
     if(canE){
       var verEl=document.getElementById('cdbVer'); if(verEl) verEl.onchange=async function(){ var self=this; try{ await sb.rpc('club_review_set',{p_register_id:regId,p_verified:self.checked}); cdbReload(); }catch(e){ alert('Could not save: '+(e.message||e)); self.checked=!self.checked; } };
       var addBtn=document.getElementById('cdbAliasAdd'); if(addBtn) addBtn.onclick=async function(){ var el=document.getElementById('cdbAliasIn'); var v=(el.value||'').trim(); if(!v) return; try{ await sb.rpc('club_alias_add',{p_register_id:regId,p_system:'website',p_alias:v}); el.value=''; cdbLoadAliases(regId); cdbReload(); }catch(e){ alert('Could not add: '+(e.message||e)); } };
@@ -3241,7 +3243,8 @@
       if(pr[0].error) throw pr[0].error; d=pr[0].data||{}; ext=(pr[1]&&pr[1].data)||{};
     }catch(e){ var b=document.getElementById('debPvBody'); if(b) b.innerHTML='<div style="padding:20px;color:#9A3130">Could not load the preview: '+esc(e.message||e)+'</div>'; return; }
     try{ var rs=await fetch('https://www.cttfa.co.za/season.json',{cache:'no-store'}); season=await rs.json(); }catch(e){}
-    var b2=document.getElementById('debPvBody'); if(b2) b2.innerHTML=debPvRender(d, ext, season, name);
+    var b2=document.getElementById('debPvBody'); if(b2){ b2.innerHTML=debPvRender(d, ext, season, name);
+      Array.prototype.forEach.call(b2.querySelectorAll('[data-pvdoc]'),function(btn){ btn.onclick=function(){ debPvOpenDoc(btn.dataset.pvdoc, btn); }; }); }
   }
   function debPvRender(d, ext, season, name){
     var H=d.home||{}, L=d.ledger||[], P=(ext&&ext.profile)||{}, REG=(ext&&ext.registrations)||{}, MEET=(ext&&ext.meeting)||{}, CORR=(ext&&ext.correspondence)||[];
@@ -3295,16 +3298,28 @@
     C+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:14px;padding:16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#59666B;font-weight:700;margin-bottom:8px">Recent statement lines</div>';
     var last=L.slice(-8);
     if(!last.length){ C+='<div style="font-size:12.5px;color:#59666B">No transactions on record.</div>'; }
-    else { C+='<table style="width:100%;border-collapse:collapse;font-size:12px">'; last.forEach(function(t){ C+='<tr style="border-bottom:1px solid #eef1f6"><td style="padding:5px 2px;color:#59666B">'+(t.opening?'Opening':dDateZA(t.date))+'</td><td style="padding:5px 2px">'+esc(String(t.type||'').slice(0,16))+'</td><td style="padding:5px 2px;text-align:right;font-variant-numeric:tabular-nums">'+mny(t.balance)+'</td></tr>'; }); C+='</table>'; }
+    else { C+='<table style="width:100%;border-collapse:collapse;font-size:12px"><tr><td style="padding:4px 2px;color:#8892a4;font-size:10.5px;text-transform:uppercase">Date</td><td style="padding:4px 2px;color:#8892a4;font-size:10.5px;text-transform:uppercase">Description</td><td style="padding:4px 2px;color:#8892a4;font-size:10.5px;text-transform:uppercase;text-align:right">Balance</td></tr>'; last.forEach(function(t){ C+='<tr style="border-bottom:1px solid #eef1f6"><td style="padding:5px 2px;color:#59666B;white-space:nowrap">'+(t.opening?'Opening':dDateZA(t.date))+'</td><td style="padding:5px 2px">'+esc(String(t.description||t.type||'').slice(0,54))+'</td><td style="padding:5px 2px;text-align:right;font-variant-numeric:tabular-nums">'+mny(t.balance)+'</td></tr>'; }); C+='</table>'; }
     C+='</div>';
     C+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:14px;padding:16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#59666B;font-weight:700;margin-bottom:8px">Correspondence copied to the club ('+CORR.length+')</div>';
     if(!CORR.length){ C+='<div style="font-size:12.5px;color:#59666B">None on record yet.</div>'; }
     else { CORR.slice(0,6).forEach(function(c){ C+='<div style="border-bottom:1px solid #eef1f6;padding:7px 0"><div style="font-size:13px;font-weight:600">'+esc(c.subject||'(no subject)')+'</div><div style="font-size:11.5px;color:#59666B">'+dDateZA(c.date)+(c.status?' · '+esc(c.status):'')+'</div></div>'; }); }
     if(MEET&&MEET.has){ C+='<div style="margin-top:12px;padding-top:10px;border-top:1px solid #eef1f6;font-size:12.5px"><b>Next meeting:</b> '+esc(MEET.name)+(MEET.date?' · '+dDateZA(MEET.date):'')+'</div>'; }
     C+='</div></div>';
+    // executive + constitution (from the club's self-service admin section)
+    var EXEC=(ext&&ext.exec)||[], DOCS=(ext&&ext.documents)||[];
+    C+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;align-items:start">';
+    C+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:14px;padding:16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#59666B;font-weight:700;margin-bottom:8px">Club executive ('+EXEC.length+')</div>';
+    if(!EXEC.length){ C+='<div style="font-size:12.5px;color:#59666B">No office-bearers captured by the club yet.</div>'; }
+    else { EXEC.forEach(function(e){ C+='<div style="border-bottom:1px solid #eef1f6;padding:7px 0;display:flex;justify-content:space-between;gap:10px"><div><b style="font-size:13px">'+esc(e.name)+'</b>'+(e.member_match?' <span style="font-size:10px;background:#eef1f6;color:#59666B;border-radius:10px;padding:1px 6px">registered</span>':'')+'<div style="font-size:11.5px;color:#59666B">'+esc(e.role)+'</div></div><div style="font-size:11.5px;color:#59666B;text-align:right">'+esc(e.email||'')+(e.phone?('<br>'+esc(e.phone)):'')+'</div></div>'; }); }
+    C+='</div>';
+    C+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:14px;padding:16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#59666B;font-weight:700;margin-bottom:8px">Club documents ('+DOCS.length+')</div>';
+    if(!DOCS.length){ C+='<div style="font-size:12.5px;color:#59666B">No constitution or documents uploaded yet.</div>'; }
+    else { DOCS.forEach(function(dz){ C+='<div style="border-bottom:1px solid #eef1f6;padding:7px 0;display:flex;justify-content:space-between;gap:10px;align-items:center"><div><b style="font-size:13px">'+esc(dz.filename||dz.kind)+'</b><div style="font-size:11.5px;color:#59666B">'+esc(dz.kind)+' · '+dDateZA(dz.uploaded_at)+'</div></div><button class="btn ghost sm" data-pvdoc="'+esc(dz.path)+'" type="button" style="padding:6px 12px">View</button></div>'; }); }
+    C+='</div></div>';
     C+='<div style="font-size:11.5px;color:#59666B;text-align:center;margin-top:14px">'+(H.has_portal_access?'This club has a contact email with portal access.':'No portal login yet &mdash; add a contact email to this club in Sage to grant access.')+'</div>';
     return C;
   }
+  async function debPvOpenDoc(path, btn){ if(btn) btn.disabled=true; try{ var r=await sb.storage.from('club-docs').createSignedUrl(path,120); if(r.data&&r.data.signedUrl) window.open(r.data.signedUrl,'_blank','noopener'); else alert('Could not open the document.'); }catch(e){ alert('Could not open the document: '+(e.message||e)); } if(btn) btn.disabled=false; }
 
   // ---- Club edit approval queue (self-service edits from the club portal) ----
   var _pvFieldLabels={ground:'Home ground',suburb:'Suburb',founded:'Founded',website:'Website',facebook:'Facebook',logo:'Logo image',lat:'Latitude',lng:'Longitude',honours:'Honours',name:'Contact name',email:'Contact email',cc_email:'Copy-to email',phone:'Contact phone'};
@@ -4856,7 +4871,7 @@
     var snr=rows.filter(function(m){return m.category==="Senior";}).length,jnr=rows.filter(function(m){return m.category==="Junior";}).length,frn=rows.filter(function(m){return m.category==="Foreign";}).length;
     var ret=rows.filter(function(m){return m.returning;}).length,refs=rows.filter(function(m){return m.type==="referee"||m.type==="official";}).length,fnat=rows.filter(function(m){return m.foreign;}).length;
     var crest=crestFor(club);
-    var h='<div class="card">'+regBackBar(regOverview)+'<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px"><div class="clubhdr">'+(crest?'<img src="'+esc(crest)+'" alt="" onerror="this.style.display=\'none\'">':'')+'<div><h3 style="margin:0">'+esc(club)+'</h3><p class="hint" style="margin:2px 0 0">Club profile · '+cycTag()+' cycle · as at '+regDate(_reg.as_at)+'</p></div></div><span style="display:flex;gap:8px"><button class="btn gold sm" id="regClubSummary">Club summary PDF</button><button class="btn ghost sm" id="regClubMemCsv">Members CSV</button><button class="btn ghost sm" id="regClubMemPdf">Members PDF</button></span></div>';
+    var h='<div class="card">'+regBackBar(regOverview)+'<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px"><div class="clubhdr">'+(crest?'<img src="'+esc(crest)+'" alt="" onerror="this.style.display=\'none\'">':'')+'<div><h3 style="margin:0">'+esc(club)+'</h3><p class="hint" style="margin:2px 0 0">Club profile · '+cycTag()+' cycle · as at '+regDate(_reg.as_at)+'</p></div></div><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost sm" id="regClubDb">Open in Club Database &#8599;</button><button class="btn gold sm" id="regClubSummary">Club summary PDF</button><button class="btn ghost sm" id="regClubMemCsv">Members CSV</button><button class="btn ghost sm" id="regClubMemPdf">Members PDF</button></span></div>';
     h+='<div class="reg-stats" style="margin-top:12px">'+regStat(rows.length,"Registered","this cycle")+regStat(snr,"Seniors","")+regStat(jnr,"Juniors","")+regStat(frn,"Foreign","age not on card")+regStat(ret,"Returning","from prev cycle")+regStat(rows.length-ret,"New","this cycle")+regStat(refs,"Referees","")+regStat(fnat,"Foreign nationals","")+'</div></div>';
     h+='<div class="card"><h3 style="margin:0 0 4px">Football — live from the Match Centre</h3>';
     if(!fb||!fb.ok){ h+='<p class="hint">Could not load live league data right now. Try again shortly, or open the club on cttfa.co.za.</p></div>'; }
@@ -4880,6 +4895,21 @@
     if(b=$("regClubMemCsv")) b.onclick=function(){ dlMembersCSV(_regView,club); };
     if(b=$("regClubMemPdf")) b.onclick=function(){ dlMembersPDF(_regView,club); };
     if(b=$("regClubSummary")) b.onclick=function(){ regClubSummaryPDF(club,fb); };
+    if(b=$("regClubDb")) b.onclick=function(){ regGotoClubDb(club); };
+  }
+  // Cross-link: from a registrations club page to its Club Database entry (matched by name/alias)
+  function regGotoClubDb(name){
+    if(typeof goTab==='function') goTab('clubdb');
+    var nn=String(name||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim(); var tries=0;
+    var iv=setInterval(function(){
+      tries++;
+      if(typeof _cdb!=='undefined' && _cdb && _cdb.clubs && _cdb.clubs.length){
+        clearInterval(iv);
+        var hit=_cdb.clubs.filter(function(c){ return String(c.name||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()===nn; })[0];
+        if(hit){ try{ cdbOpenClub(hit.register_id); }catch(e){} }
+        else { alert('Open the club from the Club Database list — an exact name match was not found for "'+name+'".'); }
+      } else if(tries>40){ clearInterval(iv); }
+    },150);
   }
   function regClubSummaryPDF(club,fb){
     if(!window.jspdf){ alert("PDF library still loading, try again in a moment."); return; }
