@@ -3205,46 +3205,147 @@
   }
   function debModalClose(){ var m=document.getElementById('debModal'),s=document.getElementById('debMScrim'); if(m)m.classList.remove('on'); if(s)s.classList.remove('on'); }
 
-  // ---- Club portal preview: render exactly what a club sees, admin-gated, read-only ----
+  // ---- Club portal preview: render exactly what a club sees, admin-gated, read-only, full size ----
+  function _pvNorm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\b(fc|afc|football club|club|the|cttlfa|cttfa)\b/g,' ').replace(/\s+/g,' ').trim(); }
+  function _pvOrd(n){ n=Number(n)||0; var s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+  function _pvDivs(season, aliases){
+    var out=[]; if(!season||!season.leagues) return out;
+    var al=aliases.map(_pvNorm).filter(Boolean);
+    function mine(t){ var n=_pvNorm(t); return al.some(function(a){ return a===n || (a.length>=4 && n.indexOf(a)===0); }); }
+    Object.keys(season.leagues).forEach(function(code){
+      var lg=season.leagues[code]; if(!lg) return; var table=lg.table||[],fx=lg.fixtures||[],rs=lg.results||[];
+      var row=null,pos=0; for(var i=0;i<table.length;i++){ if(mine(table[i][0])){ row=table[i]; pos=i+1; break; } }
+      var mf=fx.filter(function(f){return mine(f[0])||mine(f[1]);});
+      if(!row && !mf.length) return;
+      var played=row?Number(row[1])||0:0, rem=mf.length, tot=played+rem;
+      out.push({name:lg.name||code,pos:pos,size:table.length,row:row,played:played,rem:rem,pct:tot>0?Math.round(played/tot*100):0});
+    });
+    out.sort(function(a,b){return b.played-a.played;});
+    return out;
+  }
   async function debPortalPreview(clubKey, name){
     var ov=document.createElement('div'); ov.id='debPvOv';
-    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(7,26,74,.55);display:flex;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;font-family:Inter,Arial,Helvetica,sans-serif';
+    ov.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(7,26,74,.55);display:flex;align-items:flex-start;justify-content:center;padding:20px 14px;overflow:auto;font-family:Inter,Arial,Helvetica,sans-serif';
     ov.onclick=function(e){ if(e.target===ov && ov.parentNode) document.body.removeChild(ov); };
-    ov.innerHTML='<div style="width:100%;max-width:900px">'
-      +'<div style="display:flex;align-items:center;gap:12px;color:#fff;margin-bottom:12px">'
-        +'<div style="flex:1"><div style="font-weight:800;font-size:16px">Club portal preview</div>'
-        +'<div style="font-size:12.5px;color:#cfd8ee">What '+esc(name)+' sees when it signs in at club.cttfa.co.za. Read-only.</div></div>'
+    ov.innerHTML='<div style="width:100%;max-width:1060px">'
+      +'<div style="display:flex;align-items:center;gap:10px;color:#fff;margin-bottom:12px">'
+        +'<div style="flex:1"><div style="font-weight:800;font-size:17px">Club portal preview</div>'
+        +'<div style="font-size:12.5px;color:#cfd8ee">Exactly what '+esc(name)+' sees at club.cttfa.co.za &mdash; read-only.</div></div>'
+        +'<a href="https://club.cttfa.co.za" target="_blank" rel="noopener" style="background:rgba(255,255,255,.15);color:#fff;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;text-decoration:none">Open live &#8599;</a>'
         +'<button id="debPvX" style="background:rgba(255,255,255,.15);color:#fff;border:0;border-radius:8px;padding:8px 14px;font:inherit;font-weight:600;cursor:pointer">Close</button></div>'
-      +'<div id="debPvBody" style="background:#F4F6FB;border-radius:16px;padding:16px;max-width:430px;margin:0 auto;box-shadow:0 20px 60px rgba(0,0,0,.35)"><div style="text-align:center;color:#59666B;padding:40px 0">Loading the club&rsquo;s view&hellip;</div></div></div>';
+      +'<div id="debPvBody" style="background:#F4F6FB;border-radius:16px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,.35)"><div style="text-align:center;color:#59666B;padding:50px 0">Loading the club&rsquo;s view&hellip;</div></div></div>';
     document.body.appendChild(ov);
     document.getElementById('debPvX').onclick=function(){ if(ov.parentNode) document.body.removeChild(ov); };
-    var d={}; try{ var r=await sb.rpc('deb_portal_preview',{p_club:clubKey}); if(r.error) throw r.error; d=r.data||{}; }
-    catch(e){ document.getElementById('debPvBody').innerHTML='<div style="padding:20px;color:#9A3130">Could not load the preview: '+esc(e.message||e)+'</div>'; return; }
-    var H=d.home||{}, L=d.ledger||[]; var bal=Number(H.balance)||0, over=Number(H.over)||0, ag=H.ageing||{};
+    var d={}, ext={}, season=null;
+    try{ var pr=await Promise.all([ sb.rpc('deb_portal_preview',{p_club:clubKey}), sb.rpc('deb_portal_preview_ext',{p_club:clubKey}) ]);
+      if(pr[0].error) throw pr[0].error; d=pr[0].data||{}; ext=(pr[1]&&pr[1].data)||{};
+    }catch(e){ var b=document.getElementById('debPvBody'); if(b) b.innerHTML='<div style="padding:20px;color:#9A3130">Could not load the preview: '+esc(e.message||e)+'</div>'; return; }
+    try{ var rs=await fetch('https://www.cttfa.co.za/season.json',{cache:'no-store'}); season=await rs.json(); }catch(e){}
+    var b2=document.getElementById('debPvBody'); if(b2) b2.innerHTML=debPvRender(d, ext, season, name);
+  }
+  function debPvRender(d, ext, season, name){
+    var H=d.home||{}, L=d.ledger||[], P=(ext&&ext.profile)||{}, REG=(ext&&ext.registrations)||{}, MEET=(ext&&ext.meeting)||{}, CORR=(ext&&ext.correspondence)||[];
+    var bal=Number(H.balance)||0, over=Number(H.over)||0, ag=H.ageing||{};
     function mny(n){ return dR(n); }
-    var pill = H.out_of_compliance?'<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#fbeceb;color:#9A3130">Out of compliance</span>'
-      : bal<0?'<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#eef2fb;color:#071A4A">In credit</span>'
-      : over>0?'<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#fbf1e2;color:#9F6621">Amount overdue</span>'
-      : '<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;background:#e7f4ec;color:#1f7a4d">Up to date</span>';
-    var html='<div style="background:#071A4A;border-radius:10px;padding:12px 14px;display:flex;align-items:center;gap:10px">'
-      +'<img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" width="34" height="34" style="border-radius:7px;background:#fff;display:block">'
-      +'<div><div style="color:#fff;font-weight:800;font-size:13px;line-height:1.1">Cape Town Tygerberg LFA</div><div style="color:#B7C4E6;font-size:11px">'+esc(H.name||name)+'</div></div></div>';
-    if(H.out_of_compliance){ html+='<div style="background:#fbeceb;border:1px solid #f0cfcd;border-radius:10px;padding:12px 14px;margin-top:12px"><b style="color:#9A3130">Your club is Out of Compliance.</b><div style="font-size:12.5px;color:#6a2321;margin-top:4px">'+mny(over>0?over:bal)+' outstanding'+(H.ooc_since?' since '+dDateZA(H.ooc_since):'')+'. Settle in full and send proof of payment to restore good standing.</div></div>'; }
-    html+='<div style="background:#071A4A;color:#fff;border-radius:12px;padding:16px;margin-top:12px"><div style="font-size:12px;color:#B7C4E6">Balance on your account</div>'
-      +'<div style="font-size:28px;font-weight:800;margin:2px 0;font-variant-numeric:tabular-nums">'+mny(bal)+'</div><div style="margin-top:6px">'+pill+'</div>'
-      +'<div style="margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.16);font-size:12px;color:#cfd8ee">Payment reference <b style="color:#fff">'+esc(H.code||'')+'</b>'+(H.as_at?' &middot; as at '+dDateZA(H.as_at):'')+'</div></div>';
+    function nm(n){ return String(Number(n)||0).replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+    var pill = H.out_of_compliance?'<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px;background:#fbeceb;color:#9A3130">Out of compliance</span>'
+      : bal<0?'<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px;background:#eef2fb;color:#071A4A">In credit</span>'
+      : over>0?'<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px;background:#fbf1e2;color:#9F6621">Amount overdue</span>'
+      : '<span style="display:inline-block;font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px;background:#e7f4ec;color:#1f7a4d">Up to date</span>';
+    var ini=String(H.name||name||'').replace(/[^A-Za-z ]/g,'').split(' ').filter(Boolean).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase()||'CT';
+    var crest = P.logo?('<div style="width:78px;height:78px;border-radius:15px;background:#fff;flex:0 0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.18)"><img src="'+esc(P.logo)+'" style="width:100%;height:100%;object-fit:contain;padding:6px" onerror="this.parentNode.innerHTML=\'<span style=&quot;color:#071A4A;font-weight:800;font-size:26px&quot;>'+ini+'</span>\'"></div>')
+                        :('<div style="width:78px;height:78px;border-radius:15px;background:#fff;flex:0 0 auto;display:flex;align-items:center;justify-content:center;color:#071A4A;font-weight:800;font-size:26px;box-shadow:0 4px 14px rgba(0,0,0,.18)">'+ini+'</div>');
+    var aliases=[]; (P.lr_aliases||[]).forEach(function(x){aliases.push(x);}); if(P.website_name)aliases.push(P.website_name); if(P.name)aliases.push(P.name); if(H.name)aliases.push(H.name);
+    var divs=_pvDivs(season, aliases);
+    var sub=[]; if(P.ground) sub.push('&#9917; '+esc(P.ground)+(P.suburb?', '+esc(P.suburb):'')); else if(P.suburb) sub.push('&#9917; '+esc(P.suburb)); if(P.founded) sub.push('Est. '+esc(P.founded)); if(H.code) sub.push('Ref '+esc(H.code));
+    var mem=(H.type==='full'?'Full member':(H.type==='associate'?'Associate member':''));
+    var C='';
+    // identity hero
+    C+='<div style="background:linear-gradient(135deg,#071A4A,#0B2461);color:#fff;border-radius:16px;padding:20px;display:flex;gap:18px;align-items:center;flex-wrap:wrap">'+crest
+      +'<div style="flex:1;min-width:220px"><div style="font-size:23px;font-weight:800;line-height:1.1">'+esc(H.name||name)+'</div>'
+      +(mem?'<span style="display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:rgba(208,152,47,.24);color:#f2d79e;border:1px solid rgba(208,152,47,.5);margin-top:6px">'+mem+'</span>':'')
+      +'<div style="color:#c9d4ee;font-size:13px;margin-top:8px">'+sub.join(' &nbsp;&middot;&nbsp; ')+'</div></div></div>';
+    // stat tiles
+    function tile(l,v,n,accent){ return '<div style="border:1px solid '+(accent?'rgba(208,152,47,.5)':'#E3E8F0')+';border-radius:13px;padding:14px 15px;background:'+(accent?'#fffdf7':'#fff')+'"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#59666B;font-weight:700">'+l+'</div><div style="font-size:20px;font-weight:800;margin-top:5px">'+v+'</div><div style="font-size:12px;color:#59666B;margin-top:2px">'+n+'</div></div>'; }
+    var posSummary = divs.length?(divs[0].pos?_pvOrd(divs[0].pos)+' · '+esc(divs[0].name):esc(divs[0].name)):'—';
+    C+='<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:14px">'
+      +tile('Account',mny(bal),(bal>0?(over>0?mny(over)+' overdue':'payable'):(bal<0?'in credit':'settled')),true)
+      +tile('Standing',pill,'as at '+(H.as_at?dDateZA(H.as_at):'—'),false)
+      +tile('Players',(REG.players!=null?nm(REG.players):'—'),(REG.season?esc(REG.season):'this season'),false)
+      +tile('Top division',posSummary,(divs.length?divs.length+' team(s) entered':'—'),false)
+      +'</div>';
+    // two-col: league + finance
+    C+='<div style="display:grid;grid-template-columns:1.5fr 1fr;gap:14px;margin-top:14px;align-items:start">';
+    // league
+    C+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:14px;padding:16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#59666B;font-weight:700;margin-bottom:12px">Your teams this season</div>';
+    if(!divs.length){ C+='<div style="font-size:13px;color:#59666B">No confident match to the league feed yet.</div>'; }
+    else { divs.slice(0,5).forEach(function(x){ C+='<div style="border:1px solid #E3E8F0;border-radius:11px;padding:11px 13px;margin-bottom:9px"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap"><b style="font-size:14px">'+esc(x.name)+'</b>'+(x.pos?'<span style="font-size:12.5px;color:#59666B">'+_pvOrd(x.pos)+' of '+x.size+'</span>':'')+'</div>'
+        +(x.row?'<div style="font-size:12.5px;color:#59666B;margin-top:3px"><b style="color:#071A4A">'+nm(x.row[7])+'</b> pts · P'+x.played+' W'+x.row[2]+' D'+x.row[3]+' L'+x.row[4]+'</div>':'')
+        +'<div style="display:flex;align-items:center;gap:9px;margin-top:7px"><span style="flex:1;height:7px;background:#F4F6FB;border-radius:5px;overflow:hidden"><i style="display:block;height:100%;width:'+x.pct+'%;background:#D0982F"></i></span><span style="font-size:11.5px;color:#59666B">'+x.pct+'% · '+x.rem+' to play</span></div></div>'; }); }
+    C+='</div>';
+    // finance
+    C+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:14px;padding:16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#59666B;font-weight:700;margin-bottom:12px">How your balance is aged</div>';
     var bands=[['Current',ag.current,false],['30 days',ag.d30,false],['60 days',ag.d60,true],['90 days',ag.d90,true],['120 days +',ag.d120,true]];
     var mx=Math.max(1,Math.max.apply(null,bands.map(function(b){return Math.abs(Number(b[1])||0);})));
-    html+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:12px;padding:14px;margin-top:12px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#59666B;margin-bottom:10px">How your balance is aged</div>';
-    bands.forEach(function(b){ var v=Number(b[1])||0,w=Math.round(Math.abs(v)/mx*100); html+='<div style="display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12.5px"><span style="width:66px;color:#59666B">'+b[0]+'</span><span style="flex:1;height:9px;background:#F4F6FB;border-radius:5px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:'+(b[2]?'#D0982F':'#071A4A')+'"></i></span><span style="width:90px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">'+mny(v)+'</span></div>'; });
-    html+='</div>';
-    html+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:12px;padding:14px;margin-top:12px"><div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:#59666B;margin-bottom:8px">Recent statement lines</div>';
+    bands.forEach(function(b){ var v=Number(b[1])||0,w=Math.round(Math.abs(v)/mx*100); C+='<div style="display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12.5px"><span style="width:70px;color:#59666B">'+b[0]+'</span><span style="flex:1;height:9px;background:#F4F6FB;border-radius:5px;overflow:hidden"><i style="display:block;height:100%;width:'+w+'%;background:'+(b[2]?'#D0982F':'#071A4A')+'"></i></span><span style="width:96px;text-align:right;font-weight:600;font-variant-numeric:tabular-nums">'+mny(v)+'</span></div>'; });
+    C+='<div style="margin-top:10px;font-size:12px;color:#59666B">Payment reference <b style="color:#071A4A">'+esc(H.code||'')+'</b></div></div>';
+    C+='</div>';
+    // recent statement + registrations + correspondence
+    C+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px;align-items:start">';
+    C+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:14px;padding:16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#59666B;font-weight:700;margin-bottom:8px">Recent statement lines</div>';
     var last=L.slice(-8);
-    if(!last.length){ html+='<div style="font-size:12.5px;color:#59666B">No transactions on record.</div>'; }
-    else { html+='<table style="width:100%;border-collapse:collapse;font-size:11.5px">'; last.forEach(function(t){ html+='<tr style="border-bottom:1px solid #eef1f6"><td style="padding:5px 2px;color:#59666B">'+(t.opening?'Opening':dDateZA(t.date))+'</td><td style="padding:5px 2px">'+esc(String(t.type||'').slice(0,14))+'</td><td style="padding:5px 2px;text-align:right;font-variant-numeric:tabular-nums">'+mny(t.balance)+'</td></tr>'; }); html+='</table>'; }
-    html+='</div>';
-    html+='<div style="font-size:11px;color:#59666B;text-align:center;margin-top:12px">'+(H.has_portal_access?'This club has a contact email with portal access.':'No portal login yet &mdash; add a contact email to this club in Sage to grant access.')+'</div>';
-    document.getElementById('debPvBody').innerHTML=html;
+    if(!last.length){ C+='<div style="font-size:12.5px;color:#59666B">No transactions on record.</div>'; }
+    else { C+='<table style="width:100%;border-collapse:collapse;font-size:12px">'; last.forEach(function(t){ C+='<tr style="border-bottom:1px solid #eef1f6"><td style="padding:5px 2px;color:#59666B">'+(t.opening?'Opening':dDateZA(t.date))+'</td><td style="padding:5px 2px">'+esc(String(t.type||'').slice(0,16))+'</td><td style="padding:5px 2px;text-align:right;font-variant-numeric:tabular-nums">'+mny(t.balance)+'</td></tr>'; }); C+='</table>'; }
+    C+='</div>';
+    C+='<div style="background:#fff;border:1px solid #E3E8F0;border-radius:14px;padding:16px"><div style="font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:#59666B;font-weight:700;margin-bottom:8px">Correspondence copied to the club ('+CORR.length+')</div>';
+    if(!CORR.length){ C+='<div style="font-size:12.5px;color:#59666B">None on record yet.</div>'; }
+    else { CORR.slice(0,6).forEach(function(c){ C+='<div style="border-bottom:1px solid #eef1f6;padding:7px 0"><div style="font-size:13px;font-weight:600">'+esc(c.subject||'(no subject)')+'</div><div style="font-size:11.5px;color:#59666B">'+dDateZA(c.date)+(c.status?' · '+esc(c.status):'')+'</div></div>'; }); }
+    if(MEET&&MEET.has){ C+='<div style="margin-top:12px;padding-top:10px;border-top:1px solid #eef1f6;font-size:12.5px"><b>Next meeting:</b> '+esc(MEET.name)+(MEET.date?' · '+dDateZA(MEET.date):'')+'</div>'; }
+    C+='</div></div>';
+    C+='<div style="font-size:11.5px;color:#59666B;text-align:center;margin-top:14px">'+(H.has_portal_access?'This club has a contact email with portal access.':'No portal login yet &mdash; add a contact email to this club in Sage to grant access.')+'</div>';
+    return C;
+  }
+
+  // ---- Club edit approval queue (self-service edits from the club portal) ----
+  var _pvFieldLabels={ground:'Home ground',suburb:'Suburb',founded:'Founded',website:'Website',facebook:'Facebook',logo:'Logo image',lat:'Latitude',lng:'Longitude',honours:'Honours',name:'Contact name',email:'Contact email',cc_email:'Copy-to email',phone:'Contact phone'};
+  async function cpLoadEdits(){
+    var wrap=document.getElementById('cpEditsWrap'); if(!wrap) return;
+    var rows=[]; try{ var r=await sb.rpc('club_edits_list'); if(!r.error) rows=r.data||[]; }catch(e){}
+    var pending=rows.filter(function(x){return x.status==='pending';});
+    var decided=rows.filter(function(x){return x.status!=='pending';});
+    var h='<div class="card"><div class="deb-sec" style="margin-top:0;border-top:0;padding-top:0">Club edits awaiting approval'+(pending.length?' <span class="deb-pill" style="background:#fbf1e2;color:#9F6621;margin-left:6px"><i style="background:#9F6621"></i>'+pending.length+' pending</span>':'')+'</div>';
+    h+='<p class="hint" style="font-size:13px;margin:0 0 12px">Clubs can update their own profile and contact details in the portal. Changes are held here for review, then publish to the public website, the Club Database and the club’s contact record.</p>';
+    if(!pending.length){ h+='<p class="hint" style="margin:0">No changes are waiting for approval.</p>'; }
+    pending.forEach(function(q){
+      h+='<div style="border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px">'
+        +'<div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:baseline"><b style="font-size:15px">'+esc(q.name||q.club_key)+'</b><span style="font-size:12px;color:var(--muted)">'+esc(q.submitted_by||'')+' &middot; '+dDateZA(q.submitted_at)+'</span></div>';
+      h+='<div style="margin-top:10px">'+cpChangeRows(q.changes)+'</div>';
+      h+='<div style="display:flex;gap:8px;margin-top:12px"><button class="btn gold sm" data-appr="'+q.id+'">Approve &amp; publish</button><button class="btn ghost sm" data-rej="'+q.id+'">Reject</button></div></div>';
+    });
+    if(decided.length){
+      h+='<details style="margin-top:6px"><summary style="cursor:pointer;font-size:13px;color:var(--navy);font-weight:600">Recently decided ('+decided.length+')</summary><div style="margin-top:8px">';
+      decided.slice(0,20).forEach(function(q){ h+='<div style="font-size:12.5px;color:var(--muted);padding:5px 0;border-bottom:1px solid var(--line2)"><b style="color:var(--ink)">'+esc(q.name||q.club_key)+'</b> &middot; '+esc(q.status)+' by '+esc(q.decided_by||'')+' &middot; '+dDateZA(q.decided_at)+(q.decide_note?' &middot; '+esc(q.decide_note):'')+'</div>'; });
+      h+='</div></details>';
+    }
+    h+='</div>';
+    wrap.innerHTML=h;
+    Array.prototype.forEach.call(wrap.querySelectorAll('[data-appr]'),function(b){ b.onclick=function(){ cpDecide(b.dataset.appr, true); }; });
+    Array.prototype.forEach.call(wrap.querySelectorAll('[data-rej]'),function(b){ b.onclick=function(){ cpDecide(b.dataset.rej, false); }; });
+  }
+  function cpChangeRows(ch){
+    ch=ch||{}; var out='';
+    function block(title,obj){ if(!obj) return ''; var keys=Object.keys(obj); if(!keys.length) return ''; var s='<div style="font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:2px 0 4px">'+title+'</div><div style="display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px">'; keys.forEach(function(k){ var v=obj[k]; if(k==='honours'){ v=Array.isArray(v)?(v.length+' honour(s)'):v; } s+='<span style="color:var(--muted)">'+esc(_pvFieldLabels[k]||k)+'</span><span style="font-weight:600">'+esc(typeof v==='object'?JSON.stringify(v):v)+'</span>'; }); s+='</div>'; return s; }
+    out+=block('Profile', ch.profile);
+    out+=block('Contact', ch.contact);
+    return out||'<span class="hint">No fields.</span>';
+  }
+  async function cpDecide(id, approve){
+    var note=null;
+    if(!approve){ note=window.prompt('Reason for rejecting (optional, shown to the office record):','')||''; }
+    else { if(!(await (typeof debConfirm==='function'?debConfirm('Approve these changes and publish them to the website, Club Database and contact record?','Approve'):Promise.resolve(window.confirm('Approve and publish these changes?'))))) return; }
+    try{ var r=await sb.rpc('club_edit_decide',{p_id:Number(id), p_approve:approve, p_note:note}); if(r.error) throw r.error; }
+    catch(e){ alert('Could not complete: '+(e.message||e)); return; }
+    cpLoadEdits();
   }
 
   // ---- Club Portal console (admin oversight of the club-facing site) ----
@@ -3268,11 +3369,13 @@
     var without=clubs.filter(function(c){return !amap[c.club_key];});
     if(without.length){ h+='<details style="margin-top:10px"><summary style="cursor:pointer;font-size:13px;color:var(--navy);font-weight:600">Clubs without portal access ('+without.length+')</summary><div style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.9">'+without.map(function(c){return esc(c.name);}).join(' &middot; ')+'</div></details>'; }
     h+='</div>';
+    h+='<div id="cpEditsWrap"></div>';
     h+='<div class="card"><div class="deb-sec" style="margin-top:0;border-top:0;padding-top:0">Preview a club&rsquo;s portal</div>'
       +'<p class="hint" style="font-size:13px;margin:0 0 10px">See exactly what a club sees when it signs in &mdash; read-only, no login needed.</p>'
       +'<input id="cpPvSearch" placeholder="Search a club or code&hellip;" style="width:100%;max-width:340px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;margin-bottom:10px">'
       +'<div id="cpPvList" class="deb-tblwrap"></div></div>';
     root.innerHTML=h;
+    cpLoadEdits();
     function drawList(q){
       q=(q||'').toLowerCase();
       var rows=clubs.filter(function(c){ return !q || (c.name||'').toLowerCase().indexOf(q)>=0 || (c.code||'').toLowerCase().indexOf(q)>=0; }).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});

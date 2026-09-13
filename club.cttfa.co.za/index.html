@@ -13,97 +13,158 @@
     --navy:#071A4A; --navy2:#0B2461; --gold:#D0982F; --gold-deep:#996A16;
     --ink:#0B1220; --muted:#59666B; --hair:#E3E8F0; --surface:#F4F6FB; --card:#ffffff;
     --good:#1f7a4d; --good-bg:#e7f4ec; --warn:#9F6621; --warn-bg:#fbf1e2; --bad:#9A3130; --bad-bg:#fbeceb;
-    --r:14px; --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --r:16px; --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    --shadow:0 6px 26px rgba(7,26,74,.06);
   }
   *{box-sizing:border-box}
   html,body{margin:0;padding:0}
   body{font-family:var(--font);color:var(--ink);background:var(--surface);-webkit-font-smoothing:antialiased;line-height:1.5}
   a{color:var(--navy)}
-  .wrap{max-width:760px;margin:0 auto;padding:0 16px}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
   .tabnum{font-variant-numeric:tabular-nums lining-nums}
+  h1,h2,h3,h4{margin:0}
   /* ---------- top bar ---------- */
-  header.top{background:var(--navy);color:#fff}
-  .top .wrap{display:flex;align-items:center;gap:12px;padding:12px 16px}
-  .top img{width:40px;height:40px;border-radius:8px;background:#fff;display:block;flex:0 0 auto}
+  header.top{background:var(--navy);color:#fff;position:sticky;top:0;z-index:40}
+  .top .wrap{display:flex;align-items:center;gap:14px;padding:13px 20px}
+  .top img.crest{width:42px;height:42px;border-radius:9px;background:#fff;display:block;flex:0 0 auto;padding:3px;object-fit:contain}
   .top .t1{font-weight:800;font-size:15px;line-height:1.15;letter-spacing:.2px}
   .top .t2{font-size:12px;color:#B7C4E6;margin-top:1px}
   .top .spacer{flex:1}
-  .signout{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:8px;padding:8px 12px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
-  .signout:hover{background:rgba(255,255,255,.2)}
+  .signout{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:8px;padding:8px 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+  .signout:hover{background:rgba(255,255,255,.22)}
+  .signout:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
   /* ---------- auth ---------- */
-  .auth{min-height:calc(100vh - 120px);display:flex;align-items:flex-start;justify-content:center;padding:32px 16px}
-  .authcard{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);max-width:420px;width:100%;padding:26px 24px;box-shadow:0 6px 26px rgba(7,26,74,.06)}
-  .authcard h1{font-size:19px;margin:0 0 4px}
+  .auth{min-height:calc(100vh - 120px);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px}
+  .authcard{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);max-width:440px;width:100%;padding:30px 26px;box-shadow:var(--shadow)}
+  .authcard .crestwrap{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .authcard .crestwrap img{width:48px;height:48px;border-radius:10px;background:var(--navy);padding:4px;object-fit:contain}
+  .authcard .crestwrap div b{font-size:14px;color:var(--navy);display:block;line-height:1.15}
+  .authcard .crestwrap div span{font-size:12px;color:var(--muted)}
+  .authcard h1{font-size:20px;margin:0 0 4px}
   .authcard p.sub{color:var(--muted);font-size:14px;margin:0 0 20px}
-  .seg{display:flex;background:var(--surface);border:1px solid var(--hair);border-radius:10px;padding:4px;margin-bottom:18px}
-  .seg button{flex:1;border:0;background:transparent;font:inherit;font-weight:600;font-size:13px;color:var(--muted);padding:8px 6px;border-radius:7px;cursor:pointer}
+  .seg{display:flex;background:var(--surface);border:1px solid var(--hair);border-radius:11px;padding:4px;margin-bottom:18px}
+  .seg button{flex:1;border:0;background:transparent;font:inherit;font-weight:600;font-size:13px;color:var(--muted);padding:9px 6px;border-radius:8px;cursor:pointer}
   .seg button[aria-selected="true"]{background:var(--navy);color:#fff}
+  .seg button:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
   label.fld{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
-  input[type=email],input[type=password]{width:100%;padding:12px 12px;border:1px solid var(--hair);border-radius:10px;font:inherit;font-size:15px;background:#fff}
+  input[type=email],input[type=password],input[type=text],input[type=number],input[type=url]{width:100%;padding:12px;border:1px solid var(--hair);border-radius:10px;font:inherit;font-size:15px;background:#fff;color:var(--ink)}
   input:focus{outline:2px solid var(--navy);outline-offset:1px;border-color:var(--navy)}
   .btn{width:100%;margin-top:18px;background:var(--navy);color:#fff;border:0;border-radius:10px;padding:13px;font:inherit;font-weight:700;font-size:15px;cursor:pointer}
-  .btn:hover{background:var(--navy2)}
-  .btn[disabled]{opacity:.6;cursor:default}
+  .btn:hover{background:var(--navy2)} .btn[disabled]{opacity:.6;cursor:default}
+  .btn:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .btn.gold{background:var(--gold);color:#231a05} .btn.gold:hover{background:var(--gold-deep);color:#fff}
+  .btn.ghost{background:#fff;color:var(--navy);border:1px solid var(--hair)} .btn.ghost:hover{background:var(--surface)}
+  .btn.sm{width:auto;margin-top:0;padding:9px 15px;font-size:13.5px}
   .link{background:none;border:0;color:var(--navy);font:inherit;font-size:13px;font-weight:600;cursor:pointer;padding:6px 0;margin-top:10px}
   .msg{margin-top:14px;font-size:13.5px;padding:10px 12px;border-radius:9px;display:none}
   .msg.err{display:block;background:var(--bad-bg);color:var(--bad);border:1px solid #f0cfcd}
   .msg.ok{display:block;background:var(--good-bg);color:var(--good);border:1px solid #cfe7d9}
   .msg.info{display:block;background:#eef2fb;color:var(--navy);border:1px solid #d6def2}
   .fineprint{margin-top:16px;font-size:11.5px;color:var(--muted);text-align:center;line-height:1.5}
-  /* ---------- app ---------- */
-  .tabs{display:flex;gap:4px;padding:12px 16px 0;max-width:760px;margin:0 auto;overflow-x:auto}
-  .tabs button{border:0;background:transparent;font:inherit;font-weight:600;font-size:14px;color:var(--muted);padding:10px 14px;border-radius:9px 9px 0 0;cursor:pointer;white-space:nowrap}
-  .tabs button[aria-selected="true"]{color:var(--navy);background:var(--card);border:1px solid var(--hair);border-bottom-color:var(--card)}
-  main{padding:16px 0 48px}
-  .card{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);padding:20px;margin-bottom:16px}
-  .card h2{font-size:13px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin:0 0 14px}
-  /* balance hero */
-  .hero{background:var(--navy);color:#fff;border:0}
-  .hero .lbl{font-size:13px;color:#B7C4E6}
-  .hero .amt{font-size:34px;font-weight:800;margin:4px 0 2px;letter-spacing:-.5px}
-  .hero .note{font-size:13px;color:#cfd8ee}
-  .hero .code{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.16);font-size:13px;color:#cfd8ee}
-  .hero .code b{color:#fff;font-weight:700;letter-spacing:.5px}
-  .pill{display:inline-block;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;margin-top:2px}
-  .pill.good{background:var(--good-bg);color:var(--good)} .pill.warn{background:var(--warn-bg);color:var(--warn)} .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.credit{background:#eef2fb;color:var(--navy)}
+  /* ---------- tabs ---------- */
+  .tabsbar{background:var(--card);border-bottom:1px solid var(--hair);position:sticky;top:68px;z-index:30}
+  .tabs{display:flex;gap:2px;max-width:1120px;margin:0 auto;padding:0 12px;overflow-x:auto}
+  .tabs button{border:0;background:transparent;font:inherit;font-weight:600;font-size:14px;color:var(--muted);padding:14px 15px;cursor:pointer;white-space:nowrap;border-bottom:3px solid transparent;margin-bottom:-1px}
+  .tabs button[aria-selected="true"]{color:var(--navy);border-bottom-color:var(--gold)}
+  .tabs button:hover{color:var(--navy)}
+  .tabs button:focus-visible{outline:2px solid var(--navy);outline-offset:-2px;border-radius:6px}
+  main{padding:22px 0 60px}
+  /* ---------- cards ---------- */
+  .card{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);padding:22px;margin-bottom:18px;box-shadow:var(--shadow)}
+  .card h2{font-size:12px;text-transform:uppercase;letter-spacing:.7px;color:var(--muted);margin:0 0 15px;font-weight:700}
+  .grid2{display:grid;grid-template-columns:1.6fr 1fr;gap:18px;align-items:start}
+  @media(max-width:840px){.grid2{grid-template-columns:1fr}}
+  /* club identity hero */
+  .idhero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:#fff;border:0;display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+  .idhero .badge{width:88px;height:88px;border-radius:16px;background:#fff;flex:0 0 auto;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 4px 14px rgba(0,0,0,.18)}
+  .idhero .badge img{width:100%;height:100%;object-fit:contain;padding:6px}
+  .idhero .badge .ini{color:var(--navy);font-weight:800;font-size:30px}
+  .idhero .idmeta{flex:1;min-width:220px}
+  .idhero h1{font-size:25px;line-height:1.1;margin:0 0 4px}
+  .idhero .sub{color:#c9d4ee;font-size:13.5px;display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+  .idhero .sub span{display:inline-flex;align-items:center;gap:5px}
+  .idhero .links{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+  .idhero .links a{background:rgba(255,255,255,.14);color:#fff;text-decoration:none;font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:20px}
+  .idhero .links a:hover{background:rgba(255,255,255,.26)}
+  .memchip{display:inline-block;font-size:11px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;padding:3px 9px;border-radius:20px;background:rgba(208,152,47,.24);color:#f2d79e;border:1px solid rgba(208,152,47,.5)}
+  /* stat tiles */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  @media(max-width:840px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{border:1px solid var(--hair);border-radius:13px;padding:15px 16px;background:#fff}
+  .stat .sl{font-size:11.5px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700}
+  .stat .sv{font-size:23px;font-weight:800;margin-top:5px;letter-spacing:-.4px}
+  .stat .sn{font-size:12px;color:var(--muted);margin-top:2px}
+  .stat.accent{border-color:rgba(208,152,47,.5);background:linear-gradient(180deg,#fffdf7,#fff)}
+  /* pills */
+  .pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 11px;border-radius:999px}
+  .pill.good{background:var(--good-bg);color:var(--good)} .pill.warn{background:var(--warn-bg);color:var(--warn)}
+  .pill.bad{background:var(--bad-bg);color:var(--bad)} .pill.credit{background:#eef2fb;color:var(--navy)} .pill.neutral{background:#eef1f6;color:var(--muted)}
+  .pill .dot{width:7px;height:7px;border-radius:50%;background:currentColor;display:inline-block}
   /* ooc banner */
-  .ooc{background:var(--bad-bg);border:1px solid #f0cfcd;border-radius:12px;padding:16px 18px;margin-bottom:16px}
+  .ooc{background:var(--bad-bg);border:1px solid #f0cfcd;border-radius:13px;padding:16px 18px;margin-bottom:18px}
   .ooc b{color:var(--bad)} .ooc p{margin:6px 0 0;font-size:13.5px;color:#6a2321}
   /* ageing */
-  .agerow{display:flex;align-items:center;gap:10px;margin:8px 0;font-size:13.5px}
-  .agerow .k{width:74px;color:var(--muted);flex:0 0 auto}
-  .agerow .bar{flex:1;height:10px;background:var(--surface);border-radius:6px;overflow:hidden}
+  .agerow{display:flex;align-items:center;gap:12px;margin:9px 0;font-size:13.5px}
+  .agerow .k{width:82px;color:var(--muted);flex:0 0 auto}
+  .agerow .bar{flex:1;height:11px;background:var(--surface);border-radius:6px;overflow:hidden}
   .agerow .bar i{display:block;height:100%;background:var(--navy);border-radius:6px}
   .agerow.over .bar i{background:var(--gold)}
-  .agerow .v{width:96px;text-align:right;font-weight:600;flex:0 0 auto}
-  /* facts */
-  .facts{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .agerow .v{width:110px;text-align:right;font-weight:600;flex:0 0 auto}
+  /* key-values */
+  .facts{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.facts{grid-template-columns:1fr}}
   .fact .fl{font-size:12px;color:var(--muted)} .fact .fv{font-weight:700;margin-top:2px}
   .bank{white-space:pre-line;font-size:13.5px;color:var(--ink);background:var(--surface);border-radius:10px;padding:12px 14px}
-  /* table */
+  /* tables */
   .tblwrap{overflow-x:auto}
   table{width:100%;border-collapse:collapse;font-size:13px}
-  th,td{padding:9px 8px;text-align:left;border-bottom:1px solid var(--hair);white-space:nowrap}
-  th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)}
+  th,td{padding:9px 10px;text-align:left;border-bottom:1px solid var(--hair);white-space:nowrap}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700}
   td.num,th.num{text-align:right;font-variant-numeric:tabular-nums lining-nums}
+  tr.me td{background:#fff8ea;font-weight:700}
   tr.rcpt td{background:#f3f8f4}
-  td.desc{white-space:normal;min-width:180px}
-  /* fixtures */
-  .fx{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--hair)}
-  .fx .d{width:56px;flex:0 0 auto;text-align:center}
-  .fx .d .dd{font-size:18px;font-weight:800;line-height:1} .fx .d .mm{font-size:11px;color:var(--muted);text-transform:uppercase}
-  .fx .m{flex:1}.fx .m .tm{font-weight:600;font-size:14px}.fx .m .cp{font-size:12px;color:var(--muted);margin-top:2px}
-  .freshbar{font-size:12px;color:var(--muted);text-align:center;padding:10px 16px 0}
-  .foot{font-size:11.5px;color:var(--muted);text-align:center;padding:18px 16px 8px;line-height:1.6}
-  .loading{text-align:center;color:var(--muted);padding:40px 0;font-size:14px}
+  td.desc{white-space:normal;min-width:200px}
+  /* league */
+  .lgcard{border:1px solid var(--hair);border-radius:14px;overflow:hidden;margin-bottom:16px}
+  .lghead{background:var(--surface);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--hair)}
+  .lghead .ln{font-weight:800;font-size:15px}
+  .lghead .lg{font-size:12px;color:var(--muted)}
+  .lgpos{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+  .lgpos .pos{font-size:13px;color:var(--muted)} .lgpos .pos b{color:var(--navy);font-size:15px}
+  .prog{height:8px;background:var(--surface);border-radius:5px;overflow:hidden;min-width:120px;flex:1}
+  .prog i{display:block;height:100%;background:var(--gold);border-radius:5px}
+  .form{display:inline-flex;gap:3px}
+  .form span{width:18px;height:18px;border-radius:5px;font-size:10.5px;font-weight:800;color:#fff;display:flex;align-items:center;justify-content:center}
+  .form .W{background:var(--good)} .form .D{background:#8892a4} .form .L{background:var(--bad)}
+  /* fixtures / results rows */
+  .fx{display:flex;align-items:center;gap:14px;padding:12px 0;border-bottom:1px solid var(--hair)}
+  .fx:last-child{border-bottom:0}
+  .fx .d{width:58px;flex:0 0 auto;text-align:center}
+  .fx .d .dd{font-size:19px;font-weight:800;line-height:1} .fx .d .mm{font-size:11px;color:var(--muted);text-transform:uppercase}
+  .fx .m{flex:1;min-width:0}.fx .m .tm{font-weight:600;font-size:14px}.fx .m .cp{font-size:12px;color:var(--muted);margin-top:2px}
+  .fx .sc{font-weight:800;font-size:15px;color:var(--navy);flex:0 0 auto}
+  .foot{font-size:11.5px;color:var(--muted);text-align:center;padding:22px 16px 8px;line-height:1.6;max-width:820px;margin:0 auto}
+  .loading{text-align:center;color:var(--muted);padding:44px 0;font-size:14px}
+  .empty{color:var(--muted);font-size:14px;margin:0}
+  .sechead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:15px;flex-wrap:wrap}
+  .sechead h2{margin:0}
+  .corr{border:1px solid var(--hair);border-radius:12px;margin-bottom:12px;overflow:hidden}
+  .corr summary{list-style:none;cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px}
+  .corr summary::-webkit-details-marker{display:none}
+  .corr .cs{flex:1;min-width:0} .corr .cs .csub{font-weight:700;font-size:14px} .corr .cs .cmeta{font-size:12px;color:var(--muted);margin-top:2px}
+  .corr .cbody{padding:0 16px 16px;border-top:1px solid var(--hair)}
+  .corr .cbody .frame{background:var(--surface);border-radius:10px;padding:14px;margin-top:12px;font-size:13.5px;white-space:pre-wrap;overflow-x:auto}
+  .note{font-size:12px;color:var(--muted);margin:12px 0 0}
   [hidden]{display:none!important}
-  @media(max-width:520px){ .facts{grid-template-columns:1fr} .hero .amt{font-size:30px} }
+  .editgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:560px){.editgrid{grid-template-columns:1fr}}
+  .pendbar{background:var(--warn-bg);border:1px solid #ecd6ac;color:#7a531a;border-radius:12px;padding:13px 16px;font-size:13.5px;margin-bottom:16px}
 </style>
 </head>
 <body>
 <header class="top">
   <div class="wrap">
-    <img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" alt="CTTLFA">
+    <img class="crest" src="https://admin.cttfa.co.za/cttlfa-logo.jpg" alt="CTTLFA">
     <div>
       <div class="t1">Cape Town Tygerberg LFA</div>
       <div class="t2" id="topSub">Club Portal</div>
@@ -116,8 +177,12 @@
 <!-- ============ AUTH ============ -->
 <section class="auth" id="authView">
   <div class="authcard">
+    <div class="crestwrap">
+      <img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" alt="CTTLFA">
+      <div><b>Cape Town Tygerberg LFA</b><span>Official club portal</span></div>
+    </div>
     <h1 id="authTitle">Club sign in</h1>
-    <p class="sub" id="authSub">Sign in to view your club's account, statement and fixtures.</p>
+    <p class="sub" id="authSub">Sign in to view your club's standing, registrations, account and correspondence.</p>
     <div class="seg" role="tablist">
       <button role="tab" id="segSignin" aria-selected="true" onclick="setMode('signin')">Sign in</button>
       <button role="tab" id="segFirst" aria-selected="false" onclick="setMode('first')">First time</button>
@@ -137,31 +202,44 @@
 
 <!-- ============ APP ============ -->
 <div id="appView" hidden>
-  <div class="tabs" role="tablist">
-    <button role="tab" id="tabOverviewBtn" aria-selected="true" onclick="showTab('overview')">Overview</button>
-    <button role="tab" id="tabStatementBtn" aria-selected="false" onclick="showTab('statement')">Statement</button>
-    <button role="tab" id="tabFixturesBtn" aria-selected="false" onclick="showTab('fixtures')">Fixtures</button>
+  <div class="tabsbar">
+    <div class="tabs" role="tablist">
+      <button role="tab" id="tabOverviewBtn" aria-selected="true" onclick="showTab('overview')">Overview</button>
+      <button role="tab" id="tabLeagueBtn" aria-selected="false" onclick="showTab('league')">League &amp; Fixtures</button>
+      <button role="tab" id="tabRegBtn" aria-selected="false" onclick="showTab('reg')">Registrations</button>
+      <button role="tab" id="tabFinanceBtn" aria-selected="false" onclick="showTab('finance')">Finance</button>
+      <button role="tab" id="tabCorrBtn" aria-selected="false" onclick="showTab('corr')">Correspondence</button>
+      <button role="tab" id="tabClubBtn" aria-selected="false" onclick="showTab('club')">Club details</button>
+    </div>
   </div>
   <main class="wrap">
     <div id="tab-overview">
-      <div class="loading" id="ovLoading">Loading your club account…</div>
+      <div class="loading" id="ovLoading">Loading your club dashboard&hellip;</div>
       <div id="ovBody" hidden></div>
     </div>
-    <div id="tab-statement" hidden>
-      <div class="card">
-        <h2>Statement of account</h2>
-        <div class="loading" id="stLoading">Loading transactions…</div>
-        <div class="tblwrap" id="stWrap" hidden><table id="stTbl"></table></div>
+    <div id="tab-league" hidden>
+      <div class="loading" id="lgLoading">Loading league standings and fixtures&hellip;</div>
+      <div id="lgBody" hidden></div>
+    </div>
+    <div id="tab-reg" hidden>
+      <div class="loading" id="rgLoading">Loading registrations&hellip;</div>
+      <div id="rgBody" hidden></div>
+    </div>
+    <div id="tab-finance" hidden>
+      <div class="loading" id="fnLoading">Loading your account&hellip;</div>
+      <div id="fnBody" hidden></div>
+    </div>
+    <div id="tab-corr" hidden>
+      <div class="card"><div class="sechead"><h2>Correspondence from the LFA</h2></div>
+        <div class="loading" id="coLoading">Loading correspondence&hellip;</div>
+        <div id="coBody" hidden></div>
       </div>
     </div>
-    <div id="tab-fixtures" hidden>
-      <div class="card">
-        <h2>Upcoming fixtures</h2>
-        <div class="loading" id="fxLoading">Loading fixtures…</div>
-        <div id="fxBody" hidden></div>
-      </div>
+    <div id="tab-club" hidden>
+      <div class="loading" id="clLoading">Loading club details&hellip;</div>
+      <div id="clBody" hidden></div>
     </div>
-    <div class="foot">Cape Town Tygerberg Local Football Association · Club Portal. Figures reflect the club's account as recorded with the LFA and are management-prepared and unaudited. Queries: treasurer@cttfa.co.za.</div>
+    <div class="foot">Cape Town Tygerberg Local Football Association &middot; Club Portal. Financial figures reflect your club's account as recorded with the Association and are management-prepared and unaudited. League and fixture data is drawn from the published season feed. Queries: treasurer@cttfa.co.za.</div>
   </main>
 </div>
 
@@ -175,16 +253,18 @@ var CONFIG = {
   SITE_URL: 'https://club.cttfa.co.za'
 };
 var sb = window.supabase.createClient(CONFIG.SUPA_URL, CONFIG.SUPA_ANON);
-var mode = 'signin';
-var HOME = null;
+var mode='signin', HOME=null, PROFILE=null, SEASON=null, LEAGUE_DONE=false, REG_DONE=false, FIN_DONE=false, CORR_DONE=false, CLUB_DONE=false;
 
 /* ---------------- helpers ---------------- */
 function el(id){return document.getElementById(id);}
-function money(n){ n=Number(n)||0; var neg=n<0; var v=Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,' '); return (neg?'(R ':'R ')+v+(neg?')':''); }
-function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function money(n){ n=Number(n)||0; var neg=n<0; var v=Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,' '); return (neg?'(R ':'R ')+v+(neg?')':''); }
+function num(n){ n=Number(n)||0; return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' '); }
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function showMsg(kind,text){ var m=el('authMsg'); m.className='msg '+kind; m.textContent=text; }
 function clearMsg(){ var m=el('authMsg'); m.className='msg'; m.textContent=''; }
-function dateZA(s){ if(!s) return ''; var d=new Date(s); if(isNaN(d)) return s; return d.getDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '+d.getFullYear(); }
+var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function dateZA(s){ if(!s) return ''; var d=new Date(s); if(isNaN(d)) return s; return d.getDate()+' '+MON[d.getMonth()]+' '+d.getFullYear(); }
+function initials(n){ return String(n||'').replace(/[^A-Za-z ]/g,'').split(' ').filter(Boolean).slice(0,2).map(function(w){return w[0];}).join('').toUpperCase()||'CT'; }
 
 /* ---------------- auth UI ---------------- */
 function setMode(m){
@@ -193,7 +273,7 @@ function setMode(m){
   el('segFirst').setAttribute('aria-selected', m==='first');
   if(m==='signin'){
     el('authTitle').textContent='Club sign in';
-    el('authSub').textContent="Sign in to view your club's account, statement and fixtures.";
+    el('authSub').textContent="Sign in to view your club's standing, registrations, account and correspondence.";
     el('pwLabel').textContent='Password';
     el('pw').autocomplete='current-password'; el('pw').placeholder='Your password';
     el('authBtn').textContent='Sign in'; el('forgotBtn').hidden=false;
@@ -206,7 +286,6 @@ function setMode(m){
   }
 }
 el('authForm').addEventListener('submit', function(){ mode==='signin'?doSignin():doFirst(); });
-
 async function doSignin(){
   clearMsg();
   var email=el('email').value.trim().toLowerCase(), pw=el('pw').value;
@@ -217,32 +296,20 @@ async function doSignin(){
   if(r.error){ showMsg('err', /invalid/i.test(r.error.message)?'That email and password do not match. If this is your first time, choose “First time” above.':r.error.message); return; }
   boot();
 }
-
 async function doFirst(){
   clearMsg();
   var email=el('email').value.trim().toLowerCase(), pw=el('pw').value;
   if(!email){ showMsg('err','Enter your club email address.'); return; }
   if(!pw||pw.length<8){ showMsg('err','Choose a password of at least 8 characters.'); return; }
   el('authBtn').disabled=true;
-  // gate to known club contacts before creating anything
   var known=await sb.rpc('portal_email_known',{p_email:email});
   if(known.error){ el('authBtn').disabled=false; showMsg('err','Could not verify your email right now. Please try again.'); return; }
-  if(known.data!==true){
-    el('authBtn').disabled=false;
-    showMsg('err','This email is not linked to a club on record with the LFA. Ask the Treasurer (treasurer@cttfa.co.za) to add it to your club in Sage.');
-    return;
-  }
+  if(known.data!==true){ el('authBtn').disabled=false; showMsg('err','This email is not linked to a club on record with the LFA. Ask the Treasurer (treasurer@cttfa.co.za) to add it to your club in Sage.'); return; }
   var r=await sb.auth.signUp({email:email,password:pw,options:{emailRedirectTo:CONFIG.SITE_URL}});
   el('authBtn').disabled=false;
-  if(r.error){
-    if(/already/i.test(r.error.message)){ showMsg('info','You already have access. Switch to “Sign in”, or use “Forgot your password?”.'); setMode('signin'); }
-    else showMsg('err', r.error.message);
-    return;
-  }
-  if(r.data && r.data.session){ boot(); }          // confirmation off → straight in
-  else { showMsg('ok','Almost there. We have sent a confirmation link to '+email+'. Click it, then come back and sign in.'); }
+  if(r.error){ if(/already/i.test(r.error.message)){ showMsg('info','You already have access. Switch to “Sign in”, or use “Forgot your password?”.'); setMode('signin'); } else showMsg('err', r.error.message); return; }
+  if(r.data && r.data.session){ boot(); } else { showMsg('ok','Almost there. We have sent a confirmation link to '+email+'. Click it, then come back and sign in.'); }
 }
-
 async function doForgot(){
   clearMsg();
   var email=el('email').value.trim().toLowerCase();
@@ -251,19 +318,23 @@ async function doForgot(){
   if(r.error){ showMsg('err', r.error.message); return; }
   showMsg('ok','If that email has access, a password-reset link is on its way to '+email+'.');
 }
-
 el('btnSignout').addEventListener('click', async function(){ await sb.auth.signOut(); location.reload(); });
 
-/* ---------------- app ---------------- */
+/* ---------------- tabs ---------------- */
 function showTab(t){
-  ['overview','statement','fixtures'].forEach(function(x){
+  ['overview','league','reg','finance','corr','club'].forEach(function(x){
     el('tab-'+x).hidden = (x!==t);
-    el('tab'+x.charAt(0).toUpperCase()+x.slice(1)+'Btn').setAttribute('aria-selected', x===t);
+    var b=el('tab'+x.charAt(0).toUpperCase()+x.slice(1)+'Btn'); if(b) b.setAttribute('aria-selected', x===t);
   });
-  if(t==='statement' && !showTab._st){ showTab._st=true; loadStatement(); }
-  if(t==='fixtures' && !showTab._fx){ showTab._fx=true; loadFixtures(); }
+  if(t==='league' && !LEAGUE_DONE){ LEAGUE_DONE=true; loadLeague(); }
+  if(t==='reg' && !REG_DONE){ REG_DONE=true; loadReg(); }
+  if(t==='finance' && !FIN_DONE){ FIN_DONE=true; loadFinance(); }
+  if(t==='corr' && !CORR_DONE){ CORR_DONE=true; loadCorr(); }
+  if(t==='club' && !CLUB_DONE){ CLUB_DONE=true; loadClub(); }
+  try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
 }
 
+/* ---------------- boot ---------------- */
 async function boot(){
   el('authView').hidden=true; el('appView').hidden=false; el('btnSignout').hidden=false;
   var r=await sb.rpc('portal_home');
@@ -271,96 +342,330 @@ async function boot(){
   HOME=r.data||{};
   if(HOME.authorised===false){
     el('ovLoading').innerHTML='Your sign-in worked, but your email is not yet linked to a club on record with the LFA.<br><br>Please ask the Treasurer (treasurer@cttfa.co.za) to add your email to your club in Sage, then sign in again.';
-    el('tabStatementBtn').hidden=true; el('tabFixturesBtn').hidden=true;
+    ['tabLeagueBtn','tabRegBtn','tabFinanceBtn','tabCorrBtn','tabClubBtn'].forEach(function(i){ var b=el(i); if(b) b.hidden=true; });
     return;
   }
   el('topSub').textContent=HOME.name||'Club Portal';
-  renderOverview();
+  // profile + meetings + registrations in parallel for the snapshot
+  var pr=await Promise.all([ sb.rpc('portal_profile'), sb.rpc('portal_meetings'), sb.rpc('portal_registrations') ]);
+  PROFILE=(pr[0]&&pr[0].data)||{};
+  var meet=(pr[1]&&pr[1].data)||{has:false};
+  var reg=(pr[2]&&pr[2].data)||{};
+  // load season feed once (public) for the snapshot standing summary
+  try{ var res=await fetch(CONFIG.SEASON_URL,{cache:'no-store'}); SEASON=await res.json(); }catch(e){ SEASON=null; }
+  renderOverview(meet, reg);
 }
 
+/* ---------------- season matching ---------------- */
+function norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\b(fc|afc|football club|club|the|cttlfa|cttfa)\b/g,' ').replace(/\s+/g,' ').trim(); }
+function clubAliases(){
+  var a=[];
+  if(PROFILE){ (PROFILE.lr_aliases||[]).forEach(function(x){ a.push(x); }); if(PROFILE.website_name) a.push(PROFILE.website_name); if(PROFILE.name) a.push(PROFILE.name); }
+  if(HOME&&HOME.name) a.push(HOME.name);
+  var seen={}, out=[];
+  a.forEach(function(x){ var n=norm(x); if(n&&!seen[n]){ seen[n]=1; out.push(n); } });
+  return out;
+}
+function isMine(team){ var t=norm(team); if(!t) return false; var al=clubAliases(); return al.some(function(a){ return a===t || (a.length>=4 && (t===a || t.indexOf(a)===0)); }); }
+
+/* build per-division standing for this club from SEASON */
+function myDivisions(){
+  var out=[]; if(!SEASON||!SEASON.leagues) return out;
+  Object.keys(SEASON.leagues).forEach(function(code){
+    var lg=SEASON.leagues[code]; if(!lg) return;
+    var table=lg.table||[], results=lg.results||[], fixtures=lg.fixtures||[];
+    var myRow=null, myPos=0;
+    for(var i=0;i<table.length;i++){ if(isMine(table[i][0])){ myRow=table[i]; myPos=i+1; break; } }
+    var myFix=fixtures.filter(function(f){ return isMine(f[0])||isMine(f[1]); });
+    var myRes=results.filter(function(r){ return isMine(r[0])||isMine(r[1]); });
+    if(!myRow && !myFix.length && !myRes.length) return;
+    var played = myRow?Number(myRow[1])||0:myRes.length;
+    var remaining = myFix.length;
+    var total = played+remaining;
+    out.push({ code:code, name:lg.name||code, group:lg.group||'', row:myRow, pos:myPos, size:table.length,
+               played:played, remaining:remaining, total:total,
+               pct: total>0?Math.round(played/total*100):0,
+               results:myRes, fixtures:myFix });
+  });
+  // senior divisions first, then by played desc
+  out.sort(function(a,b){ return (b.played)-(a.played); });
+  return out;
+}
+function formHTML(f){ if(!f) return ''; return '<span class="form">'+String(f).slice(-5).split('').map(function(c){ return (c==='W'||c==='D'||c==='L')?'<span class="'+c+'">'+c+'</span>':''; }).join('')+'</span>'; }
+
+/* ---------------- status pill ---------------- */
 function statusPill(){
-  var s=(HOME.status||'').toLowerCase(), bal=Number(HOME.balance)||0;
-  if(HOME.out_of_compliance) return '<span class="pill bad">Out of compliance</span>';
-  if(bal<0) return '<span class="pill credit">In credit</span>';
-  if((Number(HOME.over)||0)>0) return '<span class="pill warn">Amount overdue</span>';
-  if(bal<=0) return '<span class="pill good">Up to date</span>';
-  return '<span class="pill warn">Balance owing</span>';
+  var bal=Number(HOME.balance)||0, over=Number(HOME.over)||0;
+  if(HOME.out_of_compliance) return '<span class="pill bad"><span class="dot"></span>Out of compliance</span>';
+  if(bal<0) return '<span class="pill credit"><span class="dot"></span>In credit</span>';
+  if(over>0) return '<span class="pill warn"><span class="dot"></span>Amount overdue</span>';
+  if(bal<=0) return '<span class="pill good"><span class="dot"></span>Up to date</span>';
+  return '<span class="pill warn"><span class="dot"></span>Balance owing</span>';
 }
 
-function renderOverview(){
-  var bal=Number(HOME.balance)||0, over=Number(HOME.over)||0, ag=HOME.ageing||{};
-  var note = bal>0 ? (over>0? money(over)+' of this is overdue' : 'Payable to the Association') : (bal<0? 'Your club is in credit' : 'Account settled — thank you');
+/* ---------------- OVERVIEW ---------------- */
+function crestHTML(size){
+  var s=size||88;
+  if(PROFILE&&PROFILE.logo){ return '<div class="badge" style="width:'+s+'px;height:'+s+'px"><img src="'+esc(PROFILE.logo)+'" alt="'+esc(HOME.name)+' crest" onerror="this.parentNode.innerHTML=\'<span class=&quot;ini&quot;>'+initials(HOME.name)+'</span>\'"></div>'; }
+  return '<div class="badge" style="width:'+s+'px;height:'+s+'px"><span class="ini">'+initials(HOME.name)+'</span></div>';
+}
+function renderOverview(meet, reg){
+  var p=PROFILE||{}, bal=Number(HOME.balance)||0, over=Number(HOME.over)||0;
+  var divs = myDivisions();
   var html='';
+  // OOC banner
   if(HOME.out_of_compliance){
     html+='<div class="ooc"><b>Your club is currently Out of Compliance.</b><p>An amount of '+money(over>0?over:bal)+' is outstanding'+(HOME.ooc_since?(' (since '+dateZA(HOME.ooc_since)+')'):'')+'. Settle the arrears in full and send proof of payment to the Treasurer to restore your club’s good standing.</p></div>';
   }
-  // hero
-  html+='<div class="card hero">'
-      +'<div class="lbl">Balance on your account</div>'
-      +'<div class="amt tabnum">'+money(bal)+'</div>'
-      +'<div class="note">'+esc(note)+'</div>'
-      +'<div style="margin-top:10px">'+statusPill()+'</div>'
-      +'<div class="code">Payment reference &nbsp; <b>'+esc(HOME.code||'')+'</b>'+(HOME.as_at?(' &nbsp;·&nbsp; as at '+dateZA(HOME.as_at)):'')+'</div>'
+  // identity hero
+  var subBits=[];
+  if(p.ground) subBits.push('<span>&#9917; '+esc(p.ground)+(p.suburb?(', '+esc(p.suburb)):'')+'</span>');
+  else if(p.suburb) subBits.push('<span>&#9917; '+esc(p.suburb)+'</span>');
+  if(p.founded) subBits.push('<span>Est. '+esc(p.founded)+'</span>');
+  if(HOME.code) subBits.push('<span>Ref '+esc(HOME.code)+'</span>');
+  var links=[];
+  if(p.website) links.push('<a href="'+esc(p.website)+'" target="_blank" rel="noopener">Website &#8599;</a>');
+  if(p.facebook) links.push('<a href="'+esc(p.facebook)+'" target="_blank" rel="noopener">Facebook &#8599;</a>');
+  var memLabel = (HOME.type==='full'?'Full member':(HOME.type==='associate'?'Associate member':''));
+  html+='<div class="card idhero">'+crestHTML(88)
+      +'<div class="idmeta"><h1>'+esc(HOME.name||'Your club')+'</h1>'
+      +(memLabel?'<span class="memchip">'+memLabel+'</span>':'')
+      +'<div class="sub">'+subBits.join('')+'</div>'
+      +(links.length?'<div class="links">'+links.join('')+'</div>':'')
+      +'</div></div>';
+  // stat tiles
+  var posSummary = divs.length? (divs[0].pos? (ordinal(divs[0].pos)+' &middot; '+esc(divs[0].name)) : esc(divs[0].name)) : '—';
+  var teamsN = (p.teams!=null? p.teams : (divs.length||'—'));
+  html+='<div class="card"><div class="stats">'
+      +'<div class="stat accent"><div class="sl">Account</div><div class="sv">'+money(bal)+'</div><div class="sn">'+(bal>0?(over>0?money(over)+' overdue':'payable'):(bal<0?'in credit':'settled'))+'</div></div>'
+      +'<div class="stat"><div class="sl">Standing</div><div class="sv" style="font-size:15px;margin-top:9px">'+statusPill()+'</div><div class="sn">as at '+(HOME.as_at?dateZA(HOME.as_at):'—')+'</div></div>'
+      +'<div class="stat"><div class="sl">Registered players</div><div class="sv">'+(reg&&reg.players!=null?num(reg.players):'—')+'</div><div class="sn">'+(reg&&reg.season?esc(reg.season)+' season':'this season')+'</div></div>'
+      +'<div class="stat"><div class="sl">Teams entered</div><div class="sv">'+esc(teamsN)+'</div><div class="sn">2026 competitions</div></div>'
+    +'</div></div>';
+  // two-column: league snapshot + meeting/finance
+  html+='<div class="grid2">';
+  // left: league snapshot
+  html+='<div class="card"><div class="sechead"><h2>Your teams this season</h2><button class="btn ghost sm" onclick="showTab(\'league\')">Full tables &amp; fixtures</button></div>';
+  if(!divs.length){ html+='<p class="empty">We could not match your club to the published league feed yet. Your standings and fixtures will appear here once the season linking is confirmed.</p>'; }
+  else {
+    divs.slice(0,4).forEach(function(d){
+      html+='<div class="lgcard"><div class="lghead"><div><div class="ln">'+esc(d.name)+'</div>'+(d.group?'<div class="lg">'+esc(d.group)+'</div>':'')+'</div>'
+          +'<div class="lgpos">'+(d.pos?'<div class="pos">Position <b>'+ordinal(d.pos)+'</b> of '+d.size+'</div>':'')
+          +(d.row?'<div>'+formHTML(d.row[8])+'</div>':'')+'</div></div>';
+      html+='<div style="padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">'
+          +(d.row?'<div class="pos" style="font-size:13px"><b style="color:var(--navy)">'+num(d.row[7])+'</b> pts &middot; P'+d.played+' W'+d.row[2]+' D'+d.row[3]+' L'+d.row[4]+'</div>':'<div class="pos" style="font-size:13px">Played '+d.played+'</div>')
+          +'<div class="prog" title="'+d.pct+'% of season played"><i style="width:'+d.pct+'%"></i></div>'
+          +'<div class="pos" style="font-size:12.5px">'+d.pct+'% done &middot; '+d.remaining+' to play</div>'
+          +'</div></div>';
+    });
+  }
+  html+='</div>';
+  // right column
+  html+='<div>';
+  // meeting/voting
+  if(meet && meet.has){
+    html+='<div class="card"><h2>Next meeting</h2>'
+        +'<div style="font-weight:800;font-size:16px">'+esc(meet.name)+'</div>'
+        +'<div style="color:var(--muted);font-size:13.5px;margin-top:4px">'+(meet.date?dateZA(meet.date):'')+(meet.venue?(' &middot; '+esc(meet.venue)):'')+'</div>'
+        +'<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">'
+        +(meet.pack_url?'<a class="btn ghost sm" href="'+esc(meet.pack_url)+'" target="_blank" rel="noopener">Meeting pack &#8599;</a>':'')
+        +'<a class="btn gold sm" href="https://admin.cttfa.co.za" target="_blank" rel="noopener">Delegate voting &#8599;</a>'
+        +'</div><p class="note">Voting opens to accredited club delegates when the meeting goes live.</p></div>';
+  }
+  // quick finance
+  html+='<div class="card"><div class="sechead"><h2>Account summary</h2><button class="btn ghost sm" onclick="showTab(\'finance\')">Statement</button></div>'
+      +'<div class="facts">'
+      +'<div class="fact"><div class="fl">Balance</div><div class="fv tabnum">'+money(bal)+'</div></div>'
+      +'<div class="fact"><div class="fl">Overdue</div><div class="fv tabnum">'+money(over)+'</div></div>'
+      +'<div class="fact"><div class="fl">Payment reference</div><div class="fv">'+esc(HOME.code||'—')+'</div></div>'
+      +'<div class="fact"><div class="fl">Last receipt</div><div class="fv">'+(HOME.last_receipt_days!=null?(HOME.last_receipt_days+' days ago'):'—')+'</div></div>'
+      +'</div></div>';
+  html+='</div>'; // right col
+  html+='</div>'; // grid2
+  el('ovBody').innerHTML=html; el('ovLoading').hidden=true; el('ovBody').hidden=false;
+}
+function ordinal(n){ n=Number(n)||0; var s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+
+/* ---------------- LEAGUE & FIXTURES ---------------- */
+function loadLeague(){
+  var divs = myDivisions();
+  var h='';
+  if(!SEASON){ h='<div class="card"><p class="empty">Fixtures are not available right now. Please try again shortly.</p></div>'; el('lgBody').innerHTML=h; el('lgLoading').hidden=true; el('lgBody').hidden=false; return; }
+  if(!divs.length){ h='<div class="card"><p class="empty">We could not confidently match your club to the published league feed yet. Team-to-club linking is being finalised and your standings and fixtures will appear here shortly.</p></div>'; el('lgBody').innerHTML=h; el('lgLoading').hidden=true; el('lgBody').hidden=false; return; }
+  // upcoming fixtures across all divisions (merged, next 8)
+  var allFix=[];
+  divs.forEach(function(d){ d.fixtures.forEach(function(f){ allFix.push({div:d.name, f:f}); }); });
+  allFix.sort(function(a,b){ return fxSort(a.f[2])-fxSort(b.f[2]); });
+  h+='<div class="card"><h2>Your upcoming fixtures</h2>';
+  if(!allFix.length){ h+='<p class="empty">No upcoming fixtures listed.</p>'; }
+  else { allFix.slice(0,8).forEach(function(x){ var f=x.f; var dt=fxParts(f[2]);
+    h+='<div class="fx"><div class="d"><div class="dd">'+dt.dd+'</div><div class="mm">'+dt.mm+'</div></div>'
+      +'<div class="m"><div class="tm">'+esc(f[0])+' v '+esc(f[1])+'</div><div class="cp">'+esc(x.div)+(f[3]?(' &middot; '+esc(f[3])):'')+(f[4]?(' &middot; '+esc(f[4])):'')+'</div></div></div>'; }); }
+  h+='</div>';
+  // per-division full table
+  divs.forEach(function(d){
+    h+='<div class="card"><div class="sechead"><h2>'+esc(d.name)+'</h2>'
+      +'<div class="lgpos">'+(d.pos?'<span class="pill neutral">'+ordinal(d.pos)+' of '+d.size+'</span>':'')+(d.row?formHTML(d.row[8]):'')+'</div></div>';
+    // progress
+    h+='<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px"><div class="prog" style="max-width:280px"><i style="width:'+d.pct+'%"></i></div><span class="pos" style="font-size:12.5px;color:var(--muted)">'+d.pct+'% of the season played &middot; '+d.played+' played &middot; '+d.remaining+' remaining</span></div>';
+    if(d.row){
+      h+='<div class="tblwrap"><table><thead><tr><th>#</th><th>Team</th><th class="num">P</th><th class="num">W</th><th class="num">D</th><th class="num">L</th><th class="num">GF</th><th class="num">GA</th><th class="num">GD</th><th class="num">Pts</th></tr></thead><tbody>';
+      var table=SEASON.leagues[d.code].table||[];
+      table.forEach(function(row,i){ var mineRow=isMine(row[0]); var gd=(Number(row[5])||0)-(Number(row[6])||0);
+        h+='<tr'+(mineRow?' class="me"':'')+'><td class="num">'+(i+1)+'</td><td>'+esc(row[0])+'</td><td class="num">'+row[1]+'</td><td class="num">'+row[2]+'</td><td class="num">'+row[3]+'</td><td class="num">'+row[4]+'</td><td class="num">'+row[5]+'</td><td class="num">'+row[6]+'</td><td class="num">'+(gd>0?'+':'')+gd+'</td><td class="num">'+row[7]+'</td></tr>'; });
+      h+='</tbody></table></div>';
+    }
+    // recent results for this club in the division
+    if(d.results&&d.results.length){
+      h+='<h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:16px 0 8px">Recent results</h4>';
+      d.results.slice(0,6).forEach(function(r){ var mineHome=isMine(r[0]);
+        h+='<div class="fx"><div class="m"><div class="tm">'+esc(r[0])+' '+esc(r[2])+' – '+esc(r[3])+' '+esc(r[1])+'</div><div class="cp">'+(r[4]?esc(r[4]):'')+'</div></div>'
+          +'<div class="sc">'+resultTag(r,mineHome)+'</div></div>'; });
+    }
+    h+='</div>';
+  });
+  el('lgBody').innerHTML=h; el('lgLoading').hidden=true; el('lgBody').hidden=false;
+}
+function resultTag(r,mineHome){ var hs=Number(r[2]),as=Number(r[3]); if(isNaN(hs)||isNaN(as)) return ''; var win=(mineHome&&hs>as)||(!mineHome&&as>hs); var draw=hs===as; var cls=draw?'D':(win?'W':'L'); var lbl=draw?'D':(win?'W':'L'); return '<span class="form"><span class="'+cls+'">'+lbl+'</span></span>'; }
+var FX_MON={jan:0,feb:1,mar:2,apr:3,may:4,jun:5,jul:6,aug:7,sep:8,oct:9,nov:10,dec:11};
+function fxParts(s){ var m=String(s||'').trim().match(/^(\d{1,2})\s+([A-Za-z]{3})/); if(!m) return {dd:'',mm:''}; return {dd:m[1], mm:m[2].toUpperCase()}; }
+function fxSort(s){ var m=String(s||'').trim().match(/^(\d{1,2})\s+([A-Za-z]{3})/); if(!m) return 9e14; var mo=FX_MON[m[2].toLowerCase()]; if(mo==null) return 9e14; var yr=(SEASON&&SEASON.season)?Number(SEASON.season):new Date().getFullYear(); return new Date(yr,mo,Number(m[1])).getTime(); }
+
+/* ---------------- REGISTRATIONS ---------------- */
+async function loadReg(){
+  var r=await sb.rpc('portal_registrations');
+  if(r.error){ el('rgBody').innerHTML='<div class="card"><p class="empty">Could not load registrations: '+esc(r.error.message)+'</p></div>'; el('rgLoading').hidden=true; el('rgBody').hidden=false; return; }
+  var d=r.data||{};
+  var h='<div class="card"><div class="sechead"><h2>Player &amp; official registrations</h2>'+(d.season?'<span class="pill neutral">'+esc(d.season)+' season</span>':'')+'</div>';
+  h+='<div class="stats">'
+    +'<div class="stat accent"><div class="sl">Registered players</div><div class="sv">'+num(d.players||0)+'</div><div class="sn">SAFA registered</div></div>'
+    +'<div class="stat"><div class="sl">Match officials</div><div class="sv">'+num(d.referees||0)+'</div><div class="sn">referees</div></div>'
+    +'<div class="stat"><div class="sl">Teams entered</div><div class="sv">'+esc((PROFILE&&PROFILE.teams!=null)?PROFILE.teams:'—')+'</div><div class="sn">2026 competitions</div></div>'
+    +'<div class="stat"><div class="sl">Total on register</div><div class="sv">'+num(d.total||0)+'</div><div class="sn">players + officials</div></div>'
     +'</div>';
+  if(d.by_category && d.by_category.length){
+    h+='<h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:20px 0 10px">Players by category</h4>';
+    h+='<div class="tblwrap"><table><thead><tr><th>Category</th><th class="num">Players</th></tr></thead><tbody>';
+    d.by_category.forEach(function(c){ h+='<tr><td>'+esc(c.category)+'</td><td class="num">'+num(c.n)+'</td></tr>'; });
+    h+='</tbody></table></div>';
+  }
+  h+='<p class="note">Registration figures reflect SAFA-registered players and officials linked to your club for the season shown. Queries on registrations can be sent to the LFA office.</p></div>';
+  el('rgBody').innerHTML=h; el('rgLoading').hidden=true; el('rgBody').hidden=false;
+}
+
+/* ---------------- FINANCE ---------------- */
+async function loadFinance(){
+  var bal=Number(HOME.balance)||0, over=Number(HOME.over)||0, ag=HOME.ageing||{};
+  var h='';
+  h+='<div class="card idhero" style="background:linear-gradient(135deg,var(--navy),var(--navy2))">'
+    +'<div class="idmeta"><div style="color:#c9d4ee;font-size:13px">Balance on your account</div>'
+    +'<div style="font-size:36px;font-weight:800;letter-spacing:-.5px;margin:4px 0" class="tabnum">'+money(bal)+'</div>'
+    +'<div style="color:#cfd8ee;font-size:13.5px">'+(bal>0?(over>0?money(over)+' of this is overdue':'Payable to the Association'):(bal<0?'Your club is in credit':'Account settled — thank you'))+'</div>'
+    +'<div style="margin-top:10px">'+statusPill()+'</div>'
+    +'<div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.16);font-size:13px;color:#cfd8ee">Payment reference &nbsp; <b style="color:#fff;letter-spacing:.5px">'+esc(HOME.code||'')+'</b>'+(HOME.as_at?(' &nbsp;&middot;&nbsp; as at '+dateZA(HOME.as_at)):'')+'</div>'
+    +'</div></div>';
   // ageing
   var bands=[['Current',ag.current,false],['30 days',ag.d30,false],['60 days',ag.d60,true],['90 days',ag.d90,true],['120 days +',ag.d120,true]];
   var max=Math.max(1, Math.max.apply(null,bands.map(function(b){return Math.abs(Number(b[1])||0);})));
-  html+='<div class="card"><h2>How your balance is aged</h2>';
+  h+='<div class="card"><h2>How your balance is aged</h2>';
   bands.forEach(function(b){ var v=Number(b[1])||0; var w=Math.round(Math.abs(v)/max*100);
-    html+='<div class="agerow'+(b[2]?' over':'')+'"><span class="k">'+b[0]+'</span><span class="bar"><i style="width:'+w+'%"></i></span><span class="v tabnum">'+money(v)+'</span></div>'; });
-  html+='<p style="font-size:12px;color:var(--muted);margin:12px 0 0">Amounts in the 60, 90 and 120-day columns are overdue under the 30-day payment terms.</p></div>';
-  // facts + banking
-  html+='<div class="card"><h2>Account details</h2><div class="facts">'
-      +'<div class="fact"><div class="fl">Club</div><div class="fv">'+esc(HOME.name||'')+'</div></div>'
-      +'<div class="fact"><div class="fl">Payment reference</div><div class="fv">'+esc(HOME.code||'')+'</div></div>'
-      +'<div class="fact"><div class="fl">Last statement</div><div class="fv">'+(HOME.statement_last?dateZA(HOME.statement_last):'—')+'</div></div>'
-      +'<div class="fact"><div class="fl">Last receipt</div><div class="fv">'+(HOME.last_receipt_days!=null?(HOME.last_receipt_days+' days ago'):'—')+'</div></div>'
-    +'</div>';
-  if(HOME.bank_details){ html+='<div style="margin-top:14px"><div class="fl" style="font-size:12px;color:var(--muted);margin-bottom:6px">Banking details — please quote your payment reference</div><div class="bank">'+esc(HOME.bank_details)+'</div></div>'; }
-  html+='</div>';
-  el('ovBody').innerHTML=html; el('ovLoading').hidden=true; el('ovBody').hidden=false;
-}
-
-async function loadStatement(){
+    h+='<div class="agerow'+(b[2]?' over':'')+'"><span class="k">'+b[0]+'</span><span class="bar"><i style="width:'+w+'%"></i></span><span class="v tabnum">'+money(v)+'</span></div>'; });
+  h+='<p class="note">Amounts in the 60, 90 and 120-day columns are overdue under the 30-day payment terms.</p></div>';
+  // banking
+  if(HOME.bank_details){ h+='<div class="card"><h2>Banking details</h2><p class="note" style="margin:0 0 8px">Please quote your payment reference <b>'+esc(HOME.code||'')+'</b> on every payment.</p><div class="bank">'+esc(HOME.bank_details)+'</div></div>'; }
+  // statement
+  h+='<div class="card"><div class="sechead"><h2>Statement of account &mdash; year to date</h2></div><div class="loading" id="stLoading">Loading transactions&hellip;</div><div class="tblwrap" id="stWrap" hidden><table id="stTbl"></table></div></div>';
+  el('fnBody').innerHTML=h; el('fnLoading').hidden=true; el('fnBody').hidden=false;
+  // ledger
   var r=await sb.rpc('portal_ledger');
   if(r.error){ el('stLoading').textContent='Could not load transactions: '+r.error.message; return; }
   var rows=r.data||[];
-  var h='<thead><tr><th>Date</th><th>Reference</th><th>Type</th><th class="desc">Description</th><th class="num">Debit</th><th class="num">Credit</th><th class="num">Balance</th></tr></thead><tbody>';
-  if(!rows.length){ h+='<tr><td colspan="7" style="color:var(--muted)">No transactions on record.</td></tr>'; }
+  var totDr=0, totCr=0;
+  rows.forEach(function(t){ if(!t.opening){ totDr+=Number(t.debit)||0; totCr+=Number(t.credit)||0; } });
+  var hh='<thead><tr><th>Date</th><th>Reference</th><th>Type</th><th class="desc">Description</th><th class="num">Charges</th><th class="num">Payments</th><th class="num">Balance</th></tr></thead><tbody>';
+  if(!rows.length){ hh+='<tr><td colspan="7" class="empty">No transactions on record.</td></tr>'; }
   rows.forEach(function(t){ var rcpt=Number(t.credit)>0;
-    h+='<tr'+(rcpt?' class="rcpt"':'')+'><td>'+(t.opening?'Opening':dateZA(t.date))+'</td><td>'+esc(t.reference)+'</td><td>'+esc(t.type)+'</td><td class="desc">'+esc(t.description)+'</td>'
-      +'<td class="num">'+(t.debit!=null?money(t.debit).replace('R ',''):'')+'</td><td class="num">'+(t.credit!=null?money(t.credit).replace('R ',''):'')+'</td><td class="num">'+money(t.balance).replace('R ','')+'</td></tr>'; });
-  h+='</tbody>';
-  el('stTbl').innerHTML=h; el('stLoading').hidden=true; el('stWrap').hidden=false;
+    hh+='<tr'+(rcpt?' class="rcpt"':'')+'><td>'+(t.opening?'Opening':dateZA(t.date))+'</td><td>'+esc(t.reference)+'</td><td>'+esc(t.type)+'</td><td class="desc">'+esc(t.description)+'</td>'
+      +'<td class="num">'+(t.debit!=null&&Number(t.debit)!==0?money(t.debit).replace('R ',''):'')+'</td><td class="num">'+(t.credit!=null&&Number(t.credit)!==0?money(t.credit).replace('R ',''):'')+'</td><td class="num">'+money(t.balance).replace('R ','')+'</td></tr>'; });
+  hh+='</tbody><tfoot><tr><td colspan="4" style="font-weight:700">Year-to-date movement</td><td class="num" style="font-weight:700">'+money(totDr).replace('R ','')+'</td><td class="num" style="font-weight:700">'+money(totCr).replace('R ','')+'</td><td class="num" style="font-weight:800">'+money(bal).replace('R ','')+'</td></tr></tfoot>';
+  el('stTbl').innerHTML=hh; el('stLoading').hidden=true; el('stWrap').hidden=false;
 }
 
-/* fixtures: best-effort match of season.json to this club (public data). Robust mapping arrives with the club master. */
-function norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,' ').replace(/\b(fc|afc|football club|club|the|cttlfa|cttfa)\b/g,' ').replace(/\s+/g,' ').trim(); }
-function clubTokens(){ var n=norm(HOME.name); return n.split(' ').filter(function(w){return w.length>=4;}); }
-function teamMatches(team){ var t=norm(team); var toks=clubTokens(); if(!toks.length) return false; return toks.some(function(w){ return t.indexOf(w)>=0; }); }
-async function loadFixtures(){
-  var data=null;
-  try{ var res=await fetch(CONFIG.SEASON_URL,{cache:'no-store'}); data=await res.json(); }catch(e){ el('fxLoading').textContent='Fixtures are not available right now.'; return; }
-  var list=[];
-  (function collect(o){ if(!o) return; if(Array.isArray(o)){ o.forEach(collect); return; }
-    if(typeof o==='object'){
-      var home=o.home||o.homeTeam||o.home_team||o.h||o.teamA, away=o.away||o.awayTeam||o.away_team||o.a||o.teamB;
-      var date=o.date||o.kickoff||o.datetime||o.ko||o.matchDate;
-      if((home||away)&&date){ list.push({home:home,away:away,date:date,comp:o.competition||o.league||o.comp||o.division||''}); }
-      Object.keys(o).forEach(function(k){ collect(o[k]); });
-    }
-  })(data);
-  var now=new Date(); now.setHours(0,0,0,0);
-  var mine=list.filter(function(f){ var d=new Date(f.date); return !isNaN(d)&&d>=now&&(teamMatches(f.home)||teamMatches(f.away)); })
-               .sort(function(a,b){return new Date(a.date)-new Date(b.date);}).slice(0,20);
-  el('fxLoading').hidden=true; el('fxBody').hidden=false;
-  if(!mine.length){ el('fxBody').innerHTML='<p style="color:var(--muted);font-size:14px;margin:0">We could not confidently match upcoming fixtures to your club yet. Team-to-club linking is being finalised and your fixtures will appear here shortly.</p>'; return; }
+/* ---------------- CORRESPONDENCE ---------------- */
+async function loadCorr(){
+  var r=await sb.rpc('portal_correspondence');
+  if(r.error){ el('coBody').innerHTML='<p class="empty">Could not load correspondence: '+esc(r.error.message)+'</p>'; el('coLoading').hidden=true; el('coBody').hidden=false; return; }
+  var rows=r.data||[];
   var h='';
-  mine.forEach(function(f){ var d=new Date(f.date);
-    h+='<div class="fx"><div class="d"><div class="dd">'+d.getDate()+'</div><div class="mm">'+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+'</div></div>'
-      +'<div class="m"><div class="tm">'+esc(f.home||'')+' v '+esc(f.away||'')+'</div><div class="cp">'+esc(f.comp||'Fixture')+'</div></div></div>'; });
-  h+='<p style="font-size:11.5px;color:var(--muted);margin:12px 0 0">Best match to your club from the published fixtures list. Report anything that looks wrong to the LFA office.</p>';
-  el('fxBody').innerHTML=h;
+  if(!rows.length){ h='<p class="empty">No correspondence from the LFA on record yet. Letters and statements sent to your club will be copied here.</p>'; }
+  rows.forEach(function(c){
+    var body = c.body_html ? c.body_html : (c.body_text? '<div class="frame">'+esc(c.body_text)+'</div>' : '');
+    h+='<details class="corr"><summary><div class="cs"><div class="csub">'+esc(c.subject||'(no subject)')+'</div><div class="cmeta">'+dateZA(c.date)+(c.to?(' &middot; to '+esc(c.to)):'')+(c.status?(' &middot; '+esc(c.status)):'')+'</div></div><span class="pill neutral">'+(c.has_body?'View':'Sent')+'</span></summary>'
+      +'<div class="cbody">'+(c.has_body?(c.body_html?'<div class="frame">'+c.body_html+'</div>':body):'<p class="note">This message was sent to your club’s contact email. A full copy is retained by the LFA office.</p>')+'</div></details>';
+  });
+  el('coBody').innerHTML=h; el('coLoading').hidden=true; el('coBody').hidden=false;
+}
+
+/* ---------------- CLUB DETAILS (self-service, approval-gated) ---------------- */
+async function loadClub(){
+  var p=PROFILE||{};
+  var cur=await sb.rpc('portal_edit_current');
+  var pending=(cur&&cur.data&&cur.data.has)?cur.data:null;
+  var h='';
+  if(pending){
+    h+='<div class="pendbar"><b>Changes awaiting approval.</b> You submitted updates on '+dateZA(pending.submitted_at)+'. They will appear on the public site and LFA records once the office approves them.</div>';
+  }
+  h+='<div class="card"><div class="sechead"><h2>Club profile</h2><span class="pill neutral">Reviewed before publishing</span></div>'
+    +'<p class="note" style="margin:0 0 16px">Update your club’s public details below. Changes are sent to the LFA office for approval, then flow to the public website, the club database and your contact record. Financial and league data cannot be edited here.</p>'
+    +'<div class="editgrid">'
+    +fld('Home ground','ef_ground',p.ground||'')
+    +fld('Suburb','ef_suburb',p.suburb||'')
+    +fld('Founded (year)','ef_founded',p.founded!=null?p.founded:'','number')
+    +fld('Website','ef_website',p.website||'','url')
+    +fld('Facebook page','ef_facebook',p.facebook||'','url')
+    +fld('Logo image URL','ef_logo',(p.logo||''),'url')
+    +'</div>'
+    +'<div class="editgrid" style="margin-top:14px">'
+    +fld('Latitude (map pin)','ef_lat',p.lat!=null?p.lat:'','number')
+    +fld('Longitude (map pin)','ef_lng',p.lng!=null?p.lng:'','number')
+    +'</div>'
+    +'<p class="note">To change your crest, paste a public image link above, or email a high-resolution logo to the LFA office and we will load it for you.</p>'
+    +'</div>';
+  h+='<div class="card"><div class="sechead"><h2>Primary contact</h2></div>'
+    +'<p class="note" style="margin:0 0 16px">The person the LFA contacts about your club. This becomes your club’s contact of record for statements and correspondence.</p>'
+    +'<div class="editgrid">'
+    +fld('Contact name','ef_cname','')
+    +fld('Contact email','ef_cemail','','email')
+    +fld('Copy-to email (optional)','ef_ccc','','email')
+    +fld('Contact phone','ef_cphone','')
+    +'</div></div>';
+  h+='<div class="card"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><button class="btn gold sm" id="ef_submit" type="button">Submit changes for approval</button><span id="ef_msg" style="font-size:13.5px"></span></div>'
+    +'<p class="note">Nothing changes on the public site until the LFA office approves your submission.</p></div>';
+  el('clBody').innerHTML=h; el('clLoading').hidden=true; el('clBody').hidden=false;
+  el('ef_submit').onclick=submitClubEdit;
+}
+function fld(label,id,val,type){ type=type||'text'; return '<div><label class="fld" for="'+id+'">'+esc(label)+'</label><input type="'+type+'" id="'+id+'" value="'+esc(val)+'"></div>'; }
+async function submitClubEdit(){
+  var m=el('ef_msg'); m.style.color='var(--muted)'; m.textContent='Submitting…';
+  function v(id){ return (el(id)&&el(id).value.trim())||''; }
+  var profile={}; var p=PROFILE||{};
+  function setIf(key,id){ var val=v(id); profile[key]=val; }
+  // profile fields (send all; approver applies)
+  ['ground','suburb','website','facebook','logo'].forEach(function(k){ profile[k]=v('ef_'+k); });
+  var founded=v('ef_founded'); if(founded) profile.founded=founded;
+  var lat=v('ef_lat'), lng=v('ef_lng'); if(lat) profile.lat=lat; if(lng) profile.lng=lng;
+  var contact={};
+  var cn=v('ef_cname'), ce=v('ef_cemail'), cc=v('ef_ccc'), cp=v('ef_cphone');
+  if(cn) contact.name=cn; if(ce) contact.email=ce; if(cc) contact.cc_email=cc; if(cp) contact.phone=cp;
+  // drop empty profile keys so we do not overwrite with blanks unintentionally
+  Object.keys(profile).forEach(function(k){ if(profile[k]==='') delete profile[k]; });
+  if(Object.keys(profile).length===0 && Object.keys(contact).length===0){ m.style.color='var(--bad)'; m.textContent='Enter at least one change to submit.'; return; }
+  el('ef_submit').disabled=true;
+  var r=await sb.rpc('portal_edit_submit',{p_changes:{profile:profile, contact:contact}});
+  el('ef_submit').disabled=false;
+  if(r.error){ m.style.color='var(--bad)'; m.textContent='Could not submit: '+r.error.message; return; }
+  m.style.color='var(--good)'; m.textContent='Submitted for approval. Thank you.';
+  CLUB_DONE=false; setTimeout(function(){ loadClub(); },900);
 }
 
 /* ---------------- start ---------------- */
