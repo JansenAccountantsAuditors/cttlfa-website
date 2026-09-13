@@ -307,6 +307,10 @@
       <div class="side-lbl">Admin Centre</div>
       <button class="snav on" data-tab="home" title="The Admin Centre home — launch any module from here."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>Home</button>
       <button class="snav" data-tab="users" title="The user list — who may sign in, and their access level. Administrators manage this."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users</button>
+      <div class="side-lbl" style="margin-top:14px">Administration</div>
+      <button class="snav" data-tab="clubdb" title="The central club database — every club mapped across the register, Sage, portal, registrations and the website."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>Club Database</button>
+      <button class="snav" data-tab="clubcontacts" title="The email addresses that may sign in to the club portal, per club."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 7l8 6 8-6"/></svg>Club Contacts</button>
+      <button class="snav" data-tab="webstats" title="Live Google Analytics for the public cttfa.co.za site."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg>Website Analytics</button>
       <button class="snav" data-tab="help" title="Full how-to guidance for every part of the Admin Centre."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help</button>
     </aside>
     <main class="main">
@@ -366,9 +370,7 @@
         <div class="hmod" data-area="fincom"><div class="hic fincom"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div><h3>Fincom Dashboard</h3><p>The Finance Committee operating dashboard — mandate, budget, monthly phasing, debtors, compliance and the Mancom packs. Restricted to Fincom members.</p><div class="hfoot"><span class="hchip live">Live · restricted</span><button class="btn gold sm" data-goto="fincom">Open</button></div></div>
         <div class="hmod" data-area="debtors"><div class="hic fin"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Club Debtors</h3><p>Live club debtor balances from Sage — ageing, who is paying, the constitutional collection cadence, and the out-of-compliance register for Mancom.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="debtors">Open</button></div></div>
         <div class="hmod" data-area="clubportal"><div class="hic portal"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div><h3>Club Portal</h3><p>The club-facing side of the association at club.cttfa.co.za — each club signs in to see its own account, statement, status and fixtures. Preview any club&rsquo;s view and manage who has access.</p><div class="hfoot"><span class="hchip ext">In testing</span><button class="btn gold sm" data-goto="clubportal">Open</button></div></div>
-        <div class="hmod" data-area="clubdb"><div class="hic clubdb"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg></div><h3>Club Database</h3><p>The one place every club maps together &mdash; register, Sage, contacts, portal, registrations and the website/LeagueRepublic names &mdash; so you can see at a glance what is linked and what is missing.</p><div class="hfoot"><span class="hchip live">New</span><button class="btn gold sm" data-goto="clubdb">Open</button></div></div>
         <div class="hmod" data-area="site"><div class="hic site"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg></div><h3>Live Website</h3><p>Open the public cttfa.co.za site as members and the public see it — fixtures, clubs, news and more.</p><div class="hfoot"><span class="hchip ext">External</span><a class="btn ghost sm" href="https://www.cttfa.co.za" target="_blank" rel="noopener">Open</a></div></div>
-        <div class="hmod" data-area="webstats"><div class="hic stats"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg></div><h3>Website Analytics</h3><p>Live Google Analytics for the public cttfa.co.za site — visitors, sources, top pages and countries, with your own date range.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="webstats">Open</button></div></div>
       </div>
       <p class="hint" style="margin-top:12px">External tools open in a new tab, so the Admin Centre stays open here to return to. Built for CTTLFA by the Treasurer&rsquo;s office &mdash; each function is a module that can be refined on its own.</p>
     </section>
@@ -428,6 +430,11 @@
     <!-- CLUB DATABASE (central club mapping across all systems) -->
     <section id="tab-clubdb" class="hidden">
       <div id="clubDbRoot"><div class="card"><p class="hint">Loading the Club Database&hellip;</p></div></div>
+    </section>
+
+    <!-- CLUB CONTACTS (portal login email administration) -->
+    <section id="tab-clubcontacts" class="hidden">
+      <div id="clubContactsRoot"><div class="card"><p class="hint">Loading Club Contacts&hellip;</p></div></div>
     </section>
 
     <!-- WEBSITE ANALYTICS (embedded Looker Studio, live GA4) -->
@@ -1031,14 +1038,14 @@
   function canSee(area){ if(!area) return true; if(meRole==="fincom") return area==="fincom"; return true; }
   /* Edit rights: administrators edit everything; staff edit only their ticked areas; viewers and fincom edit nothing. */
   function canEdit(area){ if(!area) return false; if(meRole==="administrator") return true; if(meRole==="staff") return (((me&&me.modules)||[]).indexOf(area)>=0); return false; }
-  function tabArea(name){ if(["meetings","accredit","compliance","motions","live","audit"].indexOf(name)>=0) return "voting"; if(name==="registrations") return "registrations"; if(name==="webadmin") return "webadmin"; if(name==="fincom") return "fincom"; if(name==="webstats") return "webstats"; if(name==="debtors") return "debtors"; if(name==="clubportal") return "debtors"; if(name==="clubdb") return "debtors"; return null; }
+  function tabArea(name){ if(["meetings","accredit","compliance","motions","live","audit"].indexOf(name)>=0) return "voting"; if(name==="registrations") return "registrations"; if(name==="webadmin") return "webadmin"; if(name==="fincom") return "fincom"; if(name==="webstats") return "webstats"; if(name==="debtors") return "debtors"; if(name==="clubportal") return "debtors"; if(name==="clubdb") return "debtors"; if(name==="clubcontacts") return "debtors"; return null; }
   function goTab(name){
     if(meRole==="fincom") name="fincom";
     var _a=tabArea(name); if(_a && !canSee(_a)) name="home";
     var votingSubs=["meetings","accredit","compliance","motions","live","audit"];
-    var sideActive=(name==="users")?"users":(name==="help")?"help":"home";
+    var sideActive=(["users","help","clubdb","clubcontacts","webstats"].indexOf(name)>=0)?name:"home";
     Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav"),function(x){x.classList.toggle("on",x.dataset.tab===sideActive);});
-    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom","webstats","debtors","clubportal","clubdb"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
+    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom","webstats","debtors","clubportal","clubdb","clubcontacts"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
     var sub=$("votingSubnav"); if(sub){ var inV=votingSubs.indexOf(name)>=0; sub.style.display=inV?"":"none"; Array.prototype.forEach.call(sub.querySelectorAll(".subtab"),function(x){x.classList.toggle("on",x.dataset.tab===name);}); }
     var _mp=$("meetingPick"); if(_mp) _mp.style.display=(["meetings","accredit","compliance","motions","live"].indexOf(name)>=0)?"":"none";
     if(name!=="accredit") stopCiTimer();
@@ -1057,6 +1064,7 @@
     if(name==="debtors" && typeof renderDebtors==="function") renderDebtors();
     if(name==="clubportal" && typeof renderClubPortal==="function") renderClubPortal();
     if(name==="clubdb" && typeof renderClubDatabase==="function") renderClubDatabase();
+    if(name==="clubcontacts" && typeof renderClubContacts==="function") renderClubContacts();
     try{ window.scrollTo(0,0); }catch(e){}
   }
   Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav, #votingSubnav .subtab"),function(t){
@@ -2236,6 +2244,66 @@
       var addBtn=document.getElementById('cdbAliasAdd'); if(addBtn) addBtn.onclick=async function(){ var el=document.getElementById('cdbAliasIn'); var v=(el.value||'').trim(); if(!v) return; try{ await sb.rpc('club_alias_add',{p_register_id:regId,p_system:'website',p_alias:v}); el.value=''; cdbLoadAliases(regId); cdbReload(); }catch(e){ alert('Could not add: '+(e.message||e)); } };
       cdbLoadAliases(regId);
     }
+  }
+
+  // ===================== CLUB CONTACTS (portal login emails) =====================
+  var _cc=null, _ccQ='', _ccFilter='all';
+  async function renderClubContacts(){
+    var root=$("clubContactsRoot"); if(!root) return;
+    if(!(meRole==='administrator'||meRole==='staff'||canSee('debtors'))){ root.innerHTML='<div class="card"><h3>Club Contacts</h3><p class="hint">Restricted. Ask an administrator for access.</p></div>'; return; }
+    root.innerHTML='<div class="card"><p class="hint">Loading Club Contacts&hellip;</p></div>';
+    try{ var r=await sb.rpc('club_contacts_list'); if(r.error) throw r.error; _cc=r.data||{}; }
+    catch(e){ root.innerHTML='<div class="card"><p class="hint">Could not load Club Contacts: '+esc(e.message||e)+'</p></div>'; return; }
+    ccDraw();
+  }
+  async function ccReload(){ try{ var r=await sb.rpc('club_contacts_list'); if(!r.error&&r.data) _cc=r.data; }catch(e){} ccDraw(); }
+  function ccFchip(k,label){ var on=(_ccFilter===k); return '<button class="cc-fchip" data-f="'+k+'" style="border:1px solid var(--line);background:'+(on?'#071A4A':'#fff')+';color:'+(on?'#fff':'var(--muted)')+';border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">'+esc(label)+'</button>'; }
+  function ccDraw(){
+    var root=$("clubContactsRoot"); var d=_cc||{}; var canE=(meRole==='administrator'||meRole==='staff');
+    var h='<div class="card" style="background:var(--navy);color:#fff;margin-bottom:12px"><h2 style="color:#fff;margin:0 0 4px;font-family:var(--head)">Club Contacts</h2>'
+      +'<div style="color:#C7D2EC;font-size:13.5px">The email addresses that may sign in to the club portal at club.cttfa.co.za, per club. Add or remove a login here. Each address sees only its own club.</div>'
+      +'<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.16);font-size:12px;color:#C7D2EC"><b style="color:#fff">'+(d.n_logins||0)+'</b> active logins across <b style="color:#fff">'+(d.n_clubs||0)+'</b> clubs &middot; <b style="color:#fff">'+(d.n_no_login||0)+'</b> club'+((d.n_no_login===1)?'':'s')+' with no login yet</div></div>';
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><div style="display:flex;gap:8px;flex-wrap:wrap">'
+      +ccFchip('all','All clubs')+ccFchip('nologin','No login yet')+ccFchip('haslogin','Has a login')
+      +'</div><input id="ccQ" type="search" placeholder="Search club or email&hellip;" style="width:220px;padding:8px 10px" value="'+esc(_ccQ)+'"></div>'
+      +'<div class="tscroll"><table class="deb-table"><thead><tr><th>Club</th><th>Sage contact</th><th>Portal login emails</th>'+(canE?'<th>Add an email</th>':'')+'</tr></thead><tbody id="ccBody"></tbody></table></div>'
+      +'<p class="hint" style="font-size:11.5px;margin:8px 0 0">Click an email to switch it on or off; the &times; removes it. A new email can sign in and set its own password on first use.</p></div>';
+    root.innerHTML=h;
+    Array.prototype.forEach.call(root.querySelectorAll('.cc-fchip'),function(b){ b.onclick=function(){ _ccFilter=b.dataset.f; ccDraw(); }; });
+    var q=$("ccQ"); if(q){ q.oninput=function(){ _ccQ=this.value.trim().toLowerCase(); ccBody(); }; }
+    ccBody();
+  }
+  function ccBody(){
+    var body=$("ccBody"); if(!body) return; var clubs=(_cc&&_cc.clubs)||[]; var canE=(meRole==='administrator'||meRole==='staff');
+    var rows=clubs.filter(function(c){
+      if(_ccFilter==='nologin' && Number(c.n_active)>0) return false;
+      if(_ccFilter==='haslogin' && !(Number(c.n_active)>0)) return false;
+      if(_ccQ){ var inName=(c.name||'').toLowerCase().indexOf(_ccQ)>=0; var inMail=((c.logins||[]).some(function(l){return (l.email||'').toLowerCase().indexOf(_ccQ)>=0;})); var inSage=((c.sage_email||'').toLowerCase().indexOf(_ccQ)>=0); if(!inName&&!inMail&&!inSage) return false; }
+      return true;
+    });
+    if(!rows.length){ body.innerHTML='<tr><td colspan="'+(canE?4:3)+'" class="hint" style="padding:14px">No club matches this filter.</td></tr>'; return; }
+    body.innerHTML=rows.map(function(c){
+      var typeChip='<span class="deb-tag" style="background:'+(c.type==='full'?'#E8F0FA':'#FBF1DD')+';color:'+(c.type==='full'?'#1e456e':'#7a5312')+'">'+esc(c.type)+'</span>';
+      var sage=c.sage_email?('<span>'+esc(c.sage_email)+'</span>'+(c.sage_contact?('<div class="hint" style="font-size:11px">'+esc(c.sage_contact)+'</div>'):'')):'<span class="hint">&ndash;</span>';
+      var logins=(c.logins||[]);
+      var chips=logins.length?logins.map(function(l){ var off=!l.active;
+        return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;background:'+(off?'#F1F3F7':'#E7F5EC')+';color:'+(off?'#8892a4':'#1c5136')+';border-radius:16px;padding:3px 4px 3px 10px;margin:2px 3px 2px 0">'
+          +'<span class="cc-tog" data-id="'+esc(l.id)+'" data-active="'+(l.active?'1':'0')+'" style="cursor:pointer'+(off?';text-decoration:line-through':'')+'" title="Click to switch this login '+(off?'on':'off')+'">'+esc(l.email)+'</span>'
+          +(canE?'<button class="cc-del" data-id="'+esc(l.id)+'" title="Remove this login" style="border:0;background:'+(off?'#e0e4ec':'#cfe8d8')+';border-radius:50%;width:18px;height:18px;cursor:pointer;line-height:1;color:inherit">&times;</button>':'')
+          +'</span>'; }).join(''):'<span class="hint" style="font-size:12px">No login yet</span>';
+      var addCell=canE?('<td style="min-width:220px"><div style="display:flex;gap:6px"><input class="cc-add" data-reg="'+esc(c.register_id)+'" type="email" placeholder="name@club.co.za" style="flex:1;min-width:130px;padding:6px 8px;font-size:12px"><button class="cc-addbtn btn ghost sm" data-reg="'+esc(c.register_id)+'">Add</button></div></td>'):'';
+      return '<tr><td><b>'+esc(c.name)+'</b> '+typeChip+(c.code?' <span class="hint" style="font-weight:400">'+esc(c.code)+'</span>':'')+'</td><td style="font-size:12px">'+sage+'</td><td>'+chips+'</td>'+addCell+'</tr>';
+    }).join('');
+    if(canE){
+      Array.prototype.forEach.call(body.querySelectorAll('.cc-tog'),function(el){ el.onclick=async function(){ try{ await sb.rpc('club_portal_user_active',{p_id:el.dataset.id,p_active:el.dataset.active!=='1'}); ccReload(); }catch(e){ alert('Could not update: '+(e.message||e)); } }; });
+      Array.prototype.forEach.call(body.querySelectorAll('.cc-del'),function(el){ el.onclick=async function(){ if(!(await debConfirm('Remove this portal login? The address will no longer be able to sign in.','Remove'))) return; try{ await sb.rpc('club_portal_user_remove',{p_id:el.dataset.id}); ccReload(); }catch(e){ alert('Could not remove: '+(e.message||e)); } }; });
+      Array.prototype.forEach.call(body.querySelectorAll('.cc-addbtn'),function(b){ b.onclick=function(){ ccAdd(b.dataset.reg); }; });
+      Array.prototype.forEach.call(body.querySelectorAll('.cc-add'),function(inp){ inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ccAdd(inp.dataset.reg); } }; });
+    }
+  }
+  async function ccAdd(regId){
+    var inp=document.querySelector('.cc-add[data-reg="'+regId+'"]'); if(!inp) return; var v=(inp.value||'').trim(); if(!v) return;
+    try{ await sb.rpc('club_portal_user_add',{p_register_id:regId,p_email:v}); inp.value=''; ccReload(); }catch(e){ alert('Could not add: '+(e.message||e)); }
   }
 
   // ---- Data-freshness banner: warns when the Sage fetch is older than the

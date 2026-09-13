@@ -4,3 +4,5 @@ __pycache__/
 
 # Prerendered per-route pages (generated at build by prerender.js)
 /p/
+
+_wadata/

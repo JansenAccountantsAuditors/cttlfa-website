@@ -1,0 +1,81 @@
+<!-- ===== Referee appointments (added Aug 2026) =====
+     Self-contained, read-only. Reads the referee dashboard's PUBLIC Supabase feed
+     directly (same data the dashboard shows every visitor; the key below is the
+     project's publishable anon key, not a secret). Caches in the browser for 2h,
+     refreshes on its own button and on the page's "Refresh live data now" button.
+     Fully guarded: any failure leaves the rest of the Teams page untouched.
+     NOTE: this file is admin-only reference; do NOT commit to the public repo. -->
+<div id="refApptWrap" style="margin-top:24px">
+  <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <h3 style="margin:0">Referee appointments</h3>
+    <div style="display:flex;align-items:center;gap:10px">
+      <span id="refApptStamp" style="font-size:12px;color:#5A667C"></span>
+      <button type="button" id="refApptRefresh" class="btn btn-ghost">Refresh appointments</button>
+    </div>
+  </div>
+  <p style="font-size:13px;color:#5A667C;margin:.35rem 0 .7rem">
+    Live from the referee dashboard. Updates automatically about every 2 hours;
+    press Refresh (or "Refresh live data now") to pull the latest immediately.
+  </p>
+  <div id="refApptBody"><div style="color:#5A667C;font-size:13px">Loading referee appointments&hellip;</div></div>
+</div>
+<script>
+(function(){
+  var SB="https://thwfepmpcmxakajryutt.supabase.co/rest/v1";
+  var K="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRod2ZlcG1wY214YWthanJ5dXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc1ODMxNDgsImV4cCI6MjA2MzE1OTE0OH0.GKBff-GWytMu3VNjqYu9E3AvAYtt012-6MCSbTrvObc";
+  var CK="cttfa_admin_appts", TTL=2*60*60*1000;
+  var body=document.getElementById('refApptBody'), stamp=document.getElementById('refApptStamp');
+  if(!body)return;
+  function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c];});}
+  function hdr(){return {apikey:K, Authorization:'Bearer '+K};}
+  function jget(p){return fetch(SB+p,{headers:hdr()}).then(function(r){if(!r.ok)throw 0;return r.json();});}
+  function fmtTs(t){try{return 'Updated '+new Date(t).toLocaleString('en-ZA',{hour12:false});}catch(e){return '';}}
+  function render(data){
+    if(!data||!data.rows||!data.rows.length){body.innerHTML='<div style="color:#5A667C;font-size:13px">No referee appointments published for upcoming fixtures yet.</div>';return;}
+    var rows=data.rows.slice().sort(function(a,b){return (a.d+a.t).localeCompare(b.d+b.t);});
+    var h='<div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px">'
+      +'<thead><tr style="text-align:left;border-bottom:2px solid #E3E8F2">'
+      +'<th style="padding:6px 8px">Date</th><th style="padding:6px 8px">Time</th><th style="padding:6px 8px">Division</th>'
+      +'<th style="padding:6px 8px">Match</th><th style="padding:6px 8px">Referee</th><th style="padding:6px 8px">Assistants</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      var as=[r.a1,r.a2].filter(function(x){return x&&x.toUpperCase()!=='TBA';}).join(', ');
+      h+='<tr style="border-bottom:1px solid #EEF1F7">'
+        +'<td style="padding:6px 8px;white-space:nowrap">'+esc(r.d)+'</td>'
+        +'<td style="padding:6px 8px;white-space:nowrap">'+esc(r.t)+'</td>'
+        +'<td style="padding:6px 8px">'+esc(r.div)+'</td>'
+        +'<td style="padding:6px 8px">'+esc(r.h)+' v '+esc(r.a)+'</td>'
+        +'<td style="padding:6px 8px;font-weight:600;color:#123FB5">'+(r.ref?esc(r.ref):'<span style="color:#98A2B3">TBA</span>')+'</td>'
+        +'<td style="padding:6px 8px;color:#5A667C">'+esc(as)+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+    body.innerHTML=h;
+    if(stamp)stamp.textContent=fmtTs(data.ts);
+  }
+  function load(force){
+    var cached=null;try{cached=JSON.parse(localStorage.getItem(CK)||'null');}catch(e){}
+    if(cached&&cached.rows)render(cached);
+    if(cached&&cached.ts&&(Date.now()-cached.ts<TTL)&&!force)return;
+    Promise.all([
+      jget('/referees?select=id,name&limit=5000'),
+      jget('/fixtures?select=division,match_date,kick_off_time,home_team,away_team,referee_id,assistant_referee_1_id,assistant_referee_2_id&order=match_date.asc&limit=8000')
+    ]).then(function(res){
+      var refs={}; res[0].forEach(function(x){refs[x.id]=(x.name||'').trim();});
+      var today=new Date(); today.setHours(0,0,0,0); var rows=[];
+      res[1].forEach(function(f){
+        var d=f.match_date||''; if(!d)return;
+        if(new Date(d+'T00:00:00')<today)return;
+        var ref=refs[f.referee_id]||'', a1=refs[f.assistant_referee_1_id]||'', a2=refs[f.assistant_referee_2_id]||'';
+        if(!ref&&!a1&&!a2)return;
+        rows.push({d:d,t:(f.kick_off_time||'').slice(0,5),div:f.division||'',h:f.home_team||'',a:f.away_team||'',ref:ref,a1:a1,a2:a2});
+      });
+      var data={ts:Date.now(),rows:rows};
+      try{localStorage.setItem(CK,JSON.stringify(data));}catch(e){}
+      render(data);
+    }).catch(function(){ if(!cached)body.innerHTML='<div style="color:#B42318;font-size:13px">Referee appointments are unavailable right now. Please Refresh in a moment.</div>'; });
+  }
+  var rb=document.getElementById('refApptRefresh'); if(rb)rb.addEventListener('click',function(){load(true);});
+  try{document.querySelectorAll('button,a.btn,.btn').forEach(function(el){if(/refresh live data now/i.test(el.textContent||''))el.addEventListener('click',function(){load(true);});});}catch(e){}
+  load(false);
+})();
+</script>
+<!-- ===== /Referee appointments ===== -->
