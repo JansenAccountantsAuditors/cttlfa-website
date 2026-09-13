@@ -2246,8 +2246,11 @@
     }
   }
 
-  // ===================== CLUB CONTACTS (portal login emails) =====================
-  var _cc=null, _ccQ='', _ccFilter='all';
+  // ===================== CLUB CONTACTS (authoritative club contact space) =====================
+  // One place to set each club's contacts. Drawn from the Club Database master so the
+  // same club is used everywhere. The primary contact feeds debtors statements and
+  // reminders; the portal emails are who may sign in at club.cttfa.co.za.
+  var _cc=null, _ccQ='', _ccFilter='all', _ccSel=null;
   async function renderClubContacts(){
     var root=$("clubContactsRoot"); if(!root) return;
     if(!(meRole==='administrator'||meRole==='staff'||canSee('debtors'))){ root.innerHTML='<div class="card"><h3>Club Contacts</h3><p class="hint">Restricted. Ask an administrator for access.</p></div>'; return; }
@@ -2257,53 +2260,126 @@
     ccDraw();
   }
   async function ccReload(){ try{ var r=await sb.rpc('club_contacts_list'); if(!r.error&&r.data) _cc=r.data; }catch(e){} ccDraw(); }
-  function ccFchip(k,label){ var on=(_ccFilter===k); return '<button class="cc-fchip" data-f="'+k+'" style="border:1px solid var(--line);background:'+(on?'#071A4A':'#fff')+';color:'+(on?'#fff':'var(--muted)')+';border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">'+esc(label)+'</button>'; }
+  function ccClubs(){ return (_cc&&_cc.clubs)||[]; }
+  function ccSelClub(){ var cs=ccClubs(); if(!cs.length) return null; var s=cs.filter(function(c){return String(c.register_id)===String(_ccSel);})[0]; return s||cs[0]; }
+  function ccFchip(k,label,n){ var on=(_ccFilter===k); return '<button class="cc-fchip" data-f="'+k+'" style="border:1px solid var(--line);background:'+(on?'#071A4A':'#fff')+';color:'+(on?'#fff':'var(--muted)')+';border-radius:20px;padding:5px 12px;font-size:12px;font-weight:600;cursor:pointer">'+esc(label)+(n!=null?(' <span style="opacity:.8">'+n+'</span>'):'')+'</button>'; }
   function ccDraw(){
-    var root=$("clubContactsRoot"); var d=_cc||{}; var canE=(meRole==='administrator'||meRole==='staff');
+    var root=$("clubContactsRoot"); if(!root) return; var d=_cc||{};
+    var cs=ccClubs();
+    var nNoMail=(d.n_no_email!=null)?d.n_no_email:cs.filter(function(c){return !c.sage_email;}).length;
+    var sel=ccSelClub(); _ccSel=sel?sel.register_id:null;
     var h='<div class="card" style="background:var(--navy);color:#fff;margin-bottom:12px"><h2 style="color:#fff;margin:0 0 4px;font-family:var(--head)">Club Contacts</h2>'
-      +'<div style="color:#C7D2EC;font-size:13.5px">The email addresses that may sign in to the club portal at club.cttfa.co.za, per club. Add or remove a login here. Each address sees only its own club.</div>'
-      +'<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.16);font-size:12px;color:#C7D2EC"><b style="color:#fff">'+(d.n_logins||0)+'</b> active logins across <b style="color:#fff">'+(d.n_clubs||0)+'</b> clubs &middot; <b style="color:#fff">'+(d.n_no_login||0)+'</b> club'+((d.n_no_login===1)?'':'s')+' with no login yet</div></div>';
-    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px"><div style="display:flex;gap:8px;flex-wrap:wrap">'
-      +ccFchip('all','All clubs')+ccFchip('nologin','No login yet')+ccFchip('haslogin','Has a login')
-      +'</div><input id="ccQ" type="search" placeholder="Search club or email&hellip;" style="width:220px;padding:8px 10px" value="'+esc(_ccQ)+'"></div>'
-      +'<div class="tscroll"><table class="deb-table"><thead><tr><th>Club</th><th>Sage contact</th><th>Portal login emails</th>'+(canE?'<th>Add an email</th>':'')+'</tr></thead><tbody id="ccBody"></tbody></table></div>'
-      +'<p class="hint" style="font-size:11.5px;margin:8px 0 0">Click an email to switch it on or off; the &times; removes it. A new email can sign in and set its own password on first use.</p></div>';
+      +'<div style="color:#C7D2EC;font-size:13.5px;max-width:86ch">The single, authoritative place to set each club&rsquo;s contact details. Every club is drawn from the Club Database master, so the same club is used across debtors, the club portal and voting. Pick a club on the left, then set its primary contact and who may sign in to the portal.</div>'
+      +'<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.16);font-size:12px;color:#C7D2EC"><b style="color:#fff">'+(d.n_clubs||cs.length||0)+'</b> clubs &middot; <b style="color:#fff">'+(d.n_logins||0)+'</b> active portal logins &middot; <b style="color:#fff">'+nNoMail+'</b> with no contact email &middot; <b style="color:#fff">'+(d.n_no_login||0)+'</b> with no portal login</div></div>';
+    h+='<div style="display:flex;gap:14px;flex-wrap:wrap;align-items:flex-start">'
+      +'<div style="flex:1 1 280px;min-width:260px;max-width:340px"><div class="card" style="padding:12px">'
+        +'<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+ccFchip('all','All',cs.length)+ccFchip('nomail','No email',nNoMail)+ccFchip('nologin','No login',(d.n_no_login||0))+'</div>'
+        +'<input id="ccQ" type="search" placeholder="Search club, code or email&hellip;" style="width:100%;padding:8px 10px;margin-bottom:8px" value="'+esc(_ccQ)+'">'
+        +'<div id="ccListBox" style="max-height:62vh;overflow:auto;border:1px solid var(--line);border-radius:10px"></div>'
+      +'</div></div>'
+      +'<div style="flex:3 1 360px;min-width:300px"><div id="ccDetailBox"></div></div>'
+    +'</div>';
     root.innerHTML=h;
-    Array.prototype.forEach.call(root.querySelectorAll('.cc-fchip'),function(b){ b.onclick=function(){ _ccFilter=b.dataset.f; ccDraw(); }; });
-    var q=$("ccQ"); if(q){ q.oninput=function(){ _ccQ=this.value.trim().toLowerCase(); ccBody(); }; }
-    ccBody();
+    Array.prototype.forEach.call(root.querySelectorAll('.cc-fchip'),function(b){ b.onclick=function(){ _ccFilter=b.dataset.f; ccFillList(); }; });
+    var q=$("ccQ"); if(q){ q.oninput=function(){ _ccQ=this.value.trim().toLowerCase(); ccFillList(); }; }
+    ccFillList(); ccFillDetail();
   }
-  function ccBody(){
-    var body=$("ccBody"); if(!body) return; var clubs=(_cc&&_cc.clubs)||[]; var canE=(meRole==='administrator'||meRole==='staff');
-    var rows=clubs.filter(function(c){
+  function ccFilteredClubs(){
+    return ccClubs().filter(function(c){
+      if(_ccFilter==='nomail' && c.sage_email) return false;
       if(_ccFilter==='nologin' && Number(c.n_active)>0) return false;
-      if(_ccFilter==='haslogin' && !(Number(c.n_active)>0)) return false;
-      if(_ccQ){ var inName=(c.name||'').toLowerCase().indexOf(_ccQ)>=0; var inMail=((c.logins||[]).some(function(l){return (l.email||'').toLowerCase().indexOf(_ccQ)>=0;})); var inSage=((c.sage_email||'').toLowerCase().indexOf(_ccQ)>=0); if(!inName&&!inMail&&!inSage) return false; }
+      if(_ccQ){ var inName=(c.name||'').toLowerCase().indexOf(_ccQ)>=0; var inCode=(c.code||'').toLowerCase().indexOf(_ccQ)>=0; var inSage=((c.sage_email||'').toLowerCase().indexOf(_ccQ)>=0); var inMail=((c.logins||[]).some(function(l){return (l.email||'').toLowerCase().indexOf(_ccQ)>=0;})); if(!inName&&!inCode&&!inSage&&!inMail) return false; }
       return true;
     });
-    if(!rows.length){ body.innerHTML='<tr><td colspan="'+(canE?4:3)+'" class="hint" style="padding:14px">No club matches this filter.</td></tr>'; return; }
-    body.innerHTML=rows.map(function(c){
-      var typeChip='<span class="deb-tag" style="background:'+(c.type==='full'?'#E8F0FA':'#FBF1DD')+';color:'+(c.type==='full'?'#1e456e':'#7a5312')+'">'+esc(c.type)+'</span>';
-      var sage=c.sage_email?('<span>'+esc(c.sage_email)+'</span>'+(c.sage_contact?('<div class="hint" style="font-size:11px">'+esc(c.sage_contact)+'</div>'):'')):'<span class="hint">&ndash;</span>';
-      var logins=(c.logins||[]);
-      var chips=logins.length?logins.map(function(l){ var off=!l.active;
-        return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;background:'+(off?'#F1F3F7':'#E7F5EC')+';color:'+(off?'#8892a4':'#1c5136')+';border-radius:16px;padding:3px 4px 3px 10px;margin:2px 3px 2px 0">'
-          +'<span class="cc-tog" data-id="'+esc(l.id)+'" data-active="'+(l.active?'1':'0')+'" style="cursor:pointer'+(off?';text-decoration:line-through':'')+'" title="Click to switch this login '+(off?'on':'off')+'">'+esc(l.email)+'</span>'
-          +(canE?'<button class="cc-del" data-id="'+esc(l.id)+'" title="Remove this login" style="border:0;background:'+(off?'#e0e4ec':'#cfe8d8')+';border-radius:50%;width:18px;height:18px;cursor:pointer;line-height:1;color:inherit">&times;</button>':'')
-          +'</span>'; }).join(''):'<span class="hint" style="font-size:12px">No login yet</span>';
-      var addCell=canE?('<td style="min-width:220px"><div style="display:flex;gap:6px"><input class="cc-add" data-reg="'+esc(c.register_id)+'" type="email" placeholder="name@club.co.za" style="flex:1;min-width:130px;padding:6px 8px;font-size:12px"><button class="cc-addbtn btn ghost sm" data-reg="'+esc(c.register_id)+'">Add</button></div></td>'):'';
-      return '<tr><td><b>'+esc(c.name)+'</b> '+typeChip+(c.code?' <span class="hint" style="font-weight:400">'+esc(c.code)+'</span>':'')+'</td><td style="font-size:12px">'+sage+'</td><td>'+chips+'</td>'+addCell+'</tr>';
+  }
+  function ccFillList(){
+    var box=$("ccListBox"); if(!box) return; var rows=ccFilteredClubs();
+    if(!rows.length){ box.innerHTML='<p class="hint" style="padding:14px;margin:0">No club matches.</p>'; return; }
+    box.innerHTML=rows.map(function(c){
+      var on=String(c.register_id)===String(_ccSel);
+      var hasMail=!!c.sage_email, nLog=Number(c.n_active)||0;
+      var dotMail='<span title="'+(hasMail?'Contact email set':'No contact email')+'" style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+(hasMail?'#1c5136':'#c9563f')+'"></span>';
+      var logBadge='<span style="font-size:10.5px;font-weight:700;color:'+(nLog?'#1c5136':'#8892a4')+'">'+(nLog?(nLog+'·portal'):'no login')+'</span>';
+      return '<div class="cc-item" data-reg="'+esc(c.register_id)+'" role="button" tabindex="0" style="padding:9px 11px;border-bottom:1px solid var(--line);cursor:pointer;display:flex;flex-direction:column;gap:2px;'+(on?'background:#EAF0FB;border-left:3px solid var(--navy);padding-left:8px':'border-left:3px solid transparent')+'">'
+        +'<div style="display:flex;align-items:center;gap:7px"><b style="font-size:13px;color:var(--navy)">'+esc(c.name)+'</b></div>'
+        +'<div style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted)">'+dotMail+'<span>'+(c.code?esc(c.code):'no code')+'</span><span style="margin-left:auto">'+logBadge+'</span></div>'
+      +'</div>';
     }).join('');
+    Array.prototype.forEach.call(box.querySelectorAll('.cc-item'),function(el){
+      var go=function(){ _ccSel=el.dataset.reg; ccFillList(); ccFillDetail(); if(window.innerWidth<620){ var db=$("ccDetailBox"); if(db&&db.scrollIntoView) db.scrollIntoView({behavior:'smooth',block:'start'}); } };
+      el.onclick=go; el.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } };
+    });
+  }
+  function ccFillDetail(){
+    var box=$("ccDetailBox"); if(!box) return; var c=ccSelClub(); var canE=(meRole==='administrator'||meRole==='staff');
+    if(!c){ box.innerHTML='<div class="card"><p class="hint" style="margin:0">No clubs to show.</p></div>'; return; }
+    var typeChip='<span class="deb-tag" style="background:'+(c.type==='full'?'#E8F0FA':'#FBF1DD')+';color:'+(c.type==='full'?'#1e456e':'#7a5312')+'">'+esc(c.type)+'</span>';
+    var verBadge=c.verified
+      ?'<span class="deb-tag" style="background:#E7F5EC;color:#1c5136">Reviewed &amp; verified</span>'
+      :'<span class="deb-tag" style="background:#FCF3D8;color:#7a5312">Not yet verified</span>';
+    var noCode=!c.code;
+    var fld=function(id,label,val,ph,type){ return '<label style="display:block;margin-bottom:10px"><span style="display:block;font-size:11.5px;color:var(--muted);font-weight:600;margin-bottom:3px">'+esc(label)+'</span>'
+      +(canE
+        ?'<input id="'+id+'" type="'+(type||'text')+'" value="'+esc(val||'')+'" placeholder="'+esc(ph||'')+'" style="width:100%;padding:8px 10px"'+(noCode?' disabled':'')+'>'
+        :'<div style="padding:8px 0;font-size:13px">'+(val?esc(val):'<span class="hint">&ndash;</span>')+'</div>')
+      +'</label>'; };
+    var h='<div class="card" style="margin-bottom:12px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">'
+        +'<div><h3 style="margin:0 0 3px">'+esc(c.name)+'</h3><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">'+typeChip+(c.code?'<span class="hint" style="font-size:12px">'+esc(c.code)+'</span>':'<span class="hint" style="font-size:12px;color:#8a3c17">no Sage code</span>')+'</div></div>'
+        +'<button class="btn ghost sm" id="ccGotoDb">Open in Club Database &rsaquo;</button>'
+      +'</div>'
+      +'<div style="margin-top:10px;padding:9px 11px;background:#F5F8FC;border:1px solid var(--line);border-radius:10px;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap"><span>Linked to the Club Database master record.</span>'+verBadge+'</div>'
+    +'</div>';
+    h+='<div class="card" style="margin-bottom:12px"><div class="deb-sec" style="margin-top:0">Primary contact</div>'
+      +'<p class="hint" style="font-size:12px;margin:0 0 10px">The address the Association writes to. Debtors statements and reminders go to this email, copying the CC address, with the Treasurer and ops copied on every send. This is the club&rsquo;s contact of record.</p>'
+      +(noCode?'<div style="background:#FBECEA;border:1px solid #f0cfcd;border-radius:10px;padding:10px 12px;margin-bottom:10px;font-size:12.5px;color:#8a3c17">This club is not yet linked to a Sage account in the Club Database, so a contact cannot be stored against it. Link it under Club Database first.</div>':'')
+      +fld('ccName','Contact name',c.sage_contact,'e.g. Club Secretary')
+      +fld('ccEmail','Email',c.sage_email,'name@club.co.za','email')
+      +fld('ccCc','CC email (optional)',c.sage_cc,'second@club.co.za','email')
+      +fld('ccPhone','Phone (optional)',c.sage_phone,'e.g. 082 000 0000','tel')
+      +(canE?'<div style="display:flex;gap:8px;align-items:center"><button class="btn gold sm" id="ccSavePrimary"'+(noCode?' disabled':'')+'>Save contact</button><span class="hint" id="ccSaveMsg" style="font-size:11.5px"></span></div>':'')
+    +'</div>';
+    var logins=(c.logins||[]);
+    var chips=logins.length?logins.map(function(l){ var off=!l.active;
+      return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;background:'+(off?'#F1F3F7':'#E7F5EC')+';color:'+(off?'#8892a4':'#1c5136')+';border-radius:16px;padding:3px 4px 3px 10px;margin:2px 3px 2px 0">'
+        +'<span class="cc-tog" data-id="'+esc(l.id)+'" data-active="'+(l.active?'1':'0')+'" style="cursor:pointer'+(off?';text-decoration:line-through':'')+'" title="Click to switch this login '+(off?'on':'off')+'">'+esc(l.email)+'</span>'
+        +(canE?'<button class="cc-del" data-id="'+esc(l.id)+'" title="Remove this login" style="border:0;background:'+(off?'#e0e4ec':'#cfe8d8')+';border-radius:50%;width:18px;height:18px;cursor:pointer;line-height:1;color:inherit">&times;</button>':'')
+      +'</span>'; }).join(''):'<span class="hint" style="font-size:12px">No login yet</span>';
+    h+='<div class="card"><div class="deb-sec" style="margin-top:0">Portal sign-in emails</div>'
+      +'<p class="hint" style="font-size:12px;margin:0 0 10px">Who may sign in at club.cttfa.co.za for this club. Each address sees only this club, and a club can have more than one. Separate from the contact above. A new address signs in and sets its own password on first use.</p>'
+      +'<div style="margin-bottom:'+(canE?'10px':'0')+'">'+chips+'</div>'
+      +(canE?'<div style="display:flex;gap:6px"><input id="ccAddEmail" type="email" placeholder="name@club.co.za" style="flex:1;min-width:160px;padding:8px 10px"><button class="btn ghost sm" id="ccAddBtn">Add email</button></div><p class="hint" style="font-size:11px;margin:8px 0 0">Click an email to switch it on or off; the &times; removes it.</p>':'')
+    +'</div>';
+    box.innerHTML=h;
+    var gd=$("ccGotoDb"); if(gd) gd.onclick=function(){ ccGotoDb(c.register_id); };
     if(canE){
-      Array.prototype.forEach.call(body.querySelectorAll('.cc-tog'),function(el){ el.onclick=async function(){ try{ await sb.rpc('club_portal_user_active',{p_id:el.dataset.id,p_active:el.dataset.active!=='1'}); ccReload(); }catch(e){ alert('Could not update: '+(e.message||e)); } }; });
-      Array.prototype.forEach.call(body.querySelectorAll('.cc-del'),function(el){ el.onclick=async function(){ if(!(await debConfirm('Remove this portal login? The address will no longer be able to sign in.','Remove'))) return; try{ await sb.rpc('club_portal_user_remove',{p_id:el.dataset.id}); ccReload(); }catch(e){ alert('Could not remove: '+(e.message||e)); } }; });
-      Array.prototype.forEach.call(body.querySelectorAll('.cc-addbtn'),function(b){ b.onclick=function(){ ccAdd(b.dataset.reg); }; });
-      Array.prototype.forEach.call(body.querySelectorAll('.cc-add'),function(inp){ inp.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ccAdd(inp.dataset.reg); } }; });
+      var sv=$("ccSavePrimary"); if(sv&&!noCode) sv.onclick=function(){ ccSavePrimary(c.register_id); };
+      Array.prototype.forEach.call(box.querySelectorAll('.cc-tog'),function(el){ el.onclick=async function(){ try{ await sb.rpc('club_portal_user_active',{p_id:el.dataset.id,p_active:el.dataset.active!=='1'}); ccReload(); }catch(e){ alert('Could not update: '+(e.message||e)); } }; });
+      Array.prototype.forEach.call(box.querySelectorAll('.cc-del'),function(el){ el.onclick=async function(){ if(!(await debConfirm('Remove this portal login? The address will no longer be able to sign in.','Remove'))) return; try{ await sb.rpc('club_portal_user_remove',{p_id:el.dataset.id}); ccReload(); }catch(e){ alert('Could not remove: '+(e.message||e)); } }; });
+      var ab=$("ccAddBtn"); if(ab) ab.onclick=function(){ ccAdd(c.register_id); };
+      var ae=$("ccAddEmail"); if(ae) ae.onkeydown=function(e){ if(e.key==='Enter'){ e.preventDefault(); ccAdd(c.register_id); } };
     }
   }
+  async function ccSavePrimary(regId){
+    var g=function(id){ var el=$(id); return el?(el.value||'').trim():''; };
+    var msg=$("ccSaveMsg"); if(msg) msg.textContent='Saving…';
+    try{
+      var r=await sb.rpc('club_contact_set_primary',{p_register_id:regId,p_email:g('ccEmail'),p_cc_email:g('ccCc'),p_phone:g('ccPhone'),p_name:g('ccName')});
+      if(r.error) throw r.error;
+      if(msg) msg.textContent='Saved.';
+      await ccReload();
+    }catch(e){ if(msg) msg.textContent=''; alert('Could not save the contact: '+(e.message||e)); }
+  }
   async function ccAdd(regId){
-    var inp=document.querySelector('.cc-add[data-reg="'+regId+'"]'); if(!inp) return; var v=(inp.value||'').trim(); if(!v) return;
-    try{ await sb.rpc('club_portal_user_add',{p_register_id:regId,p_email:v}); inp.value=''; ccReload(); }catch(e){ alert('Could not add: '+(e.message||e)); }
+    var inp=$("ccAddEmail"); if(!inp) return; var v=(inp.value||'').trim(); if(!v) return;
+    try{ var r=await sb.rpc('club_portal_user_add',{p_register_id:regId,p_email:v}); if(r.error) throw r.error; inp.value=''; ccReload(); }catch(e){ alert('Could not add: '+(e.message||e)); }
+  }
+  function ccGotoDb(regId){
+    goTab('clubdb');
+    var tries=0; var iv=setInterval(function(){ tries++;
+      if(typeof _cdb!=='undefined'&&_cdb&&_cdb.clubs&&_cdb.clubs.length){ clearInterval(iv); try{ cdbOpenClub(regId); }catch(e){} }
+      else if(tries>24){ clearInterval(iv); }
+    },150);
   }
 
   // ---- Data-freshness banner: warns when the Sage fetch is older than the
