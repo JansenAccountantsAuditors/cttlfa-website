@@ -3495,36 +3495,54 @@
     if(r.data && r.data.ok===false) throw new Error(r.data.error||'send failed');
     return r.data;
   }
-  async function debSendComposed(c, subject, bodyText, attachStmt, S){
-    var html=debEmailHtml(bodyText, S, {attached: !!attachStmt});
+  async function debSendComposed(c, subject, bodyText, attachStmt, S, customAtt){
+    var html=debEmailHtml(bodyText, S, {attached:(customAtt? false : !!attachStmt)});
     var b64=null, pname=null;
-    if(attachStmt){ try{ var doc=await debStatementPDF(c,{doc:true}); if(doc){ b64=doc.output('datauristring').split(',')[1]; pname='CTTLFA Statement - '+(String(c.name).replace(/[^A-Za-z0-9 ]/g,'').trim())+'.pdf'; } }catch(e){} }
+    if(customAtt && customAtt.base64){ b64=customAtt.base64; pname=customAtt.name||'Attachment.pdf'; }
+    else if(attachStmt){ try{ var doc=await debStatementPDF(c,{doc:true}); if(doc){ b64=doc.output('datauristring').split(',')[1]; pname='CTTLFA Statement - '+(String(c.name).replace(/[^A-Za-z0-9 ]/g,'').trim())+'.pdf'; } }catch(e){} }
     var r=await sb.functions.invoke('deb-send',{ body:{ club_key:c.club_key, name:c.name, code:c.code, trigger:'custom', subject:subject, html:html, text:bodyText, pdf_base64:b64, pdf_name:pname } });
     if(r.error) throw new Error(r.error.message||r.error);
     if(r.data && r.data.ok===false) throw new Error(r.data.error||'send failed');
     return r.data;
   }
+  // Fetch a same-origin file (a prepared attachment) and base64-encode it for the send layer.
+  async function debUrlToB64(url){
+    var resp=await fetch(url,{cache:'no-store'}); if(!resp.ok) throw new Error('could not load attachment ('+resp.status+')');
+    var buf=await resp.arrayBuffer(); var bytes=new Uint8Array(buf); var bin=''; var CH=0x8000;
+    for(var i=0;i<bytes.length;i+=CH){ bin+=String.fromCharCode.apply(null, bytes.subarray(i,i+CH)); }
+    return btoa(bin);
+  }
   async function debComposeEmail(c){
     // Ad-hoc, free-form email to one club — a payment reminder in your own words, a query, anything
-    // beyond the structured stage letters. Respects test mode; the Treasurer is always BCC'd.
+    // beyond the structured stage letters. If a prepared email is held for the club
+    // (deb_prepared_email), the subject, body and a specific attachment are pre-filled so it only
+    // needs review and a send. Respects test mode; the Treasurer is always BCC'd.
     var st; try{ st=await debSendSetup(); }catch(e){ alert('Could not load email settings: '+(e.message||e)); return; }
     var S=st.settings||{}, cfg=st.config||{}, test=(cfg.test_mode!==false);
     var testTo=(cfg.test_email)||'the Treasurer';
+    var prep=null; try{ var pr=await sb.rpc('deb_prepared_get',{p_club_key:c.club_key}); if(!pr.error && pr.data) prep=pr.data; }catch(e){}
+    var hasAtt=!!(prep && prep.att_url);
+    var subjVal=(prep && prep.subject)? prep.subject : ('CTTLFA — '+c.name);
+    var bodyVal=(prep && prep.body)? prep.body : '';
     var ov=document.createElement('div'); ov.className='deb-confirm-ov';
     var noteTxt=test
       ? 'TEST MODE — this email is delivered to '+esc(testTo)+' only, not to the club. A copy is kept in the treasurer mailbox (BCC).'
       : 'LIVE — this email goes to '+esc(c.name)+'’s address on file, copied to the treasurer and ops mailboxes (BCC).';
     var _coaC=debCashByKey(c.club_key);
     var coaNote=(_coaC&&Number(_coaC.amount)>0)?'<div class="deb-cmp-note" style="background:#FBF1DD;border-color:#E7D3A8;color:#7a5312;margin-top:8px">Heads up: this club is holding '+dR(_coaC.amount)+' of unallocated cash in Sage. If you are writing to chase payment, allocate the receipt in Sage first — it may already have paid.</div>':'';
+    var prepNote=prep?('<div class="deb-cmp-note" style="background:#E7F5EC;border-color:#BFE3CC;color:#14462b;margin-top:8px"><b>Prepared email.</b> The subject, message'+(hasAtt?' and attachment have':' has')+' been prepared for you'+(prep.note?(' — '+esc(prep.note)):'')+'. Review the wording, then send.</div>'):'';
+    var attRow=hasAtt
+      ? '<div class="deb-cmp-opts"><span style="font-size:12.5px;color:#33415c">Attachment: <b>'+esc(prep.att_name||'Attachment.pdf')+'</b> is attached to this email.</span><input type="checkbox" id="cmpStmt" style="display:none"></div>'
+      : '<div class="deb-cmp-opts"><label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#33415c;cursor:pointer"><input type="checkbox" id="cmpStmt"> Attach the current statement (PDF)</label></div>';
     ov.innerHTML='<div class="deb-cmp-card" role="dialog" aria-modal="true" aria-label="Write email to '+esc(c.name)+'">'
-      +'<div class="deb-cmp-h"><h4>Write to '+esc(c.name)+'</h4><div class="dsub">Free-form email · '+esc(c.code||'')+' · balance '+dR(c.bal)+'</div></div>'
+      +'<div class="deb-cmp-h"><h4>Write to '+esc(c.name)+'</h4><div class="dsub">'+(prep?'Prepared email':'Free-form email')+' · '+esc(c.code||'')+' · balance '+dR(c.bal)+'</div></div>'
       +'<div class="deb-cmp-b">'
-        +'<div class="deb-cmp-note'+(test?'':' live')+'">'+noteTxt+'</div>'+coaNote
+        +'<div class="deb-cmp-note'+(test?'':' live')+'">'+noteTxt+'</div>'+prepNote+coaNote
         +'<label class="fl" for="cmpSubj">Subject</label>'
-        +'<input type="text" id="cmpSubj" value="'+esc('CTTLFA — '+c.name)+'" style="margin-bottom:14px">'
+        +'<input type="text" id="cmpSubj" value="'+esc(subjVal)+'" style="margin-bottom:14px">'
         +'<label class="fl" for="cmpBody">Message</label>'
-        +'<textarea id="cmpBody" placeholder="Dear '+esc(c.name)+',&#10;&#10;Write your message here. It is sent on the CTTLFA finance letterhead and signed off by the Treasurer."></textarea>'
-        +'<div class="deb-cmp-opts"><label style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#33415c;cursor:pointer"><input type="checkbox" id="cmpStmt"> Attach the current statement (PDF)</label></div>'
+        +'<textarea id="cmpBody" placeholder="Dear '+esc(c.name)+',&#10;&#10;Write your message here. It is sent on the CTTLFA finance letterhead and signed off by the Treasurer.">'+esc(bodyVal)+'</textarea>'
+        +attRow
       +'</div>'
       +'<div class="deb-cmp-f"><span class="deb-cmp-status" id="cmpStatus"></span>'
         +'<button class="btn ghost" id="cmpCancel">Cancel</button>'
@@ -3536,16 +3554,19 @@
     document.addEventListener('keydown',onKey);
     document.body.appendChild(ov);
     ov.querySelector('#cmpCancel').onclick=close;
-    var bodyEl=ov.querySelector('#cmpBody'); if(bodyEl) bodyEl.focus();
+    var bodyEl=ov.querySelector('#cmpBody'); if(bodyEl && !prep) bodyEl.focus();
     ov.querySelector('#cmpSend').onclick=async function(){
       var subj=(ov.querySelector('#cmpSubj').value||'').trim();
       var msg=(ov.querySelector('#cmpBody').value||'').trim();
-      var att=ov.querySelector('#cmpStmt').checked;
+      var stmtEl=ov.querySelector('#cmpStmt'); var att=(stmtEl?stmtEl.checked:false);
       if(!subj){ alert('Add a subject line first.'); return; }
       if(!msg){ alert('Write a message first.'); return; }
       var b=this, sEl=ov.querySelector('#cmpStatus'); var t0=b.textContent; b.disabled=true; b.textContent='Sending…'; if(sEl) sEl.textContent='';
       try{
-        await debSendComposed(c, subj, msg, att, S);
+        var customAtt=null;
+        if(hasAtt){ b.textContent='Preparing attachment…'; var b64=await debUrlToB64(prep.att_url); customAtt={name:(prep.att_name||'Attachment.pdf'), base64:b64}; b.textContent='Sending…'; }
+        await debSendComposed(c, subj, msg, att, S, customAtt);
+        if(prep && !test){ try{ await sb.rpc('deb_prepared_clear',{p_club_key:c.club_key}); }catch(e){} }
         if(sEl) sEl.textContent='Sent'+(test?' — delivered to the Treasurer (test mode)':'')+'.';
         b.textContent='Sent'; _deb=null;
         setTimeout(function(){ close(); debOpenClub(c.club_key); }, 800);
