@@ -171,6 +171,41 @@
   .doc:last-child{border-bottom:0}
   .subcard{border:1px solid var(--hair);border-radius:13px;padding:18px;margin-top:14px}
   .subcard h3{font-size:15px;margin:0 0 4px}
+  /* ---------- contextual help (matches Admin Centre) ---------- */
+  .help-q{display:none;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--gold);color:var(--navy);font-weight:800;font-size:11px;line-height:1;margin-left:8px;padding:0;cursor:help;vertical-align:middle;border:0;flex:0 0 auto}
+  body.help-on .help-q{display:inline-flex}
+  .help-q:hover{background:var(--gold-deep);color:#fff}
+  .help-q:focus-visible{outline:2px solid var(--navy);outline-offset:2px}
+  .help-bubble{position:fixed;z-index:70;max-width:300px;background:#0b1830;color:#fff;font-size:12.5px;line-height:1.5;padding:10px 13px;border-radius:11px;box-shadow:0 14px 34px rgba(7,26,74,.4);opacity:0;transform:translateY(4px);transition:opacity .12s,transform .12s;pointer-events:none}
+  .help-bubble.on{opacity:1;transform:translateY(0)}
+  .help-bubble b{color:var(--gold)}
+  .helptoggle{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.24);color:#fff;border-radius:999px;padding:7px 12px;font:inherit;font-weight:700;font-size:11.5px;letter-spacing:.03em;cursor:pointer;min-height:36px;white-space:nowrap}
+  .helptoggle:hover{background:rgba(255,255,255,.2)}
+  .helptoggle:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .helptoggle .ht-track{width:30px;height:16px;border-radius:999px;background:rgba(255,255,255,.28);position:relative;transition:background .15s;flex:0 0 auto}
+  .helptoggle .ht-track:after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:left .15s}
+  .helptoggle.on .ht-track{background:var(--gold)}
+  .helptoggle.on .ht-track:after{left:16px}
+  /* ---------- member table tags ---------- */
+  .mtag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;padding:2px 7px;border-radius:20px;vertical-align:middle}
+  .mtag.snr{background:#e7ecfa;color:#2a4a8a} .mtag.jnr{background:var(--good-bg);color:var(--good)} .mtag.uncat{background:#eef1f6;color:var(--muted)}
+  .mtag.frn{background:var(--warn-bg);color:var(--warn);margin-left:6px}
+  td.mono{font-variant-numeric:tabular-nums lining-nums;letter-spacing:.2px}
+  /* ---------- help page ---------- */
+  .hlp .lead{color:var(--muted);font-size:13.5px;margin:0 0 4px;line-height:1.6}
+  .hlpstep{display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--hair)}
+  .hlpstep:last-child{border-bottom:0}
+  .hlpstep .n{flex:0 0 auto;width:30px;height:30px;border-radius:9px;background:var(--navy);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;font-size:14px}
+  .hlpstep .b b{font-size:14px;color:var(--ink)} .hlpstep .b p{margin:3px 0 0;font-size:13px;color:var(--muted);line-height:1.55}
+  .hlptab{display:flex;gap:13px;align-items:flex-start;padding:13px 0;border-bottom:1px solid var(--hair)}
+  .hlptab:last-child{border-bottom:0}
+  .hlptab .ic{flex:0 0 auto;width:34px;height:34px;border-radius:9px;background:var(--surface);border:1px solid var(--hair);display:flex;align-items:center;justify-content:center;font-size:17px}
+  .hlptab .b b{font-size:14px} .hlptab .b p{margin:3px 0 0;font-size:13px;color:var(--muted);line-height:1.55}
+  .faqq{border:1px solid var(--hair);border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .faqq summary{cursor:pointer;padding:13px 16px;font-weight:700;font-size:13.5px;list-style:none}
+  .faqq summary::-webkit-details-marker{display:none}
+  .faqq[open] summary{border-bottom:1px solid var(--hair)}
+  .faqq .fa{padding:12px 16px;font-size:13px;color:var(--muted);line-height:1.6}
 </style>
 </head>
 <body>
@@ -182,6 +217,7 @@
       <div class="t2" id="topSub">Club Portal</div>
     </div>
     <div class="spacer"></div>
+    <button class="helptoggle" id="helpToggle" type="button" aria-pressed="true" title="Show or hide the help tips (the gold ? markers)" hidden><span class="ht-track"></span><span id="helpToggleLbl">Help tips: on</span></button>
     <button class="signout" id="btnSignout" hidden>Sign out</button>
   </div>
 </header>
@@ -222,6 +258,7 @@
       <button role="tab" id="tabFinanceBtn" aria-selected="false" onclick="showTab('finance')">Finance</button>
       <button role="tab" id="tabCorrBtn" aria-selected="false" onclick="showTab('corr')">Correspondence</button>
       <button role="tab" id="tabClubBtn" aria-selected="false" onclick="showTab('club')">Club admin</button>
+      <button role="tab" id="tabHelpBtn" aria-selected="false" onclick="showTab('help')">Help</button>
     </div>
   </div>
   <main class="wrap">
@@ -251,6 +288,10 @@
       <div class="loading" id="clLoading">Loading club admin&hellip;</div>
       <div id="clBody" hidden></div>
     </div>
+    <div id="tab-help" hidden>
+      <div class="loading" id="hpLoading">Loading the guide&hellip;</div>
+      <div id="hpBody" hidden></div>
+    </div>
     <div class="foot">Cape Town Tygerberg Local Football Association &middot; Club Portal. Financial figures reflect your club's account as recorded with the Association and are management-prepared and unaudited. League and fixture data is drawn from the published season feed. Member data reflects SAFA registrations on record. Queries: treasurer@cttfa.co.za.</div>
   </main>
 </div>
@@ -269,7 +310,8 @@ var CONFIG = {
 };
 var sb = window.supabase.createClient(CONFIG.SUPA_URL, CONFIG.SUPA_ANON);
 var mode='signin', HOME=null, PROFILE=null, SEASON=null, MEMBERS=null;
-var LEAGUE_DONE=false, REG_DONE=false, FIN_DONE=false, CORR_DONE=false, CLUB_DONE=false;
+var LEAGUE_DONE=false, REG_DONE=false, FIN_DONE=false, CORR_DONE=false, CLUB_DONE=false, HELP_DONE=false;
+var HELP_WIRED=false, _helpBubble=null;
 
 /* ---------------- helpers ---------------- */
 function el(id){return document.getElementById(id);}
@@ -340,7 +382,7 @@ el('btnSignout').addEventListener('click', async function(){ await sb.auth.signO
 
 /* ---------------- tabs ---------------- */
 function showTab(t){
-  ['overview','league','reg','finance','corr','club'].forEach(function(x){
+  ['overview','league','reg','finance','corr','club','help'].forEach(function(x){
     el('tab-'+x).hidden = (x!==t);
     var b=el('tab'+x.charAt(0).toUpperCase()+x.slice(1)+'Btn'); if(b) b.setAttribute('aria-selected', x===t);
   });
@@ -349,12 +391,14 @@ function showTab(t){
   if(t==='finance' && !FIN_DONE){ FIN_DONE=true; loadFinance(); }
   if(t==='corr' && !CORR_DONE){ CORR_DONE=true; loadCorr(); }
   if(t==='club' && !CLUB_DONE){ CLUB_DONE=true; loadClub(); }
+  if(t==='help' && !HELP_DONE){ HELP_DONE=true; loadHelp(); }
   try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
 }
 
 /* ---------------- boot ---------------- */
 async function boot(){
   el('authView').hidden=true; el('appView').hidden=false; el('btnSignout').hidden=false;
+  el('helpToggle').hidden=false; initHelp();
   var r=await sb.rpc('portal_home');
   if(r.error){ el('ovLoading').textContent='Could not load your account: '+r.error.message; return; }
   HOME=r.data||{};
@@ -448,7 +492,7 @@ function renderOverview(meet, reg){
   html+='<div class="card"><div class="stats">'
       +'<div class="stat accent"><div class="sl">Account</div><div class="sv">'+money(bal)+'</div><div class="sn">'+(bal>0?(over>0?money(over)+' overdue':'payable'):(bal<0?'in credit':'settled'))+'</div></div>'
       +'<div class="stat"><div class="sl">Standing</div><div class="sv" style="font-size:15px;margin-top:9px">'+statusPill()+'</div><div class="sn">as at '+(HOME.as_at?dateZA(HOME.as_at):'—')+'</div></div>'
-      +'<div class="stat"><div class="sl">Registered players</div><div class="sv">'+(reg&&reg.players!=null?num(reg.players):'—')+'</div><div class="sn">'+(reg&&reg.season?esc(reg.season)+' season':'this season')+'</div></div>'
+      +'<div class="stat"><div class="sl">Registered players</div><div class="sv">'+(reg&&reg.players!=null?num(reg.players):'—')+'</div><div class="sn">'+(reg&&reg.cycle_label?esc(reg.cycle_label)+' cycle':'this cycle')+'</div></div>'
       +'<div class="stat"><div class="sl">Teams entered</div><div class="sv">'+esc(teamsN)+'</div><div class="sn">2026 competitions</div></div>'
     +'</div></div>';
   html+='<div class="grid2">';
@@ -477,7 +521,7 @@ function renderOverview(meet, reg){
         +'<a class="btn gold sm" href="https://admin.cttfa.co.za" target="_blank" rel="noopener">Delegate voting &#8599;</a>'
         +'</div><p class="note">Voting opens to accredited club delegates when the meeting goes live.</p></div>';
   }
-  html+='<div class="card"><div class="sechead"><h2>Account summary</h2><button class="btn ghost sm" onclick="showTab(\'finance\')">Statement</button></div>'
+  html+='<div class="card"><div class="sechead"><h2 data-help="A quick summary of your account. Open Finance for the full statement, ageing and banking details.">Account summary</h2><button class="btn ghost sm" onclick="showTab(\'finance\')">Statement</button></div>'
       +'<div class="facts">'
       +'<div class="fact"><div class="fl">Balance</div><div class="fv tabnum">'+money(bal)+'</div></div>'
       +'<div class="fact"><div class="fl">Overdue</div><div class="fv tabnum">'+money(over)+'</div></div>'
@@ -561,53 +605,70 @@ function fxParts(s){ var m=String(s||'').trim().match(/^(\d{1,2})\s+([A-Za-z]{3}
 function fxSort(s){ var m=String(s||'').trim().match(/^(\d{1,2})\s+([A-Za-z]{3})/); if(!m) return 9e14; var mo=FX_MON[m[2].toLowerCase()]; if(mo==null) return 9e14; var yr=(SEASON&&SEASON.season)?Number(SEASON.season):new Date().getFullYear(); return new Date(yr,mo,Number(m[1])).getTime(); }
 
 /* ---------------- MEMBERS (dynamic + searchable) ---------------- */
-async function loadReg(season){
-  var r=await sb.rpc('portal_members', season?{p_season:season}:{});
+async function loadReg(startYear){
+  var r=await sb.rpc('portal_members', startYear?{p_start_year:Number(startYear)}:{});
   if(r.error){ el('rgBody').innerHTML='<div class="card"><p class="empty">Could not load members: '+esc(r.error.message)+'</p></div>'; el('rgLoading').hidden=true; el('rgBody').hidden=false; return; }
-  MEMBERS=r.data||{members:[],seasons:[]};
-  var reg=null; try{ var rr=await sb.rpc('portal_registrations'); reg=rr.data; }catch(e){}
+  MEMBERS=r.data||{members:[],cycles:[]};
+  var reg=null; try{ var rr=await sb.rpc('portal_registrations', startYear?{p_start_year:Number(startYear)}:{}); reg=rr.data; }catch(e){}
   drawReg(reg);
   el('rgLoading').hidden=true; el('rgBody').hidden=false;
 }
 function drawReg(reg){
-  var m=MEMBERS||{}, list=m.members||[], seasons=m.seasons||[];
-  var players=list.filter(function(x){return x.type==='player';}).length;
-  var refs=list.filter(function(x){return x.type==='referee';}).length;
-  var h='<div class="card"><div class="sechead"><h2>Registered members</h2>'
-    + (seasons.length?'<select id="rgSeason" style="max-width:170px;width:auto;padding:9px 11px;border:1px solid var(--hair);border-radius:9px;font:inherit">'+seasons.map(function(s){return '<option value="'+esc(s)+'"'+(s===m.season?' selected':'')+'>'+esc(s)+' season</option>';}).join('')+'</select>':'')
-    + '</div>';
+  var m=MEMBERS||{}, list=m.members||[], cycles=m.cycles||[];
+  var players=list.filter(function(x){return x.type!=='referee';}).length;
+  var snr=list.filter(function(x){return x.type!=='referee'&&x.category==='Senior';}).length;
+  var jnr=list.filter(function(x){return x.type!=='referee'&&x.category==='Junior';}).length;
+  var frn=list.filter(function(x){return x.type!=='referee'&&x.foreign;}).length;
+  var h='<div class="card"><div class="sechead"><h2 data-help="These are your club’s own SAFA-registered members for the selected two-year card cycle — the same cycle and figures the LFA office sees. Use it to reconcile your roll against ours.">Registered members</h2>'
+    + (cycles.length>1
+        ? '<select id="rgCycle" style="max-width:210px;width:auto;padding:9px 11px;border:1px solid var(--hair);border-radius:9px;font:inherit">'+cycles.map(function(c){return '<option value="'+esc(c.start_year)+'"'+(String(c.start_year)===String(m.cycle_start)?' selected':'')+'>'+esc(c.label)+' card cycle</option>';}).join('')+'</select>'
+        : '<span class="pill neutral">'+esc(m.cycle_label||'')+' card cycle</span>')
+    + '</div>'
+    + '<p class="note" style="margin:-4px 0 14px">SAFA issues player cards on a two-year cycle. This shows the current cycle'+(m.cycle_range?(' ('+esc(m.cycle_range)+')'):'')+', matching the Association’s master register.</p>';
   h+='<div class="stats">'
-    +'<div class="stat accent"><div class="sl">Registered players</div><div class="sv">'+num(players)+'</div><div class="sn">'+esc(m.season||'')+'</div></div>'
-    +'<div class="stat"><div class="sl">Match officials</div><div class="sv">'+num(refs)+'</div><div class="sn">referees</div></div>'
-    +'<div class="stat"><div class="sl">Teams entered</div><div class="sv">'+esc((PROFILE&&PROFILE.teams!=null)?PROFILE.teams:'—')+'</div><div class="sn">2026 competitions</div></div>'
-    +'<div class="stat"><div class="sl">Total on register</div><div class="sv">'+num(list.length)+'</div><div class="sn">players + officials</div></div>'
+    +'<div class="stat accent"><div class="sl">Registered players</div><div class="sv">'+num(players)+'</div><div class="sn">'+esc(m.cycle_label||'')+' cycle</div></div>'
+    +'<div class="stat"><div class="sl">Seniors</div><div class="sv">'+num(snr)+'</div><div class="sn">18 and older</div></div>'
+    +'<div class="stat"><div class="sl">Juniors</div><div class="sv">'+num(jnr)+'</div><div class="sn">under 18</div></div>'
+    +'<div class="stat"><div class="sl">Foreign players</div><div class="sv">'+num(frn)+'</div><div class="sn">foreign ID renews yearly</div></div>'
     +'</div></div>';
-  h+='<div class="card"><div class="sechead"><h2>Your registered members</h2><button class="btn ghost sm" id="mCsv">Download CSV</button></div>'
-    +'<div class="toolbar"><div class="search"><input type="text" id="mSearch" placeholder="Search your members by name or category&hellip;" autocomplete="off"></div></div>'
-    +'<div class="tblwrap"><table><thead><tr><th>Name</th><th>Category</th><th>Type</th></tr></thead><tbody id="mBody"></tbody></table></div>'
+  h+='<div class="card"><div class="sechead"><h2 data-help="Search by name, SAFA number, ID number or category. The SAFA number stays the same each cycle; a foreign player’s ID is re-issued each year, so check it against your latest card. Download CSV gives you the full list for your records.">Your registered members</h2><button class="btn ghost sm" id="mCsv">Download CSV</button></div>'
+    +'<div class="toolbar"><div class="search"><input type="text" id="mSearch" placeholder="Search by name, SAFA number, ID number or category…" autocomplete="off"></div></div>'
+    +'<div class="tblwrap"><table><thead><tr><th>Name</th><th>Category</th><th>SAFA number</th><th>ID number</th><th>Club</th><th>Type</th></tr></thead><tbody id="mBody"></tbody></table></div>'
     +'<p class="note" id="mCount"></p>'
-    +'<p class="note">This is your club’s own SAFA-registered members on record with the Association. Personal identifiers are not shown here; contact the LFA office for registration certificates or ID-level queries.</p></div>';
+    +'<p class="note">This is your club’s own registered roll as held by the Association, shown so you can reconcile it against your own records rather than guess what we hold. It contains personal information: please keep it confidential and use it only for your club’s registration administration (Protection of Personal Information Act 4 of 2013). A player’s SAFA number stays the same each cycle; a foreign player is flagged because their foreign ID is re-issued annually. Registration certificates or corrections: treasurer@cttfa.co.za.</p></div>';
   el('rgBody').innerHTML=h;
-  var sel=el('rgSeason'); if(sel) sel.onchange=function(){ REG_DONE=true; el('rgLoading').hidden=false; el('rgBody').hidden=true; loadReg(sel.value); };
+  var sel=el('rgCycle'); if(sel) sel.onchange=function(){ REG_DONE=true; el('rgLoading').hidden=false; el('rgBody').hidden=true; loadReg(sel.value); };
   var s=el('mSearch'); if(s){ s.oninput=function(){ drawMembers(s.value); }; }
   var c=el('mCsv'); if(c) c.onclick=membersCSV;
   drawMembers('');
 }
+function catTag(x){
+  if(x.type==='referee') return '<span class="mtag uncat">Official</span>';
+  var c=x.category||'To categorise';
+  var cls=(c==='Senior'?'snr':(c==='Junior'?'jnr':'uncat'));
+  return '<span class="mtag '+cls+'">'+esc(c)+'</span>'+(x.foreign?'<span class="mtag frn" title="Foreign player – foreign ID re-issued each year">Foreign</span>':'');
+}
 function drawMembers(q){
   q=(q||'').toLowerCase().trim();
   var list=(MEMBERS&&MEMBERS.members)||[];
-  var rows=list.filter(function(x){ if(!q) return true; var name=((x.first_name||'')+' '+(x.surname||'')).toLowerCase(); return name.indexOf(q)>=0 || (x.category||'').toLowerCase().indexOf(q)>=0 || (x.type||'').toLowerCase().indexOf(q)>=0; });
+  var rows=list.filter(function(x){ if(!q) return true;
+    var name=((x.first_name||'')+' '+(x.surname||'')).toLowerCase();
+    return name.indexOf(q)>=0 || (x.category||'').toLowerCase().indexOf(q)>=0
+      || String(x.safa||'').toLowerCase().indexOf(q)>=0 || String(x.id_number||'').toLowerCase().indexOf(q)>=0
+      || String(x.club||'').toLowerCase().indexOf(q)>=0 || (x.type||'').toLowerCase().indexOf(q)>=0; });
   var b='';
-  if(!rows.length){ b='<tr><td colspan="3" class="empty">'+(list.length?'No members match your search.':'No members on record for this season.')+'</td></tr>'; }
-  else rows.forEach(function(x){ b+='<tr><td>'+esc(((x.surname||'')+', '+(x.first_name||'')).replace(/^, |, $/,''))+'</td><td>'+esc(x.category||'')+'</td><td>'+(x.type==='referee'?'Official':'Player')+'</td></tr>'; });
+  if(!rows.length){ b='<tr><td colspan="6" class="empty">'+(list.length?'No members match your search.':'No members on record for this cycle.')+'</td></tr>'; }
+  else rows.forEach(function(x){ var nm=((x.surname||'')+', '+(x.first_name||'')).replace(/^, |, $/,'');
+    b+='<tr><td>'+esc(nm)+'</td><td>'+catTag(x)+'</td><td class="mono">'+esc(x.safa||'')+'</td><td class="mono">'+esc(x.id_number||'')+'</td><td>'+esc(x.club||'')+'</td><td>'+(x.type==='referee'?'Official':'Player')+'</td></tr>'; });
   el('mBody').innerHTML=b;
-  var cnt=el('mCount'); if(cnt) cnt.textContent='Showing '+rows.length+' of '+list.length+' members'+(MEMBERS&&MEMBERS.season?(' · '+MEMBERS.season+' season'):'');
+  var cnt=el('mCount'); if(cnt) cnt.textContent='Showing '+rows.length+' of '+list.length+' members'+(MEMBERS&&MEMBERS.cycle_label?(' · '+MEMBERS.cycle_label+' cycle'):'');
 }
 function membersCSV(){
   var list=(MEMBERS&&MEMBERS.members)||[];
-  var out='Surname,First name,Category,Type,Season\r\n';
+  var cy=(MEMBERS&&MEMBERS.cycle_label)||'';
+  var out='Surname,First name,Category,SAFA number,ID number,Club,Foreign,Type,Card cycle\r\n';
   list.forEach(function(x){ function q(s){ s=String(s==null?'':s); return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
-    out+=[q(x.surname),q(x.first_name),q(x.category),(x.type==='referee'?'Official':'Player'),q((MEMBERS&&MEMBERS.season)||'')].join(',')+'\r\n'; });
+    out+=[q(x.surname),q(x.first_name),q(x.category),q(x.safa),q(x.id_number),q(x.club),(x.foreign?'Yes':'No'),(x.type==='referee'?'Official':'Player'),q(cy)].join(',')+'\r\n'; });
   dl((HOME.name||'club').replace(/[^A-Za-z0-9]+/g,'_')+'_members.csv', out, 'text/csv');
 }
 
@@ -624,7 +685,7 @@ async function loadFinance(){
     +'</div></div>';
   var bands=[['Current',ag.current,false],['30 days',ag.d30,false],['60 days',ag.d60,true],['90 days',ag.d90,true],['120 days +',ag.d120,true]];
   var max=Math.max(1, Math.max.apply(null,bands.map(function(b){return Math.abs(Number(b[1])||0);})));
-  h+='<div class="card"><h2>How your balance is aged</h2>';
+  h+='<div class="card"><h2 data-help="Your balance split by age. Current is within terms; 60, 90 and 120-day columns are overdue under the 30-day payment terms.">How your balance is aged</h2>';
   bands.forEach(function(b){ var v=Number(b[1])||0; var w=Math.round(Math.abs(v)/max*100);
     h+='<div class="agerow'+(b[2]?' over':'')+'"><span class="k">'+b[0]+'</span><span class="bar"><i style="width:'+w+'%"></i></span><span class="v tabnum">'+money(v)+'</span></div>'; });
   h+='<p class="note">Amounts in the 60, 90 and 120-day columns are overdue under the 30-day payment terms.</p></div>';
@@ -893,6 +954,107 @@ async function submitClubEdit(){
   if(r.error){ m.style.color='var(--bad)'; m.textContent='Could not submit: '+r.error.message; return; }
   m.style.color='var(--good)'; m.textContent='Submitted for approval. Thank you.';
   CLUB_DONE=false; setTimeout(function(){ loadClub(); },900);
+}
+
+/* ---------------- HELP / GUIDE ---------------- */
+function loadHelp(){
+  var name=(HOME&&HOME.name)?esc(HOME.name):'your club';
+  var h='';
+  h+='<div class="card hlp"><div class="sechead"><h2 data-help="This page never changes your data. It only explains how the portal works and what each page is for.">How this portal works</h2><span class="pill neutral">Guide</span></div>'
+    +'<p class="lead">This is the official Cape Town Tygerberg LFA club portal for <b>'+name+'</b>. It is a read-only window onto exactly what the Association holds for your club: your league standing and fixtures, your registered members, your account and statement, and the letters we have sent you. The only thing you can change here is your own club profile, which is reviewed by the LFA office before it goes live.</p>'
+    +'<p class="lead" style="margin-top:8px">Turn <b>Help tips</b> on with the switch at the top right. A small gold <b>?</b> then appears next to key headings across every page — hover or tap it for a short explanation of what that section does.</p>'
+    +'</div>';
+
+  h+='<div class="card hlp"><div class="sechead"><h2 data-help="Follow these in order the first time. After that, most visits are just Overview and Finance.">Getting started, step by step</h2></div>'
+    +hstep('1','Sign in with your club email','Use the email address the LFA office has on record for your club. First time here? Choose “First time” on the sign-in screen and set a password. If your email is not recognised, ask the Treasurer to add it to your club.')
+    +hstep('2','Check your standing on Overview','The Overview shows your account balance, whether you are in good standing, your registered player count for the current cycle, and your teams’ league positions at a glance.')
+    +hstep('3','Reconcile your members','Open Members to see every player and official the Association has registered for your club this two-year card cycle, with their SAFA number and ID number, so you can check our roll against yours.')
+    +hstep('4','View your statement and pay','Finance shows your balance, how it is aged, our banking details and your full year-to-date statement. Always quote your payment reference. You can download the statement as a PDF or CSV.')
+    +hstep('5','Keep your club details current','On Club admin you can update your ground, contacts, office-bearers and constitution. Profile changes are sent to the LFA office for approval before they appear publicly.')
+    +hstep('6','Read what we have sent you','Correspondence keeps a copy of the letters and statements the LFA has sent your club, so nothing gets lost in an inbox.')
+    +'</div>';
+
+  h+='<div class="card hlp"><div class="sechead"><h2 data-help="A one-line summary of every tab and what it is for.">What each page gives you</h2></div>'
+    +htab('🏠','Overview','Your club at a glance: account balance and standing, registered players for the current cycle, teams entered, and your league positions with recent form. Start here each visit.')
+    +htab('⚽','League &amp; Fixtures','Your full league tables, upcoming fixtures and recent results, drawn from the published season feed. Download your fixtures as CSV or PDF.')
+    +htab('📋','Members','Your club’s registered players and officials for the selected two-year SAFA card cycle, with category, SAFA number, ID number and club. Search and export the list to reconcile it against your own records.')
+    +htab('💳','Finance','Your account balance, ageing, the LFA’s banking details and your year-to-date statement of account. Download a branded PDF statement or a CSV. Figures are management-prepared and unaudited.')
+    +htab('✉️','Correspondence','A record of the letters, reminders and statements the LFA office has sent your club.')
+    +htab('⚙️','Club admin','Update your public club profile, primary contact, office-bearers and constitution. Profile changes are reviewed by the office before publishing; financial, league and member data cannot be edited here.')
+    +htab('❓','Help','This guide. Leave the Help-tips switch on to see the gold ‘?’ markers on every page.')
+    +'</div>';
+
+  h+='<div class="card hlp"><div class="sechead"><h2 data-help="This explains the numbers on the Members page so they line up with what the LFA office quotes you.">Your registration figures, explained</h2></div>'
+    +'<div class="hlpstep"><div class="n" style="background:var(--gold);color:var(--navy)">2y</div><div class="b"><b>Two-year card cycle</b><p>SAFA registers players on a rolling two-year cycle that starts on 1 November. The Members page shows the current cycle by default, and you can switch to an earlier cycle where one exists. This is the same cycle the LFA office and the Admin Centre use, so your figures will match ours exactly.</p></div></div>'
+    +'<div class="hlpstep"><div class="n" style="background:#2a4a8a">S/J</div><div class="b"><b>Senior and Junior</b><p>Every player is either a Senior (18 and older) or a Junior (under 18), worked out from their ID. A player carried across from an earlier card keeps their category. A very small number may show as “To categorise” where we do not yet hold enough to place them — tell us and we will fix it.</p></div></div>'
+    +'<div class="hlpstep"><div class="n" style="background:var(--warn);color:#fff">F</div><div class="b"><b>Foreign players</b><p>A foreign player is still a Senior or a Junior — the <span class="mtag frn" style="margin:0">Foreign</span> flag simply notes that their identity document is a foreign ID. Their SAFA number stays the same each cycle, but the foreign ID is re-issued every year, so check it against their latest card.</p></div></div>'
+    +'<div class="hlpstep"><div class="n">#</div><div class="b"><b>SAFA number vs ID number</b><p>The <b>SAFA number</b> is the player’s permanent registration number with SAFA — it does not change. The <b>ID number</b> is their South African ID or foreign ID. Both are shown so you can match a player to your own records without guessing.</p></div></div>'
+    +'</div>';
+
+  h+='<div class="card hlp"><div class="sechead"><h2 data-help="How your account works and how to keep your club in good standing.">Paying your account</h2></div>'
+    +'<div class="hlptab"><div class="ic">🔖</div><div class="b"><b>Always quote your payment reference</b><p>Your reference is shown on the Overview and Finance pages and on your statement. Quoting it lets us match your payment to your club automatically.</p></div></div>'
+    +'<div class="hlptab"><div class="ic">📆</div><div class="b"><b>30-day terms</b><p>Invoices are due within 30 days. Anything in the 60, 90 and 120-day columns of the ageing is overdue and should be settled promptly.</p></div></div>'
+    +'<div class="hlptab"><div class="ic">⚠️</div><div class="b"><b>Out of compliance</b><p>If arrears are not settled, your club can be placed out of compliance, which affects delegate accreditation and voting. Settle the arrears and send proof of payment to the Treasurer to restore good standing.</p></div></div>'
+    +'</div>';
+
+  h+='<div class="card hlp"><div class="sechead"><h2 data-help="Quick answers to the questions clubs ask most.">Common questions</h2></div>'
+    +hfaq('I can’t sign in','Use your club’s email address on record with the LFA. If it is your first time, choose “First time” and set a password. Forgotten your password? Use “Forgot your password?” on the sign-in screen. If your email is still not recognised, it is not yet linked to your club — ask the Treasurer to add it.')
+    +hfaq('The Members numbers look different to mine','The portal shows the current two-year SAFA card cycle, the same basis the LFA office uses. If a specific player is missing, in the wrong category, or shown under the wrong club, email the Treasurer with their name and SAFA number and we will correct the register.')
+    +hfaq('Why can I see ID numbers here?','So you can reconcile our register against your own records without guessing. This is your club’s own members only. Please treat it as confidential personal information and use it only for your club’s registration administration (Protection of Personal Information Act 4 of 2013).')
+    +hfaq('My league table or fixtures look wrong','League and fixture data comes from the published season feed. If your club is not matched to a division yet, or a result is wrong, let the LFA office know and it will be corrected at source.')
+    +hfaq('How do I change my club logo or contact?','On the Club admin page, update the details and submit them. Changes are reviewed by the LFA office before they appear on the public website and in our records.')
+    +'</div>';
+
+  h+='<div class="card"><div class="sechead"><h2>Still need help?</h2></div>'
+    +'<p class="note" style="margin:0">The LFA office is happy to help with anything this guide does not cover — registrations, your account, accreditation or access. Email the Treasurer at <b>treasurer@cttfa.co.za</b>.</p></div>';
+
+  el('hpBody').innerHTML=h;
+  el('hpLoading').hidden=true; el('hpBody').hidden=false;
+}
+function hstep(n,t,p){ return '<div class="hlpstep"><div class="n">'+n+'</div><div class="b"><b>'+t+'</b><p>'+p+'</p></div></div>'; }
+function htab(ic,t,p){ return '<div class="hlptab"><div class="ic">'+ic+'</div><div class="b"><b>'+t+'</b><p>'+p+'</p></div></div>'; }
+function hfaq(q,a){ return '<details class="faqq"><summary>'+q+'</summary><div class="fa">'+a+'</div></details>'; }
+
+/* ---------------- contextual help engine (matches Admin Centre) ---------------- */
+function _helpShow(q){
+  if(!_helpBubble) return;
+  _helpBubble.textContent=q.getAttribute('data-tip')||'';
+  _helpBubble.classList.add('on');
+  var r=q.getBoundingClientRect(), bw=_helpBubble.offsetWidth, bh=_helpBubble.offsetHeight, gap=8, vw=window.innerWidth, vh=window.innerHeight;
+  var left=r.left+r.width/2-bw/2; left=Math.max(10,Math.min(left,vw-bw-10));
+  var top=r.bottom+gap; if(top+bh>vh-10) top=r.top-bh-gap; if(top<10) top=10;
+  _helpBubble.style.left=left+'px'; _helpBubble.style.top=top+'px';
+}
+function _helpHide(){ if(_helpBubble) _helpBubble.classList.remove('on'); }
+function wireHelpMarker(node){
+  if(!node || node.nodeType!==1 || !node.hasAttribute || !node.hasAttribute('data-help')) return;
+  if(node.__helpWired) return; node.__helpWired=true;
+  var tip=node.getAttribute('data-help')||'';
+  var q=document.createElement('button'); q.type='button'; q.className='help-q'; q.textContent='?'; q.setAttribute('aria-label','Help'); q.setAttribute('data-tip',tip); q.setAttribute('title',tip);
+  node.insertBefore(q, node.childNodes[1]||null);
+  q.addEventListener('mouseenter',function(){ if(document.body.classList.contains('help-on')) _helpShow(q); });
+  q.addEventListener('mouseleave',_helpHide);
+  q.addEventListener('focus',function(){ if(document.body.classList.contains('help-on')) _helpShow(q); });
+  q.addEventListener('blur',_helpHide);
+  q.addEventListener('click',function(e){ e.preventDefault(); e.stopPropagation(); if(_helpBubble&&_helpBubble.classList.contains('on')) _helpHide(); else _helpShow(q); });
+}
+function scanHelp(root){ try{ Array.prototype.forEach.call((root||document).querySelectorAll('[data-help]'), wireHelpMarker); }catch(e){} }
+function applyHelp(on){
+  document.body.classList.toggle('help-on',on);
+  var t=el('helpToggle'); if(t){ t.classList.toggle('on',on); t.setAttribute('aria-pressed',on?'true':'false'); }
+  var l=el('helpToggleLbl'); if(l) l.textContent='Help tips: '+(on?'on':'off');
+  if(!on) _helpHide();
+}
+function initHelp(){
+  if(HELP_WIRED) return; HELP_WIRED=true;
+  _helpBubble=document.createElement('div'); _helpBubble.className='help-bubble'; document.body.appendChild(_helpBubble);
+  var pref=true; try{ var v=localStorage.getItem('cttlfa_club_help_on'); if(v!==null) pref=(v==='1'); }catch(e){}
+  var t=el('helpToggle'); if(t) t.onclick=function(){ var on=!document.body.classList.contains('help-on'); try{ localStorage.setItem('cttlfa_club_help_on',on?'1':'0'); }catch(e){} applyHelp(on); };
+  scanHelp(document);
+  try{ var mo=new MutationObserver(function(muts){ muts.forEach(function(mu){ Array.prototype.forEach.call(mu.addedNodes,function(n){ if(n.nodeType===1){ wireHelpMarker(n); scanHelp(n); } }); }); }); mo.observe(document.body,{childList:true,subtree:true}); }catch(e){}
+  window.addEventListener('scroll',_helpHide,true); window.addEventListener('resize',_helpHide);
+  document.addEventListener('click',function(){ _helpHide(); });
+  applyHelp(pref);
 }
 
 /* ---------------- start ---------------- */
