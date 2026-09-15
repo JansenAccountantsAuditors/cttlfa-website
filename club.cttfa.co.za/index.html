@@ -493,6 +493,45 @@ function caActionsCard(meet){
   }
   return '<div class="card"><div class="sechead"><h2 data-help="What the Association needs from your club right now — payments, meetings and notices. Each item links to where you deal with it.">What your club needs to do</h2><span class="pill neutral">This week</span></div>'+body+'</div>';
 }
+function obligationsCard(reg){
+  var bal=Number(HOME.balance)||0, over=Number(HOME.over)||0;
+  function row(label, pill, stmt, auth){
+    return '<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-top:1px solid var(--hair)">'
+      +'<div style="flex:0 0 118px;min-width:0"><b>'+label+'</b></div>'
+      +'<div style="flex:0 0 auto">'+pill+'</div>'
+      +'<div style="flex:1;min-width:140px"><div class="note" style="margin:0">'+stmt+'</div>'
+      +(auth?'<div class="note" style="margin-top:3px;font-size:11.5px;opacity:.8">'+auth+'</div>':'')+'</div></div>';
+  }
+  // Finance — the club's account standing
+  var finPill, finStmt;
+  if(HOME.out_of_compliance){ finPill='<span class="pill bad"><span class="dot"></span>Out of compliance</span>'; finStmt='An amount of '+money(over>0?over:bal)+' is outstanding'+(HOME.ooc_since?(' since '+dateZA(HOME.ooc_since)):'')+'. Settle it in full and send proof of payment to the Treasurer.'; }
+  else if(over>0){ finPill='<span class="pill warn"><span class="dot"></span>Overdue</span>'; finStmt=money(over)+' is overdue. Please settle and send proof of payment to the Treasurer.'; }
+  else if(bal>0){ finPill='<span class="pill warn"><span class="dot"></span>Balance owing</span>'; finStmt=money(bal)+' is payable on your account. Please settle within terms.'; }
+  else if(bal<0){ finPill='<span class="pill credit"><span class="dot"></span>In credit</span>'; finStmt='Your account is '+money(-bal)+' in credit.'; }
+  else { finPill='<span class="pill good"><span class="dot"></span>Up to date</span>'; finStmt='Your account is settled. Nothing is due.'; }
+  var asat=HOME.as_at?(' As at '+dateZA(HOME.as_at)+'.'):'';
+  // Delegate voting eligibility — governed by the compliance rule, not the same thing as match eligibility
+  var votePill, voteStmt;
+  if(HOME.out_of_compliance){ votePill='<span class="pill bad"><span class="dot"></span>Suspended</span>'; voteStmt='Delegate voting rights are suspended while your club is out of compliance. They are restored once the account is settled.'; }
+  else { votePill='<span class="pill good"><span class="dot"></span>Eligible</span>'; voteStmt='Your accredited delegate may vote at LFA meetings.'; }
+  // Membership category
+  var memLabel=(HOME.type==='full'?'Full member':(HOME.type==='associate'?'Associate member':'Not set'));
+  var memPill='<span class="pill neutral"><span class="dot"></span>'+memLabel+'</span>';
+  // Player registrations
+  var hasPlayers=(reg&&reg.players!=null);
+  var players=hasPlayers?num(reg.players):'—';
+  var cyc=(reg&&reg.cycle_label)?esc(reg.cycle_label)+' cycle':'this cycle';
+  var regPill='<span class="pill neutral"><span class="dot"></span>'+(hasPlayers?players+' registered':'—')+'</span>';
+  var regStmt=hasPlayers?(players+' player'+(Number(reg.players)===1?'':'s')+' registered in the '+cyc+'.'):'No registrations captured for this cycle yet.';
+  var body=''
+    +row('Finance', finPill, finStmt+asat, 'LFA finance office. Affects your account and your delegate voting standing.')
+    +row('Delegate voting', votePill, voteStmt, 'Constitutional compliance rule. A voting-rights standing, not a decision on any team&rsquo;s eligibility to play.')
+    +row('Membership', memPill, 'Your club&rsquo;s membership category with the Association.', 'Set by the LFA. Determines your rights as a member.')
+    +row('Player registrations', regPill, regStmt, 'SAFA registration. Only registered players are eligible for selection.');
+  return '<div class="card"><div class="sechead"><h2 data-help="Your standing with the Association across each area. Each line is governed separately, so they are shown on their own rather than as one score.">Your standing with the Association</h2></div>'
+    +body
+    +'<p class="note" style="margin-top:12px;border-top:1px solid var(--hair);padding-top:10px">Each area is shown on its own because each is governed separately. A finance or voting standing is not a determination of any team&rsquo;s eligibility to play &mdash; match eligibility and discipline are dealt with under the competition rules. Please contact the Treasurer (treasurer@cttfa.co.za) with any query.</p></div>';
+}
 function renderOverview(meet, reg){
   var p=PROFILE||{}, bal=Number(HOME.balance)||0, over=Number(HOME.over)||0;
   var divs = myDivisions();
@@ -520,6 +559,7 @@ function renderOverview(meet, reg){
       +'<div class="stat"><div class="sl">Registered players</div><div class="sv">'+(reg&&reg.players!=null?num(reg.players):'—')+'</div><div class="sn">'+(reg&&reg.cycle_label?esc(reg.cycle_label)+' cycle':'this cycle')+'</div></div>'
       +'<div class="stat"><div class="sl">Teams entered</div><div class="sv">'+esc(teamsN)+'</div><div class="sn">2026 competitions</div></div>'
     +'</div></div>';
+  html+=obligationsCard(reg);
   html+='<div class="grid2">';
   html+='<div class="card"><div class="sechead"><h2>Your teams this season</h2><button class="btn ghost sm" onclick="showTab(\'league\')">Full tables &amp; fixtures</button></div>';
   if(!divs.length){ html+='<p class="empty">We could not match your club to the published league feed yet. Your standings and fixtures will appear here once the season linking is confirmed.</p>'; }
