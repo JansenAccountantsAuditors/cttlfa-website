@@ -61,7 +61,7 @@
     var upd=season&&season.updated;
     var fxAgeH=upd?(Date.now()-new Date(upd).getTime())/3.6e6:null;
     var fxState=(upd==null)?{w:'Not reachable',c:'warn'}:(fxAgeH>12?{w:'Ageing',c:'warn'}:{w:'Fresh',c:'ok'});
-    var fxTile=shTile('League &amp; fixtures feed',shPill(fxState.w,fxState.c),[
+    var fxTile=shTile('League & fixtures feed',shPill(fxState.w,fxState.c),[
         ['Feed updated',upd?(shDT(upd)+' ('+shAgo(upd)+')'):'could not load season.json'],
         ['Season',(season&&season.label)?NS.esc(season.label):'&mdash;']
       ],(upd&&fxAgeH>12)?'The public league feed has not refreshed in over 12 hours; run the LeagueRepublic refresh in Website Admin.':'The public league and fixtures feed is current.');
