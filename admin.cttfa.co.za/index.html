@@ -1086,7 +1086,7 @@
     if(name==="webadmin" && typeof renderWebadmin==="function") renderWebadmin();
     if(name==="fincom" && typeof renderFincom==="function") renderFincom();
     if(name==="webstats" && typeof renderWebstats==="function") renderWebstats();
-    if(name==="syshealth" && typeof renderSysHealth==="function") window.AC.renderSysHealth();
+    if(name==="syshealth" && window.AC && window.AC.renderSysHealth) window.AC.renderSysHealth();
     if(name==="debtors" && typeof renderDebtors==="function") renderDebtors();
     if(name==="clubportal" && typeof renderClubPortal==="function") renderClubPortal();
     if(name==="clubdb" && typeof renderClubDatabase==="function") renderClubDatabase();
