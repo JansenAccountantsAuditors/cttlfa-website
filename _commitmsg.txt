@@ -1,11 +1,11 @@
-C09: club resources tab on the portal
+C10 (phone): fix obligations rows overflowing on narrow phones
 
-Adds a Resources tab to the club portal: how to pay (with the club's own
-payment reference), sending proof of payment, delegate voting, notices,
-managing the club record, and who to contact. Uses only true content and
-the club's live data (portal_home); no fabricated fee schedule. Marks the
-fee schedule, forms, course dates and insurance contacts as to be added
-as they are published. Front-end only; no new backend.
+The obligations register rows used fixed-width flex columns that could
+overflow the card on a ~360px phone. Restructured so the label and status
+pill sit on one wrapping line with the statement below, no fixed widths.
+Portal tab bar already scrolls horizontally and stats/grids/tables already
+collapse, so no other portal mobile change needed. Access-scope half of
+C10 not built (declined under D2).
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX
