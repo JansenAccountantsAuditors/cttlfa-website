@@ -1,11 +1,11 @@
-C05 (part): delivery vs formal service note on correspondence tab
+C09: club resources tab on the portal
 
-Adds a standing governance note to the club portal correspondence tab:
-the copies shown are for reference, and formal notice or service of a
-document is effected per the Constitution and rules, not by a message
-appearing here or being opened. Confirmed portal_correspondence already
-excludes test-mode and failed/error sends, so no test send is shown to a
-club as received correspondence.
+Adds a Resources tab to the club portal: how to pay (with the club's own
+payment reference), sending proof of payment, delegate voting, notices,
+managing the club record, and who to contact. Uses only true content and
+the club's live data (portal_home); no fabricated fee schedule. Marks the
+fee schedule, forms, course dates and insurance contacts as to be added
+as they are published. Front-end only; no new backend.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX

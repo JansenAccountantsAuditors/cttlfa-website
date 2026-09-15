@@ -258,6 +258,7 @@
       <button role="tab" id="tabFinanceBtn" aria-selected="false" onclick="showTab('finance')">Finance</button>
       <button role="tab" id="tabCorrBtn" aria-selected="false" onclick="showTab('corr')">Correspondence</button>
       <button role="tab" id="tabClubBtn" aria-selected="false" onclick="showTab('club')">Club admin</button>
+      <button role="tab" id="tabResourcesBtn" aria-selected="false" onclick="showTab('resources')">Resources</button>
       <button role="tab" id="tabHelpBtn" aria-selected="false" onclick="showTab('help')">Help</button>
     </div>
   </div>
@@ -289,6 +290,10 @@
       <div class="loading" id="clLoading">Loading club admin&hellip;</div>
       <div id="clBody" hidden></div>
     </div>
+    <div id="tab-resources" hidden>
+      <div class="loading" id="reLoading">Loading resources&hellip;</div>
+      <div id="reBody" hidden></div>
+    </div>
     <div id="tab-help" hidden>
       <div class="loading" id="hpLoading">Loading the guide&hellip;</div>
       <div id="hpBody" hidden></div>
@@ -311,7 +316,7 @@ var CONFIG = {
 };
 var sb = window.supabase.createClient(CONFIG.SUPA_URL, CONFIG.SUPA_ANON);
 var mode='signin', HOME=null, PROFILE=null, SEASON=null, MEMBERS=null;
-var LEAGUE_DONE=false, REG_DONE=false, FIN_DONE=false, CORR_DONE=false, CLUB_DONE=false, HELP_DONE=false;
+var LEAGUE_DONE=false, REG_DONE=false, FIN_DONE=false, CORR_DONE=false, CLUB_DONE=false, RES_DONE=false, HELP_DONE=false;
 var HELP_WIRED=false, _helpBubble=null;
 
 /* ---------------- helpers ---------------- */
@@ -383,7 +388,7 @@ el('btnSignout').addEventListener('click', async function(){ await sb.auth.signO
 
 /* ---------------- tabs ---------------- */
 function showTab(t){
-  ['overview','league','reg','finance','corr','club','help'].forEach(function(x){
+  ['overview','league','reg','finance','corr','club','resources','help'].forEach(function(x){
     el('tab-'+x).hidden = (x!==t);
     var b=el('tab'+x.charAt(0).toUpperCase()+x.slice(1)+'Btn'); if(b) b.setAttribute('aria-selected', x===t);
   });
@@ -392,6 +397,7 @@ function showTab(t){
   if(t==='finance' && !FIN_DONE){ FIN_DONE=true; loadFinance(); }
   if(t==='corr' && !CORR_DONE){ CORR_DONE=true; loadCorr(); }
   if(t==='club' && !CLUB_DONE){ CLUB_DONE=true; loadClub(); }
+  if(t==='resources' && !RES_DONE){ RES_DONE=true; loadResources(); }
   if(t==='help' && !HELP_DONE){ HELP_DONE=true; loadHelp(); }
   try{ window.scrollTo({top:0,behavior:'smooth'}); }catch(e){}
 }
@@ -885,6 +891,42 @@ function statementPDF(){
     stRenderInto(doc,c,stx,S); stFooters(doc,S);
     doc.save('CTTLFA Statement - '+String(stx.name||'club').replace(/[^A-Za-z0-9 ]/g,'').trim()+' - '+stIso(new Date())+'.pdf');
   }catch(e){ alert('Could not generate the statement PDF: '+(e.message||e)); }
+}
+
+/* ---------------- RESOURCES ---------------- */
+function resItem(title, body, action){
+  return '<div style="padding:12px 0;border-top:1px solid var(--hair)">'
+    +'<b>'+title+'</b><div class="note" style="margin-top:3px">'+body+'</div>'
+    +(action?'<div style="margin-top:8px">'+action+'</div>':'')+'</div>';
+}
+function loadResources(){
+  var code=(HOME&&HOME.code)?esc(HOME.code):'your club code';
+  var h='';
+  h+='<div class="card"><div class="sechead"><h2 data-help="Practical links and contacts for dealing with the Association. The season fee schedule, forms and other documents will be added here as they are published.">Club resources</h2></div>'
+    +'<p class="note" style="margin:0">Everything a club officer needs to deal with the Association, in one place. More documents will be added here through the season.</p></div>';
+  // Paying the Association
+  h+='<div class="card"><div class="sechead"><h2>Paying the Association</h2></div>'
+    +resItem('Your payment reference','Use <b>'+code+'</b> as the reference on every payment so it is allocated to your club&rsquo;s account. Payments without a reference take longer to match.','')
+    +resItem('Send proof of payment','Email your proof of payment to the Treasurer so your account can be updated. Sending proof does not settle the account until Finance has verified the payment against the ledger.','<a class="btn gold sm" href="mailto:treasurer@cttfa.co.za?subject=Proof%20of%20payment%20%E2%80%94%20'+code+'">Email proof of payment</a>')
+    +resItem('Your statement and balance','Your balance, ageing and full statement are on the Finance tab.','<button class="btn ghost sm" onclick="showTab(\'finance\')">Open Finance</button>')
+    +'</div>';
+  // Meetings and voting
+  h+='<div class="card"><div class="sechead"><h2>Meetings and voting</h2></div>'
+    +resItem('Delegate voting','Accredited club delegates vote at LFA meetings from the delegate voting site once a meeting goes live.','<a class="btn ghost sm" href="https://vote.cttfa.co.za" target="_blank" rel="noopener">Delegate voting &#8599;</a>')
+    +resItem('Notices and correspondence','Copies of letters and statements the LFA has sent your club are kept on the Correspondence tab.','<button class="btn ghost sm" onclick="showTab(\'corr\')">Open Correspondence</button>')
+    +'</div>';
+  // Managing your club record
+  h+='<div class="card"><div class="sechead"><h2>Managing your club record</h2></div>'
+    +resItem('Update your club details','Change your ground, contact person, website and office-bearers from Club admin. Changes go to the LFA office for approval before they publish.','<button class="btn ghost sm" onclick="showTab(\'club\')">Open Club admin</button>')
+    +resItem('Upload your constitution','Upload your club&rsquo;s current constitution (PDF, photo or scan) from Club admin so Mancom can view it.','<button class="btn ghost sm" onclick="showTab(\'club\')">Open Club admin</button>')
+    +resItem('Members and registrations','Your registered members and player counts are on the Members tab.','<button class="btn ghost sm" onclick="showTab(\'reg\')">Open Members</button>')
+    +'</div>';
+  // Who to contact + coming soon
+  h+='<div class="card"><div class="sechead"><h2>Who to contact</h2></div>'
+    +resItem('Finance, affiliation and general queries','Contact the Treasurer at <a href="mailto:treasurer@cttfa.co.za">treasurer@cttfa.co.za</a> for any account, affiliation or general query.','')
+    +'<p class="note" style="margin-top:12px;border-top:1px solid var(--hair);padding-top:10px">Coming to this page as they are published for the season: the fee schedule, registration and transfer forms, coaching-course dates, and insurance and safeguarding contacts.</p>'
+    +'</div>';
+  el('reBody').innerHTML=h; el('reLoading').hidden=true; el('reBody').hidden=false;
 }
 
 /* ---------------- CORRESPONDENCE ---------------- */
