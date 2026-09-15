@@ -836,11 +836,12 @@ async function loadCorr(){
 /* ---------------- CLUB ADMIN (self-service) ---------------- */
 async function loadClub(){
   var p=PROFILE||{};
-  var res=await Promise.all([ sb.rpc('portal_edit_current'), sb.rpc('portal_exec_list'), sb.rpc('portal_docs_list'), sb.rpc('portal_members',{}) ]);
+  var res=await Promise.all([ sb.rpc('portal_edit_current'), sb.rpc('portal_exec_list'), sb.rpc('portal_docs_list'), sb.rpc('portal_members',{}), sb.rpc('portal_contact_current') ]);
   var pending=(res[0]&&res[0].data&&res[0].data.has)?res[0].data:null;
   var execs=(res[1]&&res[1].data)||[];
   var docs=(res[2]&&res[2].data)||[];
   var mem=(res[3]&&res[3].data)||{members:[]};
+  var con=(res[4]&&res[4].data)||{}; window.CLUB_CONTACT0=con;
   var h='';
   if(pending){ h+='<div class="pendbar"><b>Profile changes awaiting approval.</b> You submitted updates on '+dateZA(pending.submitted_at)+'. They will appear on the public site and LFA records once the office approves them.</div>'; }
 
@@ -861,10 +862,10 @@ async function loadClub(){
     +'</div>'
     +'<div class="subcard"><h3>Primary contact</h3><p class="note" style="margin:0 0 12px">The person the LFA contacts about your club.</p>'
     +'<div class="editgrid">'
-    +fld('Contact name','ef_cname','')
-    +fld('Contact email','ef_cemail','','email')
-    +fld('Copy-to email (optional)','ef_ccc','','email')
-    +fld('Contact phone','ef_cphone','','tel')
+    +fld('Contact name','ef_cname',con.name||'')
+    +fld('Contact email','ef_cemail',con.email||'','email')
+    +fld('Copy-to email (optional)','ef_ccc',con.cc_email||'','email')
+    +fld('Contact phone','ef_cphone',con.phone||'','tel')
     +'</div></div>'
     +'<div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:16px"><button class="btn gold sm" id="ef_submit" type="button">Submit changes for approval</button><span id="ef_msg" style="font-size:13.5px"></span></div>'
     +'<p class="note">To change your crest, paste a public image link above, or email a high-resolution logo to the LFA office. Nothing changes on the public site until the office approves your submission.</p>'
@@ -886,9 +887,9 @@ async function loadClub(){
 
   // Constitution
   h+='<div class="card"><div class="sechead"><h2>Club constitution &amp; documents</h2></div>'
-    +'<p class="note" style="margin:0 0 14px">Upload your club’s current constitution (PDF). Mancom can view it. Uploading a new version replaces the previous one.</p>'
+    +'<p class="note" style="margin:0 0 14px">Upload your club’s current constitution (PDF, or a clear photo or scan). Mancom can view it. Uploading a new version replaces the previous one.</p>'
     +'<div id="docList"></div>'
-    +'<div class="drop" id="docDrop" style="margin-top:12px"><b>Upload constitution (PDF)</b><div style="margin-top:8px"><input type="file" id="docFile" accept="application/pdf,image/jpeg,image/png"></div><div id="docMsg" style="margin-top:8px;font-size:13px"></div></div>'
+    +'<div class="drop" id="docDrop" style="margin-top:12px"><b>Upload constitution (PDF or image)</b><div style="margin-top:8px"><input type="file" id="docFile" accept="application/pdf,image/jpeg,image/png"></div><div id="docMsg" style="margin-top:8px;font-size:13px"></div></div>'
     +'</div>';
 
   el('clBody').innerHTML=h; el('clLoading').hidden=true; el('clBody').hidden=false;
@@ -939,14 +940,17 @@ async function uploadDoc(ev){
 async function submitClubEdit(){
   var m=el('ef_msg'); m.style.color='var(--muted)'; m.textContent='Submitting…';
   function v(id){ return (el(id)&&el(id).value.trim())||''; }
+  function orig(o,k){ return (o&&o[k]!=null)?String(o[k]).trim():''; }
+  var P=PROFILE||{}, K=window.CLUB_CONTACT0||{};
+  // Send only fields that actually changed. An emptied prefilled field is a deliberate clear.
   var profile={};
-  ['ground','suburb','website','facebook','logo'].forEach(function(k){ profile[k]=v('ef_'+k); });
-  var founded=v('ef_founded'); if(founded) profile.founded=founded;
-  var lat=v('ef_lat'), lng=v('ef_lng'); if(lat) profile.lat=lat; if(lng) profile.lng=lng;
+  ['ground','suburb','website','facebook','logo','founded','lat','lng'].forEach(function(k){
+    var cur=v('ef_'+k); if(cur!==orig(P,k)) profile[k]=cur;
+  });
   var contact={};
-  var cn=v('ef_cname'), ce=v('ef_cemail'), cc=v('ef_ccc'), cp=v('ef_cphone');
-  if(cn) contact.name=cn; if(ce) contact.email=ce; if(cc) contact.cc_email=cc; if(cp) contact.phone=cp;
-  Object.keys(profile).forEach(function(k){ if(profile[k]==='') delete profile[k]; });
+  [['name','ef_cname'],['email','ef_cemail'],['cc_email','ef_ccc'],['phone','ef_cphone']].forEach(function(pr){
+    var cur=v(pr[1]); if(cur!==orig(K,pr[0])) contact[pr[0]]=cur;
+  });
   if(Object.keys(profile).length===0 && Object.keys(contact).length===0){ m.style.color='var(--bad)'; m.textContent='Enter at least one change to submit.'; return; }
   el('ef_submit').disabled=true;
   var r=await sb.rpc('portal_edit_submit',{p_changes:{profile:profile, contact:contact}});
