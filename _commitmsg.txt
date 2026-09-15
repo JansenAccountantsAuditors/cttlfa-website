@@ -1,9 +1,11 @@
-T05: cache-bust js/50-system.js (?v=2)
+T05: fix System Health module — namespace param A collided with local A
 
-The System Health module is correct on the server (verified: closure over
-window.AC, helpers via A.*), but the browser/edge was serving the stale
-broken js/50-system.js from the first attempt because the filename was
-unchanged. Versioning the URL forces a fresh fetch so the new module loads.
+Real cause of the stuck "Loading system health": sysHealthHtml has its own
+local var A (= data.agent), which shadowed the closure's namespace parameter
+also named A, so A.esc/A.dR resolved to data.agent.esc (undefined). Renamed
+the namespace parameter to NS throughout (NS.esc/NS.dR/NS.sb/NS.$), leaving
+the local A (data.agent) untouched. Bumped the cache-bust to v=3. Confirmed
+in the live browser via the sys_health RPC + a direct render call.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX
