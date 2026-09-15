@@ -1,14 +1,11 @@
-C03 upcoming fixtures on overview + C05 information centre marked to come
+T05 step 0: externalise logo blob to js/00-logo.js (pipeline proof)
 
-C03: adds an "Your upcoming fixtures" card to the portal overview, the
-club's own next five fixtures by date and kick-off from the season feed,
-leading the football section ahead of the league-table stack. Full list
-and tables remain on the League & Fixtures tab. Reuses the existing
-myUpcoming season matching.
-
-C05: marks the wider information centre (circulars, agendas, minutes,
-resolutions) as a planned "To come" build on the correspondence tab,
-pending office document-workflow integration.
+First modularisation step. Moves the ~5.6KB base64 logo data URI out of an
+inline script in admin index.html into js/00-logo.js, loaded via an ordered
+script tag after the CDN libraries. Establishes the js/ module folder and
+the ordered-static-scripts approach; extends _jscheck.py to node --check
+js/*.js as well as inline blocks. No behaviour change: window.LOGO_URI is
+defined before the app block, as before. Revertable on its own.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX
