@@ -631,15 +631,17 @@ function drawReg(reg){
     +'<div class="stat"><div class="sl">Juniors</div><div class="sv">'+num(jnr)+'</div><div class="sn">under 18</div></div>'
     +'<div class="stat"><div class="sl">Foreign players</div><div class="sv">'+num(frn)+'</div><div class="sn">foreign ID renews yearly</div></div>'
     +'</div></div>';
-  h+='<div class="card"><div class="sechead"><h2 data-help="Search by name, SAFA number, ID number or category. The SAFA number stays the same each cycle; a foreign player’s ID is re-issued each year, so check it against your latest card. Download CSV gives you the full list for your records.">Your registered members</h2><button class="btn ghost sm" id="mCsv">Download CSV</button></div>'
+  h+='<div class="card"><div class="sechead"><h2 data-help="Search by name, SAFA number, ID number or category. The SAFA number stays the same each cycle; a foreign player’s ID is re-issued each year, so check it against your latest card. Download CSV gives you the full list for your records.">Your registered members</h2><span style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost sm" id="mReveal" type="button" aria-pressed="false">Show ID numbers</button><button class="btn ghost sm" id="mCsv">Download CSV</button></span></div>'
     +'<div class="toolbar"><div class="search"><input type="text" id="mSearch" placeholder="Search by name, SAFA number, ID number or category…" autocomplete="off"></div></div>'
     +'<div class="tblwrap"><table><thead><tr><th>Name</th><th>Category</th><th>SAFA number</th><th>ID number</th><th>Club</th><th>Type</th></tr></thead><tbody id="mBody"></tbody></table></div>'
     +'<p class="note" id="mCount"></p>'
-    +'<p class="note">This is your club’s own registered roll as held by the Association, shown so you can reconcile it against your own records rather than guess what we hold. It contains personal information: please keep it confidential and use it only for your club’s registration administration (Protection of Personal Information Act 4 of 2013). A player’s SAFA number stays the same each cycle; a foreign player is flagged because their foreign ID is re-issued annually. Registration certificates or corrections: treasurer@cttfa.co.za.</p></div>';
+    +'<p class="note">This is your club’s own registered roll as held by the Association, shown so you can reconcile it against your own records rather than guess what we hold. It contains personal information: please keep it confidential and use it only for your club’s registration administration (Protection of Personal Information Act 4 of 2013). For privacy, ID numbers are hidden by default; use “Show ID numbers” to reveal them, and a downloaded CSV keeps them hidden unless you have revealed them first. A player’s SAFA number stays the same each cycle; a foreign player is flagged because their foreign ID is re-issued annually. Registration certificates or corrections: treasurer@cttfa.co.za.</p></div>';
   el('rgBody').innerHTML=h;
   var sel=el('rgCycle'); if(sel) sel.onchange=function(){ REG_DONE=true; el('rgLoading').hidden=false; el('rgBody').hidden=true; loadReg(sel.value); };
   var s=el('mSearch'); if(s){ s.oninput=function(){ drawMembers(s.value); }; }
   var c=el('mCsv'); if(c) c.onclick=membersCSV;
+  window.MEM_SHOW_IDS=false;
+  var rv=el('mReveal'); if(rv) rv.onclick=function(){ window.MEM_SHOW_IDS=!window.MEM_SHOW_IDS; rv.textContent=window.MEM_SHOW_IDS?'Hide ID numbers':'Show ID numbers'; rv.setAttribute('aria-pressed', window.MEM_SHOW_IDS?'true':'false'); drawMembers(el('mSearch')?el('mSearch').value:''); };
   drawMembers('');
 }
 function catTag(x){
@@ -648,6 +650,7 @@ function catTag(x){
   var cls=(c==='Senior'?'snr':(c==='Junior'?'jnr':'uncat'));
   return '<span class="mtag '+cls+'">'+esc(c)+'</span>'+(x.foreign?'<span class="mtag frn" title="Foreign player – foreign ID re-issued each year">Foreign</span>':'');
 }
+function maskId(v){ var s=String(v==null?'':v).trim(); if(!s) return ''; if(s.length<=4) return '••••'; return new Array(Math.max(3,s.length-4)+1).join('•')+s.slice(-4); }
 function drawMembers(q){
   q=(q||'').toLowerCase().trim();
   var list=(MEMBERS&&MEMBERS.members)||[];
@@ -659,7 +662,7 @@ function drawMembers(q){
   var b='';
   if(!rows.length){ b='<tr><td colspan="6" class="empty">'+(list.length?'No members match your search.':'No members on record for this cycle.')+'</td></tr>'; }
   else rows.forEach(function(x){ var nm=((x.surname||'')+', '+(x.first_name||'')).replace(/^, |, $/,'');
-    b+='<tr><td>'+esc(nm)+'</td><td>'+catTag(x)+'</td><td class="mono">'+esc(x.safa||'')+'</td><td class="mono">'+esc(x.id_number||'')+'</td><td>'+esc(x.club||'')+'</td><td>'+(x.type==='referee'?'Official':'Player')+'</td></tr>'; });
+    b+='<tr><td>'+esc(nm)+'</td><td>'+catTag(x)+'</td><td class="mono">'+esc(x.safa||'')+'</td><td class="mono">'+(window.MEM_SHOW_IDS?esc(x.id_number||''):maskId(x.id_number))+'</td><td>'+esc(x.club||'')+'</td><td>'+(x.type==='referee'?'Official':'Player')+'</td></tr>'; });
   el('mBody').innerHTML=b;
   var cnt=el('mCount'); if(cnt) cnt.textContent='Showing '+rows.length+' of '+list.length+' members'+(MEMBERS&&MEMBERS.cycle_label?(' · '+MEMBERS.cycle_label+' cycle'):'');
 }
@@ -668,7 +671,7 @@ function membersCSV(){
   var cy=(MEMBERS&&MEMBERS.cycle_label)||'';
   var out='Surname,First name,Category,SAFA number,ID number,Club,Foreign,Type,Card cycle\r\n';
   list.forEach(function(x){ function q(s){ s=String(s==null?'':s); return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
-    out+=[q(x.surname),q(x.first_name),q(x.category),q(x.safa),q(x.id_number),q(x.club),(x.foreign?'Yes':'No'),(x.type==='referee'?'Official':'Player'),q(cy)].join(',')+'\r\n'; });
+    out+=[q(x.surname),q(x.first_name),q(x.category),q(x.safa),(window.MEM_SHOW_IDS?q(x.id_number):q(maskId(x.id_number))),q(x.club),(x.foreign?'Yes':'No'),(x.type==='referee'?'Official':'Player'),q(cy)].join(',')+'\r\n'; });
   dl((HOME.name||'club').replace(/[^A-Za-z0-9]+/g,'_')+'_members.csv', out, 'text/csv');
 }
 
