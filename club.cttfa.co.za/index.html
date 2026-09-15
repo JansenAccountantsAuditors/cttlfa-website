@@ -466,13 +466,38 @@ function crestHTML(size){
   if(PROFILE&&PROFILE.logo){ return '<div class="badge" style="width:'+s+'px;height:'+s+'px"><img src="'+esc(PROFILE.logo)+'" alt="'+esc(HOME.name)+' crest" onerror="this.parentNode.innerHTML=\'<span class=&quot;ini&quot;>'+initials(HOME.name)+'</span>\'"></div>'; }
   return '<div class="badge" style="width:'+s+'px;height:'+s+'px"><span class="ini">'+initials(HOME.name)+'</span></div>';
 }
+function caActionsCard(meet){
+  var bal=Number(HOME.balance)||0, over=Number(HOME.over)||0, acts=[];
+  if(HOME.out_of_compliance){
+    acts.push({sev:'bad', t:'Your club is out of compliance', d:'An amount of '+money(over>0?over:bal)+' is outstanding'+(HOME.ooc_since?(' since '+dateZA(HOME.ooc_since)):'')+'. Settle it in full and send proof of payment to the Treasurer to restore your club&rsquo;s good standing.', tab:'finance', btn:'Open account'});
+  } else if(over>0){
+    acts.push({sev:'warn', t:money(over)+' is overdue on your account', d:'Please settle the overdue amount and send proof of payment to the Treasurer.', tab:'finance', btn:'Open account'});
+  } else if(bal>0){
+    acts.push({sev:'warn', t:money(bal)+' is payable', d:'Your account has a balance owing. Please settle within terms.', tab:'finance', btn:'Open account'});
+  }
+  if(meet && meet.has){
+    acts.push({sev:'info', t:'Next meeting: '+esc(meet.name||'CTTLFA meeting'), d:(meet.date?dateZA(meet.date):'')+(meet.venue?(' &middot; '+esc(meet.venue)):'')+'. Accredited club delegates vote at vote.cttfa.co.za when it goes live.', tab:null, btn:null});
+  }
+  var st={bad:['#fbeceb','#9A3130','Action'], warn:['#fbf1e2','#9F6621','Attention'], info:['#eef2fb','#071A4A','For info']};
+  var body;
+  if(!acts.length){
+    body='<p class="note" style="margin:0">Nothing currently required from your club. Anything the LFA needs — a payment, a document, a meeting response — will show here.</p>';
+  } else {
+    body=acts.map(function(a){ var c=st[a.sev]||st.info;
+      return '<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-top:1px solid var(--hair)">'
+        +'<span class="pill" style="background:'+c[0]+';color:'+c[1]+';white-space:nowrap"><span class="dot" style="background:'+c[1]+'"></span>'+c[2]+'</span>'
+        +'<div style="flex:1;min-width:0"><b>'+a.t+'</b><div class="note" style="margin-top:2px">'+a.d+'</div></div>'
+        +(a.tab?'<button class="btn gold sm" style="flex:0 0 auto" onclick="showTab(\''+a.tab+'\')">'+esc(a.btn||'Open')+'</button>':'')
+        +'</div>';
+    }).join('');
+  }
+  return '<div class="card"><div class="sechead"><h2 data-help="What the Association needs from your club right now — payments, meetings and notices. Each item links to where you deal with it.">What your club needs to do</h2><span class="pill neutral">This week</span></div>'+body+'</div>';
+}
 function renderOverview(meet, reg){
   var p=PROFILE||{}, bal=Number(HOME.balance)||0, over=Number(HOME.over)||0;
   var divs = myDivisions();
   var html='';
-  if(HOME.out_of_compliance){
-    html+='<div class="ooc"><b>Your club is currently Out of Compliance.</b><p>An amount of '+money(over>0?over:bal)+' is outstanding'+(HOME.ooc_since?(' (since '+dateZA(HOME.ooc_since)+')'):'')+'. Settle the arrears in full and send proof of payment to the Treasurer to restore your club’s good standing.</p></div>';
-  }
+  html+=caActionsCard(meet);
   var subBits=[];
   if(p.ground) subBits.push('<span>&#9917; '+esc(p.ground)+(p.suburb?(', '+esc(p.suburb)):'')+'</span>');
   else if(p.suburb) subBits.push('<span>&#9917; '+esc(p.suburb)+'</span>');
