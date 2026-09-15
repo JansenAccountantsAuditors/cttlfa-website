@@ -1,11 +1,10 @@
-T05 step 0: externalise logo blob to js/00-logo.js (pipeline proof)
+T05 step A: publish shared foundation to window.AC (additive)
 
-First modularisation step. Moves the ~5.6KB base64 logo data URI out of an
-inline script in admin index.html into js/00-logo.js, loaded via an ordered
-script tag after the CDN libraries. Establishes the js/ module folder and
-the ordered-static-scripts approach; extends _jscheck.py to node --check
-js/*.js as well as inline blocks. No behaviour change: window.LOGO_URI is
-defined before the app block, as before. Revertable on its own.
+Publishes the core helpers (sb, $, esc, msg, dR, canSee, canEdit, goTab)
+onto a window.AC namespace from inside the app closure, so extracted
+module files can reach them. Additive only — nothing is removed and no
+code path changes, so behaviour is unchanged. This is the bridge the
+strict-mode closure needs before any feature module can move out.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX

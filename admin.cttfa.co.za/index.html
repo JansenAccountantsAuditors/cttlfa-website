@@ -991,6 +991,14 @@
   function msg(el,t,cls){el.innerHTML='<div class="msg '+cls+'">'+esc(t)+'</div>';}
   function code(){var A="ABCDEFGHJKMNPQRSTUVWXYZ23456789",s="";for(var i=0;i<6;i++)s+=A[Math.floor(Math.random()*A.length)];return s;}
 
+  /* T05 modularisation: publish the shared foundation to a namespace that both this
+     closure and the extracted js/*.js module files can reach. Additive only — nothing
+     is removed here, so behaviour is unchanged. dR/canSee/canEdit/goTab are hoisted
+     function declarations defined later in this closure; sb and $ are assigned above. */
+  window.AC = window.AC || {};
+  window.AC.sb = sb; window.AC.$ = $; window.AC.esc = esc; window.AC.msg = msg;
+  window.AC.dR = dR; window.AC.canSee = canSee; window.AC.canEdit = canEdit; window.AC.goTab = goTab;
+
   try{document.getElementById("loginLogo").innerHTML='<img alt="CTTFA" src="'+LOGO+'">';document.getElementById("topLogo").innerHTML='<img alt="CTTFA" src="'+LOGO+'">';}catch(e){}
   var me=null, meRole=null, clubs=[], curMeeting=null, selectedPerson=null;
 
