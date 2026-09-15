@@ -4097,6 +4097,23 @@
         +'<span>Ledger balance at export</span><b>'+dR(txbal)+'</b>'
         +'<span>Movement since export</span><b>'+(unimp===null?'–':(Math.abs(unimp)<=0.01?'<span style="color:#1c5136">none — in sync</span>':(unimp<0?'<span style="color:#1c5136">'+dR(Math.abs(unimp))+' received/reduced</span>':'<span style="color:#9A3130">'+dR(unimp)+' invoiced/added</span>')))+'</b></div>';
     } else { h+='<p class="hint" style="font-size:12px">No transaction history is loaded for this club yet. Balance and ageing come from the live Sage Days-Outstanding report.</p>'; }
+    // case management
+    h+='<div class="deb-sec">Case</div>';
+    if(canW){
+      h+='<div id="debCaseForm">'
+        +'<label style="font-size:11px;color:#59666b;display:block;margin-bottom:5px">Owner<input type="text" id="debCaseOwner" value="'+esc(coll.owner||'')+'" placeholder="Who is following this up" style="display:block;width:100%;margin-top:2px;padding:5px 7px;border:1px solid #d2d8e4;border-radius:5px;font-size:13px"></label>'
+        +'<label style="font-size:11px;color:#59666b;display:block;margin-bottom:5px">Next action<input type="text" id="debCaseNext" value="'+esc(coll.next_action||'')+'" placeholder="Agreed next step" style="display:block;width:100%;margin-top:2px;padding:5px 7px;border:1px solid #d2d8e4;border-radius:5px;font-size:13px"></label>'
+        +'<label style="font-size:11px;color:#59666b;display:block;margin-bottom:5px">Dispute / query reason<textarea id="debCaseDispute" rows="2" placeholder="Any dispute or query on this account" style="display:block;width:100%;margin-top:2px;padding:5px 7px;border:1px solid #d2d8e4;border-radius:5px;font-size:13px;font-family:inherit;resize:vertical">'+esc(coll.dispute_reason||'')+'</textarea></label>'
+        +'<div><button class="btn sm" id="debCaseSave">Save case</button> <span class="hint" id="debCaseMsg" style="font-size:11px"></span></div>'
+        +'<div class="hint" style="font-size:11px;margin-top:4px">'+(coll.updated_by?'Last updated by '+esc(coll.updated_by):'')+(coll.updated_at?' · '+dDateZA(coll.updated_at):'')+'</div></div>';
+    } else {
+      if(coll.owner||coll.next_action||coll.dispute_reason){
+        h+='<div class="deb-kv">'
+          +'<span>Owner</span><b>'+(coll.owner?esc(coll.owner):'–')+'</b>'
+          +'<span>Next action</span><b>'+(coll.next_action?esc(coll.next_action):'–')+'</b>'
+          +(coll.dispute_reason?'<span>Dispute / query</span><b>'+esc(coll.dispute_reason)+'</b>':'')+'</div>';
+      } else { h+='<p class="hint" style="font-size:12px">No case owner or next action recorded.</p>'; }
+    }
     // contact
     h+='<div class="deb-sec">Club contact'+(canW?' <button class="deb-linkbtn" id="debCtEdit">edit</button>':'')+'</div><div id="debCtView">';
     if(_ct&&(_ct.name||_ct.email||_ct.phone||_ct.cc_email)){
@@ -4206,6 +4223,8 @@
     // club type
     var ts=document.getElementById('debTypeSel'), tMsg=document.getElementById('debTypeMsg');
     if(ts){ ts.onchange=async function(){ var v=ts.value; ts.disabled=true; if(tMsg) tMsg.textContent='Saving…'; try{ var rr=await sb.rpc('deb_club_type_set',{p_key:c.club_key,p_name:c.name,p_type:v}); if(rr.error) throw rr.error; if(tMsg) tMsg.textContent='Saved'; _deb=null; await renderDebtors(true); debOpenClub(key); }catch(e){ if(tMsg) tMsg.textContent='Could not save: '+(e.message||e); ts.disabled=false; } }; }
+    // case management
+    var _csv=document.getElementById('debCaseSave'); if(_csv) _csv.onclick=async function(){ var b=this; b.disabled=true; var msg=document.getElementById('debCaseMsg'); if(msg)msg.textContent='Saving…'; try{ var rr=await sb.rpc('deb_case_set',{p_key:c.club_key,p_name:c.name,p_owner:(document.getElementById('debCaseOwner')||{}).value||null,p_next_action:(document.getElementById('debCaseNext')||{}).value||null,p_dispute_reason:(document.getElementById('debCaseDispute')||{}).value||null}); if(rr.error) throw rr.error; if(msg)msg.textContent='Saved'; _deb=null; debOpenClub(key); }catch(e){ if(msg)msg.textContent='Could not save: '+(e.message||e); b.disabled=false; } };
     // contact edit
     var _ce=document.getElementById('debCtEdit'); if(_ce) _ce.onclick=function(){ var v=document.getElementById('debCtView'),f=document.getElementById('debCtForm'); if(v)v.style.display='none'; if(f)f.style.display='block'; };
     var _cx=document.getElementById('debCtCancel'); if(_cx) _cx.onclick=function(){ var v=document.getElementById('debCtView'),f=document.getElementById('debCtForm'); if(f)f.style.display='none'; if(v)v.style.display='block'; };
