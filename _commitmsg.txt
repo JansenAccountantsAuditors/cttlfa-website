@@ -1,11 +1,9 @@
-T05 step 1 (redo): extract System Health to js/50-system.js via window.AC
+T05: cache-bust js/50-system.js (?v=2)
 
-Redone under the corrected namespace method after the first attempt broke.
-System Health moves to js/50-system.js as a closure over window.AC; its
-core-helper calls ($, sb, esc, dR) are repointed to A.*, the sh* helpers
-and sysHealthHtml/sysRunbookHtml stay local, and the dispatcher now calls
-window.AC.renderSysHealth(). The module loads after the app block so
-window.AC is populated first. renderWebstats/LOOKER_URL left in place.
+The System Health module is correct on the server (verified: closure over
+window.AC, helpers via A.*), but the browser/edge was serving the stale
+broken js/50-system.js from the first attempt because the filename was
+unchanged. Versioning the URL forces a fresh fetch so the new module loads.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX
