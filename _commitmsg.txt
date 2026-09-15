@@ -1,10 +1,10 @@
-A05: debtor case workflow — owner, next action, dispute reason
+T03: correspondence idempotency — client handling for duplicate sends
 
-Adds a Case panel to the debtor drawer (admin centre) capturing the
-account owner, the agreed next action and any dispute or query reason,
-saved via the new write-gated deb_case_set RPC. Read-only display for
-users without debtors write access. Purely additive; existing status,
-stage, contact and notes machinery untouched.
+Frontend half of the duplicate-send guard. debSendOne tags a duplicate
+response so the batch correspondence run counts it as "already sent
+today, skipped" and marks the queue item sent, rather than a failure.
+Inert until the deb-send edge-function guard is deployed (production
+deploy, pending Treasurer approval).
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX

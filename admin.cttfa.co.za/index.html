@@ -3307,14 +3307,14 @@
     var heldNote=held.length?('\n\n'+held.length+' item'+(held.length>1?'s':'')+' held (unallocated cash in Sage or detail out of sync) and skipped. Review each from its club profile.'):'';
     if(!(await debConfirm('Send '+sendItems.length+' email'+(sendItems.length>1?'s':'')+' now?\n\n'+to+'\n\nEach includes the branded statement PDF. Every send is logged for the audit file.'+heldNote, 'Send '+sendItems.length+' now'))) return;
     _corrBusy=true; var ot=btn?btn.textContent:''; if(btn){ btn.disabled=true; btn.textContent='Sending…'; }
-    var stat=document.getElementById('corrStatus'); var ok=0, fail=0;
+    var stat=document.getElementById('corrStatus'); var ok=0, fail=0, skip=0;
     for(var i=0;i<sendItems.length;i++){ var it=sendItems[i];
       if(stat) stat.textContent='Sending '+(i+1)+' of '+sendItems.length+': '+it.name+'…';
       var c=((_deb&&_deb.clubs)||[]).filter(function(x){return x.club_key===it.club_key;})[0] || {club_key:it.club_key,name:it.name,code:it.code,bal:it.bal,cur:it.cur,over:it.over,status:it.status};
       try{ await debSendOne(c, it.tier, {bypassGuard:true}); ok++; try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'sent'}); }catch(e){} }
-      catch(e){ fail++; try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'failed',p_error:String(e.message||e).slice(0,300)}); }catch(e2){} }
+      catch(e){ if(e&&e.duplicate){ skip++; try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'sent'}); }catch(e2){} } else { fail++; try{ await sb.rpc('deb_corr_mark',{p_id:it.id,p_status:'failed',p_error:String(e.message||e).slice(0,300)}); }catch(e2){} } }
     }
-    if(stat) stat.textContent='Sent '+ok+(fail?(' · '+fail+' failed'):'')+(held.length?(' · '+held.length+' held'):'')+(test?' (test mode — delivered to the Treasurer)':'')+'.';
+    if(stat) stat.textContent='Sent '+ok+(skip?(' · '+skip+' already sent today, skipped'):'')+(fail?(' · '+fail+' failed'):'')+(held.length?(' · '+held.length+' held'):'')+(test?' (test mode — delivered to the Treasurer)':'')+'.';
     try{ var r2=await sb.rpc('deb_corr_latest'); if(!r2.error) _corrRunData=r2.data||_corrRunData; }catch(e){}
     _corrBusy=false; debCorrMonthlyBody(dr); _deb=null;
   }
@@ -3746,7 +3746,7 @@
     }
     var r=await sb.functions.invoke('deb-send',{ body:{ club_key:c.club_key, name:c.name, code:c.code, trigger:trigger, subject:subject, html:html, text:text, attachments:atts } });
     if(r.error) throw new Error(r.error.message||r.error);
-    if(r.data && r.data.ok===false) throw new Error(r.data.error||'send failed');
+    if(r.data && r.data.ok===false){ var _de=new Error(r.data.error||'send failed'); if(r.data.duplicate){ _de.duplicate=true; _de.already_sent_at=r.data.already_sent_at; } throw _de; }
     return r.data;
   }
   async function debSendComposed(c, subject, bodyText, attachStmt, S, customAtt){
