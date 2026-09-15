@@ -362,6 +362,7 @@
         <div class="assoc">Cape Town Tygerberg Local Football Association</div>
         <p class="desc">The CTTLFA Admin Centre is the association&rsquo;s single online workspace for the Management Committee and staff. From one place you run meetings and voting, manage player registrations and club profiles, reach the website and discipline systems, follow fixtures and finances, and open the public site. Each function is its own module, brought together here so the whole association is administered from a single, secure home.</p>
       </div>
+      <div id="homeInbox" class="hidden" style="margin-top:16px"></div>
       <div class="homegrid">
         <div class="hmod" data-area="voting"><div class="hic voting"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Voting &amp; Meetings</h3><p>Run AGMs, SGMs and Mancom meetings — accreditation, motions, live secret ballots and the formal record.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="meetings">Open</button></div></div>
         <div class="hmod" data-area="registrations"><div class="hic reg"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></div><h3>Registrations &amp; Clubs</h3><p>The full SAFA card-cycle analytics and per-club profiles, with live teams, fixtures, results and CSV/PDF exports.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="registrations">Open</button></div></div>
@@ -1678,6 +1679,37 @@
     try{ var hc=$("homeCrest"); if(hc && typeof LOGO!=="undefined" && LOGO && !hc.firstChild) hc.innerHTML='<img src="'+LOGO+'" alt="CTTLFA crest">'; }catch(e){}
     try{ Array.prototype.forEach.call(document.querySelectorAll('#tab-home .hmod'),function(c){ var a=c.getAttribute('data-area'); c.style.display=canSee(a)?'':'none'; }); }catch(e){}
     try{ var un=document.querySelector('#sideNav .snav[data-tab="users"]'); if(un) un.style.display=(meRole==="administrator")?'':'none'; }catch(e){}
+    try{ await homeLoadInbox(); }catch(e){}
+  }
+  async function homeLoadInbox(){
+    var box=$("homeInbox"); if(!box) return;
+    if(meRole==="fincom"){ box.classList.add("hidden"); return; }
+    box.classList.remove("hidden");
+    box.innerHTML='<div class="card"><p class="hint">Loading your action queue&hellip;</p></div>';
+    var acts={items:[]}, season=null;
+    try{
+      var pr=await Promise.all([ sb.rpc('home_actions'), fetch('https://www.cttfa.co.za/season.json',{cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;}) ]);
+      if(pr[0].error) throw pr[0].error;
+      acts=pr[0].data||{items:[]}; season=pr[1];
+    }catch(e){ box.innerHTML='<div class="card"><h3 style="margin:0 0 4px">Your action queue</h3><p class="hint" style="color:#9A3130">Could not load the action queue: '+esc(e.message||String(e))+'</p></div>'; return; }
+    box.innerHTML=homeInboxHtml(acts, season);
+    Array.prototype.forEach.call(box.querySelectorAll('[data-goto]'),function(b){ b.onclick=function(){ goTab(b.getAttribute('data-goto')); }; });
+  }
+  function homeInboxHtml(acts, season){
+    var items=((acts&&acts.items)||[]).slice();
+    var upd=season&&season.updated, ageH=upd?(Date.now()-new Date(upd).getTime())/3.6e6:null;
+    if(ageH!=null && ageH>12){ items.push({label:'League and fixtures feed is stale',detail:'The public feed last updated about '+Math.round(ageH)+' hours ago. Refresh it in Website Admin.',goto:'webadmin',severity:'warn'}); }
+    var order={bad:0,warn:1,info:2};
+    items.sort(function(a,b){ return (order[a.severity]||9)-(order[b.severity]||9); });
+    if(!items.length){ return '<div class="card" style="border-left:4px solid #1f7a4d"><h3 style="margin:0 0 3px">Your action queue</h3><p class="hint" style="margin:0">Nothing needs your attention right now. Approvals, debtor letters, a stalled feed or a failed notice will appear here when they arise.</p></div>'; }
+    var sevWord={bad:'Action',warn:'Attention',info:'For info'};
+    var rows=items.map(function(it){
+      return '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-top:1px solid #EEF1F5">'
+        +shPill(sevWord[it.severity]||'Item', it.severity==='bad'?'bad':(it.severity==='info'?'ok':'warn'))
+        +'<div style="flex:1;min-width:200px"><b>'+esc(it.label)+'</b>'+(it.detail?'<div class="hint" style="margin-top:1px">'+esc(it.detail)+'</div>':'')+'</div>'
+        +'<button class="btn gold sm" data-goto="'+esc(it.goto||'home')+'">Open</button></div>';
+    }).join('');
+    return '<div class="card"><div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap"><h3 style="margin:0">Your action queue</h3><span class="hint">'+items.length+' item'+(items.length===1?'':'s')+' need attention</span></div>'+rows+'</div>';
   }
   function homeWire(){ Array.prototype.forEach.call(document.querySelectorAll('#tab-home [data-goto]'),function(b){ b.onclick=function(){ goTab(b.getAttribute("data-goto")); }; }); }
 
