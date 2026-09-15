@@ -518,7 +518,7 @@ function renderOverview(meet, reg){
         +'<div style="color:var(--muted);font-size:13.5px;margin-top:4px">'+(meet.date?dateZA(meet.date):'')+(meet.venue?(' &middot; '+esc(meet.venue)):'')+'</div>'
         +'<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">'
         +(meet.pack_url?'<a class="btn ghost sm" href="'+esc(meet.pack_url)+'" target="_blank" rel="noopener">Meeting pack &#8599;</a>':'')
-        +'<a class="btn gold sm" href="https://admin.cttfa.co.za" target="_blank" rel="noopener">Delegate voting &#8599;</a>'
+        +'<a class="btn gold sm" href="https://vote.cttfa.co.za" target="_blank" rel="noopener">Delegate voting &#8599;</a>'
         +'</div><p class="note">Voting opens to accredited club delegates when the meeting goes live.</p></div>';
   }
   html+='<div class="card"><div class="sechead"><h2 data-help="A quick summary of your account. Open Finance for the full statement, ageing and banking details.">Account summary</h2><button class="btn ghost sm" onclick="showTab(\'finance\')">Statement</button></div>'
@@ -526,7 +526,7 @@ function renderOverview(meet, reg){
       +'<div class="fact"><div class="fl">Balance</div><div class="fv tabnum">'+money(bal)+'</div></div>'
       +'<div class="fact"><div class="fl">Overdue</div><div class="fv tabnum">'+money(over)+'</div></div>'
       +'<div class="fact"><div class="fl">Payment reference</div><div class="fv">'+esc(HOME.code||'—')+'</div></div>'
-      +'<div class="fact"><div class="fl">Last receipt</div><div class="fv">'+(HOME.last_receipt_days!=null?(HOME.last_receipt_days+' days ago'):'—')+'</div></div>'
+      +'<div class="fact"><div class="fl">Last receipt</div><div class="fv">'+(HOME.last_receipt_days==null||Number(HOME.last_receipt_days)>=999?'No receipt on record':(Number(HOME.last_receipt_days)<=0?'Today':(HOME.last_receipt_days+(Number(HOME.last_receipt_days)===1?' day ago':' days ago'))))+'</div></div>'
       +'</div></div>';
   html+='</div>';
   html+='</div>';
