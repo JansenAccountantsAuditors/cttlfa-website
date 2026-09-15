@@ -1,11 +1,14 @@
-C10 (phone): fix obligations rows overflowing on narrow phones
+C03 upcoming fixtures on overview + C05 information centre marked to come
 
-The obligations register rows used fixed-width flex columns that could
-overflow the card on a ~360px phone. Restructured so the label and status
-pill sit on one wrapping line with the statement below, no fixed widths.
-Portal tab bar already scrolls horizontally and stats/grids/tables already
-collapse, so no other portal mobile change needed. Access-scope half of
-C10 not built (declined under D2).
+C03: adds an "Your upcoming fixtures" card to the portal overview, the
+club's own next five fixtures by date and kick-off from the season feed,
+leading the football section ahead of the league-table stack. Full list
+and tables remain on the League & Fixtures tab. Reuses the existing
+myUpcoming season matching.
+
+C05: marks the wider information centre (circulars, agendas, minutes,
+resolutions) as a planned "To come" build on the correspondence tab,
+pending office document-workflow integration.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX

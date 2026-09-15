@@ -285,6 +285,9 @@
         <div class="loading" id="coLoading">Loading correspondence&hellip;</div>
         <div id="coBody" hidden></div>
       </div>
+      <div class="card" style="border-style:dashed;background:var(--surface)"><div class="sechead"><h2>Information centre</h2><span class="pill neutral">To come</span></div>
+        <p class="note" style="margin:0">A wider information centre is planned here: LFA circulars, meeting agendas, minutes and resolutions in one place, kept separate from formal notice and service. It will be built once the office document workflow is integrated.</p>
+      </div>
     </div>
     <div id="tab-club" hidden>
       <div class="loading" id="clLoading">Loading club admin&hellip;</div>
@@ -538,6 +541,18 @@ function obligationsCard(reg){
     +body
     +'<p class="note" style="margin-top:12px;border-top:1px solid var(--hair);padding-top:10px">Each area is shown on its own because each is governed separately. A finance or voting standing is not a determination of any team&rsquo;s eligibility to play &mdash; match eligibility and discipline are dealt with under the competition rules. Please contact the Treasurer (treasurer@cttfa.co.za) with any query.</p></div>';
 }
+function upcomingFixturesCard(){
+  var all=myUpcoming();
+  if(!all.length) return '';
+  var next=all.slice(0,5);
+  var rows=next.map(function(x){ var dt=fxParts(x.date);
+    return '<div class="fx"><div class="d"><div class="dd">'+dt.dd+'</div><div class="mm">'+dt.mm+'</div></div>'
+      +'<div class="m"><div class="tm">'+esc(x.home)+' v '+esc(x.away)+'</div><div class="cp">'+esc(x.div)+(x.time?(' &middot; '+esc(x.time)):'')+(x.venue?(' &middot; '+esc(x.venue)):'')+'</div></div></div>';
+  }).join('');
+  return '<div class="card"><div class="sechead"><h2 data-help="Your club&rsquo;s next fixtures by date, from the published season feed. The full list and league tables are on the League &amp; Fixtures tab.">Your upcoming fixtures</h2><button class="btn ghost sm" onclick="showTab(\'league\')">All fixtures &amp; tables</button></div>'
+    +rows
+    +'<p class="note" style="margin-top:10px">Published fixtures from the season feed. Dates, times and venues can change; the League &amp; Fixtures tab has the full list.</p></div>';
+}
 function renderOverview(meet, reg){
   var p=PROFILE||{}, bal=Number(HOME.balance)||0, over=Number(HOME.over)||0;
   var divs = myDivisions();
@@ -566,6 +581,7 @@ function renderOverview(meet, reg){
       +'<div class="stat"><div class="sl">Teams entered</div><div class="sv">'+esc(teamsN)+'</div><div class="sn">2026 competitions</div></div>'
     +'</div></div>';
   html+=obligationsCard(reg);
+  html+=upcomingFixturesCard();
   html+='<div class="grid2">';
   html+='<div class="card"><div class="sechead"><h2>Your teams this season</h2><button class="btn ghost sm" onclick="showTab(\'league\')">Full tables &amp; fixtures</button></div>';
   if(!divs.length){ html+='<p class="empty">We could not match your club to the published league feed yet. Your standings and fixtures will appear here once the season linking is confirmed.</p>'; }
