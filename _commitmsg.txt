@@ -1,12 +1,11 @@
-T05 step 1: extract System Health module to js/50-system.js
+T05 step 0: externalise logo blob to js/00-logo.js (pipeline proof)
 
-Moves renderSysHealth, sysHealthHtml, sysRunbookHtml and the shDT/shDate/
-shAgo/shPill/shTile helpers out of the admin app block into
-js/50-system.js, loaded via an ordered script tag ahead of the app block
-so the function is defined before init. Self-contained: depends only on
-core globals ($, sb, esc, dR) at call time. renderWebstats and LOOKER_URL
-left in place (they belong to webstats). No behaviour change; the System
-Health tab renders exactly as before. Revertable on its own.
+First modularisation step. Moves the ~5.6KB base64 logo data URI out of an
+inline script in admin index.html into js/00-logo.js, loaded via an ordered
+script tag after the CDN libraries. Establishes the js/ module folder and
+the ordered-static-scripts approach; extends _jscheck.py to node --check
+js/*.js as well as inline blocks. No behaviour change: window.LOGO_URI is
+defined before the app block, as before. Revertable on its own.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX
