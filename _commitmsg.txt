@@ -1,13 +1,11 @@
-C02: club obligations register — standing with the Association
+C05 (part): delivery vs formal service note on correspondence tab
 
-Adds a "Your standing with the Association" register to the club portal
-overview, below the stats. Shows finance, delegate voting, membership and
-player registrations as distinct lines, each with its own status and the
-authority that governs it. Deliberately no single compliance score: a
-finance or voting standing is stated NOT to be a match-eligibility
-decision, which is governed separately under the competition rules. Uses
-existing portal data only (portal_home / portal_registrations); no new
-backend.
+Adds a standing governance note to the club portal correspondence tab:
+the copies shown are for reference, and formal notice or service of a
+document is effected per the Constitution and rules, not by a message
+appearing here or being opened. Confirmed portal_correspondence already
+excludes test-mode and failed/error sends, so no test send is shown to a
+club as received correspondence.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
 Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX
