@@ -1,616 +1,199 @@
 #!/usr/bin/env python3
 """
-CTTLFA — LeagueRepublic -> season.json sync  (Route 2: scrape, auto-discovery)
-=============================================================================
-Discovers EVERY competition in a season straight from LeagueRepublic (no
-hard-coded division list), scrapes each one, and writes a season.json the
-website renders natively. Youth (U18/U16/U14/U12), veterans and women's
-divisions are all picked up automatically. No login, no paid plan.
+CTTLFA - LeagueRepublic -> season.json builder (API edition)
+============================================================
+Builds season.json DIRECTLY from the LeagueRepublic JSON Data API (Gold feature,
+leagueID 895893986). No scraping, no HTML parsing, no Playwright, stdlib only.
 
-    pip install requests beautifulsoup4
-    python3 lr_sync.py                       # -> season.json        (2026, current)
-    python3 lr_sync.py --season 2025 \
-            --out season-2025.json           # -> 2025 archive
+    python3 lr_sync.py                    # -> season.json        (2026, current)
+    python3 lr_sync.py --season 2025 --out season-2025.json
 
-Schedule with the GitHub Action in .github/workflows/ (every 20 min).
+Output shape is byte-compatible with the old scraper's season.json so the weekly
+bulletin and season precheck keep working unchanged:
+  {season,label,updated,crestBase,leagues:{CODE:{name,group,table,results,fixtures}},cups,crests}
 
-How it works: any competition page carries a <select> of that season's
-competitions (name + fixtureGroup key). We read that once from a season "seed"
-page, then scrape each competition's standings, results and fixtures, plus the
-LeagueRepublic-hosted team crest ids.
+The public website reads the API live in the browser and no longer needs this file;
+season.json now exists only to feed weekly_bulletin.py and season_precheck.py.
 """
+import argparse, json, re, sys, datetime, urllib.request, time
 
-import argparse, json, re, sys, os, datetime, time
-import requests
-try:
-    from bs4 import BeautifulSoup
-except ImportError:
-    sys.exit("Install deps:  pip install requests beautifulsoup4")
-
-SITE = "https://cttfass.leaguerepublic.com"
+API = "https://api.leaguerepublic.com/json"
+LEAGUE_ID = "895893986"
 CREST_BASE = "https://images.leaguerepublic.com/data/images"   # /<id>/115.jpg
-UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36", "Accept": "text/html,application/xhtml+xml", "Accept-Language": "en-ZA,en;q=0.9"}
-
-# One "seed" fixtureGroup per season — any division id from that season works.
-SEASONS = {
-    "2026": {"label": "CTTLFA 2026", "seed": "1_616774953"},   # A1 Premier 2026
-    "2025": {"label": "CTTLFA 2025", "seed": "1_950683955"},   # A1 Premier 2025
-    # add older seasons here with any one of that season's fixtureGroup ids.
-}
-
 MON = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-PREFIX = re.compile(r"^[A-Za-z0-9]{1,5}-\s*\d+\s*-\s*")   # strips "PD-01- " team codes
+CODE_RE = re.compile(r"^[A-Za-z0-9]+-\d+[A-Za-z]?-\s*")
+MAX_RESULTS_PER_DIV = 20   # keeps season.json lean; the bulletin only needs recent results
+
+SEASON_IDS = {"2026": 47708359, "2025": 763744782}
+LABELS     = {"2026": "CTTLFA 2026", "2025": "CTTLFA 2025"}
+SEASON_NO  = {"2026": 2026, "2025": 2025}
+DIVMAP     = {"A1": {"name": "Premier Division", "group": "Senior Divisions"}, "A2": {"name": "Premier Reserve", "group": "Reserves"}, "B1": {"name": "First Division", "group": "Senior Divisions"}, "B2": {"name": "First Reserve", "group": "Reserves"}, "C1": {"name": "Second Division", "group": "Senior Divisions"}, "C2": {"name": "Second Reserve", "group": "Reserves"}, "D1": {"name": "3rd Division", "group": "Senior Divisions"}, "D2": {"name": "4th Division", "group": "Senior Divisions"}, "D3": {"name": "5th Division", "group": "Senior Divisions"}, "D4": {"name": "6th Division", "group": "Senior Divisions"}, "E1": {"name": "Vets 035", "group": "Veterans"}, "E2": {"name": "Vets 035 B", "group": "Veterans"}, "F1": {"name": "Vets 040 A", "group": "Veterans"}, "F2": {"name": "Vets 040 B", "group": "Veterans"}, "G1": {"name": "Vets 045 A", "group": "Veterans"}, "G4": {"name": "Vets 050 A", "group": "Veterans"}, "G5": {"name": "Vets 050 B", "group": "Veterans"}, "G6": {"name": "Vets O50 C", "group": "Veterans"}, "H1": {"name": "Womens Premier League", "group": "Women"}, "H2": {"name": "Womens First Division", "group": "Women"}, "I1": {"name": "Under 18 Premier One", "group": "Under-18"}, "I2": {"name": "Under 18 Premier Two", "group": "Under-18"}, "I3": {"name": "Under 18 Premier Three", "group": "Under-18"}, "I3B": {"name": "Under 18 Premier Three B", "group": "Under-18"}, "I4": {"name": "Under 18 Division Four", "group": "Under-18"}, "I5": {"name": "Under 18 Division Five", "group": "Under-18"}, "K1": {"name": "Under 16 Premier One", "group": "Under-16"}, "K2": {"name": "Under 16 Premier Two", "group": "Under-16"}, "K3": {"name": "Under 16 Premier Three", "group": "Under-16"}, "K3B": {"name": "Under 16 Premier Three B", "group": "Under-16"}, "K4": {"name": "Under 16 Division Four", "group": "Under-16"}, "K5": {"name": "Under 16 Division Five", "group": "Under-16"}, "K6": {"name": "Under 16 Division Six", "group": "Under-16"}, "K7": {"name": "Under 16 Girls Premier One", "group": "Under-16"}, "K8": {"name": "Under 16 Division Seven", "group": "Under-16"}, "M1": {"name": "Under 14 Premier One", "group": "Under-14"}, "M2": {"name": "Under 14 Premier Two", "group": "Under-14"}, "M3": {"name": "Under 14 Premier Three", "group": "Under-14"}, "M3B": {"name": "Under 14 Premier Three B", "group": "Under-14"}, "M4": {"name": "Under 14 Division Four", "group": "Under-14"}, "M5": {"name": "Under 14 Division Five", "group": "Under-14"}, "M6": {"name": "Under 14 Division Six", "group": "Under-14"}, "M7": {"name": "Under 14 Division Seven", "group": "Under-14"}, "M8": {"name": "Under 14 Girls Premier One", "group": "Under-14"}, "M9": {"name": "Under 14 Division Eight", "group": "Under-14"}, "O1": {"name": "Under 12 Premier One", "group": "Under-12"}, "O2": {"name": "Under 12 Premier Two", "group": "Under-12"}, "O3": {"name": "Under 12 Premier Three", "group": "Under-12"}, "O3B": {"name": "Under 12 Premier Three B", "group": "Under-12"}, "O4": {"name": "Under 12 Division Four", "group": "Under-12"}, "O5": {"name": "Under 12 Division Five", "group": "Under-12"}, "O6": {"name": "Under 12 Division Six", "group": "Under-12"}, "O7": {"name": "Under 12 Girls Premier One (9v9)", "group": "Under-12"}, "O8": {"name": "Under 12 Division Seven", "group": "Under-12"}, "I3G": {"name": "Under 18 Premier 3 A&B", "group": "Under-18"}, "O3G": {"name": "Under 12 Premier 3 A&B", "group": "Under-12"}, "M3G": {"name": "Under 14 Premier 3 A&B", "group": "Under-14"}, "K3G": {"name": "Under 16 Premier 3 A&B", "group": "Under-16"}}
+CRESTS     = {"Durbanville": "603169281", "Table View": "926521367", "Hanover Park": "966477820", "Rygersdal": "342234291", "C.R. Vasco Da Gama": "759498919", "Fish Hoek": "724061652", "Holy Cross": "894903931", "Saxon Rovers": "387054430", "UCT": "152827271", "Bothasig": "416141189", "Sunningdale City": "938776554", "Bellville City FC": "522626759", "JMI": "738238671", "Kensington": "721154884", "Stephanian Ottery": "767162649", "Tramway": "718389157", "Northpine United": "674014319", "Ruyterwacht": "462020176", "Brooklyn Superstars": "281655054", "Queens Park": "247119670", "Avendale Athletico": "571817130", "Young Bafana": "801154554", "Chelsea Bridgetown": "58556195", "West End United": "790271081", "Camps Bay": "924011377", "Mutual FC": "462207720", "YSD Macassar": "149983422", "FC Kapstadt": "227801021", "Shosholoza FC": "64445222", "Bellville City": "905078339", "Lansdowne": "321044869", "Everton United": "215524454", "Turfhall": "442872570", "Sunningdale City B": "954589510", "Jamestown United": "901761593", "West End United A": "817291201", "Hanover Park B": "144922522", "West End United B": "225405348", "West End United C": "484529293", "Hanover Park C": "799019491", "Tramway B": "429631959", "Stephanian Ottery B": "284704636", "Magic Ladies": "24348048", "Magic Ladies B": "855305244", "UCT B": "672355881", "CR Vasco Da Gama": "365992196", "Shosholoza": "748120971", "Grass Boots": "909725523", "CR Vasco Da Gama B": "335799158", "Northpine United B": "230255460", "Norway Parks B": "884240218", "Saxon Rovers B": "413585152", "Bothasig B": "873184117", "Rygersdal B.": "884144531", "Fish Hoek B.": "388184835", "Ruyterwacht B": "286626581", "Bellville City B": "144214403", "Bothasig C": "127932065", "Rygersdal B": "535503655", "Bellville City B.": "242635109", "Shosholoza B": "312508450", "Kensington B": "393120770", "Sunningdale City C": "298169474", "Nova Generation": "582068396", "Northpine United C": "593964196", "Rygersdal C": "513638581", "Fish Hoek C.": "810021150", "Bothasig D": "262950410", "Saxon Rovers B.": "283676164", "FC Kapstadt B": "594876184", "Sunningdale City C.": "524104961", "Northpine United D": "942316362", "Bellville City C": "635884056", "Grass Boots B": "628006242", "Stephanian Ottery C": "581885516", "Fish Hoek C": "613648472", "Meadowridge B": "349681226", "Fish Hoek.": "431612356", "Mutual B": "861951024", "Norway Parks C": "36837663"}
+CUPMETA    = [{"key": "2_870266437", "name": "Premier League Cup", "group": "Senior"}, {"key": "2_635842836", "name": "Premier Reserves Cup", "group": "Senior"}, {"key": "2_440158046", "name": "First Division Cup", "group": "Senior"}, {"key": "2_663677289", "name": "First Reserves Cup", "group": "Senior"}, {"key": "2_545176691", "name": "Second Division Cup", "group": "Senior"}, {"key": "2_564311915", "name": "Second Reserve Cup", "group": "Senior"}, {"key": "2_175543749", "name": "3rd Division Cup", "group": "Senior"}, {"key": "2_826947009", "name": "4th Division Cup", "group": "Senior"}, {"key": "2_592804479", "name": "5th Division Cup", "group": "Senior"}, {"key": "2_549170807", "name": "6th Division Cup", "group": "Senior"}, {"key": "2_339589907", "name": "Womans Premier League Cup", "group": "Women"}, {"key": "2_148522950", "name": "Womans First Division Cup", "group": "Women"}, {"key": "2_389709242", "name": "O/35 A Division Cup", "group": "Senior"}, {"key": "2_445396709", "name": "O/35 B Division Cup", "group": "Senior"}, {"key": "2_367814409", "name": "O/40 A Division Cup", "group": "Veterans"}, {"key": "2_398052558", "name": "O/40 B Division Cup", "group": "Veterans"}, {"key": "2_483328144", "name": "O/45 A Division Cup", "group": "Senior"}, {"key": "2_29602231", "name": "O/50 A Division Cup", "group": "Veterans"}, {"key": "2_341021773", "name": "O/50 B Division Cup", "group": "Veterans"}, {"key": "2_163344839", "name": "O/50 C Division Cup", "group": "Veterans"}, {"key": "2_344235459", "name": "U/18 Premier One Cup", "group": "Under-18"}, {"key": "2_807292977", "name": "U/18 Premier Two Cup", "group": "Under-18"}, {"key": "2_899443994", "name": "U/18 Premier Three Cup", "group": "Under-18"}, {"key": "2_36090187", "name": "U/18 Premier Three B Cup", "group": "Under-18"}, {"key": "2_138945952", "name": "U/18 Division Four Cup", "group": "Under-18"}, {"key": "2_467424669", "name": "U/18 Division Five Cup", "group": "Under-18"}, {"key": "2_637880725", "name": "U/16 Premier One Cup", "group": "Under-16"}, {"key": "2_558835710", "name": "U/16 Premier Two Cup", "group": "Under-16"}, {"key": "2_606011803", "name": "U/16 Premier Three Cup", "group": "Under-16"}, {"key": "2_845275354", "name": "U/16 Premier Three B Cup", "group": "Under-16"}, {"key": "2_698339450", "name": "U/16 Division Four Cup", "group": "Under-16"}, {"key": "2_816835386", "name": "U/16 Division Five Cup", "group": "Under-16"}, {"key": "2_886186997", "name": "U/16 Division Six Cup", "group": "Under-16"}, {"key": "2_72978235", "name": "U/16 Girls Premier Cup", "group": "Under-16"}, {"key": "2_523149227", "name": "U/16 Division Seven Cup", "group": "Under-16"}, {"key": "2_887884945", "name": "U/14 Premier One Cup", "group": "Under-14"}, {"key": "2_359663090", "name": "U/14 Premier Two Cup", "group": "Under-14"}, {"key": "2_625505235", "name": "U/14 Premier Three Cup", "group": "Under-14"}, {"key": "2_169776866", "name": "U/14 Premier Three B Cup", "group": "Under-14"}, {"key": "2_98508192", "name": "U/14 Division Four Cup", "group": "Under-14"}, {"key": "2_658734577", "name": "U/14 Division Five Cup", "group": "Under-14"}, {"key": "2_215646910", "name": "U/14 Division Six Cup", "group": "Under-14"}, {"key": "2_644243770", "name": "U/14 Division Seven Cup", "group": "Under-14"}, {"key": "2_801704572", "name": "U/14 Girls Premier Cup", "group": "Under-14"}, {"key": "2_51825301", "name": "U/14 Division Eight Cup", "group": "Under-14"}, {"key": "2_922320980", "name": "U/12 Premier One Cup", "group": "Under-12"}, {"key": "2_247013237", "name": "U/12 Premier Two Cup", "group": "Under-12"}, {"key": "2_432841572", "name": "U/12 Premier Three Cup", "group": "Under-12"}, {"key": "2_163942268", "name": "U/12 Premier Three B Cup", "group": "Under-12"}, {"key": "2_13531507", "name": "U/12 Division Four Cup", "group": "Under-12"}, {"key": "2_551102346", "name": "U/12 Division Five Cup", "group": "Under-12"}, {"key": "2_95555487", "name": "U/12 Division Six Cup", "group": "Under-12"}, {"key": "2_42519981", "name": "U/12 Girls Premier Cup", "group": "Under-12"}, {"key": "2_768685067", "name": "U/12 Division Seven Cup", "group": "Under-12"}]
 
 
-SESSION = requests.Session()
-SESSION.headers.update(UA)
-
-
-def get(url):
-    # Shared session so the cookie LeagueRepublic sets on the /fg/ page is carried
-    # to the report endpoints (the matchHub 'View All Matches' view), which return
-    # an empty HTTP 202 to a cookieless request.
-    r = SESSION.get(url, timeout=30)
-    r.raise_for_status()
-    return r.text
-
-
-def clean(s):
-    return PREFIX.sub("", re.sub(r"\s+", " ", (s or "")).strip()).strip()
-
-
-def fdate(s):
-    m = re.search(r"(\d{2})/(\d{2})/\d{2}", s or "")
-    return f"{int(m.group(1))} {MON[int(m.group(2))]}" if m else (s or "").strip()
-
-
-def ftime(s):
-    m = re.search(r"(\d{2}:\d{2})", s or "")
-    return m.group(1) if m else ""
-
-
-def group_of(code):
-    if code in ("A2", "B2", "C2"):
-        return "Reserves"
-    c = code[:1]
-    return ("Senior Divisions" if c in "ABCD" else "Veterans" if c in "EFG"
-            else "Women" if c == "H" else "Under-18" if c == "I" else "Under-16" if c == "K"
-            else "Under-14" if c == "M" else "Under-12" if c == "O" else "Other")
-
-
-def crest_id(cell):
-    img = cell.find("img")
-    m = re.search(r"images/(\d+)/", img.get("src", "")) if img else None
-    return m.group(1) if m else ""
-
-
-def discover(seed):
-    """Return [(code, name, fgkey)] for every LEAGUE competition in the season."""
-    soup = BeautifulSoup(get(f"{SITE}/fg/{seed}.html"), "html.parser")
-    sel = soup.find("select", attrs={"name": "fixtureGroupPageContent.filterFixtureGroupKey"})
-    out = []
-    for o in sel.find_all("option"):
-        val = o.get("value", "")
-        if not val.startswith("1_"):          # 1_ = league, 2_ = knockout (skip)
-            continue
-        txt = o.get_text(" ", strip=True)
-        code, _, name = txt.partition("-")
-        out.append((code.strip(), name.strip(), val))
-    return out
-
-
-def sortkey(s):
-    """Sortable key from a dd/mm/yy date cell so results order chronologically."""
-    m = re.search(r"(\d{2})/(\d{2})/(\d{2})", s or "")
-    return (int(m.group(3)), int(m.group(2)), int(m.group(1))) if m else (0, 0, 0)
-
-
-def compute_form(table, allres):
-    """Attach a last-5 W/D/L string (oldest->newest) to each standings row."""
-    seq = {}
-    for hn, an, hs, as_, _dt in sorted(allres, key=lambda x: sortkey(x[4])):
-        hs, as_ = int(hs), int(as_)
-        seq.setdefault(hn, []).append("W" if hs > as_ else "L" if hs < as_ else "D")
-        seq.setdefault(an, []).append("W" if as_ > hs else "L" if as_ < hs else "D")
-    for row in table:
-        f = seq.get(row[0])
-        if f:
-            row[8] = "".join(f[-5:])
-
-
-def _parse_fixture_rows(fsoup, out, seen):
-    """Append upcoming fixtures from one matchHub page; de-dupe on (home,away,date,
-    time) so page-boundary overlaps don't double up, and drop stale past-dated rows
-    (the view lists old postponed matches too). Returns how many NEW rows it added."""
-    cutoff = datetime.date.today() - datetime.timedelta(days=1)
-    added = 0
-    for tb in fsoup.find_all("table"):
-        for r in tb.find_all("tr"):
-            td = r.find_all("td")
-            if len(td) < 5:
-                continue
-            dtx = td[0].get_text(" ", strip=True)
-            m = re.search(r"(\d{2})/(\d{2})/(\d{2})", dtx)
-            if not m:                                           # header / non-match row
-                continue
-            if re.search(r"\d+\s*-\s*\d+", td[2].get_text(" ", strip=True)):
-                continue                                        # already played (carries a score)
-            try:
-                d = datetime.date(2000 + int(m.group(3)), int(m.group(2)), int(m.group(1)))
-            except ValueError:
-                continue
-            if d < cutoff:                                      # drop stale / past-dated rows
-                continue
-            hraw = td[1].get_text(" ", strip=True)
-            araw = td[3].get_text(" ", strip=True)
-            hn, an = clean(hraw), clean(araw)
-            if not (hn and an):
-                continue
-            tm = ftime(dtx)
-            key = (hn, an, fdate(dtx), tm)
-            if key in seen:                                     # de-dupe page overlaps
-                continue
-            seen.add(key)
-            ven = td[4].get_text(" ", strip=True)
-            ven = ven.split("@", 1)[1].strip() if "@" in ven else ""
-            # trailing full team codes (fullcode) let the caller attribute each match
-            # to its exact division and are stripped before the fixture is published.
-            out.append([hn, an, fdate(dtx), tm, ven, fullcode(hraw), fullcode(araw)])
-            added += 1
-    return added
-
-
-def scrape_all_fixtures(soup):
-    """Full upcoming-fixtures list from LeagueRepublic's 'View All Matches' view.
-    The /fg/ page only shows the next fixture date or two; this view lists the whole
-    remaining programme, but 20 per page — so we follow the 'Next' link to the end.
-    Returns [[home, away, date, time, venue], ...] or [] if the view can't be read
-    (the caller then keeps the /fg/ list as a fallback, so it can never regress)."""
-    link = soup.find("a", href=re.compile(r"/matchHub/.+/1/true\.html"))
-    href = re.sub(r"\s+", "", (link.get("href") if link else "") or "")
-    if not href:
-        return None                                             # can't locate the view -> keep /fg/ list
-    url = href if href.startswith("http") else SITE + href
-    out, seen, seen_urls = [], set(), set()
-    got_page = False
-    for _ in range(80):                                         # page safety cap
-        if not url or url in seen_urls:
-            break
-        seen_urls.add(url)
+def jget(path, tries=5):
+    for i in range(tries):
         try:
-            fsoup = BeautifulSoup(get(url), "html.parser")
-        except Exception:
-            break
-        got_page = True
-        if _parse_fixture_rows(fsoup, out, seen) == 0:          # page added nothing new -> end/wrap
-            break
-        nxt = next((a for a in fsoup.find_all("a")
-                    if a.get_text(strip=True).lower() == "next"), None)
-        nhref = re.sub(r"\s+", "", (nxt.get("href") if nxt else "") or "")
-        if not nhref or "matchHub" not in nhref:
-            break
-        url = nhref if nhref.startswith("http") else SITE + nhref
-        time.sleep(0.1)
-    # Return None ONLY when the view couldn't be read at all (so the caller keeps the
-    # /fg/ list as protection). An empty list is a valid answer — a division whose
-    # league season is finished has no upcoming fixtures, and must NOT fall back to the
-    # /fg/ page (which for a finished division lists stale/knockout rows).
-    return out if got_page else None
-
-
-def scrape_division(fgkey, crests, code=None):
-    soup = BeautifulSoup(get(f"{SITE}/fg/{fgkey}.html"), "html.parser")
-    table, results, fixtures, allres = [], [], [], []
-    live_codes = set()                           # full team codes seen on THIS division's page
-    for t in soup.find_all("table"):
-        first = t.find("tr")
-        head = (first.get_text(" ", strip=True) if first else "").upper()
-        if "VENUE" in head:                      # upcoming fixtures (has a header row)
-            for r in t.find_all("tr")[1:]:
-                td = r.find_all("td")
-                if len(td) < 5:
-                    continue
-                hraw, araw = td[2].get_text(" ", strip=True), td[4].get_text(" ", strip=True)
-                hn, an = clean(hraw), clean(araw)
-                dt = td[1].get_text(" ", strip=True)
-                if hn and an:
-                    hc, ac = fullcode(hraw), fullcode(araw)
-                    live_codes.update({hc, ac})
-                    fixtures.append([hn, an, fdate(dt), ftime(dt),
-                                     td[5].get_text(" ", strip=True) if len(td) > 5 else "", hc, ac])
-        elif "SCORE" in head:                    # played results (has a header row)
-            for r in t.find_all("tr")[1:]:
-                td = r.find_all("td")
-                if len(td) < 5:
-                    continue
-                m = re.search(r"(\d+)\s*-\s*(\d+)", td[3].get_text())
-                hraw, araw = td[2].get_text(" ", strip=True), td[4].get_text(" ", strip=True)
-                hn, an = clean(hraw), clean(araw)
-                if hn and an and m:
-                    live_codes.update({fullcode(hraw), fullcode(araw)})
-                    allres.append([hn, an, m.group(1), m.group(2), td[1].get_text(" ", strip=True)])
-        else:                                     # standings: LR renders NO header row
-            for r in t.find_all("tr"):
-                td = r.find_all("td")
-                if len(td) < 9:
-                    continue
-                if not td[0].get_text(strip=True).isdigit():   # first cell = league position
-                    continue
-                raw = td[1].get_text(" ", strip=True)
-                nm = clean(raw)
-                if not nm:
-                    continue
-                live_codes.add(fullcode(raw))
-                n = lambda i: int(re.sub(r"\D", "", td[i].get_text() or "0") or 0)
-                table.append([nm, n(2), n(3), n(4), n(5), n(6), n(7), n(len(td) - 1), ""])
-                c = crest_id(td[1])
-                if c:
-                    crests[nm] = c
-    # per-team last-5 form from the full results history
-    compute_form(table, allres)
-    # display: the 8 most recent results (newest first), carrying the match date
-    # so the site can date-stamp and globally order the live news feed
-    for hn, an, hs, as_, _dt in sorted(allres, key=lambda x: sortkey(x[4]), reverse=True)[:8]:
-        results.append([hn, an, hs, as_, fdate(_dt)])
-    # Replace the windowed /fg/ fixtures with the FULL remaining programme from the
-    # 'View All Matches' view, then attribute each match to THIS division by full team
-    # code. Every full code (e.g. 'O3-02') belongs to exactly one division, so a
-    # shared/contaminated hub is filtered down to only this division's own matches:
-    # O3-02 (Premier Three B) never leaks into O3 (Premier Three) or O3G (Premier 3
-    # A&B). Membership = this division's season-stable roster (from the committed LR
-    # export) plus any codes seen live on its own /fg page. An empty result is
-    # authoritative (a finished division has no upcoming fixtures) — we do NOT fall
-    # back to the /fg list, which for a finished division carries stale/other rows.
-    def _nrm(s):
-        return re.sub(r"[^a-z0-9]", "", (s or "").lower())
-    mine = {fc for fc, dc in roster_map().items() if code and dc == code}
-    mine |= {c for c in live_codes if c}
-    name_roster = {_nrm(t[0]) for t in table}
-    def _belongs(f):
-        hc, ac = (f[5] if len(f) > 5 else ""), (f[6] if len(f) > 6 else "")
-        if mine:                                  # attribute by full team code (reliable)
-            return bool(hc) and bool(ac) and hc in mine and ac in mine
-        # no codes available at all (no export, empty page) -> both-teams-in-standings
-        return (not name_roster) or (_nrm(f[0]) in name_roster and _nrm(f[1]) in name_roster)
-    full = scrape_all_fixtures(soup)
-    if full is not None:
-        keep = [f for f in full if _belongs(f)]
-        if full and not keep and not mine:    # only fall back when we truly can't attribute
-            fixtures = [f for f in fixtures if _belongs(f)]
-        else:
-            fixtures = keep
-    else:
-        fixtures = [f for f in fixtures if _belongs(f)]
-    # Drop "Bye" placeholders and strip the trailing full-code helpers so each
-    # published fixture is [home, away, date, time, venue].
-    fixtures = [f[:5] for f in fixtures
-                if _nrm(f[0]) != "bye" and _nrm(f[1]) != "bye"]
-    return {"table": table, "results": results, "fixtures": fixtures}
-
-
-# ---------------- KNOCKOUT CUPS ----------------
-
-def discover_cups(seed):
-    """Return [(name, fgkey)] for every KNOCKOUT competition (2_) in the season."""
-    soup = BeautifulSoup(get(f"{SITE}/fg/{seed}.html"), "html.parser")
-    sel = soup.find("select", attrs={"name": "fixtureGroupPageContent.filterFixtureGroupKey"})
-    out = []
-    for o in sel.find_all("option"):
-        val = o.get("value", "")
-        if val.startswith("2_"):
-            out.append((o.get_text(" ", strip=True), val))
-    return out
-
-
-def cup_clean_name(raw):
-    n = re.sub(r"\bCTTLFA\b", "", raw)
-    n = re.sub(r"\b20\d\d\b", "", n)
-    n = re.sub(r"Knock\s*Out|Knockout", "Cup", n, flags=re.I)
-    n = re.sub(r"\s+", " ", n).strip()
-    return n
-
-
-def cup_group(raw):
-    if re.search(r"U/?18", raw): return "Under-18"
-    if re.search(r"U/?16", raw): return "Under-16"
-    if re.search(r"U/?14", raw): return "Under-14"
-    if re.search(r"U/?12", raw): return "Under-12"
-    if re.search(r"Wom[ae]n", raw, re.I): return "Women"
-    if re.search(r"O/?\d0", raw): return "Veterans"
-    return "Senior"
-
-
-def round_rank(r):
-    s = (r or "").lower()
-    if "prelim" in s: return 0
-    m = re.search(r"round\s+(\d+)", s)
-    if m: return int(m.group(1))
-    if "last 64" in s: return 79
-    if "last 32" in s: return 80
-    if "last 16" in s: return 81
-    if "quarter" in s: return 90
-    if "semi" in s: return 91
-    if "third" in s or "3rd" in s: return 93
-    if "final" in s: return 92
-    return 60
-
-
-CODE = re.compile(r"^([A-Za-z0-9]{1,6}-\s*\d+)-\s*(.*)$")
-
-
-def build_codemap(soup):
-    """team code (e.g. 'PD-05') -> full club name, read from the fixture-group page
-    where names are not truncated. Lets us resolve the chart's shortened names."""
-    m = {}
-    for td in soup.find_all("td"):
-        t = re.sub(r"\s+", " ", td.get_text(" ", strip=True)).strip()
-        cm = CODE.match(t)
-        if cm:
-            code = re.sub(r"\s+", "", cm.group(1))
-            name = re.sub(r"\s*\d+(\s*-\s*\d+)?\s*$", "", cm.group(2)).strip()
-            if name and not name.isdigit():
-                m.setdefault(code, name)
-    return m
-
-
-def parse_cup_team(text, codemap):
-    """A chart team cell -> {'n','s'} | {'bye':1} | {'tbd':1}."""
-    t = re.sub(r"\s+", " ", (text or "")).strip()
-    if not t:
-        return {"tbd": 1}
-    cm = CODE.match(t)
-    if cm:
-        code = re.sub(r"\s+", "", cm.group(1))
-        rest = cm.group(2).strip()
-        sm = re.search(r"(\d+)\s*$", rest)
-        score = sm.group(1) if sm else ""
-        name = codemap.get(code) or re.sub(r"\s*\d+\s*$", "", rest)
-        if name.lower() == "bye":
-            return {"bye": 1}
-        return {"n": name, "s": score}
-    if t.lower() == "bye" or t.lower().startswith("bye "):
-        return {"bye": 1}
-    if " or " in t.lower() or "winner" in t.lower():
-        return {"tbd": 1}
-    sm = re.search(r"(\d+)\s*$", t)
-    if sm:
-        return {"n": re.sub(r"\s*\d+\s*$", "", t), "s": sm.group(1)}
-    return {"n": t}
-
-
-def scrape_cup(fgkey, crests):
-    """Return the cup's bracket as {rounds:[names], cols:[[box,...],...]} using
-    LeagueRepublic's own tournament chart (the authoritative tree — byes, the
-    final, and undecided future ties are all laid out for us)."""
-    soup = BeautifulSoup(get(f"{SITE}/fg/{fgkey}.html"), "html.parser")
-    codemap = build_codemap(soup)
-    # collect crest ids for cup teams (resolved by name on the site)
-    for td in soup.find_all("td"):
-        c = crest_id(td)
-        if c:
-            nm = clean(td.get_text(" ", strip=True))
-            if nm:
-                crests[nm] = c
-    link = soup.find("a", href=re.compile(r"/displayCompetition/"))
-    if not link:
-        return {"rounds": [], "cols": []}
-    chart = BeautifulSoup(get(SITE + link.get("href")), "html.parser")
-    rounds = []
-    for h in chart.find_all("h4", class_="competition-round-title"):
-        p = h.find_parent("div", style=re.compile("left"))
-        mm = re.search(r"left:\s*(\d+)px", p.get("style", "")) if p else None
-        rounds.append((int(mm.group(1)) if mm else 0, h.get_text(strip=True)))
-    rounds.sort()
-    lefts = [r[0] for r in rounds]
-    names = [r[1] for r in rounds]
-    cols = [[] for _ in rounds]
-    for outer in chart.find_all("div", class_="competition-box-outer"):
-        pos = outer.find_parent("div", style=re.compile(r"position:\s*absolute"))
-        st = pos.get("style", "") if pos else ""
-        lm = re.search(r"left:\s*(\d+)px", st)
-        tm = re.search(r"top:\s*(\d+)px", st)
-        if not (lm and tm):
-            continue
-        L, T = int(lm.group(1)), int(tm.group(1))
-        ri = min(range(len(lefts)), key=lambda i: abs(lefts[i] - L)) if lefts else 0
-        cells = outer.find_all("div", class_="competition-match-team")
-        teams = [parse_cup_team(c.get_text(" ", strip=True), codemap) for c in cells]
-        while len(teams) < 2:
-            teams.append({"tbd": 1})
-        dds = outer.find_all("div", class_="competition-match-date")
-        dtx = re.sub(r"\s+", " ", dds[0].get_text(" ", strip=True)) if dds else ""
-        box = {"a": teams[0], "b": teams[1],
-               "d": fdate(dtx), "t": ftime(dtx)}
-        # Venue lives in the SECOND date div, which LeagueRepublic renders as
-        # "<home team name> <venue>". Strip the leading home-team name so we keep
-        # just the ground. A neutral/allocated venue (prefix is NOT the home team,
-        # e.g. a semi-final played at Kensington) is left exactly as LR gives it.
-        if len(dds) > 1:
-            vtx = re.sub(r"\s+", " ", dds[1].get_text(" ", strip=True)).strip()
-            if vtx and not re.match(r"^\d{2}/\d{2}/\d{2}", vtx):
-                # Strip a leading host-team name (either side of the tie) so only the
-                # ground remains; a neutral venue keeps its full text.
-                for tm in (teams[0], teams[1]):
-                    nm = (tm.get("n") or "").strip()
-                    if nm and vtx.lower().startswith(nm.lower() + " "):
-                        vtx = vtx[len(nm):].strip()
-                        break
-                # Backstop: collapse an exact leading duplication such as
-                # "Table View Table View A" -> "Table View A".
-                w = vtx.split()
-                for k in range(len(w) // 2, 0, -1):
-                    if w[:k] == w[k:2 * k]:
-                        vtx = " ".join(w[k:])
-                        break
-                if vtx and vtx.lower() != "bye":
-                    box["v"] = vtx
-        pm = re.search(r"Pens?\s*(\d+\s*-\s*\d+)", dtx, re.I)
-        if pm:
-            box["p"] = re.sub(r"\s+", "", pm.group(1))
-        cols[ri].append((T, box))
-    for c in cols:
-        c.sort(key=lambda x: x[0])
-    return {"rounds": names, "cols": [[b for _, b in c] for c in cols]}
-
-
-def build_cups(seed, crests):
-    cups = []
-    for raw, fgkey in discover_cups(seed):
-        try:
-            bracket = scrape_cup(fgkey, crests)
-            cups.append({"key": fgkey, "name": cup_clean_name(raw),
-                         "group": cup_group(raw), "bracket": bracket})
-            n = sum(len(c) for c in bracket["cols"])
-            print(f"  ○ {cup_clean_name(raw):34} {n} ties, {len(bracket['rounds'])} rounds")
+            req = urllib.request.Request(API + path + ".json", headers={"Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=45) as r:
+                return json.loads(r.read().decode("utf-8"))
         except Exception as e:
-            print(f"  ✗ cup {raw[:34]} {e}")
-        time.sleep(0.12)
-    return cups
+            if i == tries - 1:
+                print("[lr_sync] fetch failed %s: %s" % (path, e), file=sys.stderr)
+                return None
+            time.sleep(0.4 * (i + 1))
+    return None
 
 
-# ---------------------------------------------------------------------------
-# DIVISION-ACCURATE FIXTURES (live, self-correcting — no manual export needed)
-# ---------------------------------------------------------------------------
-# LeagueRepublic's "View All Matches" hub is, for some divisions (the U12–U18
-# "Premier Three B" age groups), a SHARED match-centre that ignores the fixtureGroup
-# and returns other divisions' games — the cause of the duplicated / cross-division
-# fixtures clubs complained about. The reliable division key is the FULL team code LR
-# prints on every match ("O3-02- Bellville City"): each full code (prefix+number)
-# belongs to exactly ONE division, so O3-02 (Premier Three B) is cleanly separated
-# from O3-01 (Premier Three) and from O3G-01 (Premier 3 A&B) — which the team-code
-# prefix or the club name alone cannot do.
-#
-# Fixtures therefore stay LIVE from the hub every run, but each match is attributed to
-# its division by full team code. The code->division roster is stable for the whole
-# season (teams do not change division mid-season), so it is read once from the
-# committed LeagueRepublic export (ROSTER_CSV) and augmented with codes learnt live
-# from each division's own /fg page. Result: fixtures stay current (reschedules, new
-# and played matches all reflected automatically every 10 min) with no cross-division
-# bleed and no duplication. The export never needs re-generating during the season.
-ROSTER_CSV = "fixtures_export.csv"
-
-_DIVCODE  = re.compile(r"^([A-Za-z0-9]{1,4})\s*-")            # "O3B - Under 12 ..." -> O3B
-_FULLCODE = re.compile(r"^([A-Za-z0-9]{1,4}-\s*\d+)\s*-")     # "O3-02- Bellville"   -> O3-02
+def clean(n):
+    return CODE_RE.sub("", (n or "").strip()).strip()
 
 
-def fullcode(s):
-    """The full LeagueRepublic team code (prefix+number, e.g. 'O3-02') that uniquely
-    identifies which division a team plays in. '' if the cell carries no code."""
-    m = _FULLCODE.match((s or "").strip())
-    return re.sub(r"\s+", "", m.group(1)).upper() if m else ""
+def fmt(s):
+    # "20260917 20:00" -> ("17 Sep", "20:00")
+    if not s or len(s) < 8:
+        return "", ""
+    day = int(s[6:8]); mon = MON[int(s[4:6])] if 0 < int(s[4:6]) < 13 else ""
+    t = s[9:14] if len(s) >= 14 else ""
+    return "%d %s" % (day, mon), t
 
 
-_ROSTER = None
-def roster_map():
-    """{full team code -> division code} from the committed LR export. Stable for the
-    whole season, so it is loaded once. Empty {} if the export is unreadable (the
-    scraper then relies solely on codes learnt live from each division's /fg page)."""
-    global _ROSTER
-    if _ROSTER is not None:
-        return _ROSTER
-    _ROSTER = {}
-    here = os.path.dirname(os.path.abspath(__file__))
-    path = next((p for p in (os.path.join(here, ROSTER_CSV), ROSTER_CSV) if os.path.exists(p)), None)
-    if not path:
-        print("[lr_sync] no roster export found; attributing fixtures from live codes only")
-        return _ROSTER
+def isnum(x):
     try:
-        import csv
-        for r in csv.DictReader(open(path, encoding="utf-8-sig")):
-            m = _DIVCODE.match((r.get("Division") or "").strip())
-            dc = m.group(1) if m else ""
-            if not dc:
-                continue
-            for cell in (r.get("Home Team"), r.get("Away Team")):
-                fc = fullcode(cell)
-                if fc and fc.lower() != "bye":
-                    _ROSTER.setdefault(fc, dc)
-        print(f"[lr_sync] roster map: {len(_ROSTER)} team codes across "
-              f"{len(set(_ROSTER.values()))} divisions")
-    except Exception as e:
-        print(f"[lr_sync] roster export unreadable ({e}); attributing from live codes only")
-    return _ROSTER
+        float(x); return True
+    except Exception:
+        return False
+
+
+def ni(x):
+    try:
+        f = float(x); return int(f) if f == int(f) else f
+    except Exception:
+        return x
+
+
+def split_desc(desc):
+    m = re.match(r"^([A-Za-z]+\d+[A-Za-z]?)\s*-\s*(.+)$", desc or "")
+    if m:
+        return m.group(1).strip(), m.group(2).strip()
+    return (desc or "").strip(), (desc or "").strip()
+
+
+def prefix_group(k):
+    p = (k or "")[:1]
+    if p in "ABCD":
+        return "Reserves" if k.endswith("2") else "Senior Divisions"
+    if p in "EFG":
+        return "Veterans"
+    return {"H": "Women", "I": "Under-18", "K": "Under-16", "M": "Under-14", "O": "Under-12"}.get(p, "Other")
+
+
+def build_bracket(fx):
+    by_round = {}
+    for f in fx:
+        by_round.setdefault(f.get("roundDesc") or "Round", []).append(f)
+    def rmin(r):
+        return min((x.get("fixtureDateInMilliseconds") or 9e15) for x in by_round[r])
+    rounds = sorted(by_round, key=rmin)
+    cols = []
+    for r in rounds:
+        col = []
+        for f in sorted(by_round[r], key=lambda x: x.get("fixtureDateInMilliseconds") or 0):
+            d, t = fmt(f.get("fixtureDate"))
+            hs, as_ = f.get("homeScore"), f.get("roadScore")
+            sh = str(int(float(hs))) if (f.get("result") and isnum(hs)) else ""
+            sa = str(int(float(as_))) if (f.get("result") and isnum(as_)) else ""
+            col.append({"a": {"n": clean(f.get("homeTeamName")), "s": sh},
+                        "b": {"n": clean(f.get("roadTeamName")), "s": sa},
+                        "d": d, "t": t, "v": f.get("venueAndSubVenueDesc") or ""})
+        cols.append(col)
+    return {"rounds": rounds, "cols": cols}
 
 
 def build(season):
-    cfg = SEASONS[season]
-    print(f"[lr_sync] {cfg['label']}  (seed {cfg['seed']})")
-    divs = discover(cfg["seed"])
-    print(f"[lr_sync] discovered {len(divs)} competitions")
-    roster_map()                       # load the season-stable code->division roster once
-    crests, leagues = {}, {}
-    for code, name, fgkey in divs:
-        try:
-            d = scrape_division(fgkey, crests, code)
-            d["name"], d["group"] = name, group_of(code)
-            leagues[code] = d
-            print(f"  ✓ {code:4} {name:26} {len(d['table'])} teams, {len(d['fixtures'])} fx")
-        except Exception as e:
-            print(f"  ✗ {code:4} {name:26} {e}")
-        time.sleep(0.15)   # be gentle
-    total_fx = sum(len(l["fixtures"]) for l in leagues.values())
-    print(f"[lr_sync] live fixtures attributed by full team code: {total_fx} across "
-          f"{sum(1 for l in leagues.values() if l['fixtures'])} divisions")
-    print("[lr_sync] scraping knockout cups")
-    cups = build_cups(cfg["seed"], crests)
-    print(f"[lr_sync] {len(cups)} cups")
-    return {"season": season, "label": cfg["label"],
-            "updated": datetime.datetime.utcnow().isoformat() + "Z",
-            "crestBase": CREST_BASE, "leagues": leagues, "cups": cups, "crests": crests}
-
-
-def mirror_crests(crests, crestdir):
-    """Download each club badge into <crestdir>/<id>/115.jpg so the public site
-    serves crests from our own domain (no external image host). Returns the map
-    pruned to badges that actually exist. Clubs without a badge fall back to
-    their initials on the site, exactly as before."""
-    os.makedirs(crestdir, exist_ok=True)
-    kept = {}
-    got = 0
-    for nm, cid in crests.items():
-        dst = os.path.join(crestdir, str(cid))
-        fp = os.path.join(dst, "115.jpg")
-        if os.path.exists(fp) and os.path.getsize(fp) > 0:
-            kept[nm] = cid
+    sid = SEASON_IDS.get(season)
+    if not sid:
+        sys.exit("[lr_sync] unknown season %s" % season)
+    fixtures = jget("/getFixturesForSeason/%s" % sid)
+    groups = jget("/getFixtureGroupsForSeason/%s" % sid)
+    if not fixtures or not groups:
+        sys.exit("[lr_sync] API returned no data (season %s) - aborting so nothing is overwritten" % season)
+    divs = [g for g in groups if g.get("fixtureTypeID") == 1]
+    leagues, key_by_fgid = {}, {}
+    for g in divs:
+        k, nm = split_desc(g.get("fixtureGroupDesc"))
+        meta = DIVMAP.get(k) if season == "2026" else None
+        name = meta["name"] if meta else nm
+        grp = meta["group"] if meta else prefix_group(k)
+        leagues[k] = {"name": name, "group": grp, "table": [], "results": [], "fixtures": []}
+        key_by_fgid[g["fixtureGroupIdentifier"]] = k
+    # split fixtures -> results / upcoming
+    for f in fixtures:
+        if f.get("fixtureTypeID") != 1:
             continue
-        try:
-            r = requests.get(f"{CREST_BASE}/{cid}/115.jpg", headers=UA, timeout=25)
-            if r.status_code == 200 and r.content:
-                os.makedirs(dst, exist_ok=True)
-                open(fp, "wb").write(r.content)
-                kept[nm] = cid
-                got += 1
-        except Exception:
-            pass
-        time.sleep(0.1)
-    print(f"[lr_sync] mirrored crests: {got} new, {len(kept)} total local")
-    return kept
+        k = key_by_fgid.get(f.get("fixtureGroupIdentifier"))
+        if not k:
+            continue
+        L = leagues[k]; d, t = fmt(f.get("fixtureDate"))
+        home, away = clean(f.get("homeTeamName")), clean(f.get("roadTeamName"))
+        hs, as_ = f.get("homeScore"), f.get("roadScore"); ms = f.get("fixtureDateInMilliseconds") or 0
+        if f.get("result") and isnum(hs) and isnum(as_):
+            L["results"].append([home, away, str(int(float(hs))), str(int(float(as_))), d, ms])
+        elif not f.get("result"):
+            L["fixtures"].append([home, away, d, t, f.get("venueAndSubVenueDesc") or "", ms])
+    for k, L in leagues.items():
+        L["results"].sort(key=lambda r: r[5], reverse=True)
+        L["fixtures"].sort(key=lambda r: r[5])
+        L["results"] = [r[:5] for r in L["results"][:MAX_RESULTS_PER_DIV]]
+        L["fixtures"] = [r[:5] for r in L["fixtures"]]
+    # tables
+    for g in divs:
+        st = jget("/getStandingsForFixtureGroup/1/%s" % g["fixtureGroupIdentifier"])
+        if st and st[0].get("standingsLines"):
+            leagues[key_by_fgid[g["fixtureGroupIdentifier"]]]["table"] = [
+                [clean(l["teamName"]), ni(l["overallPlayed"]), ni(l["overallWon"]), ni(l["overallTied"]),
+                 ni(l["overallLoss"]), ni(l["overallScoreFor"]), ni(l["overallScoreAgainst"]),
+                 ni(l["points"]), l.get("recentForm", "")]
+                for l in st[0]["standingsLines"]]
+    # cups from the same season-fixtures payload
+    cup_fx = {}
+    for f in fixtures:
+        if f.get("fixtureTypeID") == 2:
+            cup_fx.setdefault(f.get("fixtureGroupIdentifier"), []).append(f)
+    cups = []
+    if season == "2026":
+        for cm in CUPMETA:
+            fgid = int(cm["key"].split("_")[1])
+            br = build_bracket(cup_fx.get(fgid, []))
+            if br["cols"]:
+                cups.append({"key": cm["key"], "name": cm["name"], "group": cm["group"], "bracket": br})
+    else:
+        for g in groups:
+            if g.get("fixtureTypeID") == 2:
+                fgid = g["fixtureGroupIdentifier"]; br = build_bracket(cup_fx.get(fgid, []))
+                if br["cols"]:
+                    cups.append({"key": "2_%s" % fgid, "name": clean(g.get("fixtureGroupDesc")),
+                                 "group": "Senior", "bracket": br})
+    return {"season": SEASON_NO.get(season, int(season)), "label": LABELS.get(season, "CTTLFA %s" % season),
+            "updated": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.%f") + "Z",
+            "crestBase": CREST_BASE, "leagues": leagues, "cups": cups, "crests": CRESTS}
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--season", default="2026", choices=list(SEASON_IDS))
+    ap.add_argument("--out", default="season.json")
+    ap.add_argument("--crestdir", default=None, help="ignored (crests served from the LeagueRepublic CDN)")
+    a = ap.parse_args()
+    data = build(a.season)
+    with open(a.out, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
+    nfx = sum(len(l["fixtures"]) for l in data["leagues"].values())
+    nres = sum(len(l["results"]) for l in data["leagues"].values())
+    print("[lr_sync] wrote %s  (%d divisions, %d cups, %d fixtures, %d results)"
+          % (a.out, len(data["leagues"]), len(data["cups"]), nfx, nres))
 
 
 if __name__ == "__main__":
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--season", default="2026", choices=list(SEASONS))
-    ap.add_argument("--out", default="season.json")
-    ap.add_argument("--crestdir", default="photos/crests",
-                    help="local folder to mirror club badges into (served by our site)")
-    a = ap.parse_args()
-    data = build(a.season)
-    # serve badges from our own site rather than the external image host
-    data["crests"] = mirror_crests(data["crests"], a.crestdir)
-    data["crestBase"] = "photos/crests"
-    # Only the "updated" timestamp changes every run. If the actual data is
-    # unchanged, keep the previous timestamp so the file is byte-identical and
-    # git/CI see no change (no needless commit, no needless site rebuild).
-    if os.path.exists(a.out):
-        try:
-            old = json.load(open(a.out, encoding="utf-8"))
-            a_cmp = {k: v for k, v in data.items() if k != "updated"}
-            b_cmp = {k: v for k, v in old.items() if k != "updated"}
-            if a_cmp == b_cmp:
-                data["updated"] = old.get("updated", data["updated"])
-                print("[lr_sync] no data change since last run")
-        except Exception:
-            pass
-    with open(a.out, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
-    print(f"[lr_sync] wrote {a.out}  ({len(data['leagues'])} competitions, {len(data['cups'])} cups, {len(data['crests'])} crests)")
+    main()
