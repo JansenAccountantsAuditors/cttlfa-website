@@ -4186,6 +4186,7 @@ body .card-f{background:#FBF7F0}
     <button class="fab-item" id="fabFind"><span class="fi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg></span>Find my club</button>
     <button class="fab-item" data-nav="register"><span class="fi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span>Fees &amp; how to join</button>
     <button class="fab-item" data-nav="report"><span class="fi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg></span>Report misconduct</button>
+    <a class="fab-item" href="docs/cttlfa-protest-complaint-form-2026.pdf" download="CTTLFA Protest and Complaint Form 2026.pdf" onclick="document.getElementById('fab').classList.remove('open')"><span class="fi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h4M9 17h6"/></svg></span>Protest / complaint form</a>
     <button class="fab-item" data-nav="contact"><span class="fi-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="m4 7 8 6 8-6"/></svg></span>Contact the office</button>
   </div>
   <button class="fab-toggle" id="fabToggle" aria-label="Quick actions" aria-expanded="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg></button>
@@ -4902,6 +4903,7 @@ function applyCommitteeMessages(){
 applyCommitteeMessages();
 const docItem=d=>`<div class="doc" role="button" tabindex="0" data-clickable aria-label="Download ${d[0]}"><div class="fic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></div><div class="dt"><b>${d[0]}</b><span>${d[1]}</span></div><div class="dl"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></div></div>`;
 const DC_DOCS=[
+["Protest & Complaint Form 2026","PDF · The form to lodge a protest or complaint","docs/cttlfa-protest-complaint-form-2026.pdf","CTTLFA Protest and Complaint Form 2026.pdf"],
 ["CTTLFA Constitution 2026","PDF · Powers & structures","docs/cttlfa-constitution-2026.pdf","CTTLFA Constitution 2026.pdf"],
 ["Rules & Regulations 2026","PDF · Protests, complaints & appeals","docs/cttlfa-rules-and-regulations-2026.pdf","CTTLFA Rules and Regulations 2026.pdf"],
 ["Disciplinary Code 2026","PDF · Offences, hearings & sanctions","docs/cttlfa-disciplinary-code-2026.pdf","CTTLFA Disciplinary Code 2026.pdf"]];
@@ -5838,6 +5840,7 @@ let DOWNLOADS=[
   {n:"SAFA Cape Town Standing Orders",m:"Standing orders of the regional body",t:"Governance",f:"docs/safa-cape-town-standing-orders.pdf",d:"SAFA Cape Town Standing Orders.pdf"},
   /* Discipline */
   {n:"Disciplinary Code 2026",m:"Offences, hearings, sanctions and appeals",t:"Discipline",f:"docs/cttlfa-disciplinary-code-2026.pdf",d:"CTTLFA Disciplinary Code 2026.pdf"},
+  {n:"Protest & Complaint Form 2026",m:"The form clubs use to lodge a protest or complaint, with the fee and proof of payment",t:"Discipline",f:"docs/cttlfa-protest-complaint-form-2026.pdf",d:"CTTLFA Protest and Complaint Form 2026.pdf"},
   /* Referees */
   {n:"Referees Committee Constitution 2024",m:"Constitution of the CTTLFA Referees Committee",t:"Referees",f:"docs/cttlfa-referees-committee-constitution-2024.pdf",d:"CTTLFA Referees Committee Constitution 2024.pdf"},
   /* Forms */
