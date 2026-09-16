@@ -727,8 +727,24 @@ function drawReg(reg){
   var sel=el('rgCycle'); if(sel) sel.onchange=function(){ REG_DONE=true; el('rgLoading').hidden=false; el('rgBody').hidden=true; loadReg(sel.value); };
   var s=el('mSearch'); if(s){ s.oninput=function(){ drawMembers(s.value); }; }
   var c=el('mCsv'); if(c) c.onclick=membersCSV;
-  window.MEM_SHOW_IDS=false;
-  var rv=el('mReveal'); if(rv) rv.onclick=function(){ window.MEM_SHOW_IDS=!window.MEM_SHOW_IDS; rv.textContent=window.MEM_SHOW_IDS?'Hide ID numbers':'Show ID numbers'; rv.setAttribute('aria-pressed', window.MEM_SHOW_IDS?'true':'false'); drawMembers(el('mSearch')?el('mSearch').value:''); };
+  window.MEM_SHOW_IDS=false; window.MEM_IDMAP=null;
+  var rv=el('mReveal'); if(rv) rv.onclick=async function(){
+    if(!window.MEM_SHOW_IDS && !window.MEM_IDMAP){
+      rv.disabled=true; var _t=rv.textContent; rv.textContent='Loading…';
+      var cn=el('mCount');
+      try{
+        var cyc=(MEMBERS&&MEMBERS.cycle_start);
+        var ir=await sb.rpc('portal_member_ids', cyc?{p_start_year:Number(cyc)}:{});
+        if(ir.error){ rv.textContent=_t; rv.disabled=false; if(cn) cn.textContent='Could not load ID numbers: '+ir.error.message; return; }
+        var map={}; ((ir.data&&ir.data.ids)||[]).forEach(function(o){ map[o.safa]=o.id_number; }); window.MEM_IDMAP=map;
+      }catch(e){ rv.textContent=_t; rv.disabled=false; if(cn) cn.textContent='Could not load ID numbers.'; return; }
+      rv.disabled=false;
+    }
+    window.MEM_SHOW_IDS=!window.MEM_SHOW_IDS;
+    rv.textContent=window.MEM_SHOW_IDS?'Hide ID numbers':'Show ID numbers';
+    rv.setAttribute('aria-pressed', window.MEM_SHOW_IDS?'true':'false');
+    drawMembers(el('mSearch')?el('mSearch').value:'');
+  };
   drawMembers('');
 }
 function catTag(x){
@@ -744,12 +760,12 @@ function drawMembers(q){
   var rows=list.filter(function(x){ if(!q) return true;
     var name=((x.first_name||'')+' '+(x.surname||'')).toLowerCase();
     return name.indexOf(q)>=0 || (x.category||'').toLowerCase().indexOf(q)>=0
-      || String(x.safa||'').toLowerCase().indexOf(q)>=0 || String(x.id_number||'').toLowerCase().indexOf(q)>=0
+      || String(x.safa||'').toLowerCase().indexOf(q)>=0 || String((window.MEM_IDMAP&&window.MEM_IDMAP[x.safa])||'').toLowerCase().indexOf(q)>=0
       || String(x.club||'').toLowerCase().indexOf(q)>=0 || (x.type||'').toLowerCase().indexOf(q)>=0; });
   var b='';
   if(!rows.length){ b='<tr><td colspan="6" class="empty">'+(list.length?'No members match your search.':'No members on record for this cycle.')+'</td></tr>'; }
   else rows.forEach(function(x){ var nm=((x.surname||'')+', '+(x.first_name||'')).replace(/^, |, $/,'');
-    b+='<tr><td>'+esc(nm)+'</td><td>'+catTag(x)+'</td><td class="mono">'+esc(x.safa||'')+'</td><td class="mono">'+(window.MEM_SHOW_IDS?esc(x.id_number||''):maskId(x.id_number))+'</td><td>'+esc(x.club||'')+'</td><td>'+(x.type==='referee'?'Official':'Player')+'</td></tr>'; });
+    b+='<tr><td>'+esc(nm)+'</td><td>'+catTag(x)+'</td><td class="mono">'+esc(x.safa||'')+'</td><td class="mono">'+(window.MEM_SHOW_IDS?esc((window.MEM_IDMAP&&window.MEM_IDMAP[x.safa])||''):'•••••••••')+'</td><td>'+esc(x.club||'')+'</td><td>'+(x.type==='referee'?'Official':'Player')+'</td></tr>'; });
   el('mBody').innerHTML=b;
   var cnt=el('mCount'); if(cnt) cnt.textContent='Showing '+rows.length+' of '+list.length+' members'+(MEMBERS&&MEMBERS.cycle_label?(' · '+MEMBERS.cycle_label+' cycle'):'');
 }
@@ -758,7 +774,7 @@ function membersCSV(){
   var cy=(MEMBERS&&MEMBERS.cycle_label)||'';
   var out='Surname,First name,Category,SAFA number,ID number,Club,Foreign,Type,Card cycle\r\n';
   list.forEach(function(x){ function q(s){ s=String(s==null?'':s); return /[",\r\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
-    out+=[q(x.surname),q(x.first_name),q(x.category),q(x.safa),(window.MEM_SHOW_IDS?q(x.id_number):q(maskId(x.id_number))),q(x.club),(x.foreign?'Yes':'No'),(x.type==='referee'?'Official':'Player'),q(cy)].join(',')+'\r\n'; });
+    out+=[q(x.surname),q(x.first_name),q(x.category),q(x.safa),(window.MEM_SHOW_IDS?q((window.MEM_IDMAP&&window.MEM_IDMAP[x.safa])||''):''),q(x.club),(x.foreign?'Yes':'No'),(x.type==='referee'?'Official':'Player'),q(cy)].join(',')+'\r\n'; });
   dl((HOME.name||'club').replace(/[^A-Za-z0-9]+/g,'_')+'_members.csv', out, 'text/csv');
 }
 
