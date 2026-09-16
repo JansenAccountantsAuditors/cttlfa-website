@@ -1053,7 +1053,7 @@
       document.body.classList.add("rolefincom");
       try{ var _bs=document.querySelector(".brandwrap .bs"); if(_bs) _bs.textContent="Fincom Dashboard"; document.title="CTTLFA Fincom Dashboard"; }catch(e){}
     }
-    await loadClubs(); await loadMeetings(); await loadUsers();
+    await loadClubs(); await loadMeetings(); if(window.AC && window.AC.loadUsers){ try{ await window.AC.loadUsers(); }catch(e){} }
     renderHome(); homeWire(); var _mp0=$("meetingPick"); if(_mp0) _mp0.style.display="none";
     ensureQuickNav();
     if(meRole==="fincom") goTab("fincom");
