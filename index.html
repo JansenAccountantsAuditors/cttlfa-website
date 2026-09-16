@@ -5,7 +5,171 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cape Town Tygerberg LFA — Official Website</title>
 <link rel="preconnect" href="https://www.websiteadmin.cttfa.co.za" crossorigin>
-<script>/* start the match-data fetch immediately so it isn't queued behind other requests */try{window.__seasonP=fetch('season.json').then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}catch(e){}try{window.__apptP=fetch('appointments.json').then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}catch(e){}</script>
+<script>/* start the match-data fetch immediately so it isn't queued behind other requests */window.__seasonP=null;try{window.__apptP=fetch('appointments.json').then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}catch(e){}</script>
+<script>/* LeagueRepublic live feed (replaces scraped season.json) */
+/* leaguerepublic-live.js — live LeagueRepublic feed for the CTTFA website.
+   Replaces the scraped season.json with direct calls to the LeagueRepublic JSON API.
+   Produces the exact season object shape the site already renders:
+     { season, label, updated, crestBase, leagues:{CODE:{key,name,group,table,results,fixtures}}, cups:[...], crests:{} }
+   No pipeline, no scraping — the browser reads LeagueRepublic live on each load. */
+(function (g) {
+  "use strict";
+  var API = "https://api.leaguerepublic.com/json";
+  var BAKED = {"divmap": {"A1": {"name": "Premier Division", "group": "Senior Divisions"}, "A2": {"name": "Premier Reserve", "group": "Reserves"}, "B1": {"name": "First Division", "group": "Senior Divisions"}, "B2": {"name": "First Reserve", "group": "Reserves"}, "C1": {"name": "Second Division", "group": "Senior Divisions"}, "C2": {"name": "Second Reserve", "group": "Reserves"}, "D1": {"name": "3rd Division", "group": "Senior Divisions"}, "D2": {"name": "4th Division", "group": "Senior Divisions"}, "D3": {"name": "5th Division", "group": "Senior Divisions"}, "D4": {"name": "6th Division", "group": "Senior Divisions"}, "E1": {"name": "Vets 035", "group": "Veterans"}, "E2": {"name": "Vets 035 B", "group": "Veterans"}, "F1": {"name": "Vets 040 A", "group": "Veterans"}, "F2": {"name": "Vets 040 B", "group": "Veterans"}, "G1": {"name": "Vets 045 A", "group": "Veterans"}, "G4": {"name": "Vets 050 A", "group": "Veterans"}, "G5": {"name": "Vets 050 B", "group": "Veterans"}, "G6": {"name": "Vets O50 C", "group": "Veterans"}, "H1": {"name": "Womens Premier League", "group": "Women"}, "H2": {"name": "Womens First Division", "group": "Women"}, "I1": {"name": "Under 18 Premier One", "group": "Under-18"}, "I2": {"name": "Under 18 Premier Two", "group": "Under-18"}, "I3": {"name": "Under 18 Premier Three", "group": "Under-18"}, "I3B": {"name": "Under 18 Premier Three B", "group": "Under-18"}, "I4": {"name": "Under 18 Division Four", "group": "Under-18"}, "I5": {"name": "Under 18 Division Five", "group": "Under-18"}, "K1": {"name": "Under 16 Premier One", "group": "Under-16"}, "K2": {"name": "Under 16 Premier Two", "group": "Under-16"}, "K3": {"name": "Under 16 Premier Three", "group": "Under-16"}, "K3B": {"name": "Under 16 Premier Three B", "group": "Under-16"}, "K4": {"name": "Under 16 Division Four", "group": "Under-16"}, "K5": {"name": "Under 16 Division Five", "group": "Under-16"}, "K6": {"name": "Under 16 Division Six", "group": "Under-16"}, "K7": {"name": "Under 16 Girls Premier One", "group": "Under-16"}, "K8": {"name": "Under 16 Division Seven", "group": "Under-16"}, "M1": {"name": "Under 14 Premier One", "group": "Under-14"}, "M2": {"name": "Under 14 Premier Two", "group": "Under-14"}, "M3": {"name": "Under 14 Premier Three", "group": "Under-14"}, "M3B": {"name": "Under 14 Premier Three B", "group": "Under-14"}, "M4": {"name": "Under 14 Division Four", "group": "Under-14"}, "M5": {"name": "Under 14 Division Five", "group": "Under-14"}, "M6": {"name": "Under 14 Division Six", "group": "Under-14"}, "M7": {"name": "Under 14 Division Seven", "group": "Under-14"}, "M8": {"name": "Under 14 Girls Premier One", "group": "Under-14"}, "M9": {"name": "Under 14 Division Eight", "group": "Under-14"}, "O1": {"name": "Under 12 Premier One", "group": "Under-12"}, "O2": {"name": "Under 12 Premier Two", "group": "Under-12"}, "O3": {"name": "Under 12 Premier Three", "group": "Under-12"}, "O3B": {"name": "Under 12 Premier Three B", "group": "Under-12"}, "O4": {"name": "Under 12 Division Four", "group": "Under-12"}, "O5": {"name": "Under 12 Division Five", "group": "Under-12"}, "O6": {"name": "Under 12 Division Six", "group": "Under-12"}, "O7": {"name": "Under 12 Girls Premier One (9v9)", "group": "Under-12"}, "O8": {"name": "Under 12 Division Seven", "group": "Under-12"}, "I3G": {"name": "Under 18 Premier 3 A&B", "group": "Under-18"}, "O3G": {"name": "Under 12 Premier 3 A&B", "group": "Under-12"}, "M3G": {"name": "Under 14 Premier 3 A&B", "group": "Under-14"}, "K3G": {"name": "Under 16 Premier 3 A&B", "group": "Under-16"}}, "groups": ["Senior Divisions", "Reserves", "Veterans", "Women", "Under-18", "Under-16", "Under-14", "Under-12"], "crests": {"Durbanville": "603169281", "Table View": "926521367", "Hanover Park": "966477820", "Rygersdal": "342234291", "C.R. Vasco Da Gama": "759498919", "Fish Hoek": "724061652", "Holy Cross": "894903931", "Saxon Rovers": "387054430", "UCT": "152827271", "Bothasig": "416141189", "Sunningdale City": "938776554", "Bellville City FC": "522626759", "JMI": "738238671", "Kensington": "721154884", "Stephanian Ottery": "767162649", "Tramway": "718389157", "Northpine United": "674014319", "Ruyterwacht": "462020176", "Brooklyn Superstars": "281655054", "Queens Park": "247119670", "Avendale Athletico": "571817130", "Young Bafana": "801154554", "Chelsea Bridgetown": "58556195", "West End United": "790271081", "Camps Bay": "924011377", "Mutual FC": "462207720", "YSD Macassar": "149983422", "FC Kapstadt": "227801021", "Shosholoza FC": "64445222", "Bellville City": "905078339", "Lansdowne": "321044869", "Everton United": "215524454", "Turfhall": "442872570", "Sunningdale City B": "954589510", "Jamestown United": "901761593", "West End United A": "817291201", "Hanover Park B": "144922522", "West End United B": "225405348", "West End United C": "484529293", "Hanover Park C": "799019491", "Tramway B": "429631959", "Stephanian Ottery B": "284704636", "Magic Ladies": "24348048", "Magic Ladies B": "855305244", "UCT B": "672355881", "CR Vasco Da Gama": "365992196", "Shosholoza": "748120971", "Grass Boots": "909725523", "CR Vasco Da Gama B": "335799158", "Northpine United B": "230255460", "Norway Parks B": "884240218", "Saxon Rovers B": "413585152", "Bothasig B": "873184117", "Rygersdal B.": "884144531", "Fish Hoek B.": "388184835", "Ruyterwacht B": "286626581", "Bellville City B": "144214403", "Bothasig C": "127932065", "Rygersdal B": "535503655", "Bellville City B.": "242635109", "Shosholoza B": "312508450", "Kensington B": "393120770", "Sunningdale City C": "298169474", "Nova Generation": "582068396", "Northpine United C": "593964196", "Rygersdal C": "513638581", "Fish Hoek C.": "810021150", "Bothasig D": "262950410", "Saxon Rovers B.": "283676164", "FC Kapstadt B": "594876184", "Sunningdale City C.": "524104961", "Northpine United D": "942316362", "Bellville City C": "635884056", "Grass Boots B": "628006242", "Stephanian Ottery C": "581885516", "Fish Hoek C": "613648472", "Meadowridge B": "349681226", "Fish Hoek.": "431612356", "Mutual B": "861951024", "Norway Parks C": "36837663"}, "crestBase": "https://images.leaguerepublic.com/data/images", "cups": [{"key": "2_870266437", "name": "Premier League Cup", "group": "Senior"}, {"key": "2_635842836", "name": "Premier Reserves Cup", "group": "Senior"}, {"key": "2_440158046", "name": "First Division Cup", "group": "Senior"}, {"key": "2_663677289", "name": "First Reserves Cup", "group": "Senior"}, {"key": "2_545176691", "name": "Second Division Cup", "group": "Senior"}, {"key": "2_564311915", "name": "Second Reserve Cup", "group": "Senior"}, {"key": "2_175543749", "name": "3rd Division Cup", "group": "Senior"}, {"key": "2_826947009", "name": "4th Division Cup", "group": "Senior"}, {"key": "2_592804479", "name": "5th Division Cup", "group": "Senior"}, {"key": "2_549170807", "name": "6th Division Cup", "group": "Senior"}, {"key": "2_339589907", "name": "Womans Premier League Cup", "group": "Women"}, {"key": "2_148522950", "name": "Womans First Division Cup", "group": "Women"}, {"key": "2_389709242", "name": "O/35 A Division Cup", "group": "Senior"}, {"key": "2_445396709", "name": "O/35 B Division Cup", "group": "Senior"}, {"key": "2_367814409", "name": "O/40 A Division Cup", "group": "Veterans"}, {"key": "2_398052558", "name": "O/40 B Division Cup", "group": "Veterans"}, {"key": "2_483328144", "name": "O/45 A Division Cup", "group": "Senior"}, {"key": "2_29602231", "name": "O/50 A Division Cup", "group": "Veterans"}, {"key": "2_341021773", "name": "O/50 B Division Cup", "group": "Veterans"}, {"key": "2_163344839", "name": "O/50 C Division Cup", "group": "Veterans"}, {"key": "2_344235459", "name": "U/18 Premier One Cup", "group": "Under-18"}, {"key": "2_807292977", "name": "U/18 Premier Two Cup", "group": "Under-18"}, {"key": "2_899443994", "name": "U/18 Premier Three Cup", "group": "Under-18"}, {"key": "2_36090187", "name": "U/18 Premier Three B Cup", "group": "Under-18"}, {"key": "2_138945952", "name": "U/18 Division Four Cup", "group": "Under-18"}, {"key": "2_467424669", "name": "U/18 Division Five Cup", "group": "Under-18"}, {"key": "2_637880725", "name": "U/16 Premier One Cup", "group": "Under-16"}, {"key": "2_558835710", "name": "U/16 Premier Two Cup", "group": "Under-16"}, {"key": "2_606011803", "name": "U/16 Premier Three Cup", "group": "Under-16"}, {"key": "2_845275354", "name": "U/16 Premier Three B Cup", "group": "Under-16"}, {"key": "2_698339450", "name": "U/16 Division Four Cup", "group": "Under-16"}, {"key": "2_816835386", "name": "U/16 Division Five Cup", "group": "Under-16"}, {"key": "2_886186997", "name": "U/16 Division Six Cup", "group": "Under-16"}, {"key": "2_72978235", "name": "U/16 Girls Premier Cup", "group": "Under-16"}, {"key": "2_523149227", "name": "U/16 Division Seven Cup", "group": "Under-16"}, {"key": "2_887884945", "name": "U/14 Premier One Cup", "group": "Under-14"}, {"key": "2_359663090", "name": "U/14 Premier Two Cup", "group": "Under-14"}, {"key": "2_625505235", "name": "U/14 Premier Three Cup", "group": "Under-14"}, {"key": "2_169776866", "name": "U/14 Premier Three B Cup", "group": "Under-14"}, {"key": "2_98508192", "name": "U/14 Division Four Cup", "group": "Under-14"}, {"key": "2_658734577", "name": "U/14 Division Five Cup", "group": "Under-14"}, {"key": "2_215646910", "name": "U/14 Division Six Cup", "group": "Under-14"}, {"key": "2_644243770", "name": "U/14 Division Seven Cup", "group": "Under-14"}, {"key": "2_801704572", "name": "U/14 Girls Premier Cup", "group": "Under-14"}, {"key": "2_51825301", "name": "U/14 Division Eight Cup", "group": "Under-14"}, {"key": "2_922320980", "name": "U/12 Premier One Cup", "group": "Under-12"}, {"key": "2_247013237", "name": "U/12 Premier Two Cup", "group": "Under-12"}, {"key": "2_432841572", "name": "U/12 Premier Three Cup", "group": "Under-12"}, {"key": "2_163942268", "name": "U/12 Premier Three B Cup", "group": "Under-12"}, {"key": "2_13531507", "name": "U/12 Division Four Cup", "group": "Under-12"}, {"key": "2_551102346", "name": "U/12 Division Five Cup", "group": "Under-12"}, {"key": "2_95555487", "name": "U/12 Division Six Cup", "group": "Under-12"}, {"key": "2_42519981", "name": "U/12 Girls Premier Cup", "group": "Under-12"}, {"key": "2_768685067", "name": "U/12 Division Seven Cup", "group": "Under-12"}], "labels": {"season.json": "CTTLFA 2026", "season-2025.json": "CTTLFA 2025"}, "seasonIDs": {"season.json": 47708359, "season-2025.json": 763744782}, "seasonNo": {"season.json": 2026, "season-2025.json": 2025}};
+  var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var CODE_RE = /^[A-Za-z0-9]+-\d+[A-Za-z]?-\s*/;
+
+  function jget(path, tries) {
+    tries = tries || 4;
+    return fetch(API + path + ".json", { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .catch(function (e) {
+        if (tries <= 1) return null;
+        return new Promise(function (res) { setTimeout(res, 400 * (5 - tries)); })
+          .then(function () { return jget(path, tries - 1); });
+      });
+  }
+  function clean(n) { return n ? String(n).replace(CODE_RE, "").trim() : (n || ""); }
+  function isNum(x) { return x !== null && x !== "" && !isNaN(+x); }
+  function ni(x) { var f = parseFloat(x); return isNaN(f) ? x : (f === Math.round(f) ? Math.round(f) : f); }
+  function fmt(s) {
+    if (!s || s.length < 8) return ["", ""];
+    var day = +s.slice(6, 8), mon = MON[(+s.slice(4, 6)) - 1] || "";
+    var t = s.length >= 14 ? s.slice(9, 14) : "";
+    return [day + " " + mon, t];
+  }
+  function splitDesc(desc) {
+    var s = String(desc || "");
+    var m = s.match(/^([A-Za-z]+\d+[A-Za-z]?)\s*-\s*(.+)$/);
+    if (m) return [m[1].trim(), m[2].trim()];
+    return [s.trim(), s.trim()];
+  }
+  function prefixGroup(k) {
+    var p = (k || "").charAt(0);
+    if (/[A-D]/.test(p)) return /2$/.test(k) ? "Reserves" : "Senior Divisions";
+    if (/[E-G]/.test(p)) return "Veterans";
+    if (p === "H") return "Women";
+    if (p === "I") return "Under-18"; if (p === "K") return "Under-16";
+    if (p === "M") return "Under-14"; if (p === "O") return "Under-12";
+    return "Other";
+  }
+  // simple concurrency-limited map
+  function pmap(arr, limit, fn) {
+    return new Promise(function (resolve) {
+      var i = 0, active = 0, done = 0, n = arr.length, out = new Array(n);
+      if (!n) return resolve(out);
+      function step() {
+        while (active < limit && i < n) {
+          (function (idx) {
+            active++;
+            Promise.resolve(fn(arr[idx], idx)).then(function (v) {
+              out[idx] = v; active--; done++;
+              if (done === n) resolve(out); else step();
+            });
+          })(i++);
+        }
+      }
+      step();
+    });
+  }
+
+  function buildBracket(fx) {
+    // group cup ties by round, order rounds by earliest date
+    var byRound = {};
+    fx.forEach(function (f) {
+      var r = f.roundDesc || "Round";
+      (byRound[r] = byRound[r] || []).push(f);
+    });
+    var rounds = Object.keys(byRound).sort(function (a, b) {
+      var ma = Math.min.apply(null, byRound[a].map(function (x) { return x.fixtureDateInMilliseconds || 9e15; }));
+      var mb = Math.min.apply(null, byRound[b].map(function (x) { return x.fixtureDateInMilliseconds || 9e15; }));
+      return ma - mb;
+    });
+    var cols = rounds.map(function (r) {
+      return byRound[r].sort(function (a, b) {
+        return (a.fixtureDateInMilliseconds || 0) - (b.fixtureDateInMilliseconds || 0);
+      }).map(function (f) {
+        var d = fmt(f.fixtureDate), hs = f.homeScore, as = f.roadScore;
+        var sh = (f.result && isNum(hs)) ? String(+hs) : "";
+        var sa = (f.result && isNum(as)) ? String(+as) : "";
+        return { a: { n: clean(f.homeTeamName), s: sh }, b: { n: clean(f.roadTeamName), s: sa },
+                 d: d[0], t: d[1], v: f.venueAndSubVenueDesc || "" };
+      });
+    });
+    return { rounds: rounds, cols: cols };
+  }
+
+  function buildSeason(fileKey) {
+    var seasonID = BAKED.seasonIDs[fileKey];
+    if (!seasonID) return Promise.resolve(null);
+    return Promise.all([
+      jget("/getFixturesForSeason/" + seasonID),
+      jget("/getFixtureGroupsForSeason/" + seasonID)
+    ]).then(function (res) {
+      var fixtures = res[0], groups = res[1];
+      if (!fixtures || !fixtures.length || !groups || !groups.length) return null;
+      var divGroups = groups.filter(function (x) { return x.fixtureTypeID === 1; });
+      var leagues = {}, keyByFgid = {};
+      divGroups.forEach(function (gp) {
+        var kd = splitDesc(gp.fixtureGroupDesc), k = kd[0];
+        var meta = BAKED.divmap[k] || { name: kd[1], group: prefixGroup(k) };
+        leagues[k] = { key: k, name: meta.name, group: meta.group, table: [], results: [], fixtures: [] };
+        keyByFgid[gp.fixtureGroupIdentifier] = k;
+      });
+      // split fixtures -> results / upcoming, per division
+      fixtures.forEach(function (f) {
+        if (f.fixtureTypeID !== 1) return;
+        var k = keyByFgid[f.fixtureGroupIdentifier]; if (!k) return;
+        var L = leagues[k], d = fmt(f.fixtureDate);
+        var home = clean(f.homeTeamName), away = clean(f.roadTeamName);
+        var hs = f.homeScore, as = f.roadScore, ms = f.fixtureDateInMilliseconds || 0;
+        if (f.result && isNum(hs) && isNum(as)) {
+          L.results.push([home, away, String(+hs), String(+as), d[0], ms]);
+        } else if (!f.result) {
+          L.fixtures.push([home, away, d[0], d[1], f.venueAndSubVenueDesc || "", ms]);
+        }
+      });
+      Object.keys(leagues).forEach(function (k) {
+        var L = leagues[k];
+        L.results.sort(function (a, b) { return b[5] - a[5]; });
+        L.fixtures.sort(function (a, b) { return a[5] - b[5]; });
+        L.results = L.results.map(function (r) { return r.slice(0, 5); });
+        L.fixtures = L.fixtures.map(function (r) { return r.slice(0, 5); });
+      });
+      // tables (per-division standings, in parallel)
+      return pmap(divGroups, 6, function (gp) {
+        return jget("/getStandingsForFixtureGroup/1/" + gp.fixtureGroupIdentifier).then(function (st) {
+          if (st && st[0] && st[0].standingsLines) {
+            leagues[keyByFgid[gp.fixtureGroupIdentifier]].table = st[0].standingsLines.map(function (l) {
+              return [clean(l.teamName), ni(l.overallPlayed), ni(l.overallWon), ni(l.overallTied),
+                      ni(l.overallLoss), ni(l.overallScoreFor), ni(l.overallScoreAgainst), ni(l.points), l.recentForm || ""];
+            });
+          }
+        });
+      }).then(function () {
+        // cups from the same season-fixtures payload
+        var cupFix = {};
+        fixtures.forEach(function (f) {
+          if (f.fixtureTypeID !== 2) return;
+          (cupFix[f.fixtureGroupIdentifier] = cupFix[f.fixtureGroupIdentifier] || []).push(f);
+        });
+        var cups = BAKED.cups.map(function (cm) {
+          var fgid = +cm.key.split("_")[1], fx = cupFix[fgid] || [];
+          return { key: cm.key, name: cm.name, group: cm.group, bracket: buildBracket(fx) };
+        }).filter(function (c) { return c.bracket.cols.length; });
+        if (!Object.keys(leagues).length) return null;
+        return {
+          season: BAKED.seasonNo[fileKey], label: BAKED.labels[fileKey],
+          crestBase: BAKED.crestBase, crests: BAKED.crests,
+          updated: new Date().toISOString(), leagues: leagues, cups: cups
+        };
+      });
+    });
+  }
+  g.LRLive = { buildSeason: buildSeason, _baked: BAKED };
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
 <meta name="description" content="The official home of the Cape Town Tygerberg Local Football Association. Fixtures, results, league standings, clubs, referees, registration and news. Est. 1993.">
 <link rel="canonical" href="https://www.cttfa.co.za/">
 <meta name="theme-color" content="#071A4A">
@@ -5799,7 +5963,7 @@ function applySeason(j){
   if(active&&rf[active.id])try{rf[active.id]();}catch(e){}
   return true;
 }
-function loadSeason(url){var p=(url==='season.json'&&window.__seasonP)?window.__seasonP:fetch(url).then(r=>r.ok?r.json():null);window.__seasonP=null;return p.then(applySeason).catch(()=>false);}
+function loadSeason(url){function apply(j){if(!j||!j.leagues||!Object.keys(j.leagues).length)return false;try{sessionStorage.setItem('lrlive:'+url,JSON.stringify(j));}catch(e){}applySeason(j);return true;}var cached=null;try{cached=sessionStorage.getItem('lrlive:'+url);}catch(e){}if(cached){try{var jc=JSON.parse(cached);if(jc&&jc.leagues&&Object.keys(jc.leagues).length)applySeason(jc);}catch(e){}(window.LRLive?LRLive.buildSeason(url):Promise.resolve(null)).then(apply).catch(function(){});return Promise.resolve(true);}return (window.LRLive?LRLive.buildSeason(url):Promise.resolve(null)).then(apply).catch(function(){return false;});}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-season]');if(!b)return;
   document.querySelectorAll('[data-season]').forEach(x=>x.classList.remove('active'));b.classList.add('active');
   loadSeason(b.dataset.season);});
