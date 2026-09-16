@@ -3959,7 +3959,7 @@
     Array.prototype.forEach.call(m.querySelectorAll('.deb-tab'),function(tb){ tb.onclick=function(){
       Array.prototype.forEach.call(m.querySelectorAll('.deb-tab'),function(x){x.classList.toggle('on',x===tb);});
       var pn=tb.dataset.tab; Array.prototype.forEach.call(m.querySelectorAll('.deb-tabpanel'),function(p){p.classList.toggle('on',p.dataset.panel===pn);});
-      if(pn==='tx' && !m._txLoaded){ m._txLoaded=true; debRenderTxTable(c, debTxPeriodOpts()); }
+      if(pn==='tx'){ debRenderTxTable(c, debTxPeriodOpts()); }
       var bd=m.querySelector('.deb-mbody'); if(bd) bd.scrollTop=0;
     }; });
     function goCorrTab(){ var t=m.querySelector('.deb-tab[data-tab="corr"]'); if(t) t.click(); }
