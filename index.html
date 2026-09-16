@@ -929,6 +929,39 @@ img[data-broken]{display:none!important}
 .ko-stats>div{text-align:center}
 .ko-stats b{display:block;color:var(--gold);font-family:var(--head);font-size:19px;line-height:1.1}
 .ko-stats span{color:#9fb0d8;font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em;font-size:11px}
+/* ===== knockout countdown (auto-rolls junior -> senior, then removes itself) ===== */
+#koCountdownHome:empty,#koCountdownKO:empty{display:none}
+.kc{position:relative;overflow:hidden;border-radius:20px;color:#fff;background:radial-gradient(1100px 420px at 88% -40%,rgba(244,180,26,.16),transparent 60%),linear-gradient(115deg,var(--navy) 0%,var(--blue-900) 55%,#0C1D3E 100%);box-shadow:0 20px 50px rgba(7,26,74,.28)}
+.kc::before{content:"";position:absolute;right:-90px;top:50%;transform:translateY(-50%);width:340px;height:340px;border:2px solid rgba(255,255,255,.10);border-radius:50%;pointer-events:none}
+.kc::after{content:"";position:absolute;right:20px;top:50%;transform:translateY(-50%);width:150px;height:150px;border:2px solid rgba(255,255,255,.08);border-radius:50%;pointer-events:none}
+.kc-gold-line{position:absolute;left:0;top:0;height:4px;width:100%;background:linear-gradient(90deg,var(--gold),var(--gold-2),var(--gold))}
+.kc-in{position:relative;display:grid;grid-template-columns:1.1fr auto;gap:26px;align-items:center;padding:26px 30px}
+.kc-tag{display:inline-flex;align-items:center;gap:7px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.1em;font-weight:700;font-size:12.5px;color:var(--navy);background:var(--gold);padding:4px 12px;border-radius:100px}
+.kc-tag svg{width:14px;height:14px}
+.kc-eyebrow{font-family:var(--cond);text-transform:uppercase;letter-spacing:.16em;font-weight:700;font-size:13px;color:var(--gold-2);margin:14px 0 4px}
+.kc-title{font-family:var(--head);font-weight:900;font-size:clamp(23px,3.2vw,34px);letter-spacing:-.02em;margin:0 0 8px;color:#fff}
+.kc-meta{display:flex;gap:18px;flex-wrap:wrap;color:#cdd8f5;font-size:14.5px;margin-bottom:2px}
+.kc-meta span{display:inline-flex;align-items:center;gap:7px}
+.kc-meta svg{width:15px;height:15px;opacity:.85;flex:none}
+.kc-cta{display:inline-flex;align-items:center;gap:8px;margin-top:16px;font-family:var(--cond);text-transform:uppercase;letter-spacing:.06em;font-weight:700;font-size:14px;color:var(--navy);background:var(--gold);padding:10px 18px;border-radius:100px;cursor:pointer;transition:.2s;border:0}
+.kc-cta:hover{background:var(--gold-2);transform:translateY(-1px)}
+.kc-clock{display:flex;gap:10px}
+.kc-cell{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);border-radius:14px;width:82px;padding:14px 8px 10px;text-align:center}
+.kc-num{font-family:var(--head);font-weight:900;font-size:40px;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.kc-unit{font-family:var(--cond);text-transform:uppercase;letter-spacing:.14em;font-size:11.5px;font-weight:700;color:#aebbe4;margin-top:8px}
+.kc-next{margin-top:14px;display:inline-flex;align-items:center;gap:9px;font-size:13px;color:#b9c5ea;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:100px;padding:6px 13px}
+.kc-next b{color:#fff;font-weight:700}
+.kc-next .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);flex:none}
+.kc-live{display:inline-flex;flex-direction:column;align-items:flex-start;gap:6px;background:rgba(31,164,99,.16);border:1px solid rgba(31,164,99,.4);border-radius:14px;padding:16px 22px}
+.kc-live b{font-family:var(--head);font-weight:900;font-size:22px;color:#fff;letter-spacing:-.02em}
+.kc-live .lb{font-family:var(--cond);text-transform:uppercase;letter-spacing:.14em;font-size:12px;font-weight:700;color:#8fe0b3;display:inline-flex;align-items:center;gap:8px}
+.kc-live .pulse{width:8px;height:8px;border-radius:50%;background:var(--green);animation:kcpulse 1.6s infinite}
+@keyframes kcpulse{0%{box-shadow:0 0 0 0 rgba(31,164,99,.55)}70%{box-shadow:0 0 0 10px rgba(31,164,99,0)}100%{box-shadow:0 0 0 0 rgba(31,164,99,0)}}
+@media(prefers-reduced-motion:reduce){.kc-live .pulse{animation:none}}
+.kc.band .kc-in{padding:20px 26px}
+.kc.band .kc-num{font-size:32px}
+.kc.band .kc-cell{width:68px;padding:11px 6px 8px}
+@media(max-width:720px){.kc-in{grid-template-columns:1fr;gap:18px}.kc::before,.kc::after{display:none}.kc-cell{flex:1}.kc-clock{width:100%}}
 /* proper knockout bracket: real tree, winners flow left-to-right, SVG connectors */
 .ko-bracket{display:flex;gap:46px;overflow-x:auto;padding:6px 8px 22px;align-items:stretch;position:relative}
 .ko-col{flex:0 0 244px;display:flex;flex-direction:column}
@@ -1811,6 +1844,9 @@ body .card-f{background:#FBF7F0}
     </div>
   </section>
 
+  <!-- knockout countdown (auto-rolls junior -> senior, then removes itself) -->
+  <section class="sec" style="padding-top:0;padding-bottom:0"><div class="wrap"><div id="koCountdownHome"></div></div></section>
+
   <!-- explore the site: discoverability directory -->
   <section class="sec">
     <div class="wrap">
@@ -2291,6 +2327,7 @@ body .card-f{background:#FBF7F0}
         <h2 style="font-size:clamp(30px,5vw,46px);margin:10px 0">Knockout Cups</h2>
         <p style="color:#c3cdea">Win or go home. Every knockout competition in the association — senior, women's, veterans and all the junior age groups — with each round's draw, results and fixtures as they are played. Choose a cup to follow its road to the final.</p>
       </div>
+      <div id="koCountdownKO" style="margin-bottom:22px"></div>
       <div class="ko-finals">
         <div class="ko-finals-h"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4a2 2 0 0 1-2-2V5h4M18 9h2a2 2 0 0 0 2-2V5h-4M6 3h12v6a6 6 0 0 1-12 0zM12 15v4M8 21h8"/></svg>2026 Finals &amp; Venues</div>
         <div class="ko-finals-grid">
@@ -4947,6 +4984,52 @@ const EVENTS=[
   <div class="einfo"><div class="et">${e.title}</div><div class="em"><span>${pinSVG}${e.venue}</span><span>${clkSVG}${e.time}</span></div></div>
   <span class="etag"><span class="tag ${e.cls||'tag-blue'}">${e.tag||'Event'}</span></span></div>`;
   }).join('');
+})();
+
+/* ---------- KNOCKOUT COUNTDOWN (auto-rolls junior -> senior, then removes itself) ---------- */
+(function(){
+  var slots=[{el:document.getElementById('koCountdownHome'),v:'band'},{el:document.getElementById('koCountdownKO'),v:'full'}].filter(function(s){return s.el;});
+  if(!slots.length)return;
+  /* Cup finals — same dates/venues as the events diary. Add dateEnd for a multi-day event. */
+  var FINALS=[
+    {date:"2026-09-26",dateEnd:"2026-09-27",title:"Junior Knockout Finals",venue:"Norway Parks FC",when:"26–27 September 2026",tag:"Junior Finals"},
+    {date:"2026-10-03",title:"Senior Knockout Final",venue:"Cape Town Spurs FC",when:"Saturday 3 October 2026",tag:"Senior Final"}
+  ];
+  var trophy='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4a2 2 0 0 1-2-2V5h4M18 9h2a2 2 0 0 0 2-2V5h-4M6 3h12v6a6 6 0 0 1-12 0zM12 15v4M8 21h8"/></svg>';
+  var pin='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5-7-11a7 7 0 0 1 14 0c0 6-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>';
+  var cal='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+  function endMs(e){return new Date((e.dateEnd||e.date)+"T23:59:59").getTime();}
+  function startMs(e){return new Date(e.date+"T00:00:00").getTime();}
+  function upcoming(){var now=Date.now();return FINALS.filter(function(e){return endMs(e)>=now;}).sort(function(a,b){return startMs(a)-startMs(b);});}
+  function cell(u){return '<div class="kc-cell"><div class="kc-num" data-u="'+u+'">00</div><div class="kc-unit">'+u+'</div></div>';}
+  function clockHTML(){return cell('Days')+cell('Hrs')+cell('Min')+cell('Sec');}
+  function liveHTML(){return '<div class="kc-live"><span class="lb"><span class="pulse"></span>Live now</span><b>Finals are underway</b></div>';}
+  function card(e,nxt,v,live){
+    return '<div class="kc '+v+'"><div class="kc-gold-line"></div><div class="kc-in"><div>'
+      +'<span class="kc-tag">'+trophy+' '+e.tag+'</span>'
+      +'<div class="kc-eyebrow">'+(live?'Happening now':'Counting down to the')+'</div>'
+      +'<h2 class="kc-title">'+e.title+'</h2>'
+      +'<div class="kc-meta"><span>'+cal+' '+e.when+'</span><span>'+pin+' '+e.venue+'</span></div>'
+      +'<button class="kc-cta" data-nav="knockouts">See the draw →</button>'
+      +(nxt?'<div class="kc-next"><span class="dot"></span>Then: <b>'+nxt.title+'</b> · '+nxt.when+'</div>':'')
+      +'</div><div class="kc-clock">'+(live?liveHTML():clockHTML())+'</div></div></div>';
+  }
+  var activeKey=null;
+  function tick(){
+    var list=upcoming(), e=list[0], nxt=list[1], now=Date.now();
+    var live=!!e && now>=startMs(e);
+    var key=e?(e.date+(live?':live':':count')):'done';
+    if(key!==activeKey){activeKey=key;slots.forEach(function(s){s.el.innerHTML=e?card(e,nxt,s.v,live):'';});}
+    if(!e||live)return;
+    var diff=Math.max(0,startMs(e)-now);
+    var d=Math.floor(diff/86400000);diff-=d*86400000;
+    var h=Math.floor(diff/3600000);diff-=h*3600000;
+    var m=Math.floor(diff/60000);diff-=m*60000;
+    var s=Math.floor(diff/1000);
+    var vals={Days:d,Hrs:h,Min:m,Sec:s};
+    slots.forEach(function(sl){for(var u in vals){var q=sl.el.querySelector('.kc-num[data-u="'+u+'"]');if(q)q.textContent=('0'+vals[u]).slice(-2);}});
+  }
+  tick();setInterval(tick,1000);
 })();
 
 /* ---------- GALLERY (real event photos, served from ./photos) ---------- */
