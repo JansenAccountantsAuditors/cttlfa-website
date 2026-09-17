@@ -5134,15 +5134,35 @@ iframe{max-width:100%}
 .fa-sub{padding:9px 16px;border:0;background:none;color:#5a6478;font-weight:600;cursor:pointer;font-size:14px;border-bottom:3px solid transparent;margin-bottom:-2px}
 .fa-sub:hover{color:var(--navy,#071A4A)}
 .fa-sub.on{color:var(--navy,#071A4A);border-bottom-color:var(--gold,#F4B41A)}
+.fa-controls{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+.fa-segs{display:inline-flex;border:1px solid var(--line,#e6e9f2);border-radius:9px;overflow:hidden}
+.fa-seg{padding:7px 16px;border:0;border-right:1px solid var(--line,#e6e9f2);background:#fff;color:var(--navy,#071A4A);font-weight:600;cursor:pointer;font-size:13.5px}
+.fa-seg:last-child{border-right:0}
+.fa-seg.on{background:var(--navy,#071A4A);color:#fff}
+.fa-divlbl{font-size:12.5px;color:#5a6478;font-weight:600;display:inline-flex;align-items:center;gap:6px}
+.fa-select{font-size:13px;padding:6px 8px;border:1px solid var(--line,#e6e9f2);border-radius:8px;background:#fff;color:var(--navy,#071A4A);max-width:290px}
 .fa-tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
 .fa-tiles-sm{grid-template-columns:repeat(auto-fit,minmax(120px,1fr));margin:8px 0}
-.fa-tile{background:#fff;border:1px solid var(--line,#e6e9f2);border-top:3px solid var(--navy,#071A4A);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.fa-tile{position:relative;background:#fff;border:1px solid var(--line,#e6e9f2);border-top:3px solid var(--navy,#071A4A);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:2px}
 .fa-tile b{font-size:26px;font-weight:800;color:var(--navy,#071A4A);line-height:1.05;font-variant-numeric:tabular-nums}
 .fa-tile span{font-size:12.5px;font-weight:700;color:#38414f;text-transform:uppercase;letter-spacing:.03em}
 .fa-tile small{font-size:11.5px;color:#6b7484}
+.fa-click{cursor:pointer}
+.fa-tile.fa-click:hover{border-color:var(--blue,#123FB5);box-shadow:0 2px 8px rgba(7,26,74,.08)}
+tr.fa-click:hover{background:#f2f6ff}
+.fa-bar.fa-click:hover .fa-bl{color:var(--blue,#123FB5)}
+.fa-mini{display:inline-block;width:90px;height:9px;background:#eef1f7;border-radius:5px;overflow:hidden;vertical-align:middle}
+.fa-mini-f{display:block;height:100%;background:var(--navy,#071A4A)}
+.fa-mini-f.red{background:#c1372f}.fa-mini-f.green{background:#1b8a5a}
+.fa-mini-l{font-size:12px;margin-left:6px;color:#5a6478;font-variant-numeric:tabular-nums}
+.fa-warn{color:#c1372f;cursor:pointer}
+.fa-ok{color:#1b8a5a}
+.fa-up{color:#1b8a5a;font-weight:700;font-size:12px}
+.fa-down{color:#c1372f;font-weight:700;font-size:12px}
+.fa-flat{color:#98a1b2;font-size:12px}
 .fa-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 @media(max-width:820px){.fa-grid2{grid-template-columns:1fr}}
-.fa-bar{display:grid;grid-template-columns:130px 1fr 48px;align-items:center;gap:8px;margin:5px 0}
+.fa-bar{display:grid;grid-template-columns:150px 1fr 48px;align-items:center;gap:8px;margin:5px 0}
 .fa-bl{font-size:13px;color:#38414f;font-weight:600}
 .fa-bt{height:14px;background:#eef1f7;border-radius:7px;overflow:hidden}
 .fa-bf{display:block;height:100%;background:var(--navy,#071A4A);border-radius:7px}
@@ -5170,11 +5190,17 @@ iframe{max-width:100%}
 .fa-day.h3 i{color:#fff}
 .fa-day.has:hover{filter:brightness(.94)}
 .fa-daylist{margin-top:14px}
-.fa-dl-h{font-weight:800;color:var(--navy,#071A4A);font-size:14px;margin:6px 0 8px;padding-top:10px;border-top:1px dashed var(--line,#dce1ec)}
+.fa-scrim{position:fixed;inset:0;background:rgba(7,18,32,.55);display:none;align-items:flex-start;justify-content:center;z-index:9000;padding:28px 16px;overflow:auto}
+.fa-modal{background:#fff;border-radius:14px;width:100%;max-width:980px;box-shadow:0 18px 50px rgba(0,0,0,.3);overflow:hidden}
+.fa-mhead{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid var(--line,#e6e9f2);background:#f7f9fd}
+.fa-mbtns{display:flex;gap:8px;flex-wrap:wrap}
+.fa-mbody{max-height:66vh;overflow:auto;padding:14px 18px}
+.fa-mbody table{width:100%;border-collapse:collapse;font-size:12.5px}
+.fa-mbody thead th{position:sticky;top:0;background:#fff}
 </style>
 <script src="js/50-system.js?v=4"></script>
 <script src="js/70-webstats.js?v=1"></script>
-<script src="js/80-fixtures.js?v=2"></script>
+<script src="js/80-fixtures.js?v=3"></script>
 <script src="js/20-users.js?v=1"></script>
 <script>
 /* Wrap every table (static, or rendered later when a tab opens) in a horizontal
