@@ -564,32 +564,68 @@
 
   /* ================= 2027 FIXTURE SCENARIO PLANNER ================= */
   var BASE_ID = 47708359;              // 2026 season = the structural base
-  var plan = { start: "2027-04-03", end: "2027-09-25", usePH: true, useSun: false, useMid: true, div: "" };
-  var _divs = null;                    // memoised division structure
+  var plan = { start: "2027-04-03", end: "2027-09-25", usePH: true, useSun: false, useMid: true, sundayDH: false, clubGroup: true, promoRel: false, up: 2, down: 2, view: "table", div: "", sizes: {} };
   var PH27 = {}; FWD.hol.forEach(function (x) { PH27[x[0]] = x[1]; });
+  var CHAINS = [["A1", "B1", "C1", "D1", "D2", "D3", "D4"], ["A2", "B2", "C2"], ["I1", "I2", "I3", "I4", "I5"], ["K1", "K2", "K3", "K4", "K5", "K6"], ["M1", "M2", "M3", "M4", "M5", "M6", "M7"], ["O1", "O2", "O3", "O4", "O5", "O6", "O8"]];
+  function codeOf(name) { var m = (name || "").match(/^([A-Z]+)(\d+[A-Z]?)/); return m ? m[1] + m[2] : null; }
 
-  function divStructure() {
-    if (_divs) return _divs;
+  var _base = null;
+  function baseDivs() {
+    if (_base) return _base;
     var data = cache[BASE_ID]; if (!data) return null;
     var byG = {};
     data.fixtures.forEach(function (f) {
       if (f.fixtureTypeID !== 1) return;
       var g = f.fixtureGroupDesc || "?";
-      if (!byG[g]) byG[g] = { name: g, gid: f.fixtureGroupIdentifier, jun: isJunior(g), teams: {}, fx: 0, hh: {}, dow: {} };
+      if (!byG[g]) byG[g] = { name: g, gid: f.fixtureGroupIdentifier, jun: isJunior(g), t: {}, fx: 0, hh: {} };
       var G = byG[g], b = isBye(f.homeTeamName) || isBye(f.roadTeamName);
-      if (!b) { G.fx++;[["homeTeam", "homeTeamName"], ["roadTeam", "roadTeamName"]].forEach(function (p) { if (f[p[0]] != null && !isBye(f[p[1]])) G.teams[f[p[0]]] = clean(f[p[1]]); }); var dp = dParts(f.fixtureDate); if (dp) { G.dow[dp.dow] = (G.dow[dp.dow] || 0) + 1; if (dp.hh != null) G.hh[dp.hh] = (G.hh[dp.hh] || 0) + 1; } }
+      if (!b) {
+        G.fx++;
+        var h = f.homeTeam, a = f.roadTeam;
+        [[h, f.homeTeamName], [a, f.roadTeamName]].forEach(function (p) { if (p[0] != null && !G.t[p[0]]) G.t[p[0]] = { id: p[0], name: clean(p[1]), P: 0, GF: 0, GA: 0, Pts: 0 }; });
+        var dp = dParts(f.fixtureDate); if (dp && dp.hh != null) G.hh[dp.hh] = (G.hh[dp.hh] || 0) + 1;
+        if (isNum(f.homeScore) && isNum(f.roadScore)) { var hs = +f.homeScore, as = +f.roadScore, H = G.t[h], A = G.t[a]; if (H && A) { H.P++; A.P++; H.GF += hs; H.GA += as; A.GF += as; A.GA += hs; if (hs > as) H.Pts += 3; else if (as > hs) A.Pts += 3; else { H.Pts++; A.Pts++; } } }
+      }
     });
-    _divs = Object.keys(byG).map(function (g) {
-      var G = byG[g], ids = Object.keys(G.teams), nt = ids.length;
-      var single = nt > 1 ? nt * (nt - 1) / 2 : 0, ratio = single ? G.fx / single : 0;
-      var clean2 = ratio > 0.7 && ratio < 2.4;            // a clean single/double round-robin
-      var dbl = ratio >= 1.5, md = nt % 2 === 0 ? nt - 1 : nt;
-      var matchdays = clean2 ? (dbl ? md * 2 : md) : Math.max(1, Object.keys(G.dow).length ? Math.round(G.fx / Math.max(1, nt / 2)) : G.fx);
+    _base = Object.keys(byG).map(function (g) {
+      var G = byG[g], arr = Object.keys(G.t).map(function (k) { return G.t[k]; });
+      arr.sort(function (a, b) { return b.Pts - a.Pts || (b.GF - b.GA) - (a.GF - a.GA) || b.GF - a.GF || a.name.localeCompare(b.name); });
+      var nt = arr.length, single = nt > 1 ? nt * (nt - 1) / 2 : 0, ratio = single ? G.fx / single : 0, clean2 = ratio > 0.7 && ratio < 2.4, dbl = ratio >= 1.5;
       var modeHH = Object.keys(G.hh).sort(function (a, b) { return G.hh[b] - G.hh[a]; })[0];
-      var modeDOW = Object.keys(G.dow).sort(function (a, b) { return G.dow[b] - G.dow[a]; })[0];
-      return { name: g, gid: G.gid, jun: G.jun, teams: ids.map(function (i) { return G.teams[i]; }), nt: nt, fx: G.fx, dbl: dbl, clean: clean2, matchdays: matchdays, ko: modeHH != null ? +modeHH : null, dow: modeDOW != null ? +modeDOW : 5 };
-    }).sort(function (a, b) { return b.matchdays - a.matchdays || b.nt - a.nt; });
-    return _divs;
+      return { name: g, gid: G.gid, jun: G.jun, code: codeOf(g), std: arr.map(function (t) { return t.name; }), fx: G.fx, dbl: dbl, clean: clean2, ko: modeHH != null ? +modeHH : null };
+    });
+    return _base;
+  }
+
+  // effective 2027 divisions after promotion/relegation, resize-cascade and club ordering
+  function planDivs() {
+    var base = baseDivs(); if (!base) return null;
+    var divs = base.map(function (d) { return { name: d.name, gid: d.gid, jun: d.jun, code: d.code, dbl: d.dbl, clean: d.clean, ko: d.ko, teams: d.std.slice() }; });
+    var byCode = {}; divs.forEach(function (d) { if (d.code) byCode[d.code] = d; });
+    if (plan.promoRel) {
+      CHAINS.forEach(function (chain) {
+        for (var i = 0; i < chain.length - 1; i++) {
+          var up = byCode[chain[i]], dn = byCode[chain[i + 1]]; if (!up || !dn) continue;
+          var nDown = Math.min(plan.down, Math.max(0, up.teams.length - 1)), nUp = Math.min(plan.up, Math.max(0, dn.teams.length - 1));
+          var releg = up.teams.splice(up.teams.length - nDown, nDown);
+          var promo = dn.teams.splice(0, nUp);
+          up.teams = up.teams.concat(promo); dn.teams = dn.teams.concat(releg);
+        }
+      });
+    }
+    // resize with cascade down the chain
+    CHAINS.forEach(function (chain) {
+      for (var i = 0; i < chain.length; i++) {
+        var dv = byCode[chain[i]]; if (!dv) continue; var target = plan.sizes[dv.gid];
+        if (!target || target >= dv.teams.length) continue;
+        var overflow = dv.teams.splice(target); var below = byCode[chain[i + 1]];
+        if (below) below.teams = below.teams.concat(overflow);
+      }
+    });
+    if (plan.clubGroup) divs.forEach(function (d) { if (d.jun) d.teams = d.teams.slice().sort(function (a, b) { return clubOf(a).localeCompare(clubOf(b)) || a.localeCompare(b); }); });
+    divs.forEach(function (d) { d.nt = d.teams.length; var md = d.nt % 2 === 0 ? Math.max(0, d.nt - 1) : d.nt; d.matchdays = d.dbl ? md * 2 : md; d.fx = d.dbl ? d.nt * (d.nt - 1) : d.nt * (d.nt - 1) / 2; });
+    divs.sort(function (a, b) { return b.matchdays - a.matchdays || b.nt - a.nt; });
+    return divs;
   }
 
   function roundRobin(teams, dbl) {
@@ -610,10 +646,7 @@
   }
 
   function pWk(iso) { var m = +iso.slice(5, 7), d = +iso.slice(8, 10); return m + "|" + Math.min(3, Math.floor((d - 1) / 7)); }
-  function rainRisk() { // 5-year mm by week bucket -> tertile thresholds
-    var b = {}; if (CTX) Object.keys(CTX.rain).forEach(function (iso) { var k = pWk(iso); b[k] = (b[k] || 0) + CTX.rain[iso]; });
-    return b;
-  }
+  function rainRisk() { var b = {}; if (CTX) Object.keys(CTX.rain).forEach(function (iso) { var k = pWk(iso); b[k] = (b[k] || 0) + CTX.rain[iso]; }); return b; }
   function seasonDates(p, needMd) {
     var d = new Date(p.start + "T00:00:00"), e = new Date(p.end + "T00:00:00");
     var sat = [], ph = [], sun = [], mid = [];
@@ -622,30 +655,28 @@
       if (wd === 6) sat.push(iso);
       else if (PH27[iso]) ph.push(iso);
       else if (wd === 0) sun.push(iso);
-      else if (wd === 3) mid.push(iso);       // midweek = Wednesday night slot
+      else if (wd === 3) mid.push(iso);
     }
-    // Saturdays are the backbone. Only the shortfall (rounds beyond the Saturdays)
-    // draws on overflow dates: public holidays first, then Sundays, then midweek.
-    // preference order for overflow: public holidays (spread through the season),
-    // then Sundays, then midweek Wednesdays — each in date order.
     function byIso(a, b) { return a.iso < b.iso ? -1 : 1; }
     var pool = [];
     if (p.usePH) pool = pool.concat(ph.map(function (x) { return { iso: x, type: "Hol" }; }).sort(byIso));
-    if (p.useSun) pool = pool.concat(sun.map(function (x) { return { iso: x, type: "Sun" }; }).sort(byIso));
+    if (p.useSun) { var ss = sun.map(function (x) { return { iso: x, type: "Sun" }; }).sort(byIso); pool = pool.concat(ss); if (p.sundayDH) pool = pool.concat(ss.map(function (x) { return { iso: x.iso, type: "Sun 2nd" }; })); }
     if (p.useMid) pool = pool.concat(mid.map(function (x) { return { iso: x, type: "Mid" }; }).sort(byIso));
     var shortfall = Math.max(0, (needMd || sat.length) - sat.length);
     var overflow = pool.slice(0, shortfall);
-    var seq = sat.map(function (x) { return { iso: x, type: "Sat" }; }).concat(overflow).sort(function (a, b) { return a.iso < b.iso ? -1 : 1; });
+    var seq = sat.map(function (x) { return { iso: x, type: "Sat" }; }).concat(overflow).sort(function (a, b) { return a.iso < b.iso ? -1 : (a.iso > b.iso ? 1 : 0); });
     return { all: seq, sat: sat, ph: ph, sun: sun, mid: mid, overflow: overflow, shortfall: shortfall, canFit: overflow.length >= shortfall };
   }
+  function ctxSchoolFwd(iso) { for (var i = 0; i < FWD.school.length; i++) { if (iso >= FWD.school[i][0] && iso <= FWD.school[i][1]) return FWD.school[i][2]; } return null; }
 
+  function ck(id, on, label) { return '<label class="fa-ck"><input type="checkbox" id="' + id + '"' + (on ? " checked" : "") + '> ' + label + '</label>'; }
   function renderPlanner() {
     if (!cache[BASE_ID]) {
       NS.$("faBody").innerHTML = '<div class="card"><p class="hint">Loading the 2026 structure to model 2027…</p></div>';
       loadSeason(BASE_ID).then(function () { paint(cur); });
       return '<div class="card"><p class="hint">Loading the 2026 structure to model 2027…</p></div>';
     }
-    var divs = divStructure();
+    var divs = planDivs();
     var maxMd = Math.max.apply(null, divs.map(function (d) { return d.matchdays; }));
     var sd = seasonDates(plan, maxMd);
     var risk = rainRisk();
@@ -653,39 +684,38 @@
     var t1 = riskVals[Math.floor(riskVals.length / 3)] || 30, t2 = riskVals[Math.floor(riskVals.length * 2 / 3)] || 60;
     function dayRisk(iso) { var v = risk[pWk(iso)] || 0; return v >= t2 ? 3 : v >= t1 ? 2 : v > 0 ? 1 : 0; }
     var RISKW = ["low", "low-moderate", "moderate", "high"];
-
     var totFx = divs.reduce(function (s, d) { return s + d.fx; }, 0);
     var totTeams = divs.reduce(function (s, d) { return s + d.nt; }, 0);
-    var satN = sd.sat.length, playN = sd.all.length;
-    var shortfall = sd.shortfall;
+    var satN = sd.sat.length, playN = sd.all.length, shortfall = sd.shortfall;
     var jr = divs.filter(function (d) { return d.jun; }), sr = divs.filter(function (d) { return !d.jun; });
-
-    // fixtures per match-date: divisions with matchdays >= k each contribute ~floor(nt/2)
     function loadOnDate(k) { var n = 0; divs.forEach(function (d) { if (d.matchdays >= k) n += Math.floor(d.nt / 2); }); return n; }
 
     var h = '';
-    // disclaimer
-    h += '<div class="card" style="margin-bottom:12px;border-top:3px solid var(--gold,#F4B41A)"><h3 style="margin:0 0 4px">2027 fixture scenario planner</h3><p class="hint" style="margin:0;max-width:82ch"><b>Assumption:</b> this models 2027 on the <b>2026 league structure</b> — the same ' + divs.length + ' divisions, the same ' + totTeams + ' team entries and the same round-robin format. It is a planning scenario to size the season, not a confirmed fixture list; final entries, promotions/relegations and venue allocations will change it. LeagueRepublic stays the system of record.</p></div>';
+    h += '<div class="card" style="margin-bottom:12px;border-top:3px solid var(--gold,#F4B41A)"><h3 style="margin:0 0 4px">2027 fixture scenario planner</h3><p class="hint" style="margin:0;max-width:82ch"><b>Assumption:</b> models 2027 on the <b>2026 league structure</b> (' + divs.length + ' divisions, ' + totTeams + ' team entries). A planning scenario, not a confirmed fixture list; entries, promotions and venues will change it. LeagueRepublic stays the system of record.</p></div>';
 
     // controls
     h += '<div class="card" style="margin-bottom:12px"><div class="fa-planctl">' +
       '<label>Season start <input type="date" id="pStart" value="' + plan.start + '"></label>' +
       '<label>Season end <input type="date" id="pEnd" value="' + plan.end + '"></label>' +
-      '<label class="fa-ck"><input type="checkbox" id="pPH"' + (plan.usePH ? " checked" : "") + '> Play public holidays</label>' +
-      '<label class="fa-ck"><input type="checkbox" id="pSun"' + (plan.useSun ? " checked" : "") + '> Use Sundays</label>' +
-      '<label class="fa-ck"><input type="checkbox" id="pMid"' + (plan.useMid ? " checked" : "") + '> Use midweek (Wed)</label>' +
-      '</div><p class="hint" style="margin:8px 0 0">Starting the first Saturday after Easter (Sun 28 Mar 2027). Adjust and the model recomputes.</p></div>';
+      ck("pPH", plan.usePH, "Public holidays") + ck("pSun", plan.useSun, "Sundays") + ck("pMid", plan.useMid, "Midweek (Wed)") + ck("pDH", plan.sundayDH, "Sunday double-headers") +
+      '</div><div class="fa-planctl" style="margin-top:8px">' +
+      ck("pClub", plan.clubGroup, "Club-grouped juniors (age groups play together)") +
+      ck("pPR", plan.promoRel, "Apply promotion / relegation") +
+      '<label>Up <input type="number" id="pUp" value="' + plan.up + '" min="0" max="4" style="width:52px"></label>' +
+      '<label>Down <input type="number" id="pDn" value="' + plan.down + '" min="0" max="4" style="width:52px"></label>' +
+      '<span class="fa-segs"><button class="fa-seg' + (plan.view === "table" ? " on" : "") + '" data-view="table">Table view</button><button class="fa-seg' + (plan.view === "calendar" ? " on" : "") + '" data-view="calendar">Calendar view</button></span>' +
+      '</div><p class="hint" style="margin:8px 0 0">Starting the first Saturday after Easter (Sun 28 Mar 2027). Adjust anything and the model recomputes. Promotion/relegation and club-grouping are provisional and do not change the season size.</p></div>';
 
     // capacity tiles
     h += '<div class="fa-tiles">';
     h += tile(satN, "Saturdays available", plan.start + " to " + plan.end, "");
-    h += tile(maxMd, "Rounds needed (max)", "biggest divisions (" + divs.filter(function (d) { return d.matchdays === maxMd; })[0].nt + " teams, double)", "");
-    h += tile(shortfall, "Saturday shortfall", shortfall ? "rounds that must move off Saturday" : "biggest divisions fit on Saturdays", "");
+    h += tile(maxMd, "Rounds needed (max)", "biggest division (" + divs.filter(function (d) { return d.matchdays === maxMd; })[0].nt + " teams)", "");
+    h += tile(shortfall, "Saturday shortfall", shortfall ? "rounds off Saturday" : "biggest divisions fit on Saturdays", "");
     h += tile(playN, "Match rounds scheduled", satN + " on Saturdays" + (sd.overflow.length ? " + " + sd.overflow.length + " overflow" : ""), "");
     h += '</div>';
     h += '<div class="fa-tiles">';
-    h += tile(totFx.toLocaleString(), "League fixtures to schedule", divs.length + " divisions", "");
-    h += tile(Math.round(totTeams / 2), "Opening-round fixtures", "if every division plays round 1 together", "");
+    h += tile(totFx.toLocaleString(), "League fixtures", divs.length + " divisions", "");
+    h += tile(Math.round(totTeams / 2), "Opening-round fixtures", "if every division plays round 1", "");
     h += tile(Math.round(totFx / Math.max(satN, 1)), "Avg fixtures / Saturday", "if spread evenly (2026 peaked ~212)", "");
     h += tile(jr.length + " / " + sr.length, "Junior / senior divisions", "max rounds " + Math.max.apply(null, jr.map(function (d) { return d.matchdays; })) + " / " + Math.max.apply(null, sr.map(function (d) { return d.matchdays; })), "");
     h += '</div>';
@@ -694,47 +724,64 @@
     h += '<div class="card"><h3>Can the season fit?</h3><p class="hint" style="margin-bottom:6px">';
     if (shortfall === 0) h += '<b class="fa-ok">Yes on Saturdays.</b> The biggest divisions need ' + maxMd + ' rounds and there are ' + satN + ' Saturdays, so every division runs on Saturdays with ' + (satN - maxMd) + ' week(s) of weather buffer.';
     else if (sd.canFit) h += '<b class="fa-ok">Yes, with ' + sd.overflow.length + ' non-Saturday round(s).</b> The ' + maxMd + '-round divisions are ' + shortfall + ' short of the ' + satN + ' Saturdays, absorbed by ' + sd.overflow.map(function (x) { return fmtDate(x.iso) + " (" + x.type + ")"; }).join(", ") + '. Smaller divisions finish inside the Saturdays.';
-    else h += '<b class="fa-warn">Does not fit.</b> The ' + maxMd + '-round divisions are ' + shortfall + ' rounds short of the ' + satN + ' Saturdays and the enabled overflow dates cover only ' + sd.overflow.length + '. Extend the season end date, or enable public holidays / Sundays / midweek.';
-    h += ' Venue load is the second constraint: a full round is ~' + Math.round(totTeams / 2) + ' fixtures, above the 2026 Saturday peak of ~212, so the age-group time ladder (juniors morning, seniors afternoon) and byes must spread it.</p>';
+    else h += '<b class="fa-warn">Does not fit.</b> The ' + maxMd + '-round divisions are ' + shortfall + ' rounds short of the ' + satN + ' Saturdays and the enabled overflow dates cover only ' + sd.overflow.length + '. Extend the end date or enable public holidays / Sundays (with double-headers) / midweek.';
+    h += ' A full round is ~' + Math.round(totTeams / 2) + ' fixtures, above the 2026 Saturday peak of ~212, so the age-group time ladder and byes spread it.</p>';
     h += bar("Rounds needed (biggest)", maxMd, Math.max(maxMd, satN), "gold");
     h += bar("Saturdays available", satN, Math.max(maxMd, satN), "blue");
     h += '</div>';
 
-    // season calendar table
-    h += '<div class="card"><h3>Proposed season calendar</h3><p class="hint" style="margin-bottom:8px">Each playable date carries a round. Weather risk is the five-year Cape Town wet-week pattern; public holidays add midweek capacity. Rounds beyond ' + satN + ' fall on the overflow dates below the Saturdays.</p>';
-    h += '<table><thead><tr><th>#</th><th>Date</th><th>Type</th><th>Round</th><th style="text-align:right">~Fixtures</th><th>Weather risk</th><th>Notes</th></tr></thead><tbody>';
-    sd.all.forEach(function (dt, i) {
-      var k = i + 1, r = dayRisk(dt.iso), note = [];
-      if (PH27[dt.iso]) note.push(PH27[dt.iso]);
-      if (ctxSchoolFwd(dt.iso)) note.push("school holiday");
-      var typeCls = dt.type === "Sat" ? "" : "fa-warn";
-      h += '<tr><td>' + k + '</td><td>' + fmtDate(dt.iso) + " (" + DOW[new Date(dt.iso + "T00:00:00").getDay()].slice(0, 3) + ')</td><td><span class="' + typeCls + '">' + dt.type + '</span></td><td>Round ' + k + '</td><td style="text-align:right">' + loadOnDate(k).toLocaleString() + '</td><td><span class="fa-risk r' + r + '">' + RISKW[r] + '</span></td><td>' + NS.esc(note.join(" · ")) + '</td></tr>';
-    });
-    h += '</tbody></table></div>';
+    // season calendar OR month-grid
+    if (plan.view === "calendar") {
+      h += '<div class="card"><h3>Proposed season calendar</h3><p class="hint" style="margin-bottom:10px">Each match round on its date. Shaded by five-year Cape Town weather risk; H = public holiday.</p><div class="fa-cal">';
+      var months = {}; sd.all.forEach(function (dt, i) { var ym = dt.iso.slice(0, 7); (months[ym] = months[ym] || []).push({ dt: dt, round: i + 1 }); });
+      Object.keys(months).sort().forEach(function (ym) {
+        var y = +ym.slice(0, 4), m = +ym.slice(5, 7), first = new Date(y, m - 1, 1), days = new Date(y, m, 0).getDate();
+        var byday = {}; months[ym].forEach(function (o) { byday[+o.dt.iso.slice(8, 10)] = o; });
+        h += '<div class="fa-mon"><div class="fa-mon-h">' + MON[m - 1] + " " + y + '</div><div class="fa-week">';
+        ["S", "M", "T", "W", "T", "F", "S"].forEach(function (x) { h += '<span class="fa-wd">' + x + '</span>'; });
+        for (var i = 0; i < first.getDay(); i++) h += '<span class="fa-day empty"></span>';
+        for (var dd = 1; dd <= days; dd++) {
+          var o = byday[dd], iso = y + "-" + pad(m) + "-" + pad(dd), dow = new Date(y, m - 1, dd).getDay();
+          if (o) { var r = dayRisk(iso), hol = PH27[iso]; h += '<span class="fa-day has r' + r + (dow === 6 ? " sat" : "") + '" title="Round ' + o.round + " — " + fmtDate(iso) + " — " + RISKW[r] + ' weather risk' + (hol ? " — " + hol : "") + '">' + dd + '<i>R' + o.round + '</i>' + (hol ? '<em class="fa-mh"></em>' : "") + '</span>'; }
+          else h += '<span class="fa-day' + (dow === 6 ? " sat" : "") + '">' + dd + '</span>';
+        }
+        h += '</div></div>';
+      });
+      h += '</div><p class="hint" style="margin-top:8px">R = round number. Darker cells are historically wetter weeks; a gold dot marks a public holiday used as a match day.</p></div>';
+    } else {
+      h += '<div class="card"><h3>Proposed season calendar</h3><p class="hint" style="margin-bottom:8px">Each playable date carries a round. Weather risk is the five-year Cape Town wet-week pattern; overflow rounds fall on the public holidays / Sundays / midweek shown.</p>';
+      h += '<table><thead><tr><th>#</th><th>Date</th><th>Type</th><th>Round</th><th style="text-align:right">~Fixtures</th><th>Weather risk</th><th>Notes</th></tr></thead><tbody>';
+      sd.all.forEach(function (dt, i) {
+        var k = i + 1, r = dayRisk(dt.iso), note = [];
+        if (PH27[dt.iso]) note.push(PH27[dt.iso]);
+        if (ctxSchoolFwd(dt.iso)) note.push("school holiday");
+        h += '<tr><td>' + k + '</td><td>' + fmtDate(dt.iso) + " (" + DOW[new Date(dt.iso + "T00:00:00").getDay()].slice(0, 3) + ')</td><td><span class="' + (dt.type === "Sat" ? "" : "fa-warn") + '">' + dt.type + '</span></td><td>Round ' + k + '</td><td style="text-align:right">' + loadOnDate(k).toLocaleString() + '</td><td><span class="fa-risk r' + r + '">' + RISKW[r] + '</span></td><td>' + NS.esc(note.join(" · ")) + '</td></tr>';
+      });
+      h += '</tbody></table></div>';
+    }
 
-    // per-division demand
-    h += '<div class="card"><h3>Fixture demand by division</h3><p class="hint" style="margin-bottom:8px">Rounds and fixtures each division needs at 2026 sizes. Sorted by rounds. Divisions needing more than ' + satN + ' rounds spill past the Saturdays.</p>';
+    // per-division demand with editable sizes
+    h += '<div class="card"><h3>Fixture demand by division</h3><p class="hint" style="margin-bottom:8px">Rounds and fixtures at the scenario sizes. <b>Edit the Teams number</b> to resize a division — overflow teams cascade into the division below on the ladder. Sorted by rounds.</p>';
     h += '<table><thead><tr><th>Division</th><th style="text-align:right">Teams</th><th style="text-align:right">Rounds</th><th style="text-align:right">Fixtures</th><th>Fits Saturdays?</th></tr></thead><tbody>';
     divs.forEach(function (d) {
-      var fits = d.matchdays <= satN;
-      h += '<tr><td>' + NS.esc(d.name) + '</td><td style="text-align:right">' + d.nt + '</td><td style="text-align:right">' + d.matchdays + '</td><td style="text-align:right">' + d.fx + '</td><td>' + (fits ? '<span class="fa-ok">Yes</span>' : '<b class="fa-warn">+' + (d.matchdays - satN) + ' off-Sat</b>') + '</td></tr>';
+      var fits = d.matchdays <= satN, editable = !!d.code;
+      h += '<tr><td>' + NS.esc(d.name) + '</td><td style="text-align:right">' + (editable ? '<input type="number" class="fa-szin" data-gid="' + d.gid + '" value="' + d.nt + '" min="2" max="20">' : d.nt) + '</td><td style="text-align:right">' + d.matchdays + '</td><td style="text-align:right">' + d.fx + '</td><td>' + (fits ? '<span class="fa-ok">Yes</span>' : '<b class="fa-warn">+' + (d.matchdays - satN) + ' off-Sat</b>') + '</td></tr>';
     });
-    h += '</tbody></table></div>';
+    h += '</tbody></table><p class="hint" style="margin-top:6px">Editing sizes only cascades within the senior (A–D), reserve (A2–C2) and junior age-group ladders. Vets and Women’s are standalone.</p></div>';
 
     // proposed fixtures for a chosen division
-    h += '<div class="card"><h3>Proposed fixture list</h3><p class="hint" style="margin-bottom:8px">Generated round-robin at 2026 entrants, mapped onto the season dates above. Pick a division; export the whole draft below. Home/away alternates for fairness; venues and exact kick-offs stay a LeagueRepublic step.</p>';
+    h += '<div class="card"><h3>Proposed fixture list</h3><p class="hint" style="margin-bottom:8px">Generated round-robin at the scenario line-up, mapped onto the season dates. With club-grouping on, junior age groups are ordered by club so a club’s teams meet the same opponent on the same day. Home/away alternates; venues and exact kick-offs stay a LeagueRepublic step.</p>';
     h += '<label class="fa-divlbl">Division <select id="pDiv" class="fa-select">' + divs.map(function (d) { return '<option value="' + d.gid + '"' + (String(d.gid) === plan.div ? " selected" : "") + '>' + NS.esc(d.name) + " (" + d.nt + " teams)</option>"; }).join("") + '</select></label>';
     h += '<div class="fa-mbtns" style="margin:8px 0"><button class="btn ghost sm" id="pCsvAll">Download full 2027 draft (CSV)</button><button class="btn gold sm" id="pPdfDiv">Download this division (PDF)</button></div>';
     h += '<div id="pFix" class="fa-pfix"></div></div>';
     return h;
   }
-  function ctxSchoolFwd(iso) { for (var i = 0; i < FWD.school.length; i++) { if (iso >= FWD.school[i][0] && iso <= FWD.school[i][1]) return FWD.school[i][2]; } return null; }
 
   function planFixturesFor(gid) {
-    var divs = divStructure(); var d = divs.filter(function (x) { return String(x.gid) === String(gid); })[0]; if (!d) return null;
+    var divs = planDivs(); var d = divs.filter(function (x) { return String(x.gid) === String(gid); })[0]; if (!d) return null;
     var maxMd = Math.max.apply(null, divs.map(function (x) { return x.matchdays; }));
     var sd = seasonDates(plan, maxMd);
-    var rounds = d.clean ? roundRobin(d.teams, d.dbl) : null;
+    var rounds = d.clean && d.nt > 1 ? roundRobin(d.teams, d.dbl) : null;
     var ko = d.ko != null ? pad(d.ko) + ":00" : "TBC";
     return { div: d, rounds: rounds, dates: sd.all, ko: ko };
   }
@@ -742,7 +789,7 @@
     var el = NS.$("pFix"); if (!el) return;
     var pf = planFixturesFor(gid); if (!pf) { el.innerHTML = ""; return; }
     var d = pf.div;
-    if (!pf.rounds) { el.innerHTML = '<p class="hint">' + NS.esc(d.name) + ' has an irregular 2026 structure (combined mini-groups), so a clean round-robin is not modelled. It carries ' + d.fx + ' fixtures across ~' + d.matchdays + ' rounds; plan it directly in LeagueRepublic.</p>'; return; }
+    if (!pf.rounds) { el.innerHTML = '<p class="hint">' + NS.esc(d.name) + ' has an irregular 2026 structure (combined mini-groups), so a clean round-robin is not modelled. It carries about ' + d.fx + ' fixtures; plan it directly in LeagueRepublic.</p>'; return; }
     var h = '<p class="hint" style="margin:6px 0 8px"><b>' + NS.esc(d.name) + '</b> — ' + d.nt + ' teams, ' + pf.rounds.length + ' rounds, ' + pf.rounds.reduce(function (s, r) { return s + r.length; }, 0) + ' fixtures. Suggested kick-off ' + pf.ko + ' (2026 pattern).</p>';
     h += '<table><thead><tr><th>Round</th><th>Date</th><th>Home</th><th>Away</th><th>KO</th></tr></thead><tbody>';
     pf.rounds.forEach(function (rp, ri) {
@@ -753,16 +800,16 @@
     el.innerHTML = h;
   }
   function exportPlanCSV() {
-    var divs = divStructure(); var maxMd = Math.max.apply(null, divs.map(function (x) { return x.matchdays; }));
+    var divs = planDivs(); var maxMd = Math.max.apply(null, divs.map(function (x) { return x.matchdays; }));
     var sd = seasonDates(plan, maxMd);
     var esc = function (v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
     var lines = ["Division,Round,Date,Home,Away,KO"];
     divs.forEach(function (d) {
-      if (!d.clean) { lines.push(esc(d.name) + ",,,irregular 2026 structure — plan in LeagueRepublic,,"); return; }
+      if (!d.clean || d.nt < 2) { lines.push(esc(d.name) + ",,,irregular structure — plan in LeagueRepublic,,"); return; }
       var rounds = roundRobin(d.teams, d.dbl), ko = d.ko != null ? pad(d.ko) + ":00" : "TBC";
       rounds.forEach(function (rp, ri) { var dt = sd.all[ri] ? sd.all[ri].iso : "overflow"; rp.forEach(function (p) { lines.push([esc(d.name), "R" + (ri + 1), dt, esc(p[0]), esc(p[1]), ko].join(",")); }); });
     });
-    var meta = "CTTLFA 2027 fixture scenario (draft) — assumes 2026 league structure\nSeason," + plan.start + " to " + plan.end + ",Generated," + new Date().toLocaleString("en-ZA") + "\nNot a confirmed fixture list; LeagueRepublic is the system of record.\n\n";
+    var meta = "CTTLFA 2027 fixture scenario (draft) — assumes 2026 league structure\nSeason," + plan.start + " to " + plan.end + ",Promotion/relegation," + (plan.promoRel ? plan.up + " up / " + plan.down + " down" : "off") + ",Club-grouped juniors," + (plan.clubGroup ? "yes" : "no") + "\nGenerated," + new Date().toLocaleString("en-ZA") + ". Not a confirmed fixture list; LeagueRepublic is the system of record.\n\n";
     var blob = new Blob([meta + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
     var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "CTTLFA 2027 fixture scenario draft.csv";
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 200);
@@ -777,15 +824,18 @@
     doc.autoTable({ startY: 122, head: [["Round", "Date", "Home", "Away", "KO"]], body: body, styles: { fontSize: 8, cellPadding: 3 }, headStyles: { fillColor: [24, 64, 80], textColor: 255 }, alternateRowStyles: { fillColor: [244, 246, 251] } });
     var y = doc.lastAutoTable.finalY + 16; if (y > 760) { doc.addPage(); y = 40; }
     doc.setFontSize(9); doc.setTextColor(90, 101, 119); doc.setFont("helvetica", "normal");
-    doc.text("Draft scenario at 2026 league sizes. Not a confirmed fixture list; venues and exact kick-offs are set in LeagueRepublic.", 40, y);
+    doc.text("Draft scenario. Not a confirmed fixture list; venues and exact kick-offs are set in LeagueRepublic.", 40, y);
     doc.save("CTTLFA 2027 draft " + d.name.replace(/[^A-Za-z0-9 ]+/g, "") + ".pdf");
   }
   function bindPlanner() {
     var root = NS.$("fixturesRoot"); if (!root) return;
-    function set(id, prop, key, recompute) { var el = NS.$(id); if (el) el.addEventListener(prop === "checked" ? "change" : "change", function () { plan[key] = prop === "checked" ? el.checked : el.value; if (recompute) paint(cur); }); }
-    set("pStart", "value", "start", true); set("pEnd", "value", "end", true);
-    set("pPH", "checked", "usePH", true); set("pSun", "checked", "useSun", true); set("pMid", "checked", "useMid", true);
-    var dv = NS.$("pDiv"); if (dv) { if (!plan.div) plan.div = dv.value; renderPlanFix(plan.div); dv.addEventListener("change", function () { plan.div = dv.value; renderPlanFix(dv.value); }); }
+    function chg(id, key, isNum2) { var el = NS.$(id); if (el) el.addEventListener("change", function () { plan[key] = isNum2 ? (+el.value || 0) : el.value; paint(cur); }); }
+    function chk(id, key) { var el = NS.$(id); if (el) el.addEventListener("change", function () { plan[key] = el.checked; paint(cur); }); }
+    chg("pStart", "start"); chg("pEnd", "end"); chg("pUp", "up", true); chg("pDn", "down", true);
+    chk("pPH", "usePH"); chk("pSun", "useSun"); chk("pMid", "useMid"); chk("pDH", "sundayDH"); chk("pClub", "clubGroup"); chk("pPR", "promoRel");
+    Array.prototype.forEach.call(root.querySelectorAll(".fa-seg[data-view]"), function (b) { b.addEventListener("click", function () { plan.view = b.getAttribute("data-view"); paint(cur); }); });
+    Array.prototype.forEach.call(root.querySelectorAll(".fa-szin"), function (inp) { inp.addEventListener("change", function () { var v = +inp.value || 0, gid = inp.getAttribute("data-gid"); if (v >= 2) plan.sizes[gid] = v; else delete plan.sizes[gid]; paint(cur); }); });
+    var dv = NS.$("pDiv"); if (dv) { if (!plan.div || !dv.querySelector('option[value="' + plan.div + '"]')) plan.div = dv.value; renderPlanFix(plan.div); dv.addEventListener("change", function () { plan.div = dv.value; renderPlanFix(dv.value); }); }
     var ca = NS.$("pCsvAll"); if (ca) ca.addEventListener("click", exportPlanCSV);
     var pd = NS.$("pPdfDiv"); if (pd) pd.addEventListener("click", function () { exportPlanDivPDF(plan.div || (dv && dv.value)); });
   }
