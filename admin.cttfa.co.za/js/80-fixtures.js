@@ -564,9 +564,21 @@
 
   /* ================= 2027 FIXTURE SCENARIO PLANNER ================= */
   var BASE_ID = 47708359;              // 2026 season = the structural base
-  var plan = { start: "2027-04-03", end: "2027-09-25", usePH: true, useSun: false, useMid: true, sundayDH: false, clubGroup: true, promoRel: false, up: 2, down: 2, view: "table", div: "", sizes: {} };
+  var plan = { start: "2027-04-03", end: "2027-10-31", usePH: true, useSun: false, useMid: true, sundayDH: false, clubGroup: true, promoRel: false, up: 2, down: 2, ko: true, koRounds: 4, koPerRound: 2, view: "table", div: "", sizes: {} };
   var PH27 = {}; FWD.hol.forEach(function (x) { PH27[x[0]] = x[1]; });
-  var CHAINS = [["A1", "B1", "C1", "D1", "D2", "D3", "D4"], ["A2", "B2", "C2"], ["I1", "I2", "I3", "I4", "I5"], ["K1", "K2", "K3", "K4", "K5", "K6"], ["M1", "M2", "M3", "M4", "M5", "M6", "M7"], ["O1", "O2", "O3", "O4", "O5", "O6", "O8"]];
+  var CHAINS = [
+    ["A1", "B1", "C1", "D1", "D2", "D3", "D4"],   // senior open: Premier -> First -> Second -> 3rd-6th
+    ["A2", "B2", "C2"],                            // senior reserves
+    ["E1", "E2"],                                  // Vets O35
+    ["F1", "F2"],                                  // Vets O40
+    ["G4", "G5", "G6"],                            // Vets O50 A/B/C (G1 = O45 A, standalone)
+    ["H1", "H2"],                                  // Women's Premier -> First
+    ["I1", "I2", "I3", "I4", "I5"],               // U18
+    ["K1", "K2", "K3", "K4", "K5", "K6", "K8"],   // U16 open
+    ["M1", "M2", "M3", "M4", "M5", "M6", "M7", "M9"], // U14 open
+    ["O1", "O2", "O3", "O4", "O5", "O6", "O8"]    // U12 open
+  ];
+  var KO_ROUNDS = ["Round 1", "Quarter-Final", "Semi-Final", "Final"];
   function codeOf(name) { var m = (name || "").match(/^([A-Z]+)(\d+[A-Z]?)/); return m ? m[1] + m[2] : null; }
 
   var _base = null;
@@ -645,6 +657,40 @@
     return rounds;
   }
 
+  // most-common 2026 home venue per cleaned team name (a team keeps its ground)
+  var _vn = null;
+  function venueOfName() {
+    if (_vn) return _vn;
+    var data = cache[BASE_ID], agg = {};
+    if (data) data.fixtures.forEach(function (f) { if (f.fixtureTypeID !== 1 || isBye(f.homeTeamName)) return; var nm = clean(f.homeTeamName), v = f.venueAndSubVenueDesc || ""; if (!nm || !v) return; (agg[nm] = agg[nm] || {})[v] = (agg[nm][v] || 0) + 1; });
+    _vn = {}; Object.keys(agg).forEach(function (nm) { var best = "", bn = 0; Object.keys(agg[nm]).forEach(function (v) { if (agg[nm][v] > bn) { bn = agg[nm][v]; best = v; } }); _vn[nm] = best; });
+    return _vn;
+  }
+  // build the full generated schedule with venue + kick-off, and find same pitch+time clashes
+  function buildSchedule() {
+    var divs = planDivs(), maxMd = Math.max.apply(null, divs.map(function (x) { return x.matchdays; }));
+    var sd = seasonDates(plan, maxMd), vn = venueOfName(), all = [];
+    divs.forEach(function (d) {
+      if (!d.clean || d.nt < 2) return;
+      var rounds = roundRobin(d.teams, d.dbl), ko = d.ko != null ? pad(d.ko) + ":00" : "TBC";
+      rounds.forEach(function (rp, ri) { var dt = sd.all[ri] ? sd.all[ri].iso : null; if (!dt) return; rp.forEach(function (p) { all.push({ date: dt, div: d.name, home: p[0], away: p[1], venue: vn[p[0]] || "", ko: ko }); }); });
+    });
+    return { fx: all, sd: sd, divs: divs };
+  }
+  function clashReport() {
+    var s = buildSchedule(), by = {};
+    s.fx.forEach(function (x) { if (!x.venue || x.ko === "TBC") return; var key = x.date + "|" + x.venue + "|" + x.ko; (by[key] = by[key] || []).push(x); });
+    var clashes = [], groups = 0;
+    Object.keys(by).forEach(function (k) { if (by[k].length > 1) { groups++; clashes = clashes.concat(by[k]); } });
+    return { clashes: clashes, groups: groups, total: s.fx.length, schedule: s };
+  }
+  // named scenarios in browser storage
+  var SC_KEY = "cttlfa_plan27_scenarios";
+  function scLoadAll() { try { return JSON.parse(localStorage.getItem(SC_KEY) || "{}"); } catch (e) { return {}; } }
+  function scSave(name) { try { var all = scLoadAll(); all[name] = JSON.parse(JSON.stringify(plan)); localStorage.setItem(SC_KEY, JSON.stringify(all)); return true; } catch (e) { return false; } }
+  function scApply(name) { var all = scLoadAll(), s = all[name]; if (!s) return false; Object.keys(s).forEach(function (k) { plan[k] = s[k]; }); return true; }
+  function scDelete(name) { try { var all = scLoadAll(); delete all[name]; localStorage.setItem(SC_KEY, JSON.stringify(all)); return true; } catch (e) { return false; } }
+
   function pWk(iso) { var m = +iso.slice(5, 7), d = +iso.slice(8, 10); return m + "|" + Math.min(3, Math.floor((d - 1) / 7)); }
   function rainRisk() { var b = {}; if (CTX) Object.keys(CTX.rain).forEach(function (iso) { var k = pWk(iso); b[k] = (b[k] || 0) + CTX.rain[iso]; }); return b; }
   function seasonDates(p, needMd) {
@@ -657,15 +703,31 @@
       else if (wd === 0) sun.push(iso);
       else if (wd === 3) mid.push(iso);
     }
+    // knockout weekends: reserve Saturdays at the actual 2026 cup cadence. In 2026
+    // the cup-heavy Saturdays fell at ~23% (mid-May), ~47% (late June), ~71%
+    // (early August) and ~96% (late September) of the season. Each round takes
+    // koPerRound Saturdays, matching how 2026 ran two weekends per round.
+    var koSats = [], koIdx = {};
+    if (p.ko && sat.length) {
+      var rounds = Math.min(p.koRounds || 4, KO_ROUNDS.length), per = Math.max(1, p.koPerRound || 2);
+      var fr = [0.24, 0.47, 0.71, 0.96];
+      for (var r = 0; r < rounds; r++) {
+        var center = fr[r] != null ? fr[r] : (r + 0.7) / rounds;
+        var start = Math.min(sat.length - 1, Math.max(0, Math.round(center * sat.length) - Math.floor(per / 2)));
+        for (var k = 0; k < per; k++) { var ix = start + k; while (ix < sat.length && koIdx[ix]) ix++; if (ix < sat.length) { koIdx[ix] = 1; koSats.push({ iso: sat[ix], round: KO_ROUNDS[r] }); } }
+      }
+      koSats.sort(function (a, b) { return a.iso < b.iso ? -1 : 1; });
+    }
+    var leagueSat = sat.filter(function (x, i) { return !koIdx[i]; });
     function byIso(a, b) { return a.iso < b.iso ? -1 : 1; }
     var pool = [];
     if (p.usePH) pool = pool.concat(ph.map(function (x) { return { iso: x, type: "Hol" }; }).sort(byIso));
     if (p.useSun) { var ss = sun.map(function (x) { return { iso: x, type: "Sun" }; }).sort(byIso); pool = pool.concat(ss); if (p.sundayDH) pool = pool.concat(ss.map(function (x) { return { iso: x.iso, type: "Sun 2nd" }; })); }
     if (p.useMid) pool = pool.concat(mid.map(function (x) { return { iso: x, type: "Mid" }; }).sort(byIso));
-    var shortfall = Math.max(0, (needMd || sat.length) - sat.length);
+    var shortfall = Math.max(0, (needMd || leagueSat.length) - leagueSat.length);
     var overflow = pool.slice(0, shortfall);
-    var seq = sat.map(function (x) { return { iso: x, type: "Sat" }; }).concat(overflow).sort(function (a, b) { return a.iso < b.iso ? -1 : (a.iso > b.iso ? 1 : 0); });
-    return { all: seq, sat: sat, ph: ph, sun: sun, mid: mid, overflow: overflow, shortfall: shortfall, canFit: overflow.length >= shortfall };
+    var seq = leagueSat.map(function (x) { return { iso: x, type: "Sat" }; }).concat(overflow).sort(function (a, b) { return a.iso < b.iso ? -1 : (a.iso > b.iso ? 1 : 0); });
+    return { all: seq, sat: leagueSat, allSat: sat, ph: ph, sun: sun, mid: mid, overflow: overflow, shortfall: shortfall, canFit: overflow.length >= shortfall, koSats: koSats };
   }
   function ctxSchoolFwd(iso) { for (var i = 0; i < FWD.school.length; i++) { if (iso >= FWD.school[i][0] && iso <= FWD.school[i][1]) return FWD.school[i][2]; } return null; }
 
@@ -705,18 +767,23 @@
       '<label>Up <input type="number" id="pUp" value="' + plan.up + '" min="0" max="4" style="width:52px"></label>' +
       '<label>Down <input type="number" id="pDn" value="' + plan.down + '" min="0" max="4" style="width:52px"></label>' +
       '<span class="fa-segs"><button class="fa-seg' + (plan.view === "table" ? " on" : "") + '" data-view="table">Table view</button><button class="fa-seg' + (plan.view === "calendar" ? " on" : "") + '" data-view="calendar">Calendar view</button></span>' +
-      '</div><p class="hint" style="margin:8px 0 0">Starting the first Saturday after Easter (Sun 28 Mar 2027). Adjust anything and the model recomputes. Promotion/relegation and club-grouping are provisional and do not change the season size.</p></div>';
+      '</div><div class="fa-planctl" style="margin-top:8px">' +
+      ck("pKO", plan.ko, "Reserve knockout weekends") +
+      '<label>KO rounds <input type="number" id="pKOr" value="' + plan.koRounds + '" min="1" max="4" style="width:52px"></label>' +
+      '<label>Saturdays each <input type="number" id="pKOp" value="' + plan.koPerRound + '" min="1" max="3" style="width:52px"></label>' +
+      '<span class="fa-plan-scn"><label>Scenario <input type="text" id="pScName" placeholder="name this scenario" style="width:170px"></label><button class="btn gold sm" id="pScSave">Save</button><select id="pScSel" class="fa-select" style="max-width:200px"></select><button class="btn ghost sm" id="pScLoad">Load</button><button class="btn ghost sm" id="pScDel">Delete</button></span>' +
+      '</div><p class="hint" style="margin:8px 0 0">Adjust anything and the model recomputes. Knockout weekends follow the actual 2026 cup cadence — Round 1 in mid-May, Quarter-Finals in late June, Semi-Finals in early August, Finals in late September — and are taken out of the league Saturdays. Promotion/relegation and club-grouping are provisional and do not change the season size.</p></div>';
 
     // capacity tiles
     h += '<div class="fa-tiles">';
-    h += tile(satN, "Saturdays available", plan.start + " to " + plan.end, "");
+    h += tile(satN, "League Saturdays", sd.allSat.length + " total less " + sd.koSats.length + " knockout", "");
+    h += tile(sd.koSats.length, "Knockout weekends", plan.ko ? (plan.koRounds + " rounds x " + plan.koPerRound + " Sat") : "off", "");
     h += tile(maxMd, "Rounds needed (max)", "biggest division (" + divs.filter(function (d) { return d.matchdays === maxMd; })[0].nt + " teams)", "");
-    h += tile(shortfall, "Saturday shortfall", shortfall ? "rounds off Saturday" : "biggest divisions fit on Saturdays", "");
-    h += tile(playN, "Match rounds scheduled", satN + " on Saturdays" + (sd.overflow.length ? " + " + sd.overflow.length + " overflow" : ""), "");
+    h += tile(shortfall, "Saturday shortfall", shortfall ? "rounds off Saturday" : "fits on league Saturdays", "");
     h += '</div>';
     h += '<div class="fa-tiles">';
     h += tile(totFx.toLocaleString(), "League fixtures", divs.length + " divisions", "");
-    h += tile(Math.round(totTeams / 2), "Opening-round fixtures", "if every division plays round 1", "");
+    h += tile(playN, "Match rounds scheduled", satN + " on Saturdays" + (sd.overflow.length ? " + " + sd.overflow.length + " overflow" : ""), "");
     h += tile(Math.round(totFx / Math.max(satN, 1)), "Avg fixtures / Saturday", "if spread evenly (2026 peaked ~212)", "");
     h += tile(jr.length + " / " + sr.length, "Junior / senior divisions", "max rounds " + Math.max.apply(null, jr.map(function (d) { return d.matchdays; })) + " / " + Math.max.apply(null, sr.map(function (d) { return d.matchdays; })), "");
     h += '</div>';
@@ -726,39 +793,61 @@
     if (shortfall === 0) h += '<b class="fa-ok">Yes on Saturdays.</b> The biggest divisions need ' + maxMd + ' rounds and there are ' + satN + ' Saturdays, so every division runs on Saturdays with ' + (satN - maxMd) + ' week(s) of weather buffer.';
     else if (sd.canFit) h += '<b class="fa-ok">Yes, with ' + sd.overflow.length + ' non-Saturday round(s).</b> The ' + maxMd + '-round divisions are ' + shortfall + ' short of the ' + satN + ' Saturdays, absorbed by ' + sd.overflow.map(function (x) { return fmtDate(x.iso) + " (" + x.type + ")"; }).join(", ") + '. Smaller divisions finish inside the Saturdays.';
     else h += '<b class="fa-warn">Does not fit.</b> The ' + maxMd + '-round divisions are ' + shortfall + ' rounds short of the ' + satN + ' Saturdays and the enabled overflow dates cover only ' + sd.overflow.length + '. Extend the end date or enable public holidays / Sundays (with double-headers) / midweek.';
+    if (plan.ko && sd.koSats.length) h += ' <b>' + sd.koSats.length + ' Saturdays are reserved for knockouts</b> (' + sd.koSats.map(function (x) { return x.round; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(", ") + '), which is why only ' + satN + ' of the ' + sd.allSat.length + ' Saturdays carry league rounds.';
     h += ' A full round is ~' + Math.round(totTeams / 2) + ' fixtures, above the 2026 Saturday peak of ~212, so the age-group time ladder and byes spread it.</p>';
     h += bar("Rounds needed (biggest)", maxMd, Math.max(maxMd, satN), "gold");
-    h += bar("Saturdays available", satN, Math.max(maxMd, satN), "blue");
+    h += bar("League Saturdays", satN, Math.max(maxMd, satN), "blue");
+    if (plan.ko && sd.koSats.length) h += bar("Knockout Saturdays", sd.koSats.length, Math.max(maxMd, satN), "green");
     h += '</div>';
 
+    // knockout lookup for the calendar
+    var koByIso = {}; sd.koSats.forEach(function (x) { koByIso[x.iso] = x.round; });
+    var koAbbr = { "Round 1": "KO1", "Quarter-Final": "QF", "Semi-Final": "SF", "Final": "FIN" };
     // season calendar OR month-grid
     if (plan.view === "calendar") {
-      h += '<div class="card"><h3>Proposed season calendar</h3><p class="hint" style="margin-bottom:10px">Each match round on its date. Shaded by five-year Cape Town weather risk; H = public holiday.</p><div class="fa-cal">';
+      h += '<div class="card"><h3>Proposed season calendar</h3><p class="hint" style="margin-bottom:10px">Each match round on its date. Shaded by five-year Cape Town weather risk; H = public holiday; green cells are knockout weekends.</p><div class="fa-cal">';
       var months = {}; sd.all.forEach(function (dt, i) { var ym = dt.iso.slice(0, 7); (months[ym] = months[ym] || []).push({ dt: dt, round: i + 1 }); });
+      sd.koSats.forEach(function (x) { var ym = x.iso.slice(0, 7); (months[ym] = months[ym] || []); });
+      var byIsoRound = {}; sd.all.forEach(function (dt, i) { byIsoRound[dt.iso] = i + 1; });
       Object.keys(months).sort().forEach(function (ym) {
         var y = +ym.slice(0, 4), m = +ym.slice(5, 7), first = new Date(y, m - 1, 1), days = new Date(y, m, 0).getDate();
-        var byday = {}; months[ym].forEach(function (o) { byday[+o.dt.iso.slice(8, 10)] = o; });
         h += '<div class="fa-mon"><div class="fa-mon-h">' + MON[m - 1] + " " + y + '</div><div class="fa-week">';
         ["S", "M", "T", "W", "T", "F", "S"].forEach(function (x) { h += '<span class="fa-wd">' + x + '</span>'; });
         for (var i = 0; i < first.getDay(); i++) h += '<span class="fa-day empty"></span>';
         for (var dd = 1; dd <= days; dd++) {
-          var o = byday[dd], iso = y + "-" + pad(m) + "-" + pad(dd), dow = new Date(y, m - 1, dd).getDay();
-          if (o) { var r = dayRisk(iso), hol = PH27[iso]; h += '<span class="fa-day has r' + r + (dow === 6 ? " sat" : "") + '" title="Round ' + o.round + " — " + fmtDate(iso) + " — " + RISKW[r] + ' weather risk' + (hol ? " — " + hol : "") + '">' + dd + '<i>R' + o.round + '</i>' + (hol ? '<em class="fa-mh"></em>' : "") + '</span>'; }
+          var iso = y + "-" + pad(m) + "-" + pad(dd), dow = new Date(y, m - 1, dd).getDay(), rn = byIsoRound[iso], koR = koByIso[iso], hol = PH27[iso];
+          if (koR) h += '<span class="fa-day has ko' + (dow === 6 ? " sat" : "") + '" title="Knockout — ' + koR + " — " + fmtDate(iso) + '">' + dd + '<i>' + koAbbr[koR] + '</i></span>';
+          else if (rn) { var r = dayRisk(iso); h += '<span class="fa-day has r' + r + (dow === 6 ? " sat" : "") + '" title="Round ' + rn + " — " + fmtDate(iso) + " — " + RISKW[r] + ' weather risk' + (hol ? " — " + hol : "") + '">' + dd + '<i>R' + rn + '</i>' + (hol ? '<em class="fa-mh"></em>' : "") + '</span>'; }
           else h += '<span class="fa-day' + (dow === 6 ? " sat" : "") + '">' + dd + '</span>';
         }
         h += '</div></div>';
       });
-      h += '</div><p class="hint" style="margin-top:8px">R = round number. Darker cells are historically wetter weeks; a gold dot marks a public holiday used as a match day.</p></div>';
+      h += '</div><p class="hint" style="margin-top:8px">R = league round; KO1/QF/SF/FIN = knockout weekends. Darker cells are historically wetter weeks; a gold dot marks a public holiday used as a match day.</p></div>';
     } else {
-      h += '<div class="card"><h3>Proposed season calendar</h3><p class="hint" style="margin-bottom:8px">Each playable date carries a round. Weather risk is the five-year Cape Town wet-week pattern; overflow rounds fall on the public holidays / Sundays / midweek shown.</p>';
-      h += '<table><thead><tr><th>#</th><th>Date</th><th>Type</th><th>Round</th><th style="text-align:right">~Fixtures</th><th>Weather risk</th><th>Notes</th></tr></thead><tbody>';
-      sd.all.forEach(function (dt, i) {
-        var k = i + 1, r = dayRisk(dt.iso), note = [];
-        if (PH27[dt.iso]) note.push(PH27[dt.iso]);
-        if (ctxSchoolFwd(dt.iso)) note.push("school holiday");
-        h += '<tr><td>' + k + '</td><td>' + fmtDate(dt.iso) + " (" + DOW[new Date(dt.iso + "T00:00:00").getDay()].slice(0, 3) + ')</td><td><span class="' + (dt.type === "Sat" ? "" : "fa-warn") + '">' + dt.type + '</span></td><td>Round ' + k + '</td><td style="text-align:right">' + loadOnDate(k).toLocaleString() + '</td><td><span class="fa-risk r' + r + '">' + RISKW[r] + '</span></td><td>' + NS.esc(note.join(" · ")) + '</td></tr>';
+      h += '<div class="card"><h3>Proposed season calendar</h3><p class="hint" style="margin-bottom:8px">Each playable date carries a league round; knockout weekends are shown in green. Weather risk is the five-year Cape Town wet-week pattern; overflow rounds fall on the public holidays / Sundays / midweek shown.</p>';
+      h += '<table><thead><tr><th>Date</th><th>Type</th><th>Round</th><th style="text-align:right">~Fixtures</th><th>Weather risk</th><th>Notes</th></tr></thead><tbody>';
+      var merged = sd.all.map(function (dt, i) { return { iso: dt.iso, type: dt.type, round: "Round " + (i + 1), load: loadOnDate(i + 1) }; }).concat(sd.koSats.map(function (x) { return { iso: x.iso, type: "Cup", round: x.round, ko: true }; }));
+      merged.sort(function (a, b) { return a.iso < b.iso ? -1 : 1; });
+      merged.forEach(function (row) {
+        var r = dayRisk(row.iso), note = [];
+        if (PH27[row.iso]) note.push(PH27[row.iso]);
+        if (ctxSchoolFwd(row.iso)) note.push("school holiday");
+        h += '<tr' + (row.ko ? ' style="background:#eef7f0"' : '') + '><td>' + fmtDate(row.iso) + " (" + DOW[new Date(row.iso + "T00:00:00").getDay()].slice(0, 3) + ')</td><td><span class="' + (row.ko ? "fa-ok" : (row.type === "Sat" ? "" : "fa-warn")) + '">' + row.type + '</span></td><td>' + (row.ko ? "<b>Knockout — " + row.round + "</b>" : row.round) + '</td><td style="text-align:right">' + (row.ko ? "—" : row.load.toLocaleString()) + '</td><td><span class="fa-risk r' + r + '">' + RISKW[r] + '</span></td><td>' + NS.esc(note.join(" · ")) + '</td></tr>';
       });
       h += '</tbody></table></div>';
+    }
+
+    // venue & clash check
+    var cr = clashReport();
+    h += '<div class="card"><h3>Venue &amp; clash check</h3><p class="hint" style="margin-bottom:8px">Each home fixture is placed at the home team’s 2026 ground at its division kick-off time. A clash is the same pitch booked at the same time on the same date. Assign a different pitch or kick-off in LeagueRepublic to clear one.</p>';
+    h += '<div class="fa-tiles fa-tiles-sm">' + tile(cr.groups, "Venue clashes", "same pitch, same time", cr.groups ? "planClash" : "") + tile(cr.total.toLocaleString(), "Fixtures placed", "with a home venue", "") + '</div>';
+    if (cr.groups) {
+      var sample = cr.clashes.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).slice(0, 20);
+      h += '<table><thead><tr><th>Date</th><th>Venue</th><th>KO</th><th>Division</th><th>Home</th><th>Away</th></tr></thead><tbody>';
+      sample.forEach(function (x) { h += '<tr><td>' + fmtDate(x.date) + '</td><td>' + NS.esc(x.venue) + '</td><td>' + x.ko + '</td><td>' + NS.esc(x.div) + '</td><td>' + NS.esc(x.home) + '</td><td>' + NS.esc(x.away) + '</td></tr>'; });
+      h += '</tbody></table>' + (cr.clashes.length > 20 ? '<p class="hint" style="margin-top:6px">Showing 20 of ' + cr.clashes.length + ' clashing fixtures; the full draft CSV carries the venue on every fixture.</p>' : '') + '</div>';
+    } else {
+      h += '<p class="hint"><b class="fa-ok">No venue clashes.</b> No pitch is double-booked at the same time in this scenario.</p></div>';
     }
 
     // per-division demand with editable sizes
@@ -791,11 +880,12 @@
     var pf = planFixturesFor(gid); if (!pf) { el.innerHTML = ""; return; }
     var d = pf.div;
     if (!pf.rounds) { el.innerHTML = '<p class="hint">' + NS.esc(d.name) + ' has an irregular 2026 structure (combined mini-groups), so a clean round-robin is not modelled. It carries about ' + d.fx + ' fixtures; plan it directly in LeagueRepublic.</p>'; return; }
-    var h = '<p class="hint" style="margin:6px 0 8px"><b>' + NS.esc(d.name) + '</b> — ' + d.nt + ' teams, ' + pf.rounds.length + ' rounds, ' + pf.rounds.reduce(function (s, r) { return s + r.length; }, 0) + ' fixtures. Suggested kick-off ' + pf.ko + ' (2026 pattern).</p>';
-    h += '<table><thead><tr><th>Round</th><th>Date</th><th>Home</th><th>Away</th><th>KO</th></tr></thead><tbody>';
+    var vn = venueOfName();
+    var h = '<p class="hint" style="margin:6px 0 8px"><b>' + NS.esc(d.name) + '</b> — ' + d.nt + ' teams, ' + pf.rounds.length + ' rounds, ' + pf.rounds.reduce(function (s, r) { return s + r.length; }, 0) + ' fixtures. Suggested kick-off ' + pf.ko + ' (2026 pattern). Venue is the home team’s most-used 2026 ground.</p>';
+    h += '<table><thead><tr><th>Round</th><th>Date</th><th>Home</th><th>Away</th><th>Venue</th><th>KO</th></tr></thead><tbody>';
     pf.rounds.forEach(function (rp, ri) {
       var dt = pf.dates[ri] ? fmtDate(pf.dates[ri].iso) : "overflow";
-      rp.forEach(function (p, pi) { h += '<tr><td>' + (pi === 0 ? "R" + (ri + 1) : "") + '</td><td>' + (pi === 0 ? dt : "") + '</td><td>' + NS.esc(p[0]) + '</td><td>' + NS.esc(p[1]) + '</td><td>' + pf.ko + '</td></tr>'; });
+      rp.forEach(function (p, pi) { h += '<tr><td>' + (pi === 0 ? "R" + (ri + 1) : "") + '</td><td>' + (pi === 0 ? dt : "") + '</td><td>' + NS.esc(p[0]) + '</td><td>' + NS.esc(p[1]) + '</td><td>' + NS.esc(vn[p[0]] || "—") + '</td><td>' + pf.ko + '</td></tr>'; });
     });
     h += '</tbody></table>';
     el.innerHTML = h;
@@ -803,14 +893,15 @@
   function exportPlanCSV() {
     var divs = planDivs(); var maxMd = Math.max.apply(null, divs.map(function (x) { return x.matchdays; }));
     var sd = seasonDates(plan, maxMd);
+    var vn = venueOfName();
     var esc = function (v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-    var lines = ["Division,Round,Date,Home,Away,KO"];
+    var lines = ["Division,Round,Date,Home,Away,Venue,KO"];
     divs.forEach(function (d) {
-      if (!d.clean || d.nt < 2) { lines.push(esc(d.name) + ",,,irregular structure — plan in LeagueRepublic,,"); return; }
+      if (!d.clean || d.nt < 2) { lines.push(esc(d.name) + ",,,irregular structure — plan in LeagueRepublic,,,"); return; }
       var rounds = roundRobin(d.teams, d.dbl), ko = d.ko != null ? pad(d.ko) + ":00" : "TBC";
-      rounds.forEach(function (rp, ri) { var dt = sd.all[ri] ? sd.all[ri].iso : "overflow"; rp.forEach(function (p) { lines.push([esc(d.name), "R" + (ri + 1), dt, esc(p[0]), esc(p[1]), ko].join(",")); }); });
+      rounds.forEach(function (rp, ri) { var dt = sd.all[ri] ? sd.all[ri].iso : "overflow"; rp.forEach(function (p) { lines.push([esc(d.name), "R" + (ri + 1), dt, esc(p[0]), esc(p[1]), esc(vn[p[0]] || ""), ko].join(",")); }); });
     });
-    var meta = "CTTLFA 2027 fixture scenario (draft) — assumes 2026 league structure\nSeason," + plan.start + " to " + plan.end + ",Promotion/relegation," + (plan.promoRel ? plan.up + " up / " + plan.down + " down" : "off") + ",Club-grouped juniors," + (plan.clubGroup ? "yes" : "no") + "\nGenerated," + new Date().toLocaleString("en-ZA") + ". Not a confirmed fixture list; LeagueRepublic is the system of record.\n\n";
+    var meta = "CTTLFA 2027 fixture scenario (draft) — assumes 2026 league structure\nSeason," + plan.start + " to " + plan.end + ",Promotion/relegation," + (plan.promoRel ? plan.up + " up / " + plan.down + " down" : "off") + ",Club-grouped juniors," + (plan.clubGroup ? "yes" : "no") + ",Knockout weekends," + (plan.ko ? (plan.koRounds + " rounds x " + plan.koPerRound + " Sat = " + sd.koSats.length + " reserved") : "off") + "\nVenue is the home team's most-used 2026 ground; exact pitch and kick-off are set in LeagueRepublic. Generated," + new Date().toLocaleString("en-ZA") + ". Not a confirmed fixture list; LeagueRepublic is the system of record.\n\n";
     var blob = new Blob([meta + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
     var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "CTTLFA 2027 fixture scenario draft.csv";
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 200);
@@ -820,9 +911,9 @@
     var pf = planFixturesFor(gid); if (!pf || !pf.rounds) { alert("This division has an irregular structure and is not modelled."); return; }
     var d = pf.div, doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" });
     faPdfHead(doc, "2027 draft fixtures — " + d.name);
-    var body = [];
-    pf.rounds.forEach(function (rp, ri) { var dt = pf.dates[ri] ? fmtDate(pf.dates[ri].iso) : "overflow"; rp.forEach(function (p, pi) { body.push([pi === 0 ? "R" + (ri + 1) : "", pi === 0 ? dt : "", p[0], p[1], pf.ko]); }); });
-    doc.autoTable({ startY: 122, head: [["Round", "Date", "Home", "Away", "KO"]], body: body, styles: { fontSize: 8, cellPadding: 3 }, headStyles: { fillColor: [24, 64, 80], textColor: 255 }, alternateRowStyles: { fillColor: [244, 246, 251] } });
+    var vn = venueOfName(), body = [];
+    pf.rounds.forEach(function (rp, ri) { var dt = pf.dates[ri] ? fmtDate(pf.dates[ri].iso) : "overflow"; rp.forEach(function (p, pi) { body.push([pi === 0 ? "R" + (ri + 1) : "", pi === 0 ? dt : "", p[0], p[1], vn[p[0]] || "—", pf.ko]); }); });
+    doc.autoTable({ startY: 122, head: [["Round", "Date", "Home", "Away", "Venue", "KO"]], body: body, styles: { fontSize: 8, cellPadding: 3 }, headStyles: { fillColor: [24, 64, 80], textColor: 255 }, alternateRowStyles: { fillColor: [244, 246, 251] } });
     var y = doc.lastAutoTable.finalY + 16; if (y > 760) { doc.addPage(); y = 40; }
     doc.setFontSize(9); doc.setTextColor(90, 101, 119); doc.setFont("helvetica", "normal");
     doc.text("Draft scenario. Not a confirmed fixture list; venues and exact kick-offs are set in LeagueRepublic.", 40, y);
@@ -834,11 +925,46 @@
     function chk(id, key) { var el = NS.$(id); if (el) el.addEventListener("change", function () { plan[key] = el.checked; repaintPlan(); }); }
     chg("pStart", "start"); chg("pEnd", "end"); chg("pUp", "up", true); chg("pDn", "down", true);
     chk("pPH", "usePH"); chk("pSun", "useSun"); chk("pMid", "useMid"); chk("pDH", "sundayDH"); chk("pClub", "clubGroup"); chk("pPR", "promoRel");
+    chk("pKO", "ko"); chg("pKOr", "koRounds", true); chg("pKOp", "koPerRound", true);
     Array.prototype.forEach.call(root.querySelectorAll(".fa-seg[data-view]"), function (b) { b.addEventListener("click", function () { plan.view = b.getAttribute("data-view"); repaintPlan(); }); });
     Array.prototype.forEach.call(root.querySelectorAll(".fa-szin"), function (inp) { inp.addEventListener("change", function () { var v = +inp.value || 0, gid = inp.getAttribute("data-gid"); if (v >= 2) plan.sizes[gid] = v; else delete plan.sizes[gid]; repaintPlan(); }); });
     var dv = NS.$("pDiv"); if (dv) { if (!plan.div || !dv.querySelector('option[value="' + plan.div + '"]')) plan.div = dv.value; renderPlanFix(plan.div); dv.addEventListener("change", function () { plan.div = dv.value; renderPlanFix(dv.value); }); }
     var ca = NS.$("pCsvAll"); if (ca) ca.addEventListener("click", exportPlanCSV);
     var pd = NS.$("pPdfDiv"); if (pd) pd.addEventListener("click", function () { exportPlanDivPDF(plan.div || (dv && dv.value)); });
+    // scenarios: populate the picker, wire save / load / delete
+    var sel = NS.$("pScSel"); if (sel) { var all = scLoadAll(), names = Object.keys(all).sort(); sel.innerHTML = '<option value="">' + (names.length ? "saved scenarios…" : "no saved scenarios") + '</option>' + names.map(function (n) { return '<option value="' + NS.esc(n) + '">' + NS.esc(n) + '</option>'; }).join(""); }
+    var sv = NS.$("pScSave"); if (sv) sv.addEventListener("click", function () { var nm = NS.$("pScName"); var name = nm ? (nm.value || "").trim() : ""; if (!name) { alert("Give the scenario a name first."); return; } if (!scSave(name)) { alert("This browser blocked local storage, so the scenario could not be saved."); return; } if (nm) nm.value = ""; repaintPlan(); });
+    var ld = NS.$("pScLoad"); if (ld) ld.addEventListener("click", function () { var s = NS.$("pScSel"); var name = s ? s.value : ""; if (!name) { alert("Pick a saved scenario to load."); return; } if (scApply(name)) repaintPlan(); });
+    var del = NS.$("pScDel"); if (del) del.addEventListener("click", function () { var s = NS.$("pScSel"); var name = s ? s.value : ""; if (!name) { alert("Pick a saved scenario to delete."); return; } scDelete(name); repaintPlan(); });
+    // clash tile drill
+    var clash = root.querySelector('[data-drill="planClash"]'); if (clash) { clash.style.cursor = "pointer"; clash.addEventListener("click", openPlanClash); }
+  }
+  function openPlanClash() {
+    var cr = clashReport();
+    var scrim = NS.$("faScrim");
+    if (!scrim) { scrim = document.createElement("div"); scrim.id = "faScrim"; scrim.className = "fa-scrim"; document.body.appendChild(scrim); }
+    var rows = cr.clashes.slice().sort(function (a, b) { return a.date < b.date ? -1 : (a.date > b.date ? 1 : (a.venue < b.venue ? -1 : 1)); });
+    var head = '<div class="fa-mhead"><div><h3 style="margin:0">Venue clashes — 2027 scenario</h3><p class="hint" style="margin:2px 0 0">' + cr.groups + ' clash group(s), ' + cr.clashes.length + ' fixtures on a shared pitch and time. Change a pitch or kick-off in LeagueRepublic to clear one.</p></div>' +
+      '<div class="fa-mbtns"><button class="btn ghost sm" id="faCsv">Download CSV</button><button class="btn ghost sm" id="faClose">Close</button></div></div>';
+    var body = '<div class="fa-mbody">';
+    if (!rows.length) body += '<p class="hint"><b class="fa-ok">No venue clashes in this scenario.</b></p>';
+    else {
+      body += '<table><thead><tr><th>Date</th><th>Venue</th><th>KO</th><th>Division</th><th>Home</th><th>Away</th></tr></thead><tbody>';
+      rows.forEach(function (x) { body += '<tr><td>' + fmtDate(x.date) + '</td><td>' + NS.esc(x.venue) + '</td><td>' + x.ko + '</td><td>' + NS.esc(x.div) + '</td><td>' + NS.esc(x.home) + '</td><td>' + NS.esc(x.away) + '</td></tr>'; });
+      body += '</tbody></table>';
+    }
+    body += '</div>';
+    scrim.innerHTML = '<div class="fa-modal">' + head + body + '</div>';
+    scrim.classList.add("on"); scrim.style.display = "flex";
+    NS.$("faClose").onclick = closeDrill;
+    scrim.onclick = function (e) { if (e.target === scrim) closeDrill(); };
+    NS.$("faCsv").onclick = function () {
+      var esc = function (v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+      var lines = ["Date,Venue,KO,Division,Home,Away"].concat(rows.map(function (x) { return [x.date, esc(x.venue), x.ko, esc(x.div), esc(x.home), esc(x.away)].join(","); }));
+      var blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "CTTLFA 2027 venue clashes.csv";
+      document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 200);
+    };
   }
 
   /* ---------- drill modal + exports ---------- */
