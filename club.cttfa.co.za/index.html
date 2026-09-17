@@ -301,9 +301,6 @@
         <div class="loading" id="coLoading">Loading correspondence&hellip;</div>
         <div id="coBody" hidden></div>
       </div>
-      <div class="card" style="border-style:dashed;background:var(--surface)"><div class="sechead"><h2>Information centre</h2><span class="pill neutral">To come</span></div>
-        <p class="note" style="margin:0">A wider information centre is planned here: LFA circulars, meeting agendas, minutes and resolutions in one place, kept separate from formal notice and service. It will be built once the office document workflow is integrated.</p>
-      </div>
     </div>
     <div id="tab-club" hidden>
       <div class="loading" id="clLoading">Loading club admin&hellip;</div>
@@ -1017,8 +1014,8 @@ function resItem(title, body, action){
 function loadResources(){
   var code=(HOME&&HOME.code)?esc(HOME.code):'your club code';
   var h='';
-  h+='<div class="card"><div class="sechead"><h2 data-help="Practical links and contacts for dealing with the Association. The season fee schedule, forms and other documents will be added here as they are published.">Club resources</h2></div>'
-    +'<p class="note" style="margin:0">Everything a club officer needs to deal with the Association, in one place. More documents will be added here through the season.</p></div>';
+  h+='<div class="card"><div class="sechead"><h2 data-help="Practical links and contacts for dealing with the Association.">Club resources</h2></div>'
+    +'<p class="note" style="margin:0">Everything a club officer needs to deal with the Association, in one place.</p></div>';
   // Paying the Association
   h+='<div class="card"><div class="sechead"><h2>Paying the Association</h2></div>'
     +resItem('Your payment reference','Use <b>'+code+'</b> as the reference on every payment so it is allocated to your club&rsquo;s account. Payments without a reference take longer to match.','')
@@ -1039,7 +1036,6 @@ function loadResources(){
   // Who to contact + coming soon
   h+='<div class="card"><div class="sechead"><h2>Who to contact</h2></div>'
     +resItem('Finance, affiliation and general queries','Contact the Treasurer at <a href="mailto:treasurer@cttfa.co.za">treasurer@cttfa.co.za</a> for any account, affiliation or general query.','')
-    +'<p class="note" style="margin-top:12px;border-top:1px solid var(--hair);padding-top:10px">Coming to this page as they are published for the season: the fee schedule, registration and transfer forms, coaching-course dates, and insurance and safeguarding contacts.</p>'
     +'</div>';
   el('reBody').innerHTML=h; el('reLoading').hidden=true; el('reBody').hidden=false;
 }
