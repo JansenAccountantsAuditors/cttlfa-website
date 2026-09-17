@@ -3341,9 +3341,11 @@
         +'<div style="color:#C7D2EC;font-size:13.5px">The club-facing side of the association. Each registered member club signs in at <b style="color:#fff">club.cttfa.co.za</b> to see its own account, statement, status and fixtures &mdash; its own data only.</div></div>'
         +'<a class="btn gold sm" href="https://club.cttfa.co.za" target="_blank" rel="noopener">Open live portal &#8599;</a></div>'
       +'<div style="margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.16);font-size:12.5px;color:#C7D2EC"><b style="color:#fff">In testing &mdash; not yet announced to clubs.</b> Live and ready for Mancom review; clubs will be told once Mancom is satisfied there are no issues.</div></div>';
+    var canSyncAccess=(meRole==='administrator'||meRole==='staff');
     h+='<div class="card"><div class="deb-sec" style="margin-top:0;border-top:0;padding-top:0">Portal access</div>'
-      +'<p class="hint" style="font-size:13px;margin:0 0 10px">Access is granted to the contact email addresses each club has on record in Sage. Sage is the master: add or remove an email on the club in Sage and it syncs to the portal. To give the coach, secretary or chair access, add their email as a contact on that club in Sage.</p>'
-      +'<div style="display:flex;gap:24px;flex-wrap:wrap;font-size:14px"><div><b style="font-size:24px;font-family:var(--head)">'+withA+'</b> of '+total+' registered clubs have a login email</div><div><b style="font-size:24px;font-family:var(--head)">'+(total-withA)+'</b> still need an email in Sage</div></div>';
+      +'<p class="hint" style="font-size:13px;margin:0 0 10px">Access is granted to the contact emails each club has in Sage, plus any additional people you add by hand. <b>Sync from Sage</b> pulls the latest Sage contacts into the portal &mdash; it only ever <b>adds</b> access, it never removes anyone. To give a coach, secretary or chair access, either add their email on the club in Sage and sync, or add them directly under <b>Club Database &rarr; the club &rarr; portal logins</b> (people you add by hand are kept, and a sync never touches them).</p>'
+      +'<div style="display:flex;gap:24px;flex-wrap:wrap;font-size:14px"><div><b style="font-size:24px;font-family:var(--head)">'+withA+'</b> of '+total+' registered clubs have a login</div><div><b style="font-size:24px;font-family:var(--head)">'+(total-withA)+'</b> still need one</div></div>'
+      +(canSyncAccess?'<div style="margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap"><button class="btn gold sm" id="cpSyncBtn" type="button">Sync from Sage now</button><span class="hint" id="cpSyncMsg" style="font-size:12.5px"></span></div>':'');
     var without=clubs.filter(function(c){return !amap[c.club_key];});
     if(without.length){ h+='<details style="margin-top:10px"><summary style="cursor:pointer;font-size:13px;color:var(--navy);font-weight:600">Clubs without portal access ('+without.length+')</summary><div style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.9">'+without.map(function(c){return esc(c.name);}).join(' &middot; ')+'</div></details>'; }
     h+='</div>';
@@ -3354,6 +3356,14 @@
       +'<div id="cpPvList" class="deb-tblwrap"></div></div>';
     root.innerHTML=h;
     cpLoadEdits();
+    var _syncBtn=document.getElementById('cpSyncBtn');
+    if(_syncBtn) _syncBtn.onclick=async function(){
+      var b=this, msg=document.getElementById('cpSyncMsg'); b.disabled=true; if(msg) msg.textContent='Syncing from Sage…';
+      try{ var r=await sb.rpc('portal_access_sync'); if(r.error) throw r.error; var d=r.data||{};
+        if(msg) msg.textContent=(d.added?('Added '+d.added+' new login'+(d.added===1?'':'s')+' from Sage.'):'Up to date — every Sage contact already has a login.');
+        renderClubPortal();
+      }catch(e){ if(msg) msg.textContent='Could not sync: '+(e.message||e); b.disabled=false; }
+    };
     function drawList(q){
       q=(q||'').toLowerCase();
       var rows=clubs.filter(function(c){ return !q || (c.name||'').toLowerCase().indexOf(q)>=0 || (c.code||'').toLowerCase().indexOf(q)>=0; }).sort(function(a,b){return (a.name||'').localeCompare(b.name||'');});
