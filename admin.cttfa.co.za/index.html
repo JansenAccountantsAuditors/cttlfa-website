@@ -269,7 +269,7 @@
 
 <!-- LOGIN -->
 <div class="login" id="loginView">
-  <div class="lcard">
+  <div class="lcard" id="authCard">
     <div class="logo" id="loginLogo">CT</div>
     <h1>CTTLFA Admin Centre</h1>
     <p>Management Committee &amp; LFA staff access.</p>
@@ -282,7 +282,19 @@
     <label class="f" for="pw" id="pwLabel">Password</label>
     <input type="password" id="pw" placeholder="Your password" autocomplete="current-password">
     <div class="btnrow"><button class="btn gold full" id="authBtn">Sign in</button></div>
+    <div class="btnrow" style="justify-content:center;margin-top:6px"><a href="#" id="forgotLink" style="font-size:13px;font-weight:600;color:var(--blue,#123FB5);text-decoration:none">Forgot your password?</a></div>
     <div id="authMsg"></div>
+  </div>
+  <div class="lcard hidden" id="recoveryCard">
+    <div class="logo" id="loginLogo2">CT</div>
+    <h1>Set a new password</h1>
+    <p>Choose a new password for your CTTLFA admin account, then you will be signed in.</p>
+    <label class="f" for="rcPw">New password</label>
+    <input type="password" id="rcPw" placeholder="At least 8 characters" autocomplete="new-password">
+    <label class="f" for="rcPw2">Confirm new password</label>
+    <input type="password" id="rcPw2" placeholder="Re-enter the new password" autocomplete="new-password">
+    <div class="btnrow"><button class="btn gold full" id="rcBtn">Update password</button></div>
+    <div id="rcMsg"></div>
   </div>
 </div>
 
@@ -1046,6 +1058,41 @@
     $("authBtn").disabled=false;
   };
   $("signOut").onclick=async function(){ await sb.auth.signOut(); location.reload(); };
+
+  /* ---------- forgot password / self-service reset ---------- */
+  var RECOVERY_MODE=false;
+  var _fl=$("forgotLink"); if(_fl) _fl.onclick=async function(e){
+    e.preventDefault();
+    var email=($("email").value||"").trim().toLowerCase();
+    if(!email){ msg($("authMsg"),"Enter your email address above first, then click Forgot your password.","err"); return; }
+    _fl.style.pointerEvents="none"; var _t=_fl.textContent; _fl.textContent="Sending…";
+    try{ await sb.auth.resetPasswordForEmail(email,{ redirectTo: location.origin + location.pathname }); }catch(err){ /* never reveal whether the email exists */ }
+    _fl.style.pointerEvents=""; _fl.textContent=_t;
+    msg($("authMsg"),"If that email is registered, a password-reset link is on its way. Open it on this device and check your spam folder. The link is valid for a short time.","ok");
+  };
+  function showRecovery(){
+    RECOVERY_MODE=true;
+    try{ $("loginView").classList.remove("hidden"); $("appView").classList.add("hidden"); }catch(e){}
+    var ac=$("authCard"), rc=$("recoveryCard"); if(ac) ac.classList.add("hidden"); if(rc) rc.classList.remove("hidden");
+    try{ var l2=$("loginLogo2"), l1=$("loginLogo"); if(l2&&l1) l2.innerHTML=l1.innerHTML; }catch(e){}
+  }
+  try{ sb.auth.onAuthStateChange(function(ev){ if(ev==="PASSWORD_RECOVERY") showRecovery(); }); }catch(e){}
+  if(/(^|[#&?])type=recovery/.test(location.hash||"") || /(^|[#&?])type=recovery/.test(location.search||"")) showRecovery();
+  var _rb=$("rcBtn"); if(_rb) _rb.onclick=async function(){
+    var pw=$("rcPw").value||"", pw2=$("rcPw2").value||"";
+    if(pw.length<8){ msg($("rcMsg"),"Password must be at least 8 characters.","err"); return; }
+    if(pw!==pw2){ msg($("rcMsg"),"The two passwords do not match.","err"); return; }
+    _rb.disabled=true;
+    try{
+      var r=await sb.auth.updateUser({ password: pw });
+      if(r.error) throw r.error;
+      msg($("rcMsg"),"Password updated. Signing you in…","ok");
+      try{ history.replaceState(null,"",location.pathname); }catch(e){}
+      RECOVERY_MODE=false;
+      $("recoveryCard").classList.add("hidden"); $("authCard").classList.remove("hidden");
+      await afterLogin();
+    }catch(e){ _rb.disabled=false; msg($("rcMsg"), (e&&e.message)||"Could not update the password. The reset link may have expired — request a new one.","err"); }
+  };
 
   async function afterLogin(){
     var u=(await sb.auth.getUser()).data.user;
@@ -5010,7 +5057,7 @@
   })();
 
   /* ---------- boot ---------- */
-  (async function(){ var s=await sb.auth.getSession(); if(s.data && s.data.session){ await afterLogin(); } })();
+  (async function(){ if(RECOVERY_MODE) return; var s=await sb.auth.getSession(); if(s.data && s.data.session){ await afterLogin(); } })();
 })();
 </script>
 
