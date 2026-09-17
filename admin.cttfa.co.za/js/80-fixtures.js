@@ -43,6 +43,17 @@
   function seasonYear(id) { var s = SEASONS.filter(function (x) { return x.id === id; })[0]; return s ? s.y : id; }
   function segLabel() { return segment === "senior" ? "Senior" : segment === "junior" ? "Junior" : "All football"; }
 
+  /* ---------- context layers (window.FA_CTX) ---------- */
+  var CTX = (typeof window !== "undefined" && window.FA_CTX) ? window.FA_CTX : null;
+  var overlays = { rain: true, hol: true, ram: true, school: true, ls: true };
+  function ctxHol(iso) { return CTX && CTX.hol[iso]; }
+  function ctxEid(iso) { return CTX && CTX.eid[iso]; }
+  function ctxRain(iso) { return CTX ? (CTX.rain[iso] || 0) : 0; }
+  function ctxLS(iso) { return CTX ? (CTX.ls[iso.slice(0, 7)] || 0) : 0; }
+  function ctxSchool(iso) { if (!CTX) return null; for (var i = 0; i < CTX.school.length; i++) { var b = CTX.school[i]; if (iso >= b.s && iso <= b.e) return b; } return null; }
+  function ctxRamadan(iso) { if (!CTX) return null; for (var i = 0; i < CTX.ramadan.length; i++) { var r = CTX.ramadan[i]; if (iso >= r.s && iso <= r.e) return r; } return null; }
+  var LS_WORD = ["None", "Light", "Moderate", "Heavy", "Severe"];
+
   function loadSeason(id) {
     if (cache[id]) return Promise.resolve(cache[id]);
     return Promise.all([jget("/getFixturesForSeason/" + id), jget("/getFixtureGroupsForSeason/" + id)])
@@ -146,6 +157,11 @@
     if (key.indexOf("div:") === 0) { var gid = key.slice(4); return { title: (fx.filter(function (f) { return String(f.fixtureGroupIdentifier) === gid; })[0] || {}).fixtureGroupDesc || "Division", fx: fx.filter(function (f) { return String(f.fixtureGroupIdentifier) === gid; }) }; }
     if (key.indexOf("overdue:") === 0) { var g = key.slice(8); var now = Date.now(); return { title: "Overdue fixtures", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && d.t < now && !f.result && nonBye(f) && !/postpon/i.test(f.fixtureStatusDesc || "") && (g === "*" || String(f.fixtureGroupIdentifier) === g); }) }; }
     if (key === "teamClash") return { title: "Teams scheduled twice at the same time", fx: teamClashes().fx };
+    if (key === "rainfx") return { title: "Fixtures on wet days (5 mm or more)", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && ctxRain(d.iso) >= 5 && nonBye(f); }) };
+    if (key === "holfx") return { title: "Fixtures on public holidays", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && ctxHol(d.iso) && nonBye(f); }) };
+    if (key === "ramfx") return { title: "Fixtures during Ramadan", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && ctxRamadan(d.iso) && nonBye(f); }) };
+    if (key === "schoolfx") return { title: "Fixtures during school holidays", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && ctxSchool(d.iso) && nonBye(f); }) };
+    if (key === "lsnight") return { title: "Night games in heavy load-shedding months", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && d.hh != null && d.hh >= 17 && ctxLS(d.iso) >= 3 && nonBye(f); }) };
     return { title: "Fixtures", fx: fx };
   }
 
@@ -286,26 +302,49 @@
     return h;
   }
 
+  function ovChip(key, label) { return '<button class="fa-ov' + (overlays[key] ? ' on' : '') + '" data-ov="' + key + '">' + label + '</button>'; }
   function renderCalendar(o) {
     if (o.firstT === Infinity) return '<div class="card"><p class="hint">No dated fixtures for this selection.</p></div>';
     var months = Object.keys(o.byMonth).sort();
     var vals = Object.keys(o.byDate).map(function (k) { return o.byDate[k]; });
     var hmax = Math.max.apply(null, vals.concat([1]));
     function heat(n) { if (!n) return ""; var l = n / hmax; return l > .66 ? "h3" : l > .33 ? "h2" : "h1"; }
-    var h = '<div class="card"><h3>Season calendar</h3><p class="hint" style="margin-bottom:10px">Every match day for the selection. Darker = more fixtures; Saturdays are outlined. Click a day to list and export its fixtures.</p><div class="fa-cal">';
+    var h = '<div class="card"><h3>Season calendar</h3><p class="hint" style="margin-bottom:8px">Every match day for the selection. Darker = more fixtures; Saturdays are outlined. Overlay the context layers below, then click a day to list and export its fixtures.</p>';
+    if (CTX) {
+      h += '<div class="fa-ovbar">' + ovChip("rain", "💧 Rain") + ovChip("hol", "● Public holiday") + ovChip("ram", "Ramadan / Eid") + ovChip("school", "School holiday") + ovChip("ls", "⚡ Load shedding") + '</div>';
+    }
+    h += '<div class="fa-cal">';
     months.forEach(function (ym) {
       var y = +ym.slice(0, 4), m = +ym.slice(5, 7);
       var first = new Date(y, m - 1, 1), days = new Date(y, m, 0).getDate();
-      h += '<div class="fa-mon"><div class="fa-mon-h">' + MON[m - 1] + " " + y + '</div><div class="fa-week">';
+      var lsv = ctxLS(ym + "-01");
+      var lsBadge = (CTX && overlays.ls && lsv >= 1) ? ' <span class="fa-lsb l' + lsv + '" title="Load shedding: ' + LS_WORD[lsv] + '">⚡' + lsv + '</span>' : '';
+      h += '<div class="fa-mon"><div class="fa-mon-h">' + MON[m - 1] + " " + y + lsBadge + '</div><div class="fa-week">';
       ["S", "M", "T", "W", "T", "F", "S"].forEach(function (d) { h += '<span class="fa-wd">' + d + '</span>'; });
       for (var i = 0; i < first.getDay(); i++) h += '<span class="fa-day empty"></span>';
       for (var dd = 1; dd <= days; dd++) {
         var iso = y + "-" + pad(m) + "-" + pad(dd), n = o.byDate[iso] || 0, dow = new Date(y, m - 1, dd).getDay();
-        h += '<span class="fa-day ' + heat(n) + (dow === 6 ? ' sat' : '') + (n ? ' has' : '') + '"' + (n ? ' data-drill="date:' + iso + '"' : '') + ' title="' + dd + " " + MON[m - 1] + ": " + n + ' fixtures">' + dd + (n ? '<i>' + n + '</i>' : '') + '</span>';
+        var cls = "fa-day " + heat(n) + (dow === 6 ? " sat" : "") + (n ? " has" : "");
+        var tip = dd + " " + MON[m - 1] + ": " + n + " fixtures";
+        var marks = "";
+        if (CTX) {
+          var ram = overlays.ram && ctxRamadan(iso), sch = overlays.school && ctxSchool(iso);
+          if (ram) { cls += " ov-ram"; tip += " · Ramadan"; }
+          else if (sch) { cls += " ov-sch"; tip += " · " + sch.name; }
+          var eidN = overlays.ram && ctxEid(iso);
+          if (eidN) { cls += " ov-eid"; tip += " · " + eidN; }
+          var holN = overlays.hol && ctxHol(iso);
+          if (holN) { marks += '<em class="fa-mh" title="' + NS.esc(holN) + '"></em>'; tip += " · " + holN; }
+          var mm = overlays.rain && ctxRain(iso);
+          if (mm) { marks += '<em class="fa-mr' + (mm >= 20 ? " big" : "") + '" title="' + mm + ' mm rain"></em>'; tip += " · " + mm + " mm rain"; }
+        }
+        h += '<span class="' + cls + '"' + (n ? ' data-drill="date:' + iso + '"' : '') + ' title="' + tip + '">' + dd + (n ? '<i>' + n + '</i>' : '') + marks + '</span>';
       }
       h += '</div></div>';
     });
-    h += '</div></div>';
+    h += '</div>';
+    if (CTX) h += '<p class="hint" style="margin-top:10px">' + NS.esc(CTX.meta.rainNote) + " " + NS.esc(CTX.meta.lsNote) + '</p>';
+    h += '</div>';
     return h;
   }
 
@@ -420,6 +459,109 @@
     return { pct: base ? Math.round(kept / base * 100) : 0, kept: kept, base: base };
   }
 
+  /* ---------- context / insights ---------- */
+  function datedFx() { return filtered().filter(function (f) { return !isBye(f.homeTeamName) && !isBye(f.roadTeamName) && dParts(f.fixtureDate); }); }
+  var FWD = {
+    y: 2027,
+    hol: [["2027-03-26", "Good Friday"], ["2027-03-29", "Family Day"], ["2027-04-27", "Freedom Day"], ["2027-05-01", "Workers' Day"], ["2027-06-16", "Youth Day"], ["2027-08-09", "National Women's Day"], ["2027-09-24", "Heritage Day"]],
+    ramadan: { s: "2027-02-08", e: "2027-03-09", eid: "2027-03-10" },
+    school: [["2027-03-27", "2027-04-06", "Autumn break"], ["2027-06-26", "2027-07-19", "Winter break"], ["2027-09-25", "2027-10-04", "Spring break"]]
+  };
+  function wettestBuckets() {
+    // aggregate 5-year rain days into month + week-of-month buckets, ranked
+    var b = {};
+    Object.keys(CTX.rain).forEach(function (iso) {
+      var m = +iso.slice(5, 7), d = +iso.slice(8, 10), wk = Math.min(3, Math.floor((d - 1) / 7));
+      var wl = ["1st", "8th", "15th", "22nd"][wk];
+      var key = m + "|" + wk;
+      if (!b[key]) b[key] = { m: m, wk: wk, label: wl + "–" + (wk < 3 ? ["7th", "14th", "21st"][wk] : "end") + " " + MON[m - 1], days: 0, mm: 0 };
+      b[key].days++; b[key].mm += CTX.rain[iso];
+    });
+    return Object.keys(b).map(function (k) { return b[k]; }).sort(function (a, b2) { return b2.mm - a.mm; });
+  }
+  function renderContext(o) {
+    if (!CTX) return '<div class="card"><p class="hint">Context data is not available.</p></div>';
+    var yr = seasonYear(cur);
+    var fx = datedFx();
+    var night = fx.filter(function (f) { var d = dParts(f.fixtureDate); return d.hh != null && d.hh >= 17; });
+    var rainFx = fx.filter(function (f) { return ctxRain(dParts(f.fixtureDate).iso) >= 5; });
+    var disrupt = fx.filter(function (f) { return /postpon|abandon/i.test(f.fixtureStatusDesc || ""); });
+    var disruptWet = disrupt.filter(function (f) { return ctxRain(dParts(f.fixtureDate).iso) >= 5; });
+    var nightHeavyLS = night.filter(function (f) { return ctxLS(dParts(f.fixtureDate).iso) >= 3; });
+    var holFx = fx.filter(function (f) { return ctxHol(dParts(f.fixtureDate).iso); });
+    var schFx = fx.filter(function (f) { return ctxSchool(dParts(f.fixtureDate).iso); });
+    var termFx = fx.length - schFx.length;
+    var ramFx = fx.filter(function (f) { return ctxRamadan(dParts(f.fixtureDate).iso); });
+    var ramNight = ramFx.filter(function (f) { var d = dParts(f.fixtureDate); return d.hh != null && d.hh >= 17; });
+    var nightShare = fx.length ? Math.round(night.length / fx.length * 100) : 0;
+    var ramNightShare = ramFx.length ? Math.round(ramNight.length / ramFx.length * 100) : 0;
+
+    var h = '<div class="card" style="margin-bottom:12px"><p class="hint" style="margin:0">External context overlaid on ' + yr + " " + segLabel().toLowerCase() + ' fixtures: weather, load shedding, public and religious holidays, and school terms. Every figure opens the underlying fixtures with export. These are signals, not proof of cause.</p></div>';
+
+    // headline tiles
+    h += '<div class="fa-tiles">';
+    h += tile(rainFx.length.toLocaleString(), "Fixtures on wet days", "5 mm rain or more", "rainfx");
+    h += tile(disrupt.length ? (disruptWet.length + " of " + disrupt.length) : "0", "Disruptions on wet days", "postponed or abandoned", "");
+    h += tile(nightHeavyLS.length.toLocaleString(), "Night games in heavy LS", "17:00+ in Stage 3-4 months", "lsnight");
+    h += tile(holFx.length.toLocaleString(), "Fixtures on public holidays", "extra match days", "holfx");
+    h += '</div>';
+
+    // weather card
+    h += '<div class="card"><h3>Weather</h3><p class="hint" style="margin-bottom:8px">Cape Town had ' + Object.keys(CTX.rain).filter(function (k) { return k.slice(0, 4) == yr; }).length + ' disruptive rain days (5 mm+) in the ' + yr + ' season window. ' + rainFx.length + ' fixtures were scheduled on a wet day' + (disrupt.length ? ", and " + disruptWet.length + " of the " + disrupt.length + " postponements/abandonments fell on one" : "") + '.</p>';
+    var wet = {}; rainFx.forEach(function (f) { var iso = dParts(f.fixtureDate).iso; wet[iso] = (wet[iso] || 0) + 1; });
+    var wetRows = Object.keys(wet).map(function (iso) { return [iso, ctxRain(iso), wet[iso]]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 12);
+    if (wetRows.length) {
+      h += '<table><thead><tr><th>Date</th><th>Day</th><th style="text-align:right">Rain (mm)</th><th style="text-align:right">Fixtures</th></tr></thead><tbody>';
+      wetRows.forEach(function (r) { var d = new Date(r[0] + "T00:00:00"); h += '<tr class="fa-click" data-drill="date:' + r[0] + '"><td>' + fmtDate(r[0]) + '</td><td>' + DOW[d.getDay()] + '</td><td style="text-align:right"><b>' + r[1].toFixed(1) + '</b></td><td style="text-align:right">' + r[2] + '</td></tr>'; });
+      h += '</tbody></table>';
+    } else h += '<p class="hint">No fixtures fell on a wet day in this selection.</p>';
+    h += '</div>';
+
+    // load shedding card
+    var lsMonths = {}; fx.forEach(function (f) { var mk = dParts(f.fixtureDate).iso.slice(0, 7); lsMonths[mk] = ctxLS(mk + "-01"); });
+    var anyLS = Object.keys(lsMonths).some(function (k) { return lsMonths[k] >= 1; });
+    h += '<div class="card"><h3>Load shedding &amp; night games</h3>';
+    if (anyLS) {
+      h += '<p class="hint" style="margin-bottom:8px">' + night.length + ' night games (17:00 and later) this season; ' + nightHeavyLS.length + ' of them fell in a heavy load-shedding month (Stage 3-4). ' + NS.esc(CTX.meta.lsNote) + '</p>';
+      h += bar("Night games in heavy LS months", nightHeavyLS.length, Math.max(night.length, 1), "gold", "lsnight");
+      h += bar("All other night games", night.length - nightHeavyLS.length, Math.max(night.length, 1), "");
+    } else {
+      h += '<p class="hint"><b class="fa-ok">No load shedding of note</b> during the ' + yr + ' season. ' + NS.esc(CTX.meta.lsCaveat) + '</p>';
+    }
+    h += '</div>';
+
+    // school + ramadan card
+    h += '<div class="fa-grid2">';
+    h += '<div class="card"><h3>School terms</h3><p class="hint" style="margin-bottom:8px">Fixtures in term versus school-holiday weeks. Relevant for junior football load.</p>';
+    var smax = Math.max(termFx, schFx.length, 1);
+    h += bar("During school terms", termFx, smax, "blue");
+    h += bar("During school holidays", schFx.length, smax, "gold", "schoolfx");
+    h += '<p class="hint" style="margin-top:6px">' + NS.esc(CTX.meta.schoolNote) + '</p></div>';
+    h += '<div class="card"><h3>Ramadan</h3>';
+    if (ramFx.length) {
+      h += '<p class="hint" style="margin-bottom:8px">' + ramFx.length + ' fixtures fell within Ramadan this season. Night games were ' + ramNightShare + '% of Ramadan fixtures against ' + nightShare + '% across the season.</p>';
+      h += bar("Ramadan fixtures", ramFx.length, Math.max(ramFx.length, 1), "green", "ramfx");
+      h += '<p class="hint" style="margin-top:6px">' + NS.esc(CTX.meta.islamNote) + '</p>';
+    } else {
+      h += '<p class="hint">Ramadan fell outside this season’s fixtures (it moves ~11 days earlier each year). ' + NS.esc(CTX.meta.islamNote) + '</p>';
+    }
+    h += '</div></div>';
+
+    // forward planner
+    h += '<div class="card"><h3>Next-season planner &mdash; ' + FWD.y + '</h3><p class="hint" style="margin-bottom:8px">Fixed dates and historically wet weeks to plan the ' + FWD.y + ' calendar around. Public holidays and school breaks are firm; Ramadan follows the projected sighting; wet weeks are the five-year Cape Town pattern.</p>';
+    h += '<div class="fa-grid2"><div>';
+    h += '<h4 class="fa-h4">Dates to plan around</h4><table><tbody>';
+    h += '<tr><td>Ramadan</td><td>' + fmtDate(FWD.ramadan.s) + " – " + fmtDate(FWD.ramadan.e) + ' (Eid ' + fmtDate(FWD.ramadan.eid) + ')</td></tr>';
+    FWD.school.forEach(function (s) { h += '<tr><td>' + s[2] + '</td><td>' + fmtDate(s[0]) + " – " + fmtDate(s[1]) + '</td></tr>'; });
+    FWD.hol.filter(function (x) { return x[0] >= "2027-03" && x[0] <= "2027-10"; }).forEach(function (x) { h += '<tr><td>' + x[1] + '</td><td>' + fmtDate(x[0]) + ' (' + DOW[new Date(x[0] + "T00:00:00").getDay()] + ')</td></tr>'; });
+    h += '</tbody></table></div><div>';
+    h += '<h4 class="fa-h4">Historically wettest weeks</h4><table><thead><tr><th>Week</th><th style="text-align:right">Rain days (5yr)</th><th style="text-align:right">Total mm</th></tr></thead><tbody>';
+    wettestBuckets().slice(0, 8).forEach(function (b) { h += '<tr><td>' + b.label + '</td><td style="text-align:right">' + b.days + '</td><td style="text-align:right">' + Math.round(b.mm) + '</td></tr>'; });
+    h += '</tbody></table></div></div>';
+    h += '<p class="hint" style="margin-top:8px">' + FWD.y + ' public-holiday and school dates are projected from the standard calendar and the Easter and Ramadan cycles; confirm against the gazette and WCED calendar when released.</p></div>';
+    return h;
+  }
+
   /* ---------- drill modal + exports ---------- */
   var lastDrill = null;
   function openDrill(key) {
@@ -505,10 +647,14 @@
     else if (subView === "calendar") html = renderCalendar(o);
     else if (subView === "schedule") html = renderSchedule();
     else if (subView === "trends") html = renderTrends();
+    else if (subView === "context") html = renderContext(o);
     else if (subView === "issues") html = renderIssues(o);
     if (subView === "trends" && SEASONS.some(function (s) { return !cache[s.id]; })) return; // loader in flight
     body.innerHTML = html;
     bindDrills();
+    Array.prototype.forEach.call(document.querySelectorAll("#fixturesRoot .fa-ov"), function (b) {
+      b.addEventListener("click", function () { var k = b.getAttribute("data-ov"); overlays[k] = !overlays[k]; paint(cur); });
+    });
   }
 
   function buildDivOptions() {
@@ -555,6 +701,7 @@
       '<button class="fa-sub" data-sub="calendar">Calendar</button>' +
       '<button class="fa-sub" data-sub="schedule">Schedule</button>' +
       '<button class="fa-sub" data-sub="trends">Trends</button>' +
+      '<button class="fa-sub" data-sub="context">Context</button>' +
       '<button class="fa-sub" data-sub="issues">Issues</button></div>';
     h += '<div id="faBody"></div>';
     root.innerHTML = h;
