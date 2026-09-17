@@ -224,7 +224,7 @@
 
 <!-- ============ AUTH ============ -->
 <section class="auth" id="authView">
-  <div class="authcard">
+  <div class="authcard" id="authCard">
     <div class="crestwrap">
       <img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" alt="CTTLFA">
       <div><b>Cape Town Tygerberg LFA</b><span>Official club portal</span></div>
@@ -245,6 +245,22 @@
     </form>
     <div class="msg" id="authMsg"></div>
     <p class="fineprint">Access is granted to the contact email addresses your club has on record with the LFA office. To add or change who has access, contact the Treasurer at treasurer@cttfa.co.za.</p>
+  </div>
+  <div class="authcard" id="recoveryCard" hidden>
+    <div class="crestwrap">
+      <img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" alt="CTTLFA">
+      <div><b>Cape Town Tygerberg LFA</b><span>Official club portal</span></div>
+    </div>
+    <h1>Set a new password</h1>
+    <p class="sub">Choose a new password for your club portal account, then you will be signed in.</p>
+    <form id="rcForm" onsubmit="return false">
+      <label class="fld" for="rcPw">New password</label>
+      <input type="password" id="rcPw" autocomplete="new-password" placeholder="At least 8 characters" required>
+      <label class="fld" for="rcPw2">Confirm new password</label>
+      <input type="password" id="rcPw2" autocomplete="new-password" placeholder="Re-enter the new password" required>
+      <button class="btn block" id="rcBtn" type="submit">Update password</button>
+    </form>
+    <div class="msg" id="rcMsg"></div>
   </div>
 </section>
 
@@ -374,7 +390,7 @@ async function doFirst(){
   var known=await sb.rpc('portal_email_known',{p_email:email});
   if(known.error){ el('authBtn').disabled=false; showMsg('err','Could not verify your email right now. Please try again.'); return; }
   if(known.data!==true){ el('authBtn').disabled=false; showMsg('err','This email is not linked to a club on record with the LFA. Ask the Treasurer (treasurer@cttfa.co.za) to add it to your club in Sage.'); return; }
-  var r=await sb.auth.signUp({email:email,password:pw,options:{emailRedirectTo:CONFIG.SITE_URL}});
+  var r=await sb.auth.signUp({email:email,password:pw,options:{emailRedirectTo:CONFIG.SITE_URL + '/'}});
   el('authBtn').disabled=false;
   if(r.error){ if(/already/i.test(r.error.message)){ showMsg('info','You already have access. Switch to “Sign in”, or use “Forgot your password?”.'); setMode('signin'); } else showMsg('err', r.error.message); return; }
   if(r.data && r.data.session){ boot(); } else { showMsg('ok','Almost there. We have sent a confirmation link to '+email+'. Click it, then come back and sign in.'); }
@@ -383,11 +399,37 @@ async function doForgot(){
   clearMsg();
   var email=el('email').value.trim().toLowerCase();
   if(!email){ showMsg('err','Enter your club email first, then tap “Forgot your password?”.'); return; }
-  var r=await sb.auth.resetPasswordForEmail(email,{redirectTo:CONFIG.SITE_URL});
+  var r=await sb.auth.resetPasswordForEmail(email,{redirectTo:CONFIG.SITE_URL + '/'});
   if(r.error){ showMsg('err', r.error.message); return; }
   showMsg('ok','If that email has access, a password-reset link is on its way to '+email+'.');
 }
 el('btnSignout').addEventListener('click', async function(){ await sb.auth.signOut(); location.reload(); });
+
+/* ---------------- password recovery (set a new password after a reset link) ---------------- */
+var RECOVERY_MODE=false;
+function showRecovery(){
+  RECOVERY_MODE=true;
+  try{ el('authView').hidden=false; el('appView').hidden=true; var so=el('btnSignout'); if(so) so.hidden=true; }catch(e){}
+  var ac=el('authCard'), rc=el('recoveryCard'); if(ac) ac.hidden=true; if(rc) rc.hidden=false;
+}
+try{ sb.auth.onAuthStateChange(function(ev){ if(ev==='PASSWORD_RECOVERY') showRecovery(); }); }catch(e){}
+if(/(^|[#&?])type=recovery/.test(location.hash||'') || /(^|[#&?])type=recovery/.test(location.search||'')) showRecovery();
+async function doSetNewPassword(){
+  var m=el('rcMsg'); m.className='msg';
+  var pw=el('rcPw').value||'', pw2=el('rcPw2').value||'';
+  if(pw.length<8){ m.className='msg err'; m.textContent='Password must be at least 8 characters.'; return; }
+  if(pw!==pw2){ m.className='msg err'; m.textContent='The two passwords do not match.'; return; }
+  el('rcBtn').disabled=true;
+  var r=await sb.auth.updateUser({password:pw});
+  el('rcBtn').disabled=false;
+  if(r.error){ m.className='msg err'; m.textContent=r.error.message||'Could not update the password. The reset link may have expired — request a new one.'; return; }
+  m.className='msg ok'; m.textContent='Password updated. Signing you in…';
+  try{ history.replaceState(null,'',location.pathname); }catch(e){}
+  RECOVERY_MODE=false;
+  el('recoveryCard').hidden=true; el('authCard').hidden=false;
+  boot();
+}
+el('rcForm').addEventListener('submit', function(){ doSetNewPassword(); });
 
 /* ---------------- tabs ---------------- */
 function showTab(t){
@@ -1206,6 +1248,7 @@ function initHelp(){
 /* ---------------- start ---------------- */
 (async function(){
   setMode('signin');
+  if(RECOVERY_MODE) return;
   var s=await sb.auth.getSession();
   if(s.data && s.data.session){ boot(); }
 })();
