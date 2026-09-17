@@ -12,17 +12,308 @@
  ],
  "senior": [
   [
+   "B1 - First Division",
+   "2026-09-19",
+   "15:45",
+   "J M I",
+   "Sunningdale City",
+   "A Richards",
+   "",
+   ""
+  ],
+  [
+   "B1 - First Division",
+   "2026-09-19",
+   "15:45",
+   "Garden Village",
+   "Bothasig",
+   "N Julies",
+   "",
+   ""
+  ],
+  [
    "C1 - Second Division",
-   "2026-09-15",
-   "20:30",
-   "Chelsea Bridgetown",
+   "2026-09-17",
+   "20:00",
+   "Varsity College",
+   "Barmsley Spurs",
+   "K Cupido",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-20",
+   "15:45",
+   "Varsity College",
+   "FC Kapstadt",
+   "J Absalon",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-20",
+   "15:45",
+   "Young Bafana",
+   "Goodwood",
+   "R Arendse",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-19",
+   "15:45",
+   "Clyde Pinelands",
    "Avendale Athletico",
-   "D Grant",
+   "D Vaughan",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-19",
+   "15:45",
+   "De Beers",
+   "Queens Park",
+   "R Kalamdien",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-19",
+   "15:45",
+   "Mutual FC",
+   "Camps Bay",
+   "S Maphempeni",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-19",
+   "15:45",
+   "FC Kapstadt",
+   "Goodwood",
+   "D Motseo",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-19",
+   "15:45",
+   "Young Bafana",
+   "Hellenic",
+   "A Hayward",
+   "",
+   ""
+  ],
+  [
+   "B1 - First Division",
+   "2026-09-19",
+   "15:45",
+   "Bellville City",
+   "Ruyterwacht",
+   "M Swartz",
+   "",
+   ""
+  ],
+  [
+   "B1 - First Division",
+   "2026-09-19",
+   "15:45",
+   "Meadowridge",
+   "Brooklyn Superstars",
+   "Bukola Pussiano Olakolu",
+   "",
+   ""
+  ],
+  [
+   "B1 - First Division",
+   "2026-09-19",
+   "15:45",
+   "Northpine United",
+   "Tramway",
+   "P Arendse",
+   "",
+   ""
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-19",
+   "15:45",
+   "Durbanville",
+   "Norway Parks",
+   "L De Klerk",
+   "S Bhali",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-19",
+   "15:45",
+   "Green Point",
+   "Hanover Park",
+   "N Dunshire",
+   "J Absalon",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-19",
+   "15:45",
+   "Holy Cross",
+   "Saxon Rovers",
+   "W Engelbrecht",
+   "M Matiwane",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-19",
+   "15:45",
+   "Rygersdal",
+   "C.R Vasco da Gama",
+   "T Daames",
+   "L Nziweni",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-19",
+   "15:45",
+   "Table View",
+   "FN Rangers",
+   "A Williams",
+   "S Loqo",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-19",
+   "15:45",
+   "U C T",
+   "Edgemead G/W",
+   "J Paulse",
+   "M Sino",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-19",
+   "15:45",
+   "Wynberg st Johns",
+   "Fish Hoek",
+   "S Mnyanda",
+   "L Somi",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-17",
+   "20:00",
+   "Saxon Rovers",
+   "FN Rangers",
+   "N Dunshire",
+   "J Absalon",
+   "Club Ref"
+  ]
+ ],
+ "junior": [],
+ "ladies": [
+  [
+   "H2 - Womans First Division",
+   "2026-09-17",
+   "19:00",
+   "Stephanian Ottery",
+   "U C T",
+   "T Daames",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-18",
+   "19:00",
+   "Kensington",
+   "Green Point",
+   "D Vaughan",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-18",
+   "19:00",
+   "Meadowridge",
+   "Saxon Rovers",
+   "A Adams",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-18",
+   "19:00",
+   "Norway Parks",
+   "Badgers FC",
+   "D Motseo",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-19",
+   "15:30",
+   "Hout Bay (Guest)",
+   "Magic Ladies",
+   "N Julies",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-20",
+   "13:00",
+   "Hout Bay (Guest)",
+   "Saxon Rovers",
+   "G Brown",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-18",
+   "19:00",
+   "Bellville City",
+   "U C T",
+   "F Nel",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-18",
+   "19:00",
+   "FN Rangers",
+   "Fish Hoek",
+   "R Arendse",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-18",
+   "19:00",
+   "Northpine United",
+   "Badgers FC",
+   "H Dresselhaus",
    "",
    ""
   ]
  ],
- "junior": [],
- "ladies": [],
- "week_label": "2026-09-15 to 2026-09-15"
+ "week_label": "2026-09-17 to 2026-09-20"
 }
