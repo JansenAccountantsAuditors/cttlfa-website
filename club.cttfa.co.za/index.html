@@ -832,9 +832,15 @@ async function doPayNow(){
     var r=await sb.functions.invoke('payfast-initiate', { body:{ amount: amt } });
     var d=r.data;
     if(r.error){ try{ d=await r.error.context.json(); }catch(_){ d=null; } }
+    if(d && d.process && d.fields){ submitPayFast(d.process, d.fields); return; }
     if(d && d.url){ window.location.assign(d.url); return; }
     throw new Error((d&&d.error)||'Could not start the payment. Please try again.');
   }catch(e){ btn.disabled=false; msg.className='msg err'; msg.textContent=(e&&e.message)||'Could not start the payment. Please try again.'; }
+}
+function submitPayFast(action, fields){
+  var f=document.createElement('form'); f.method='POST'; f.action=action; f.style.display='none';
+  Object.keys(fields).forEach(function(k){ var i=document.createElement('input'); i.type='hidden'; i.name=k; i.value=fields[k]; f.appendChild(i); });
+  document.body.appendChild(f); f.submit();
 }
 function payReturnBanner(){
   try{
