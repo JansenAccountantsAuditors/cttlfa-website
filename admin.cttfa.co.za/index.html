@@ -2732,7 +2732,8 @@
     try{ var doc=await debStatementPDF(c, Object.assign({doc:true,silent:true}, opts||{})); if(doc){ b64=doc.output('datauristring').split(',')[1]; pname='CTTLFA Statement - '+String(c.name).replace(/[^A-Za-z0-9 ]/g,'').trim()+'.pdf'; } }catch(e){ alert('Could not build the statement: '+(e.message||e)); return; }
     if(!b64){ alert('Could not build the statement PDF.'); return; }
     var text='Dear '+c.name+' Committee,\n\nPlease find attached the club’s statement of account'+((opts&&opts.label)?' ('+opts.label+')':'')+', reflecting a balance of '+dR(c.bal)+'. Please use club code '+(c.code||c.name)+' as the payment reference; banking details are on the statement.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
-    var html=debEmailHtml(text, S, {attached:true});
+    var _pay=(Number(c.bal)>0)? await debPayLink(c, c.bal, 'statement') : null;
+    var html=debEmailHtml(text, S, {attached:true, pay_url:(_pay&&_pay.url)||null, pay_amount:c.bal});
     try{ var r=await sb.functions.invoke('deb-send',{ body:{ club_key:c.club_key, name:c.name, code:c.code, trigger:'statement', subject:'Statement of account — '+c.name+(c.code?' ('+c.code+')':''), html:html, text:text, pdf_base64:b64, pdf_name:pname } });
       if(r.error) throw new Error(r.error.message||r.error); if(r.data&&r.data.ok===false) throw new Error(r.data.error||'send failed');
       alert('Statement '+(test?'delivered to the Treasurer (test mode).':'sent to the club.')); _deb=null;
@@ -3530,6 +3531,15 @@
     var paras=e(textBody).split(/\n\n+/).map(function(p){return '<p style="margin:0 0 12px;'+FONT+';font-size:14px;line-height:1.55;color:#0B1220">'+p.replace(/\n/g,'<br>')+'</p>';}).join('');
     var reply=(S&&S.reply_to)||'treasurer@cttfa.co.za';
     var attnote=(opts&&opts.attached===false)?'':(' '+((opts&&opts.docs==='both')?'Your statement and a signed copy of this notice are attached.':'Your statement is attached.'));
+    // Outlook-safe "Pay your account online" button (bgcolor + inline styles, table-based).
+    var payBlock='';
+    if(opts&&opts.pay_url){
+      payBlock=''
+        +'<table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:2px 0 14px;border-collapse:collapse"><tr>'
+        +'<td bgcolor="#071A4A" style="background-color:#071A4A;border-radius:8px"><a href="'+opts.pay_url+'" target="_blank" style="display:inline-block;padding:12px 24px;'+FONT+';font-size:14px;font-weight:bold;color:#ffffff;text-decoration:none">Pay your account online &rsaquo;</a></td>'
+        +'</tr></table>'
+        +'<p style="margin:0 0 12px;'+FONT+';font-size:12px;line-height:1.55;color:#59666B">Pay'+(opts.pay_amount!=null?(' the balance of '+dR(opts.pay_amount)):'')+' securely by card or instant EFT through PayFast, with your payment reference built in. You can also pay by EFT using the banking details on the statement. If you have already paid, please disregard.</p>';
+    }
     return ''
       +'<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;background-color:#f4f6fb;margin:0;padding:0"><tr><td align="center" style="padding:16px 10px">'
       +'<table role="presentation" width="620" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;width:620px;max-width:620px;'+FONT+'">'
@@ -3538,11 +3548,66 @@
       +'<td width="46" style="width:46px;padding-right:12px;vertical-align:middle"><img src="https://admin.cttfa.co.za/cttlfa-logo.jpg" width="46" height="46" alt="CTTLFA" style="display:block;border:0;border-radius:6px;background-color:#ffffff"></td>'
       +'<td style="vertical-align:middle"><div style="color:#ffffff;font-size:15px;font-weight:bold;line-height:1.2;'+FONT+'">Cape Town Tygerberg Local Football Association</div><div style="color:#B7C4E6;font-size:12px;margin-top:2px;'+FONT+'">Finance Office</div></td>'
       +'</tr></table></td></tr>'
-      +'<tr><td bgcolor="#ffffff" style="background-color:#ffffff;border:1px solid #E3E8F0;border-top:0;border-radius:0 0 8px 8px;padding:18px 20px">'+paras
+      +'<tr><td bgcolor="#ffffff" style="background-color:#ffffff;border:1px solid #E3E8F0;border-top:0;border-radius:0 0 8px 8px;padding:18px 20px">'+paras+payBlock
       +'<hr style="border:0;border-top:1px solid #eeeeee;margin:14px 0">'
       +'<div style="font-size:11px;line-height:1.5;color:#59666B;'+FONT+'">Issued by the Treasurer of the Cape Town Tygerberg LFA. Queries to '+reply+'.'+attnote+'</div>'
       +'</td></tr></table></td></tr></table>';
   }
+  // ---- PayFast online payment links (admin) ----
+  // Mints a secure, signed payment link via the payfast-initiate edge function (admin path).
+  // Used for the statement/notice "Pay your account" button (source 'statement') and the
+  // ad-hoc club "Pay link" action (source 'admin'). The passphrase never leaves the server.
+  async function debPayLink(c, amount, source){
+    var amt=Math.round((Number(amount!=null?amount:c.bal)||0)*100)/100;
+    if(!(amt>0)) return { error:'This club has no outstanding balance to pay.' };
+    try{
+      var r=await sb.functions.invoke('payfast-initiate',{ body:{ club_key:c.club_key, amount:amt, source:(source||'admin') } });
+      var d=r.data; if(r.error){ try{ d=await r.error.context.json(); }catch(_){ d=null; } }
+      if(d&&d.pay_url) return { url:d.pay_url, amount:amt };
+      return { error:(d&&d.error)||'Could not generate the payment link.' };
+    }catch(e){ return { error:(e&&e.message)||'Could not generate the payment link.' }; }
+  }
+  function debPayStatusPill(s){
+    var m={paid:['Paid','#E7F5EC','#1c5136'],pending:['Link not opened','#EEF2F8','#5A667C'],redirected:['Opened, not paid','#FBF1DD','#7a5312'],cancelled:['Cancelled','#F8E7E5','#7a2320'],failed:['Failed','#F8E7E5','#7a2320']};
+    var x=m[s]||[s||'—','#EEF2F8','#5A667C']; return '<span class="deb-pill" style="background:'+x[1]+';color:'+x[2]+'">'+esc(x[0])+'</span>';
+  }
+  async function debPayLinkFlow(c){
+    var ov=document.createElement('div'); ov.className='deb-confirm-ov';
+    ov.innerHTML='<div class="deb-cmp-card" role="dialog" aria-modal="true" aria-label="Payment link for '+esc(c.name)+'">'
+      +'<div class="deb-cmp-h"><h4>Online payment link &mdash; '+esc(c.name)+'</h4><div class="dsub">'+esc(c.code||'')+' &middot; balance '+dR(c.bal)+'</div></div>'
+      +'<div class="deb-cmp-b" id="plBody"><p class="hint">Generating a secure PayFast link&hellip;</p></div>'
+      +'<div class="deb-cmp-f"><button class="btn ghost" id="plClose">Close</button></div></div>';
+    document.body.appendChild(ov);
+    function close(){ try{document.body.removeChild(ov);}catch(e){} document.removeEventListener('keydown',onKey); }
+    function onKey(e){ if(e.key==='Escape') close(); }
+    document.addEventListener('keydown',onKey);
+    ov.addEventListener('click',function(e){ if(e.target===ov) close(); });
+    var _c=ov.querySelector('#plClose'); if(_c) _c.onclick=close;
+    var body=ov.querySelector('#plBody');
+    var res=await debPayLink(c, c.bal, 'admin');
+    var pays=[]; try{ var pr=await sb.rpc('deb_payments_admin_list',{p_club:c.club_key}); if(!pr.error&&Array.isArray(pr.data)) pays=pr.data; }catch(e){}
+    var linkHtml;
+    if(res.error){ linkHtml='<div class="deb-cmp-note live">'+esc(res.error)+'</div>'; }
+    else{
+      linkHtml='<label class="fl">Secure payment link (valid 30 days) &mdash; for '+dR(res.amount)+'</label>'
+        +'<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'
+        +'<input type="text" id="plUrl" readonly value="'+esc(res.url)+'" style="flex:1;min-width:220px;font-size:12.5px">'
+        +'<button class="btn sm" id="plCopy" type="button">Copy</button>'
+        +'<a class="btn ghost sm" href="'+esc(res.url)+'" target="_blank" rel="noopener">Open</a>'
+        +'</div>'
+        +'<p class="hint" style="margin:8px 2px 0">Send this to the club by email or WhatsApp. It opens a secure PayFast checkout for '+dR(res.amount)+' with the club&rsquo;s payment reference built in; card and instant EFT are handled entirely by PayFast. The payment reflects on the account once confirmed and reconciled. Statements and notices you email already carry a Pay button, so this is for ad-hoc requests.</p>';
+    }
+    var payHtml='<div class="deb-sec" style="margin-top:14px">Online payments &amp; links</div>';
+    if(!pays.length){ payHtml+='<p class="hint" style="font-size:12px">No online payments or links recorded for this club yet.</p>'; }
+    else{
+      payHtml+='<div class="tscroll"><table class="deb-table"><thead><tr><th>Date</th><th class="num">Amount</th><th>Status</th><th>Source</th></tr></thead><tbody>'
+        +pays.slice(0,30).map(function(p){ return '<tr><td>'+dDateTimeZA(p.created_at)+'</td><td class="num">'+dR(p.amount)+'</td><td>'+debPayStatusPill(p.status)+(p.status==='paid'&&p.amount_net!=null?' <span class="hint" style="font-weight:400">net '+dR(p.amount_net)+'</span>':'')+'</td><td class="hint" style="font-weight:400">'+esc(p.source||'')+'</td></tr>'; }).join('')
+        +'</tbody></table></div>';
+    }
+    body.innerHTML=linkHtml+payHtml;
+    var cp=ov.querySelector('#plCopy'); if(cp) cp.onclick=function(){ var i=ov.querySelector('#plUrl'); try{ i.select(); navigator.clipboard.writeText(i.value); }catch(e){} this.textContent='Copied'; var b=this; setTimeout(function(){b.textContent='Copy';},1300); };
+  }
+
   async function debSendOne(c, trigger, opts){
     if(!_deb||!_deb.clubs){ try{ var _rr=await sb.rpc('deb_dashboard'); if(!_rr.error&&_rr.data) _deb=_rr.data; }catch(e){} }
     var _full=((_deb&&_deb.clubs)||[]).filter(function(x){return x.club_key===c.club_key;})[0]; if(_full) c=_full;
@@ -3557,7 +3622,8 @@
     var subject=debFill(tpl.subject||'Statement of account — {club} ({code})', c, S);
     var text=debFill(tpl.body||'Please find your statement attached.', c, S);
     var _withLetter=(_tk==='ooc' || _tk==='ooc_guest' || trigger==='ooc');
-    var html=debEmailHtml(text, S, {docs:(_withLetter?'both':undefined)});
+    var _pay=(Number(c.bal)>0)? await debPayLink(c, c.bal, 'statement') : null;
+    var html=debEmailHtml(text, S, {docs:(_withLetter?'both':undefined), pay_url:(_pay&&_pay.url)||null, pay_amount:c.bal});
     var cleanNm=String(c.name).replace(/[^A-Za-z0-9 ]/g,'').trim();
     var atts=[];
     try{ var doc=await debStatementPDF(c,{doc:true}); if(doc){ atts.push({name:'CTTLFA Statement - '+cleanNm+'.pdf', base64:doc.output('datauristring').split(',')[1]}); } }catch(e){}
@@ -3870,6 +3936,7 @@
       +'<button class="btn ghost sm" id="debGoCorr">Correspondence →</button>'
       +'<button class="btn ghost sm" id="debPvBtn" title="Open a read-only preview of this club&rsquo;s portal, rebuilt from the same data.">Preview club portal</button>'
       +(canW?'<button class="btn ghost sm" id="debWriteEmail" title="Write a free-form email to this club. Sent on the CTTLFA letterhead, BCC to the treasurer mailbox.">Write email…</button>':'')
+      +(canW&&bal>0?'<button class="btn ghost sm" id="debPayLink" title="Generate a secure PayFast link for this club to pay online by card or instant EFT, and see its online payments.">Pay link…</button>':'')
       +'</div></div>';
     // stage control
     h+='<div class="deb-sec">Constitutional stage</div>';
@@ -4038,6 +4105,7 @@
     var cp=document.getElementById('debCopy'); if(cp) cp.onclick=function(){ try{navigator.clipboard.writeText(debReminderText(c));}catch(e){} this.textContent='Copied'; var b=this; setTimeout(function(){b.textContent='Copy letter';},1300); };
     var ch=document.getElementById('debCorrHere'); if(ch) ch.onclick=function(){ debModalClose(); setTimeout(debOpenCorr,140); };
     Array.prototype.forEach.call(m.querySelectorAll('#debWriteEmail,#debWriteEmail2'),function(we){ we.onclick=function(){ debComposeEmail(c); }; });
+    var _plk=document.getElementById('debPayLink'); if(_plk) _plk.onclick=function(){ debPayLinkFlow(c); };
     // stage override
     var ss=document.getElementById('debStageSel'), sSave=document.getElementById('debStageSave'), sRW=document.getElementById('debStageReasonWrap'), sMsg=document.getElementById('debStageMsg');
     if(ss){ ss.onchange=function(){ var v=ss.value; var diff=(v!==stageComputed); if(sRW) sRW.style.display=diff?'block':'none'; if(sSave) sSave.style.display=(v!==c.stage||diff)?'inline-block':'none'; if(sMsg) sMsg.textContent = diff?'This overrides the calculated stage.':'This reverts to the calculated stage.'; }; }
