@@ -456,7 +456,16 @@
     document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 200);
   }
   function faPdfHead(doc, title) {
-    doc.setFillColor(7, 26, 74); doc.rect(0, 0, doc.internal.pageSize.getWidth(), 64, "F");
+    var W = doc.internal.pageSize.getWidth();
+    doc.setFillColor(7, 26, 74); doc.rect(0, 0, W, 64, "F");
+    // CTTLFA crest on a white badge plate at the right of the navy bar
+    try {
+      if (window.LOGO_URI) {
+        var lw = 43, lh = 44, lx = W - 40 - lw, ly = 10;
+        doc.setFillColor(255, 255, 255); doc.roundedRect(lx - 4, ly - 3, lw + 8, lh + 6, 5, 5, "F");
+        doc.addImage(window.LOGO_URI, "JPEG", lx, ly, lw, lh);
+      }
+    } catch (e) { }
     doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(15); doc.text("CTTLFA", 40, 30);
     doc.setFontSize(10); doc.setTextColor(200, 210, 235); doc.text("Cape Town Tygerberg Local Football Association", 40, 46);
     doc.setTextColor(20, 30, 50); doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.text(title, 40, 92);
