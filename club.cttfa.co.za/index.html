@@ -466,6 +466,7 @@ async function boot(){
   var reg=(pr[2]&&pr[2].data)||{};
   try{ var res=await fetch(CONFIG.SEASON_URL,{cache:'no-store'}); SEASON=await res.json(); }catch(e){ SEASON=null; }
   renderOverview(meet, reg);
+  payReturnBanner();
 }
 
 /* ---------------- season matching ---------------- */
@@ -820,6 +821,31 @@ function membersCSV(){
   dl((HOME.name||'club').replace(/[^A-Za-z0-9]+/g,'_')+'_members.csv', out, 'text/csv');
 }
 
+/* ---------------- FINANCE: PayFast online payment ---------------- */
+async function doPayNow(){
+  var amtEl=el('payAmt'), msg=el('payMsg'), btn=el('payNow');
+  msg.className='msg';
+  var amt=Math.round((Number(amtEl&&amtEl.value)||0)*100)/100;
+  if(!(amt>0)){ msg.className='msg err'; msg.textContent='Enter an amount to pay.'; return; }
+  btn.disabled=true; msg.className='msg'; msg.textContent='Starting secure checkout…';
+  try{
+    var r=await sb.functions.invoke('payfast-initiate', { body:{ amount: amt } });
+    var d=r.data;
+    if(r.error){ try{ d=await r.error.context.json(); }catch(_){ d=null; } }
+    if(d && d.url){ window.location.assign(d.url); return; }
+    throw new Error((d&&d.error)||'Could not start the payment. Please try again.');
+  }catch(e){ btn.disabled=false; msg.className='msg err'; msg.textContent=(e&&e.message)||'Could not start the payment. Please try again.'; }
+}
+function payReturnBanner(){
+  try{
+    var q=new URLSearchParams(location.search), pr=q.get('pay');
+    if(!pr) return;
+    try{ history.replaceState(null,'',location.pathname); }catch(_){}
+    if(pr==='success'){ alert('Thank you. Your payment was submitted to PayFast and will reflect on your account once it is confirmed and reconciled.'); showTab('finance'); }
+    else if(pr==='cancel'){ alert('Payment cancelled. Your account has not been charged.'); showTab('finance'); }
+  }catch(e){}
+}
+
 /* ---------------- FINANCE ---------------- */
 async function loadFinance(){
   var bal=Number(HOME.balance)||0, over=Number(HOME.over)||0, ag=HOME.ageing||{};
@@ -831,6 +857,15 @@ async function loadFinance(){
     +'<div style="margin-top:10px">'+statusPill()+'</div>'
     +'<div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.16);font-size:13px;color:#cfd8ee">Payment reference &nbsp; <b style="color:#fff;letter-spacing:.5px">'+esc(HOME.code||'')+'</b>'+(HOME.as_at?(' &nbsp;&middot;&nbsp; as at '+dateZA(HOME.as_at)):'')+'</div>'
     +'</div></div>';
+  if(bal>0){
+    h+='<div class="card" id="payCard"><div class="sechead"><h2 data-help="Pay your account online by card or instant EFT through PayFast, our secure payment provider. You can pay the full balance or part of it.">Pay online</h2></div>'
+      +'<p class="note" style="margin:0 0 10px">Pay by card or instant EFT through PayFast. You can pay the full balance shown, or edit the amount for a part-payment. Your payment reference is added automatically.</p>'
+      +'<div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap">'
+      +'<label class="fld" style="margin:0">Amount to pay (R)<input type="number" id="payAmt" min="1" step="0.01" value="'+bal.toFixed(2)+'" style="width:170px;margin-top:4px"></label>'
+      +'<button class="btn" id="payNow" type="button" style="margin:0">Pay now</button>'
+      +'</div><div class="msg" id="payMsg" style="margin-top:10px"></div>'
+      +'<p class="note" style="margin-top:10px;font-size:11.5px;opacity:.85">You will be taken to PayFast to complete the payment, then returned here. Card and EFT details are handled entirely by PayFast; the LFA never sees them. The payment reflects on your account once confirmed and reconciled.</p></div>';
+  }
   var bands=[['Current',ag.current,false],['30 days',ag.d30,false],['60 days',ag.d60,true],['90 days',ag.d90,true],['120 days +',ag.d120,true]];
   var max=Math.max(1, Math.max.apply(null,bands.map(function(b){return Math.abs(Number(b[1])||0);})));
   h+='<div class="card"><h2 data-help="Your balance split by age. Current is within terms; 60, 90 and 120-day columns are overdue under the 30-day payment terms.">How your balance is aged</h2>';
@@ -840,6 +875,7 @@ async function loadFinance(){
   if(HOME.bank_details){ h+='<div class="card"><h2>Banking details</h2><p class="note" style="margin:0 0 8px">Please quote your payment reference <b>'+esc(HOME.code||'')+'</b> on every payment.</p><div class="bank">'+esc(HOME.bank_details)+'</div></div>'; }
   h+='<div class="card"><div class="sechead"><h2>Statement of account &mdash; year to date</h2><div style="display:flex;gap:8px"><button class="btn ghost sm" id="stPdf">Download PDF</button><button class="btn ghost sm" id="stCsv">Download CSV</button></div></div><div class="loading" id="stLoading">Loading transactions&hellip;</div><div class="tblwrap" id="stWrap" hidden><table id="stTbl"></table></div></div>';
   el('fnBody').innerHTML=h; el('fnLoading').hidden=true; el('fnBody').hidden=false;
+  var pn=el('payNow'); if(pn) pn.onclick=doPayNow;
   var r=await sb.rpc('portal_ledger');
   if(r.error){ el('stLoading').textContent='Could not load transactions: '+r.error.message; return; }
   var rows=r.data||[];
