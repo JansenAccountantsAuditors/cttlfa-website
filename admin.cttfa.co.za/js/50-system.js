@@ -19,6 +19,14 @@
     }
     root.innerHTML=sysHealthHtml(data, season);
     var rb=NS.$("shRefresh"); if(rb) rb.onclick=function(){ renderSysHealth(); };
+    var cn=NS.$("shCheckNow"); if(cn) cn.onclick=function(){ shRunFn(cn,'shCheckMsg','check'); };
+    var bn=NS.$("shBackupNow"); if(bn) bn.onclick=function(){ shRunFn(bn,'shBackupMsg','backup'); };
+    var sn=NS.$("shSyncNow"); if(sn) sn.onclick=async function(){
+      var m=NS.$("shSyncMsg"); sn.disabled=true; if(m) m.textContent='Syncing…';
+      try{ var r=await NS.sb.rpc('portal_access_sync'); if(r.error) throw r.error; var d=r.data||{};
+        if(m) m.textContent=(d.added?('Added '+d.added+' login'+(d.added===1?'':'s')):'Up to date'); setTimeout(renderSysHealth, 800);
+      }catch(e){ if(m) m.textContent='Could not sync: '+(e.message||String(e)); sn.disabled=false; }
+    };
   }
   function shDT(ts){ if(!ts) return '&mdash;'; try{ return new Date(ts).toLocaleString('en-ZA',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}); }catch(e){ return NS.esc(String(ts)); } }
   function shDate(d){ if(!d) return '&mdash;'; try{ return new Date(d).toLocaleDateString('en-ZA',{day:'2-digit',month:'short',year:'numeric'}); }catch(e){ return NS.esc(String(d)); } }
@@ -27,6 +35,16 @@
   function shTile(title,pill,rows,note){
     var kv=rows.map(function(r){ return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0;border-bottom:1px solid #EFF1F5"><span style="color:#59666B">'+NS.esc(r[0])+'</span><b style="font-variant-numeric:tabular-nums;text-align:right">'+r[1]+'</b></div>'; }).join('');
     return '<div class="card" style="margin:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px"><h3 style="margin:0;font-size:15px">'+NS.esc(title)+'</h3>'+pill+'</div>'+kv+(note?'<p class="hint" style="margin:8px 0 0">'+note+'</p>':'')+'</div>';
+  }
+  function shTileBtn(title,pill,rows,note,btnHtml){
+    var kv=rows.map(function(r){ return '<div style="display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:3px 0;border-bottom:1px solid #EFF1F5;align-items:center"><span style="color:#59666B">'+NS.esc(r[0])+'</span><b style="font-variant-numeric:tabular-nums;text-align:right">'+r[1]+'</b></div>'; }).join('');
+    return '<div class="card" style="margin:0"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px"><h3 style="margin:0;font-size:15px">'+NS.esc(title)+'</h3>'+pill+'</div>'+kv+(note?'<p class="hint" style="margin:8px 0 0">'+note+'</p>':'')+(btnHtml?'<div style="margin-top:10px">'+btnHtml+'</div>':'')+'</div>';
+  }
+  async function shRunFn(btn,msgId,what){
+    var m=NS.$(msgId); btn.disabled=true; if(m) m.textContent=(what==='backup'?'Backing up…':'Checking…');
+    try{ var r=await NS.sb.rpc('sys_run',{p_what:what}); if(r.error) throw r.error;
+      if(m) m.textContent='Running… refreshing shortly'; setTimeout(renderSysHealth, 6000);
+    }catch(e){ if(m) m.textContent='Could not start: '+(e.message||String(e)); btn.disabled=false; }
   }
   function sysHealthHtml(data,season){
     var A=data.agent||{}, D=data.debtors||{}, E=data.email||{}, C=data.correspondence||{}, W=data.watchdog||{};
@@ -70,9 +88,37 @@
         ['Receipt age',W.receipt_age_days!=null?(W.receipt_age_days+' days'):'&mdash;'],
         ['Checked',shDT(W.last_checked_at)]
       ],W.alert_active?('Watchdog alert: '+NS.esc(W.alert_kind||'see Club Debtors')):'No receipts-processing alert.');
+    // ----- operations: monitoring, backups, access sync -----
+    var P=data.platform||{}, B=data.backup||{}, X=data.access||{};
+    var role=(NS.session?NS.session().role:null), canRun=(role==='administrator'||role==='staff');
+    var pChecks=P.checks||[];
+    var pRows=pChecks.length?pChecks.map(function(c){ return [c.name, c.ok?shPill('OK','ok'):shPill(NS.esc(c.detail||'fail'),'bad')]; }):[['Status','not yet run']];
+    var pState=P.ok?{w:'All healthy',c:'ok'}:((P.consecutive_fails||0)>=2?{w:'Service down',c:'bad'}:{w:'Checking',c:'warn'});
+    var platTile=shTileBtn('Platform monitor',shPill(pState.w,pState.c),pRows,
+      'Checked '+shDT(P.last_checked_at)+(P.last_checked_at?(' ('+shAgo(P.last_checked_at)+')'):'')+'. Runs every 30 minutes; emails the Treasurer and Justin Asher on a sustained fault, and again on recovery.',
+      canRun?'<button class="btn ghost sm" id="shCheckNow" type="button">Check now</button> <span class="hint" id="shCheckMsg" style="font-size:11.5px"></span>':'');
+    var bAgeH=B.last_at?((Date.now()-new Date(B.last_at).getTime())/3.6e6):null;
+    var bState=B.last_at?(bAgeH>36?{w:'Ageing',c:'warn'}:{w:'Current',c:'ok'}):{w:'None yet',c:'bad'};
+    var bkTile=shTileBtn('Backups',shPill(bState.w,bState.c),[
+        ['Last backup',shDT(B.last_at)+(B.last_at?(' ('+shAgo(B.last_at)+')'):'')],
+        ['Size',B.last_bytes!=null?(Math.round(B.last_bytes/1024)+' KB'):'&mdash;'],
+        ['Snapshots kept',(B.count!=null?B.count:'&mdash;')]
+      ],'Daily snapshot of the config, mapping and governance tables to a private store, 30-day retention. The Sage ledger rebuilds from Sage on restore.',
+      canRun?'<button class="btn ghost sm" id="shBackupNow" type="button">Back up now</button> <span class="hint" id="shBackupMsg" style="font-size:11.5px"></span>':'');
+    var xMiss=X.members_without_login;
+    var xState=(xMiss!=null&&xMiss>0)?{w:xMiss+' without a login',c:'warn'}:{w:'All covered',c:'ok'};
+    var acTile=shTileBtn('Portal access',shPill(xState.w,xState.c),[
+        ['Active logins',(X.active!=null?X.active:'&mdash;')],
+        ['From Sage / manual',(X.sage!=null?X.sage:0)+' / '+(X.manual!=null?X.manual:0)],
+        ['Members without a login',(xMiss!=null?xMiss:'&mdash;')],
+        ['Last synced',shDT(X.last_synced_at)]
+      ],'All 43 full and 7 associate clubs must have a login. Sync adds Sage contacts and never removes hand-added people.',
+      canRun?'<button class="btn ghost sm" id="shSyncNow" type="button">Sync from Sage</button> <span class="hint" id="shSyncMsg" style="font-size:11.5px"></span>':'');
     var h='';
     h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><h3 style="margin:0">System health</h3><p class="hint" style="margin:2px 0 0">Live status of the feeds and services behind the Admin Centre. Read-only. Snapshot taken '+shDT(data.generated_at)+'.</p></div><button class="btn ghost sm" id="shRefresh">Refresh</button></div></div>';
     h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px">'+agTile+dbTile+emTile+coTile+fxTile+wdTile+'</div>';
+    h+='<div class="card" style="margin-top:12px;margin-bottom:0"><h3 style="margin:0">Automated jobs, monitoring &amp; backups</h3><p class="hint" style="margin:2px 0 0">The scheduled safeguards behind the platform: a 30-minute uptime monitor, a daily backup and a daily Sage access sync. You can run each on demand.</p></div>';
+    h+='<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px">'+platTile+bkTile+acTile+'</div>';
     h+=sysRunbookHtml();
     return h;
   }
