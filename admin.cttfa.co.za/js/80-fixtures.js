@@ -257,7 +257,7 @@
   function render() {
     var root = NS.$("fixturesRoot"); if (!root) return;
     var h = '<div class="card" style="margin-bottom:12px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap">';
-    h += '<div><h3 style="margin:0 0 4px">Fixture Analytics</h3><p class="hint" style="margin:0;max-width:74ch">Live from LeagueRepublic. Team entrants, teams per club, day and kick-off breakdowns, a season calendar, and fixture issues (walkovers, byes, postponements). Pick a season.</p></div>';
+    h += '<div><h3 style="margin:0 0 4px">Fixture Analytics</h3><p class="hint" style="margin:0 0 8px;max-width:74ch">Live from LeagueRepublic. Team entrants, teams per club, day and kick-off breakdowns, a season calendar, and fixture issues (walkovers, byes, postponements). Pick a season.</p><a class="btn ghost sm" href="https://a.leaguerepublic.com/myaccount/login/index.html" target="_blank" rel="noopener" title="Sign in to LeagueRepublic administration with the CTTLFA league email to manage fixtures and appointments. On the office machine your saved browser password fills it in — no password is stored on this site.">LR admin login</a></div>';
     h += '<div class="fa-seasons">' + SEASONS.map(function (s) { return '<button class="fa-season" data-sid="' + s.id + '">' + s.y + '</button>'; }).join("") + '</div>';
     h += '</div>';
     h += '<div class="fa-subtabs">' +
