@@ -670,12 +670,13 @@
   function ctxSchoolFwd(iso) { for (var i = 0; i < FWD.school.length; i++) { if (iso >= FWD.school[i][0] && iso <= FWD.school[i][1]) return FWD.school[i][2]; } return null; }
 
   function ck(id, on, label) { return '<label class="fa-ck"><input type="checkbox" id="' + id + '"' + (on ? " checked" : "") + '> ' + label + '</label>'; }
-  function renderPlanner() {
-    if (!cache[BASE_ID]) {
-      NS.$("faBody").innerHTML = '<div class="card"><p class="hint">Loading the 2026 structure to model 2027…</p></div>';
-      loadSeason(BASE_ID).then(function () { paint(cur); });
-      return '<div class="card"><p class="hint">Loading the 2026 structure to model 2027…</p></div>';
-    }
+  function repaintPlan() {
+    var root = NS.$("planner27Root"); if (!root) return;
+    if (!cache[BASE_ID]) { root.innerHTML = '<div class="card"><p class="hint">Loading the 2026 structure to model 2027…</p></div>'; loadSeason(BASE_ID).then(function () { repaintPlan(); }); return; }
+    root.innerHTML = renderPlannerBody();
+    bindPlanner();
+  }
+  function renderPlannerBody() {
     var divs = planDivs();
     var maxMd = Math.max.apply(null, divs.map(function (d) { return d.matchdays; }));
     var sd = seasonDates(plan, maxMd);
@@ -691,7 +692,7 @@
     function loadOnDate(k) { var n = 0; divs.forEach(function (d) { if (d.matchdays >= k) n += Math.floor(d.nt / 2); }); return n; }
 
     var h = '';
-    h += '<div class="card" style="margin-bottom:12px;border-top:3px solid var(--gold,#F4B41A)"><h3 style="margin:0 0 4px">2027 fixture scenario planner</h3><p class="hint" style="margin:0;max-width:82ch"><b>Assumption:</b> models 2027 on the <b>2026 league structure</b> (' + divs.length + ' divisions, ' + totTeams + ' team entries). A planning scenario, not a confirmed fixture list; entries, promotions and venues will change it. LeagueRepublic stays the system of record.</p></div>';
+    h += '<div class="card" style="margin-bottom:12px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0 0 4px">2027 Season Planner</h3><p class="hint" style="margin:0;max-width:82ch"><b>Assumption:</b> models 2027 on the <b>2026 league structure</b> (' + divs.length + ' divisions, ' + totTeams + ' team entries). A planning scenario to shape and draft the season, not a confirmed fixture list; entries, promotions and venues will change it. LeagueRepublic stays the system of record.</p></div><a class="btn ghost sm" href="https://a.leaguerepublic.com/myaccount/login/index.html" target="_blank" rel="noopener" title="Sign in to LeagueRepublic administration to enter the finalised fixtures.">LR admin login</a></div></div>';
 
     // controls
     h += '<div class="card" style="margin-bottom:12px"><div class="fa-planctl">' +
@@ -828,13 +829,13 @@
     doc.save("CTTLFA 2027 draft " + d.name.replace(/[^A-Za-z0-9 ]+/g, "") + ".pdf");
   }
   function bindPlanner() {
-    var root = NS.$("fixturesRoot"); if (!root) return;
-    function chg(id, key, isNum2) { var el = NS.$(id); if (el) el.addEventListener("change", function () { plan[key] = isNum2 ? (+el.value || 0) : el.value; paint(cur); }); }
-    function chk(id, key) { var el = NS.$(id); if (el) el.addEventListener("change", function () { plan[key] = el.checked; paint(cur); }); }
+    var root = NS.$("planner27Root"); if (!root) return;
+    function chg(id, key, isNum2) { var el = NS.$(id); if (el) el.addEventListener("change", function () { plan[key] = isNum2 ? (+el.value || 0) : el.value; repaintPlan(); }); }
+    function chk(id, key) { var el = NS.$(id); if (el) el.addEventListener("change", function () { plan[key] = el.checked; repaintPlan(); }); }
     chg("pStart", "start"); chg("pEnd", "end"); chg("pUp", "up", true); chg("pDn", "down", true);
     chk("pPH", "usePH"); chk("pSun", "useSun"); chk("pMid", "useMid"); chk("pDH", "sundayDH"); chk("pClub", "clubGroup"); chk("pPR", "promoRel");
-    Array.prototype.forEach.call(root.querySelectorAll(".fa-seg[data-view]"), function (b) { b.addEventListener("click", function () { plan.view = b.getAttribute("data-view"); paint(cur); }); });
-    Array.prototype.forEach.call(root.querySelectorAll(".fa-szin"), function (inp) { inp.addEventListener("change", function () { var v = +inp.value || 0, gid = inp.getAttribute("data-gid"); if (v >= 2) plan.sizes[gid] = v; else delete plan.sizes[gid]; paint(cur); }); });
+    Array.prototype.forEach.call(root.querySelectorAll(".fa-seg[data-view]"), function (b) { b.addEventListener("click", function () { plan.view = b.getAttribute("data-view"); repaintPlan(); }); });
+    Array.prototype.forEach.call(root.querySelectorAll(".fa-szin"), function (inp) { inp.addEventListener("change", function () { var v = +inp.value || 0, gid = inp.getAttribute("data-gid"); if (v >= 2) plan.sizes[gid] = v; else delete plan.sizes[gid]; repaintPlan(); }); });
     var dv = NS.$("pDiv"); if (dv) { if (!plan.div || !dv.querySelector('option[value="' + plan.div + '"]')) plan.div = dv.value; renderPlanFix(plan.div); dv.addEventListener("change", function () { plan.div = dv.value; renderPlanFix(dv.value); }); }
     var ca = NS.$("pCsvAll"); if (ca) ca.addEventListener("click", exportPlanCSV);
     var pd = NS.$("pPdfDiv"); if (pd) pd.addEventListener("click", function () { exportPlanDivPDF(plan.div || (dv && dv.value)); });
@@ -926,16 +927,13 @@
     else if (subView === "schedule") html = renderSchedule();
     else if (subView === "trends") html = renderTrends();
     else if (subView === "context") html = renderContext(o);
-    else if (subView === "planner") html = renderPlanner();
     else if (subView === "issues") html = renderIssues(o);
-    if (subView === "planner" && !cache[BASE_ID]) return; // loader in flight
     if (subView === "trends" && SEASONS.some(function (s) { return !cache[s.id]; })) return; // loader in flight
     body.innerHTML = html;
     bindDrills();
     Array.prototype.forEach.call(document.querySelectorAll("#fixturesRoot .fa-ov"), function (b) {
       b.addEventListener("click", function () { var k = b.getAttribute("data-ov"); overlays[k] = !overlays[k]; paint(cur); });
     });
-    if (subView === "planner") bindPlanner();
   }
 
   function buildDivOptions() {
@@ -983,7 +981,6 @@
       '<button class="fa-sub" data-sub="schedule">Schedule</button>' +
       '<button class="fa-sub" data-sub="trends">Trends</button>' +
       '<button class="fa-sub" data-sub="context">Context</button>' +
-      '<button class="fa-sub" data-sub="planner">2027 Plan</button>' +
       '<button class="fa-sub" data-sub="issues">Issues</button></div>';
     h += '<div id="faBody"></div>';
     root.innerHTML = h;
@@ -1003,4 +1000,5 @@
   }
 
   NS.renderFixtures = render;
+  NS.renderPlanner27 = repaintPlan;
 })(window.AC);
