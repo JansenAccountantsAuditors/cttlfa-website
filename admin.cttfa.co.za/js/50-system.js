@@ -56,19 +56,21 @@
         ['Last result',NS.esc(A.last_result||'&mdash;')]
       ],A.online?'The office PC fetch agent is running.':'The office PC is not reporting in. Start it, run the CTTLFA Sage fetch agent, then press Fetch on Club Debtors.');
     var dbState=D.extracted_at?(D.reconciled?{w:'Reconciled',c:'ok'}:{w:'Not reconciled',c:'warn'}):{w:'No snapshot',c:'bad'};
+    var dbReconTxt=D.recon_note?NS.esc(D.recon_note):(D.reconciled?'The itemised ledger tied to the ageing at fetch.':'The ledger did not tie to the ageing at fetch; run a fresh fetch before sending statements.');
     var dbTile=shTile('Club debtor data',shPill(dbState.w,dbState.c),[
         ['As at',shDate(D.as_at)],
         ['Fetched',shDT(D.extracted_at)+(D.extracted_at?(' ('+shAgo(D.extracted_at)+')'):'')],
+        ['Snapshot',D.snapshot_id!=null?NS.esc(String(D.snapshot_id).slice(0,8)):'&mdash;'],
         ['Clubs / owing',(D.n_clubs!=null?D.n_clubs:'&mdash;')+' / '+(D.n_owing!=null?D.n_owing:'&mdash;')],
         ['Net debtors',D.net_total!=null?NS.dR(D.net_total):'&mdash;']
-      ],D.reconciled?'The itemised ledger reconciles to the ageing.':'The ledger does not currently tie to the ageing; a fresh fetch is recommended before sending statements.');
+      ],dbReconTxt+' Per-club live status is on the &ldquo;In sync with Sage&rdquo; badge on Club Debtors.');
     var emFailed=Number(E.failed||0);
-    var emTile=shTile('Email delivery (30 days)',shPill(emFailed>0?(emFailed+' failed'):'All delivered',emFailed>0?'warn':'ok'),[
+    var emTile=shTile('Email delivery (30 days)',shPill(emFailed>0?(emFailed+' failed'):'None failed',emFailed>0?'warn':'ok'),[
         ['Sent',(E.total!=null?E.total:0)],
         ['Live / test',(E.live!=null?E.live:0)+' / '+(E.test!=null?E.test:0)],
         ['Failed / bounced',emFailed],
         ['Last sent',shDT(E.last_sent_at)]
-      ],emFailed>0?'Some emails did not deliver. Check the club contact address on the Correspondence log and re-send that one.':'No delivery failures recorded in the last 30 days.');
+      ],emFailed>0?'Some emails failed or bounced. Check the club contact address on the Correspondence log and re-send that one.':'No send failures or bounces recorded by Resend in the last 30 days. This tracks acceptance and bounces, not whether the recipient opened it.');
     var coAw=Number(C.awaiting||0), coF=Number(C.failed||0);
     var coState=coF>0?{w:coF+' failed',c:'bad'}:(coAw>0?{w:coAw+' awaiting',c:'warn'}:{w:'Clear',c:'ok'});
     var coTile=shTile('Correspondence queue',shPill(coState.w,coState.c),[
@@ -82,7 +84,7 @@
     var fxTile=shTile('League & fixtures feed',shPill(fxState.w,fxState.c),[
         ['Feed updated',upd?(shDT(upd)+' ('+shAgo(upd)+')'):'could not load season.json'],
         ['Season',(season&&season.label)?NS.esc(season.label):'&mdash;']
-      ],(upd&&fxAgeH>12)?'The public league feed has not refreshed in over 12 hours; run the LeagueRepublic refresh in Website Admin.':'The public league and fixtures feed is current.');
+      ],(upd==null)?'Could not read season.json, so feed freshness cannot be confirmed. Check the LeagueRepublic refresh in Website Admin.':(fxAgeH>12?'The public league feed has not refreshed in over 12 hours; run the LeagueRepublic refresh in Website Admin.':'The public league and fixtures feed is current.'));
     var wdTile=shTile('Receipts watchdog',shPill(W.alert_active?'Alert':'Normal',W.alert_active?'warn':'ok'),[
         ['Last receipt',shDate(W.last_receipt_date)],
         ['Receipt age',W.receipt_age_days!=null?(W.receipt_age_days+' days'):'&mdash;'],
@@ -106,7 +108,7 @@
       ],'Daily snapshot of the config, mapping and governance tables to a private store, 30-day retention. The Sage ledger rebuilds from Sage on restore.',
       canRun?'<button class="btn ghost sm" id="shBackupNow" type="button">Back up now</button> <span class="hint" id="shBackupMsg" style="font-size:11.5px"></span>':'');
     var xMiss=X.members_without_login;
-    var xState=(xMiss!=null&&xMiss>0)?{w:xMiss+' without a login',c:'warn'}:{w:'All covered',c:'ok'};
+    var xState=(xMiss==null)?{w:'Unknown',c:'warn'}:(xMiss>0?{w:xMiss+' without a login',c:'warn'}:{w:'All covered',c:'ok'});
     var acTile=shTileBtn('Portal access',shPill(xState.w,xState.c),[
         ['Active logins',(X.active!=null?X.active:'&mdash;')],
         ['From Sage / manual',(X.sage!=null?X.sage:0)+' / '+(X.manual!=null?X.manual:0)],
@@ -129,7 +131,7 @@
       +'<tr><td><b>Sage fetch agent</b><br><span class="hint">Pulls club balances from Sage</span></td><td>Treasurer<br><span class="hint">backup: office secretary</span></td><td>Start the office PC and run the CTTLFA Sage fetch agent. If it asks to sign in, sign in once, then press <b>Fetch from Sage</b> on Club Debtors.</td></tr>'
       +'<tr><td><b>Club debtor emails</b><br><span class="hint">Statements &amp; reminders</span></td><td>Treasurer</td><td>Delivery runs through Resend. If an email fails, correct the club contact address on the Correspondence log and re-send that one; do not resend a whole batch.</td></tr>'
       +'<tr><td><b>League &amp; fixtures feed</b><br><span class="hint">season.json from LeagueRepublic</span></td><td>Treasurer</td><td>The feed refreshes on a schedule. If it is hours stale, run the LeagueRepublic refresh in Website Admin, then reload.</td></tr>'
-      +'<tr><td><b>Websites &amp; portals</b><br><span class="hint">admin / club / vote</span></td><td>Treasurer</td><td>Hosted on Netlify from the cttlfa-website repository. A bad change is undone by reverting the last commit; the site redeploys on its own.</td></tr>'
+      +'<tr><td><b>Websites &amp; portals</b><br><span class="hint">admin / club / vote</span></td><td>Treasurer</td><td>Hosted on Xneelo; GitHub Actions deploys by FTP from the cttlfa-website repository on each push to main. A bad change is undone by reverting the last commit and pushing; the deploy runs on its own.</td></tr>'
       +'<tr><td><b>Database</b><br><span class="hint">Supabase &mdash; all data</span></td><td>Treasurer</td><td>Supabase project cttlfa-voting. Backups are retained by Supabase; access is by invitation only.</td></tr>'
       +'</tbody></table></div>'
       +'<p class="hint" style="margin:10px 0 0">Escalation: the Treasurer holds the master access. Keep this list current as owners change.</p></div>';
