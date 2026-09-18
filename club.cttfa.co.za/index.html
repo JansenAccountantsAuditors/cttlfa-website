@@ -535,9 +535,8 @@ function caActionsCard(meet){
   } else if(bal>0){
     acts.push({sev:'warn', t:money(bal)+' is payable', d:'Your account has a balance owing. Please settle within terms.', tab:'finance', btn:'Open account'});
   }
-  if(meet && meet.has){
-    acts.push({sev:'info', t:'Next meeting: '+esc(meet.name||'CTTLFA meeting'), d:(meet.date?dateZA(meet.date):'')+(meet.venue?(' &middot; '+esc(meet.venue)):'')+'. Accredited club delegates vote at vote.cttfa.co.za when it goes live.', tab:null, btn:null});
-  }
+  // "For info" notices (e.g. Next meeting) are switched off in this action card until the
+  // in-portal notices feature is finalised. The dedicated "Next meeting" card still shows below.
   var st={bad:['#fbeceb','#9A3130','Action'], warn:['#fbf1e2','#9F6621','Attention'], info:['#eef2fb','#071A4A','For info']};
   var body;
   if(!acts.length){
