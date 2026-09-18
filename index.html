@@ -4658,54 +4658,62 @@ function renderJuniorCombined(){const tabsEl=document.getElementById('jcTabs'),b
   tabsEl.onclick=e=>{const b=e.target.closest('[data-jc]');if(!b)return;jcActive=b.dataset.jc;renderJuniorCombined();};}
 renderJuniorCombined();
 
-// ---- Junior Combined Logs: branded PDF (all four Premier tiers in one document) ----
+// ---- Junior Combined Logs: branded PDF (all four Premier tiers, landscape) ----
+// Preload the association crest once (same-origin, so the canvas is not tainted).
+let JC_LOGO=null;
+(function(){try{const im=new Image();im.onload=function(){try{const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;c.getContext('2d').drawImage(im,0,0);JC_LOGO={data:c.toDataURL('image/png'),w:im.naturalWidth,h:im.naturalHeight};}catch(e){JC_LOGO=null;}};im.src='assets/crest.png';}catch(e){}})();
 function jcExportPDF(){
   const JP=(window.jspdf&&window.jspdf.jsPDF);
   if(!JP){const b=document.getElementById('jcPdfBtn');if(b){const t=b.textContent;b.textContent='Preparing…';setTimeout(()=>{b.textContent=t;},1500);}return;}
-  const doc=new JP({unit:'pt',format:'a4',orientation:'portrait'});
-  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=40;
+  const doc=new JP({unit:'pt',format:'a4',orientation:'landscape'});
+  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight();
   const NAVY=[7,26,74],GOLD=[208,152,47],INK=[33,45,51],MUT=[89,102,107];
+  const TABLE_W=560,LX=(W-TABLE_W)/2,RM=W-LX-TABLE_W,TOP=104,BOTTOM=H-40;
   const now=new Date(),mo=['January','February','March','April','May','June','July','August','September','October','November','December'];
   const dstr=now.getDate()+' '+mo[now.getMonth()]+' '+now.getFullYear();
   function header(){
-    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(0,0,W,74,'F');
-    doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]);doc.rect(0,74,W,3,'F');
-    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(17);
-    doc.text('Junior Combined Logs',M,34);
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(0,0,W,76,'F');
+    doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]);doc.rect(0,76,W,3,'F');
+    let tx=LX;
+    if(JC_LOGO){const lh=48,lw=lh*(JC_LOGO.w/JC_LOGO.h);doc.addImage(JC_LOGO.data,'PNG',LX,14,lw,lh);tx=LX+lw+14;}
+    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(18);
+    doc.text('Junior Combined Logs',tx,36);
     doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(195,205,234);
-    doc.text('Cape Town Tygerberg Local Football Association · 2026 Season',M,52);
-    doc.setFontSize(8.5);
-    doc.text('Generated '+dstr,W-M,34,{align:'right'});
-    doc.text('cttfa.co.za',W-M,48,{align:'right'});
+    doc.text('Cape Town Tygerberg Local Football Association · 2026 Season',tx,55);
+    doc.setFontSize(9);
+    doc.text('Generated '+dstr,LX+TABLE_W,36,{align:'right'});
+    doc.text('cttfa.co.za',LX+TABLE_W,54,{align:'right'});
   }
   header();
-  let y=98;
+  let y=TOP;
   doc.setTextColor(MUT[0],MUT[1],MUT[2]);doc.setFont('helvetica','normal');doc.setFontSize(8.5);
-  doc.text('Each club’s Under-12 to Under-18 teams within a Premier tier, added together and ranked by combined points (goal difference splits ties). Source: live LeagueRepublic league feed.',M,y,{maxWidth:W-2*M});
-  y+=28;
+  doc.text('Each club’s Under-12 to Under-18 teams within a Premier tier, added together and ranked by combined points (goal difference splits ties).',LX,y,{maxWidth:TABLE_W});
+  y+=24;
   JC_TIERS.forEach(function(tier){
     const rows=jcBuild(tier.label).rows,n=rows.length;
-    if(y>H-130){doc.addPage();header();y=98;}
-    doc.setFillColor(239,244,247);doc.rect(M,y-12,W-2*M,20,'F');
-    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(M,y-12,3,20,'F');
+    // Keep each tier's heading, table and legend together on one page.
+    const blockH=24+(n?((n+1)*16+6):20)+34;
+    if(y+blockH>BOTTOM){doc.addPage();header();y=TOP;}
+    doc.setFillColor(239,244,247);doc.rect(LX,y-12,TABLE_W,20,'F');
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(LX,y-12,3,20,'F');
     doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFont('helvetica','bold');doc.setFontSize(11);
-    doc.text(tier.name,M+10,y+2);
+    doc.text(tier.name,LX+10,y+2);
     y+=16;
     if(!n){
       doc.setTextColor(MUT[0],MUT[1],MUT[2]);doc.setFont('helvetica','italic');doc.setFontSize(9);
-      doc.text('Combined log not yet available — the age-group logs for this tier are not yet published for the season.',M+4,y+8);
-      y+=28;return;
+      doc.text('Combined log not yet available — the age-group logs for this tier are not yet published for the season.',LX+4,y+8);
+      y+=30;return;
     }
     const body=rows.map(function(a,i){
       const p=k=>{const x=a.ages[k];return x&&x.pos?String(x.pos):'–';};
       return [String(i+1),a.name,String(a.PLD),jcSign(a.GD),String(a.PTS),p(12),p(14),p(16),p(18)];
     });
     doc.autoTable({
-      startY:y,margin:{left:M,right:M},
+      startY:y,margin:{left:LX,right:RM},pageBreak:'avoid',
       head:[['#','Club','P','GD','Pts','U12','U14','U16','U18']],body:body,theme:'grid',
       styles:{font:'helvetica',fontSize:8.5,cellPadding:3,lineColor:[211,219,222],lineWidth:0.4,textColor:INK},
       headStyles:{fillColor:NAVY,textColor:[255,255,255],fontStyle:'bold',halign:'center',fontSize:8.5},
-      columnStyles:{0:{halign:'center',cellWidth:24},1:{halign:'left'},2:{halign:'center',cellWidth:30},3:{halign:'center',cellWidth:34},4:{halign:'center',cellWidth:34,fontStyle:'bold'},5:{halign:'center',cellWidth:40},6:{halign:'center',cellWidth:40},7:{halign:'center',cellWidth:40},8:{halign:'center',cellWidth:40}},
+      columnStyles:{0:{halign:'center',cellWidth:28},1:{halign:'left',cellWidth:212},2:{halign:'center',cellWidth:34},3:{halign:'center',cellWidth:40},4:{halign:'center',cellWidth:42,fontStyle:'bold'},5:{halign:'center',cellWidth:51},6:{halign:'center',cellWidth:51},7:{halign:'center',cellWidth:51},8:{halign:'center',cellWidth:51}},
       didParseCell:function(d){
         if(d.section!=='body')return;const i=d.row.index,ok=n>4;
         if(i===0)d.cell.styles.fillColor=[250,243,224];
@@ -4715,14 +4723,14 @@ function jcExportPDF(){
     });
     y=doc.lastAutoTable.finalY+9;
     doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(MUT[0],MUT[1],MUT[2]);
-    doc.text('Shading: leader (top row), promotion places (top two) and relegation places (bottom two), shown where a tier has more than four clubs. U12–U18 columns show each club’s position on that age-group log.',M,y,{maxWidth:W-2*M});
-    y+=24;
+    doc.text('Shading: leader (top row), promotion places (top two) and relegation places (bottom two), shown where a tier has more than four clubs. U12–U18 columns show each club’s position on that age-group log.',LX,y,{maxWidth:TABLE_W});
+    y+=26;
   });
   const pc=doc.internal.getNumberOfPages();
   for(let i=1;i<=pc;i++){doc.setPage(i);
     doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(MUT[0],MUT[1],MUT[2]);
-    doc.text('Cape Town Tygerberg LFA — Junior Combined Logs',M,H-18);
-    doc.text('Page '+i+' of '+pc,W-M,H-18,{align:'right'});
+    doc.text('Cape Town Tygerberg LFA — Junior Combined Logs',LX,H-18);
+    doc.text('Page '+i+' of '+pc,LX+TABLE_W,H-18,{align:'right'});
   }
   doc.save('CTTLFA Junior Combined Logs 2026.pdf');
 }
