@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Cape Town Tygerberg LFA — Official Website</title>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <link rel="preconnect" href="https://www.websiteadmin.cttfa.co.za" crossorigin>
 <script>/* start the match-data fetch immediately so it isn't queued behind other requests */window.__seasonP=null;try{window.__apptP=fetch('appointments.json').then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}catch(e){}</script>
 <script>/* LeagueRepublic live feed (replaces scraped season.json) */
@@ -2097,6 +2099,7 @@ body .card-f{background:#FBF7F0}
         <p style="color:#c3cdea;font-size:16px">A club's junior teams, counted as one. Where the age-group logs rank a single age group, the combined log measures how a club is performing right across its junior programme, by adding its Under-12, Under-14, Under-16 and Under-18 teams together into one table.</p>
         <div style="margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap">
           <a class="btn btn-gold" data-nav="matchcentre">Age-group logs &amp; fixtures</a>
+          <button class="btn btn-ghost" id="jcPdfBtn" type="button">Download PDF ↓</button>
           <a class="btn btn-ghost" href="https://dash.cttlfa.com/combined-logs" target="_blank" rel="noopener">Open the live dashboard ↗</a>
         </div>
       </div>
@@ -4654,6 +4657,76 @@ function renderJuniorCombined(){const tabsEl=document.getElementById('jcTabs'),b
   body.innerHTML=jcTableHtml(tier);
   tabsEl.onclick=e=>{const b=e.target.closest('[data-jc]');if(!b)return;jcActive=b.dataset.jc;renderJuniorCombined();};}
 renderJuniorCombined();
+
+// ---- Junior Combined Logs: branded PDF (all four Premier tiers in one document) ----
+function jcExportPDF(){
+  const JP=(window.jspdf&&window.jspdf.jsPDF);
+  if(!JP){const b=document.getElementById('jcPdfBtn');if(b){const t=b.textContent;b.textContent='Preparing…';setTimeout(()=>{b.textContent=t;},1500);}return;}
+  const doc=new JP({unit:'pt',format:'a4',orientation:'portrait'});
+  const W=doc.internal.pageSize.getWidth(),H=doc.internal.pageSize.getHeight(),M=40;
+  const NAVY=[7,26,74],GOLD=[208,152,47],INK=[33,45,51],MUT=[89,102,107];
+  const now=new Date(),mo=['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const dstr=now.getDate()+' '+mo[now.getMonth()]+' '+now.getFullYear();
+  function header(){
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(0,0,W,74,'F');
+    doc.setFillColor(GOLD[0],GOLD[1],GOLD[2]);doc.rect(0,74,W,3,'F');
+    doc.setTextColor(255,255,255);doc.setFont('helvetica','bold');doc.setFontSize(17);
+    doc.text('Junior Combined Logs',M,34);
+    doc.setFont('helvetica','normal');doc.setFontSize(10.5);doc.setTextColor(195,205,234);
+    doc.text('Cape Town Tygerberg Local Football Association · 2026 Season',M,52);
+    doc.setFontSize(8.5);
+    doc.text('Generated '+dstr,W-M,34,{align:'right'});
+    doc.text('cttfa.co.za',W-M,48,{align:'right'});
+  }
+  header();
+  let y=98;
+  doc.setTextColor(MUT[0],MUT[1],MUT[2]);doc.setFont('helvetica','normal');doc.setFontSize(8.5);
+  doc.text('Each club’s Under-12 to Under-18 teams within a Premier tier, added together and ranked by combined points (goal difference splits ties). Source: live LeagueRepublic league feed.',M,y,{maxWidth:W-2*M});
+  y+=28;
+  JC_TIERS.forEach(function(tier){
+    const rows=jcBuild(tier.label).rows,n=rows.length;
+    if(y>H-130){doc.addPage();header();y=98;}
+    doc.setFillColor(239,244,247);doc.rect(M,y-12,W-2*M,20,'F');
+    doc.setFillColor(NAVY[0],NAVY[1],NAVY[2]);doc.rect(M,y-12,3,20,'F');
+    doc.setTextColor(NAVY[0],NAVY[1],NAVY[2]);doc.setFont('helvetica','bold');doc.setFontSize(11);
+    doc.text(tier.name,M+10,y+2);
+    y+=16;
+    if(!n){
+      doc.setTextColor(MUT[0],MUT[1],MUT[2]);doc.setFont('helvetica','italic');doc.setFontSize(9);
+      doc.text('Combined log not yet available — the age-group logs for this tier are not yet published for the season.',M+4,y+8);
+      y+=28;return;
+    }
+    const body=rows.map(function(a,i){
+      const p=k=>{const x=a.ages[k];return x&&x.pos?String(x.pos):'–';};
+      return [String(i+1),a.name,String(a.PLD),jcSign(a.GD),String(a.PTS),p(12),p(14),p(16),p(18)];
+    });
+    doc.autoTable({
+      startY:y,margin:{left:M,right:M},
+      head:[['#','Club','P','GD','Pts','U12','U14','U16','U18']],body:body,theme:'grid',
+      styles:{font:'helvetica',fontSize:8.5,cellPadding:3,lineColor:[211,219,222],lineWidth:0.4,textColor:INK},
+      headStyles:{fillColor:NAVY,textColor:[255,255,255],fontStyle:'bold',halign:'center',fontSize:8.5},
+      columnStyles:{0:{halign:'center',cellWidth:24},1:{halign:'left'},2:{halign:'center',cellWidth:30},3:{halign:'center',cellWidth:34},4:{halign:'center',cellWidth:34,fontStyle:'bold'},5:{halign:'center',cellWidth:40},6:{halign:'center',cellWidth:40},7:{halign:'center',cellWidth:40},8:{halign:'center',cellWidth:40}},
+      didParseCell:function(d){
+        if(d.section!=='body')return;const i=d.row.index,ok=n>4;
+        if(i===0)d.cell.styles.fillColor=[250,243,224];
+        else if(ok&&i<2)d.cell.styles.fillColor=[233,242,235];
+        else if(ok&&i>=n-2)d.cell.styles.fillColor=[247,235,235];
+      }
+    });
+    y=doc.lastAutoTable.finalY+9;
+    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(MUT[0],MUT[1],MUT[2]);
+    doc.text('Shading: leader (top row), promotion places (top two) and relegation places (bottom two), shown where a tier has more than four clubs. U12–U18 columns show each club’s position on that age-group log.',M,y,{maxWidth:W-2*M});
+    y+=24;
+  });
+  const pc=doc.internal.getNumberOfPages();
+  for(let i=1;i<=pc;i++){doc.setPage(i);
+    doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(MUT[0],MUT[1],MUT[2]);
+    doc.text('Cape Town Tygerberg LFA — Junior Combined Logs',M,H-18);
+    doc.text('Page '+i+' of '+pc,W-M,H-18,{align:'right'});
+  }
+  doc.save('CTTLFA Junior Combined Logs 2026.pdf');
+}
+{const _b=document.getElementById('jcPdfBtn');if(_b)_b.addEventListener('click',jcExportPDF);}
 
 /* ================= WEEKEND RESULTS ENGINE (auto, from the live feed) =================
    Deterministic: reads every division's played results out of the live league feed
