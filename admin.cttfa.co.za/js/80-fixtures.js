@@ -465,19 +465,23 @@
     y: 2027,
     hol: [["2027-03-26", "Good Friday"], ["2027-03-29", "Family Day"], ["2027-04-27", "Freedom Day"], ["2027-05-01", "Workers' Day"], ["2027-06-16", "Youth Day"], ["2027-08-09", "National Women's Day"], ["2027-09-24", "Heritage Day"]],
     ramadan: { s: "2027-02-08", e: "2027-03-09", eid: "2027-03-10" },
-    school: [["2027-03-27", "2027-04-06", "Autumn break"], ["2027-06-26", "2027-07-19", "Winter break"], ["2027-09-25", "2027-10-04", "Spring break"]]
+    school: [["2027-03-27", "2027-04-06", "Autumn break"], ["2027-06-26", "2027-07-19", "Winter break"], ["2027-09-25", "2027-10-04", "Spring break"]],
+    schoolBasis: "projected", holBasis: "statutory"
   };
+  // A public holiday falling on a Sunday is observed the following Monday (Public Holidays Act 36 of 1994).
+  (function () { var p2 = function (n) { return n < 10 ? "0" + n : "" + n; }, add = []; FWD.hol.forEach(function (x) { var dt = new Date(x[0] + "T00:00:00"); if (dt.getDay() === 0) { dt.setDate(dt.getDate() + 1); add.push([dt.getFullYear() + "-" + p2(dt.getMonth() + 1) + "-" + p2(dt.getDate()), x[1] + " (observed Monday)"]); } }); if (add.length) FWD.hol = FWD.hol.concat(add).sort(function (a, b) { return a[0] < b[0] ? -1 : 1; }); })();
   function wettestBuckets() {
-    // aggregate 5-year rain days into month + week-of-month buckets, ranked
+    // aggregate 5-year rain into month + week-of-month buckets. The last week of a month is longer
+    // than seven days, so rank by rainfall NORMALISED to mm per calendar day, not raw total.
     var b = {};
     Object.keys(CTX.rain).forEach(function (iso) {
       var m = +iso.slice(5, 7), d = +iso.slice(8, 10), wk = Math.min(3, Math.floor((d - 1) / 7));
       var wl = ["1st", "8th", "15th", "22nd"][wk];
       var key = m + "|" + wk;
-      if (!b[key]) b[key] = { m: m, wk: wk, label: wl + "–" + (wk < 3 ? ["7th", "14th", "21st"][wk] : "end") + " " + MON[m - 1], days: 0, mm: 0 };
+      if (!b[key]) { var span = wk < 3 ? 7 : (new Date(2027, m, 0).getDate() - 21); b[key] = { m: m, wk: wk, span: span, label: wl + "–" + (wk < 3 ? ["7th", "14th", "21st"][wk] : "end") + " " + MON[m - 1], days: 0, mm: 0 }; }
       b[key].days++; b[key].mm += CTX.rain[iso];
     });
-    return Object.keys(b).map(function (k) { return b[k]; }).sort(function (a, b2) { return b2.mm - a.mm; });
+    return Object.keys(b).map(function (k) { var x = b[k]; x.mmPerDay = x.span ? x.mm / x.span / 5 : 0; return x; }).sort(function (a, b2) { return b2.mmPerDay - a.mmPerDay; });
   }
   function renderContext(o) {
     if (!CTX) return '<div class="card"><p class="hint">Context data is not available.</p></div>';
@@ -548,17 +552,17 @@
     h += '</div></div>';
 
     // forward planner
-    h += '<div class="card"><h3>Next-season planner &mdash; ' + FWD.y + '</h3><p class="hint" style="margin-bottom:8px">Fixed dates and historically wet weeks to plan the ' + FWD.y + ' calendar around. Public holidays and school breaks are firm; Ramadan follows the projected sighting; wet weeks are the five-year Cape Town pattern.</p>';
+    h += '<div class="card"><h3>Next-season planner &mdash; ' + FWD.y + '</h3><p class="hint" style="margin-bottom:8px">Dates and historically wet weeks to plan the ' + FWD.y + ' calendar around. Public holidays are statutory (Public Holidays Act 36 of 1994), with any Sunday holiday observed the following Monday; Western Cape school breaks are <b>projected</b> and must be confirmed against the WCED calendar; Ramadan follows the projected sighting; wet weeks are the five-year Cape Town pattern, normalised to rainfall per day.</p>';
     h += '<div class="fa-grid2"><div>';
     h += '<h4 class="fa-h4">Dates to plan around</h4><table><tbody>';
-    h += '<tr><td>Ramadan</td><td>' + fmtDate(FWD.ramadan.s) + " – " + fmtDate(FWD.ramadan.e) + ' (Eid ' + fmtDate(FWD.ramadan.eid) + ')</td></tr>';
-    FWD.school.forEach(function (s) { h += '<tr><td>' + s[2] + '</td><td>' + fmtDate(s[0]) + " – " + fmtDate(s[1]) + '</td></tr>'; });
+    h += '<tr><td>Ramadan <span class="kv">(projected)</span></td><td>' + fmtDate(FWD.ramadan.s) + " – " + fmtDate(FWD.ramadan.e) + ' (Eid ' + fmtDate(FWD.ramadan.eid) + ')</td></tr>';
+    FWD.school.forEach(function (s) { h += '<tr><td>' + s[2] + ' <span class="kv">(projected)</span></td><td>' + fmtDate(s[0]) + " – " + fmtDate(s[1]) + '</td></tr>'; });
     FWD.hol.filter(function (x) { return x[0] >= "2027-03" && x[0] <= "2027-10"; }).forEach(function (x) { h += '<tr><td>' + x[1] + '</td><td>' + fmtDate(x[0]) + ' (' + DOW[new Date(x[0] + "T00:00:00").getDay()] + ')</td></tr>'; });
     h += '</tbody></table></div><div>';
-    h += '<h4 class="fa-h4">Historically wettest weeks</h4><table><thead><tr><th>Week</th><th style="text-align:right">Rain days (5yr)</th><th style="text-align:right">Total mm</th></tr></thead><tbody>';
-    wettestBuckets().slice(0, 8).forEach(function (b) { h += '<tr><td>' + b.label + '</td><td style="text-align:right">' + b.days + '</td><td style="text-align:right">' + Math.round(b.mm) + '</td></tr>'; });
+    h += '<h4 class="fa-h4">Historically wettest weeks</h4><table><thead><tr><th>Week</th><th style="text-align:right">Rain days (5yr)</th><th style="text-align:right">mm / day</th></tr></thead><tbody>';
+    wettestBuckets().slice(0, 8).forEach(function (b) { h += '<tr><td>' + b.label + '</td><td style="text-align:right">' + b.days + '</td><td style="text-align:right">' + (Math.round(b.mmPerDay * 10) / 10) + '</td></tr>'; });
     h += '</tbody></table></div></div>';
-    h += '<p class="hint" style="margin-top:8px">' + FWD.y + ' public-holiday and school dates are projected from the standard calendar and the Easter and Ramadan cycles; confirm against the gazette and WCED calendar when released.</p></div>';
+    h += '<p class="hint" style="margin-top:8px">' + FWD.y + ' public-holiday dates are statutory under the Public Holidays Act 36 of 1994 (Good Friday and Family Day follow the Easter cycle); the Western Cape school-break dates are projected and must be confirmed against the WCED calendar when released. Wet-week ranking is normalised to millimetres per calendar day, so the longer last week of a month is not overstated.</p></div>';
     return h;
   }
 
@@ -566,6 +570,11 @@
   var BASE_ID = 47708359;              // 2026 season = the structural base
   var plan = { start: "2027-04-03", end: "2027-10-31", usePH: true, useSun: false, useMid: true, sundayDH: false, clubGroup: true, promoRel: false, up: 2, down: 2, ko: true, koRounds: 4, koPerRound: 2, view: "table", div: "", sizes: {} };
   var PH27 = {}; FWD.hol.forEach(function (x) { PH27[x[0]] = x[1]; });
+  // pitch-slot model for the venue/clash check (U07): each ground is a pitch; a match occupies
+  // the pitch for MATCH_MINS, with REST_MINS turnaround, in back-to-back slots between DAY_START and DAY_END.
+  var MATCH_MINS = 105, REST_MINS = 15, DAY_START = 8 * 60, DAY_END = 18 * 60;
+  var _unalloc = [];   // teams that could not be seated after a resize cascade (U06 conservation)
+  function mmToHHMM(min) { return min == null ? "TBC" : pad(Math.floor(min / 60)) + ":" + pad(min % 60); }
   var CHAINS = [
     ["A1", "B1", "C1", "D1", "D2", "D3", "D4"],   // senior open: Premier -> First -> Second -> 3rd-6th
     ["A2", "B2", "C2"],                            // senior reserves
@@ -615,23 +624,38 @@
     var divs = base.map(function (d) { return { name: d.name, gid: d.gid, jun: d.jun, code: d.code, dbl: d.dbl, clean: d.clean, ko: d.ko, teams: d.std.slice() }; });
     var byCode = {}; divs.forEach(function (d) { if (d.code) byCode[d.code] = d; });
     if (plan.promoRel) {
+      // Decide every promotion/relegation from the IMMUTABLE base standings first, then apply
+      // once, so a team moves at most one division (no A->C double jumps) and none is lost.
+      var relegOut = {}, promoOut = {};   // division code -> team names leaving it
       CHAINS.forEach(function (chain) {
         for (var i = 0; i < chain.length - 1; i++) {
           var up = byCode[chain[i]], dn = byCode[chain[i + 1]]; if (!up || !dn) continue;
-          var nDown = Math.min(plan.down, Math.max(0, up.teams.length - 1)), nUp = Math.min(plan.up, Math.max(0, dn.teams.length - 1));
-          var releg = up.teams.splice(up.teams.length - nDown, nDown);
-          var promo = dn.teams.splice(0, nUp);
-          up.teams = up.teams.concat(promo); dn.teams = dn.teams.concat(releg);
+          var nDown = Math.min(plan.down, Math.max(0, up.teams.length - 1));
+          var nUp = Math.min(plan.up, Math.max(0, dn.teams.length - 1));
+          relegOut[up.code] = up.teams.slice(up.teams.length - nDown);   // bottom nDown of the higher division
+          promoOut[dn.code] = dn.teams.slice(0, nUp);                    // top nUp of the lower division
+        }
+      });
+      CHAINS.forEach(function (chain) {
+        for (var i = 0; i < chain.length; i++) {
+          var dv = byCode[chain[i]]; if (!dv) continue;
+          var leaving = {}; (relegOut[dv.code] || []).concat(promoOut[dv.code] || []).forEach(function (n) { leaving[n] = 1; });
+          var kept = dv.teams.filter(function (n) { return !leaving[n]; });
+          var comingUp = (i < chain.length - 1) ? (promoOut[chain[i + 1]] || []) : [];   // promoted from the division below
+          var comingDown = (i > 0) ? (relegOut[chain[i - 1]] || []) : [];                // relegated from the division above
+          dv.teams = comingUp.concat(kept, comingDown);
         }
       });
     }
-    // resize with cascade down the chain
+    // resize with cascade down the chain; conserve every team — overflow past the last division is listed, never dropped
+    _unalloc = [];
     CHAINS.forEach(function (chain) {
       for (var i = 0; i < chain.length; i++) {
         var dv = byCode[chain[i]]; if (!dv) continue; var target = plan.sizes[dv.gid];
         if (!target || target >= dv.teams.length) continue;
         var overflow = dv.teams.splice(target); var below = byCode[chain[i + 1]];
         if (below) below.teams = below.teams.concat(overflow);
+        else overflow.forEach(function (n) { _unalloc.push({ team: n, from: dv.name }); });
       }
     });
     if (plan.clubGroup) divs.forEach(function (d) { if (d.jun) d.teams = d.teams.slice().sort(function (a, b) { return clubOf(a).localeCompare(clubOf(b)) || a.localeCompare(b); }); });
@@ -666,23 +690,39 @@
     _vn = {}; Object.keys(agg).forEach(function (nm) { var best = "", bn = 0; Object.keys(agg[nm]).forEach(function (v) { if (agg[nm][v] > bn) { bn = agg[nm][v]; best = v; } }); _vn[nm] = best; });
     return _vn;
   }
-  // build the full generated schedule with venue + kick-off, and find same pitch+time clashes
+  // build the full generated schedule and seat each home fixture in a real pitch slot (U07):
+  // one ground = one pitch; a match holds the pitch for MATCH_MINS + REST_MINS, in back-to-back
+  // slots between DAY_START and DAY_END. A fixture whose division kick-off cannot be honoured is
+  // pushed to the next free slot ("moved"), or left "unplaced" if the pitch-day is full.
   function buildSchedule() {
     var divs = planDivs(), maxMd = Math.max.apply(null, divs.map(function (x) { return x.matchdays; }));
     var sd = seasonDates(plan, maxMd), vn = venueOfName(), all = [];
     divs.forEach(function (d) {
       if (!d.clean || d.nt < 2) return;
-      var rounds = roundRobin(d.teams, d.dbl), ko = d.ko != null ? pad(d.ko) + ":00" : "TBC";
-      rounds.forEach(function (rp, ri) { var dt = sd.all[ri] ? sd.all[ri].iso : null; if (!dt) return; rp.forEach(function (p) { all.push({ date: dt, div: d.name, home: p[0], away: p[1], venue: vn[p[0]] || "", ko: ko }); }); });
+      var rounds = roundRobin(d.teams, d.dbl), koMin = d.ko != null ? d.ko * 60 : null;
+      rounds.forEach(function (rp, ri) { var dt = sd.all[ri] ? sd.all[ri].iso : null; if (!dt) return; rp.forEach(function (p) { all.push({ date: dt, div: d.name, home: p[0], away: p[1], venue: vn[p[0]] || "", koWant: koMin }); }); });
+    });
+    var by = {}; all.forEach(function (x) { if (!x.venue) { x.status = "novenue"; x.koGot = null; return; } (by[x.date + "|" + x.venue] = by[x.date + "|" + x.venue] || []).push(x); });
+    Object.keys(by).forEach(function (k) {
+      var list = by[k].slice().sort(function (a, b) { return (a.koWant == null ? DAY_START : a.koWant) - (b.koWant == null ? DAY_START : b.koWant); });
+      var cursor = DAY_START;
+      list.forEach(function (x) {
+        var want = x.koWant == null ? DAY_START : x.koWant, start = Math.max(want, cursor);
+        if (start + MATCH_MINS <= DAY_END) { x.koGot = start; x.status = (x.koWant != null && start > x.koWant) ? "moved" : "ok"; cursor = start + MATCH_MINS + REST_MINS; }
+        else { x.koGot = null; x.status = "unplaced"; }
+      });
     });
     return { fx: all, sd: sd, divs: divs };
   }
   function clashReport() {
-    var s = buildSchedule(), by = {};
-    s.fx.forEach(function (x) { if (!x.venue || x.ko === "TBC") return; var key = x.date + "|" + x.venue + "|" + x.ko; (by[key] = by[key] || []).push(x); });
-    var clashes = [], groups = 0;
-    Object.keys(by).forEach(function (k) { if (by[k].length > 1) { groups++; clashes = clashes.concat(by[k]); } });
-    return { clashes: clashes, groups: groups, total: s.fx.length, schedule: s };
+    var s = buildSchedule(), moved = [], unplaced = [], placed = 0, withVenue = 0, pd = {};
+    s.fx.forEach(function (x) {
+      if (x.status === "novenue") return;
+      withVenue++; pd[x.date + "|" + x.venue] = (pd[x.date + "|" + x.venue] || 0) + 1;
+      if (x.status === "unplaced") unplaced.push(x); else { placed++; if (x.status === "moved") moved.push(x); }
+    });
+    var busy = Object.keys(pd).filter(function (k) { return pd[k] > 1; }).length;
+    return { moved: moved, unplaced: unplaced, placed: placed, withVenue: withVenue, conflicts: moved.length + unplaced.length, busyPitchDays: busy, total: s.fx.length, schedule: s };
   }
   // named scenarios in browser storage
   var SC_KEY = "cttlfa_plan27_scenarios";
@@ -779,7 +819,7 @@
     h += tile(satN, "League Saturdays", sd.allSat.length + " total less " + sd.koSats.length + " knockout", "");
     h += tile(sd.koSats.length, "Knockout weekends", plan.ko ? (plan.koRounds + " rounds x " + plan.koPerRound + " Sat") : "off", "");
     h += tile(maxMd, "Rounds needed (max)", "biggest division (" + divs.filter(function (d) { return d.matchdays === maxMd; })[0].nt + " teams)", "");
-    h += tile(shortfall, "Saturday shortfall", shortfall ? "rounds off Saturday" : "fits on league Saturdays", "");
+    h += tile(shortfall, "Saturday shortfall", shortfall ? "rounds off Saturday" : "within league Saturdays", "");
     h += '</div>';
     h += '<div class="fa-tiles">';
     h += tile(totFx.toLocaleString(), "League fixtures", divs.length + " divisions", "");
@@ -789,12 +829,12 @@
     h += '</div>';
 
     // verdict
-    h += '<div class="card"><h3>Can the season fit?</h3><p class="hint" style="margin-bottom:6px">';
+    h += '<div class="card"><h3>Season date capacity</h3><p class="hint" style="margin-bottom:6px">';
     if (shortfall === 0) h += '<b class="fa-ok">Yes on Saturdays.</b> The biggest divisions need ' + maxMd + ' rounds and there are ' + satN + ' Saturdays, so every division runs on Saturdays with ' + (satN - maxMd) + ' week(s) of weather buffer.';
     else if (sd.canFit) h += '<b class="fa-ok">Yes, with ' + sd.overflow.length + ' non-Saturday round(s).</b> The ' + maxMd + '-round divisions are ' + shortfall + ' short of the ' + satN + ' Saturdays, absorbed by ' + sd.overflow.map(function (x) { return fmtDate(x.iso) + " (" + x.type + ")"; }).join(", ") + '. Smaller divisions finish inside the Saturdays.';
     else h += '<b class="fa-warn">Does not fit.</b> The ' + maxMd + '-round divisions are ' + shortfall + ' rounds short of the ' + satN + ' Saturdays and the enabled overflow dates cover only ' + sd.overflow.length + '. Extend the end date or enable public holidays / Sundays (with double-headers) / midweek.';
     if (plan.ko && sd.koSats.length) h += ' <b>' + sd.koSats.length + ' Saturdays are reserved for knockouts</b> (' + sd.koSats.map(function (x) { return x.round; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).join(", ") + '), which is why only ' + satN + ' of the ' + sd.allSat.length + ' Saturdays carry league rounds.';
-    h += ' A full round is ~' + Math.round(totTeams / 2) + ' fixtures, above the 2026 Saturday peak of ~212, so the age-group time ladder and byes spread it.</p>';
+    h += ' A full round is ~' + Math.round(totTeams / 2) + ' fixtures, above the 2026 Saturday peak of ~212, so the age-group time ladder and byes spread it. This measures dates only, which is necessary but not sufficient: whether every fixture physically fits also depends on pitches and kick-off times, checked in the venue &amp; pitch-slot card below, where any fixture that cannot be seated is listed.</p>';
     h += bar("Rounds needed (biggest)", maxMd, Math.max(maxMd, satN), "gold");
     h += bar("League Saturdays", satN, Math.max(maxMd, satN), "blue");
     if (plan.ko && sd.koSats.length) h += bar("Knockout Saturdays", sd.koSats.length, Math.max(maxMd, satN), "green");
@@ -837,27 +877,29 @@
       h += '</tbody></table></div>';
     }
 
-    // venue & clash check
+    // venue & pitch-slot check
     var cr = clashReport();
-    h += '<div class="card"><h3>Venue &amp; clash check</h3><p class="hint" style="margin-bottom:8px">Each home fixture is placed at the home team’s 2026 ground at its division kick-off time. A clash is the same pitch booked at the same time on the same date. Assign a different pitch or kick-off in LeagueRepublic to clear one.</p>';
-    h += '<div class="fa-tiles fa-tiles-sm">' + tile(cr.groups, "Venue clashes", "same pitch, same time", cr.groups ? "planClash" : "") + tile(cr.total.toLocaleString(), "Fixtures placed", "with a home venue", "") + '</div>';
-    if (cr.groups) {
-      var sample = cr.clashes.slice().sort(function (a, b) { return a.date < b.date ? -1 : 1; }).slice(0, 20);
-      h += '<table><thead><tr><th>Date</th><th>Venue</th><th>KO</th><th>Division</th><th>Home</th><th>Away</th></tr></thead><tbody>';
-      sample.forEach(function (x) { h += '<tr><td>' + fmtDate(x.date) + '</td><td>' + NS.esc(x.venue) + '</td><td>' + x.ko + '</td><td>' + NS.esc(x.div) + '</td><td>' + NS.esc(x.home) + '</td><td>' + NS.esc(x.away) + '</td></tr>'; });
-      h += '</tbody></table>' + (cr.clashes.length > 20 ? '<p class="hint" style="margin-top:6px">Showing 20 of ' + cr.clashes.length + ' clashing fixtures; the full draft CSV carries the venue on every fixture.</p>' : '') + '</div>';
+    h += '<div class="card"><h3>Venue &amp; pitch slots</h3><p class="hint" style="margin-bottom:8px">Each home fixture is seated at the home team’s 2026 ground, treated as one pitch. A match holds the pitch for ' + MATCH_MINS + ' minutes with a ' + REST_MINS + '-minute turnaround, in back-to-back slots from ' + mmToHHMM(DAY_START) + ' to ' + mmToHHMM(DAY_END) + '. A fixture whose division kick-off falls in a slot already taken is pushed to the next free slot (<b>moved</b>); if the pitch has no slot left that day it is <b>unplaced</b> and must move to another pitch or date in LeagueRepublic.</p>';
+    h += '<div class="fa-tiles fa-tiles-sm">' + tile(cr.placed.toLocaleString(), "Fixtures seated", cr.moved.length ? (cr.moved.length + " with kick-off moved") : "all at their division kick-off", cr.conflicts ? "planClash" : "") + tile(cr.unplaced.length.toLocaleString(), "Unplaced", cr.unplaced.length ? "no pitch slot — must move" : "every fixture has a slot", cr.unplaced.length ? "planClash" : "") + '</div>';
+    if (cr.conflicts) {
+      var sample = cr.unplaced.concat(cr.moved).sort(function (a, b) { return a.date < b.date ? -1 : 1; }).slice(0, 20);
+      h += '<table><thead><tr><th>Date</th><th>Venue (pitch)</th><th>Division</th><th>Home</th><th>Away</th><th>Wanted</th><th>Seated</th></tr></thead><tbody>';
+      sample.forEach(function (x) { h += '<tr><td>' + fmtDate(x.date) + '</td><td>' + NS.esc(x.venue) + '</td><td>' + NS.esc(x.div) + '</td><td>' + NS.esc(x.home) + '</td><td>' + NS.esc(x.away) + '</td><td>' + mmToHHMM(x.koWant) + '</td><td>' + (x.status === "unplaced" ? '<b class="fa-warn">no slot</b>' : mmToHHMM(x.koGot)) + '</td></tr>'; });
+      h += '</tbody></table>' + (cr.conflicts > 20 ? '<p class="hint" style="margin-top:6px">Showing 20 of ' + cr.conflicts + ' fixtures that were moved or could not be seated; open the drill-down for the full list and CSV.</p>' : '') + '</div>';
     } else {
-      h += '<p class="hint"><b class="fa-ok">No venue clashes.</b> No pitch is double-booked at the same time in this scenario.</p></div>';
+      h += '<p class="hint"><b class="fa-ok">Every fixture seats at its division kick-off.</b> No pitch is over-booked in this scenario.</p></div>';
     }
 
     // per-division demand with editable sizes
     h += '<div class="card"><h3>Fixture demand by division</h3><p class="hint" style="margin-bottom:8px">Rounds and fixtures at the scenario sizes. <b>Edit the Teams number</b> to resize a division — overflow teams cascade into the division below on the ladder. Sorted by rounds.</p>';
-    h += '<table><thead><tr><th>Division</th><th style="text-align:right">Teams</th><th style="text-align:right">Rounds</th><th style="text-align:right">Fixtures</th><th>Fits Saturdays?</th></tr></thead><tbody>';
+    h += '<table><thead><tr><th>Division</th><th style="text-align:right">Teams</th><th style="text-align:right">Rounds</th><th style="text-align:right">Fixtures</th><th>Within Saturdays?</th></tr></thead><tbody>';
     divs.forEach(function (d) {
       var fits = d.matchdays <= satN, editable = !!d.code;
       h += '<tr><td>' + NS.esc(d.name) + '</td><td style="text-align:right">' + (editable ? '<input type="number" class="fa-szin" data-gid="' + d.gid + '" value="' + d.nt + '" min="2" max="20">' : d.nt) + '</td><td style="text-align:right">' + d.matchdays + '</td><td style="text-align:right">' + d.fx + '</td><td>' + (fits ? '<span class="fa-ok">Yes</span>' : '<b class="fa-warn">+' + (d.matchdays - satN) + ' off-Sat</b>') + '</td></tr>';
     });
-    h += '</tbody></table><p class="hint" style="margin-top:6px">Editing sizes only cascades within the senior (A–D), reserve (A2–C2) and junior age-group ladders. Vets and Women’s are standalone.</p></div>';
+    h += '</tbody></table>';
+    if (_unalloc.length) h += '<p class="hint" style="margin-top:6px;color:#9A3130"><b>' + _unalloc.length + ' team(s) could not be seated</b> after resizing: ' + _unalloc.map(function (u) { return NS.esc(u.team) + ' (from ' + NS.esc(u.from) + ')'; }).join(', ') + '. The last division on that ladder is full — raise a size or add a division so no team is dropped.</p>';
+    h += '<p class="hint" style="margin-top:6px">Editing sizes only cascades within the senior (A–D), reserve (A2–C2) and junior age-group ladders. Vets and Women’s are standalone; every team removed by a resize is carried into the division below or listed above, never dropped.</p></div>';
 
     // proposed fixtures for a chosen division
     h += '<div class="card"><h3>Proposed fixture list</h3><p class="hint" style="margin-bottom:8px">Generated round-robin at the scenario line-up, mapped onto the season dates. With club-grouping on, junior age groups are ordered by club so a club’s teams meet the same opponent on the same day. Home/away alternates; venues and exact kick-offs stay a LeagueRepublic step.</p>';
@@ -943,14 +985,14 @@
     var cr = clashReport();
     var scrim = NS.$("faScrim");
     if (!scrim) { scrim = document.createElement("div"); scrim.id = "faScrim"; scrim.className = "fa-scrim"; document.body.appendChild(scrim); }
-    var rows = cr.clashes.slice().sort(function (a, b) { return a.date < b.date ? -1 : (a.date > b.date ? 1 : (a.venue < b.venue ? -1 : 1)); });
-    var head = '<div class="fa-mhead"><div><h3 style="margin:0">Venue clashes — 2027 scenario</h3><p class="hint" style="margin:2px 0 0">' + cr.groups + ' clash group(s), ' + cr.clashes.length + ' fixtures on a shared pitch and time. Change a pitch or kick-off in LeagueRepublic to clear one.</p></div>' +
+    var rows = cr.unplaced.concat(cr.moved).sort(function (a, b) { return a.date < b.date ? -1 : (a.date > b.date ? 1 : (a.venue < b.venue ? -1 : 1)); });
+    var head = '<div class="fa-mhead"><div><h3 style="margin:0">Pitch slots — 2027 scenario</h3><p class="hint" style="margin:2px 0 0">' + cr.unplaced.length + ' unplaced, ' + cr.moved.length + ' with kick-off moved, of ' + cr.withVenue.toLocaleString() + ' fixtures at a home ground. Assign another pitch, kick-off or date in LeagueRepublic to clear one.</p></div>' +
       '<div class="fa-mbtns"><button class="btn ghost sm" id="faCsv">Download CSV</button><button class="btn ghost sm" id="faClose">Close</button></div></div>';
     var body = '<div class="fa-mbody">';
-    if (!rows.length) body += '<p class="hint"><b class="fa-ok">No venue clashes in this scenario.</b></p>';
+    if (!rows.length) body += '<p class="hint"><b class="fa-ok">Every fixture seats at its division kick-off in this scenario.</b></p>';
     else {
-      body += '<table><thead><tr><th>Date</th><th>Venue</th><th>KO</th><th>Division</th><th>Home</th><th>Away</th></tr></thead><tbody>';
-      rows.forEach(function (x) { body += '<tr><td>' + fmtDate(x.date) + '</td><td>' + NS.esc(x.venue) + '</td><td>' + x.ko + '</td><td>' + NS.esc(x.div) + '</td><td>' + NS.esc(x.home) + '</td><td>' + NS.esc(x.away) + '</td></tr>'; });
+      body += '<table><thead><tr><th>Date</th><th>Venue (pitch)</th><th>Division</th><th>Home</th><th>Away</th><th>Wanted</th><th>Seated</th><th>Status</th></tr></thead><tbody>';
+      rows.forEach(function (x) { body += '<tr><td>' + fmtDate(x.date) + '</td><td>' + NS.esc(x.venue) + '</td><td>' + NS.esc(x.div) + '</td><td>' + NS.esc(x.home) + '</td><td>' + NS.esc(x.away) + '</td><td>' + mmToHHMM(x.koWant) + '</td><td>' + (x.status === "unplaced" ? "—" : mmToHHMM(x.koGot)) + '</td><td>' + (x.status === "unplaced" ? '<b class="fa-warn">unplaced</b>' : '<span class="fa-warn">moved</span>') + '</td></tr>'; });
       body += '</tbody></table>';
     }
     body += '</div>';
@@ -960,9 +1002,9 @@
     scrim.onclick = function (e) { if (e.target === scrim) closeDrill(); };
     NS.$("faCsv").onclick = function () {
       var esc = function (v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
-      var lines = ["Date,Venue,KO,Division,Home,Away"].concat(rows.map(function (x) { return [x.date, esc(x.venue), x.ko, esc(x.div), esc(x.home), esc(x.away)].join(","); }));
+      var lines = ["Date,Venue,Division,Home,Away,WantedKO,SeatedKO,Status"].concat(rows.map(function (x) { return [x.date, esc(x.venue), esc(x.div), esc(x.home), esc(x.away), mmToHHMM(x.koWant), x.status === "unplaced" ? "" : mmToHHMM(x.koGot), x.status].join(","); }));
       var blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
-      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "CTTLFA 2027 venue clashes.csv";
+      var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "CTTLFA 2027 pitch slots.csv";
       document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 200);
     };
   }

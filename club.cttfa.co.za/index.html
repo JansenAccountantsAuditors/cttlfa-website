@@ -33,6 +33,16 @@
   .signout{background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:8px;padding:8px 13px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
   .signout:hover{background:rgba(255,255,255,.22)}
   .signout:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  .top .hdr-title{min-width:0}
+  @media(max-width:560px){
+    .top .wrap{flex-wrap:wrap;padding:11px 16px;gap:8px 10px}
+    .top .spacer{display:none}
+    .top .hdr-title{flex:1 1 120px}
+    .top .t1{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .signout{padding:7px 11px;font-size:12.5px}
+    .helptoggle{padding:6px 10px}
+  }
+  @media(max-width:400px){ .top .t2{display:none} }
   /* ---------- auth ---------- */
   .auth{min-height:calc(100vh - 120px);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px}
   .authcard{background:var(--card);border:1px solid var(--hair);border-radius:var(--r);max-width:440px;width:100%;padding:30px 26px;box-shadow:var(--shadow)}
@@ -212,7 +222,7 @@
 <header class="top">
   <div class="wrap">
     <img class="crest" src="https://admin.cttfa.co.za/cttlfa-logo.jpg" alt="CTTLFA">
-    <div>
+    <div class="hdr-title">
       <div class="t1">Cape Town Tygerberg LFA</div>
       <div class="t2" id="topSub">Club Portal</div>
     </div>
@@ -534,10 +544,10 @@ function caActionsCard(meet){
     body='<p class="note" style="margin:0">Nothing currently required from your club. Anything the LFA needs — a payment, a document, a meeting response — will show here.</p>';
   } else {
     body=acts.map(function(a){ var c=st[a.sev]||st.info;
-      return '<div style="display:flex;align-items:flex-start;gap:12px;padding:11px 0;border-top:1px solid var(--hair)">'
-        +'<span class="pill" style="background:'+c[0]+';color:'+c[1]+';white-space:nowrap"><span class="dot" style="background:'+c[1]+'"></span>'+c[2]+'</span>'
-        +'<div style="flex:1;min-width:0"><b>'+a.t+'</b><div class="note" style="margin-top:2px">'+a.d+'</div></div>'
-        +(a.tab?'<button class="btn gold sm" style="flex:0 0 auto" onclick="showTab(\''+a.tab+'\')">'+esc(a.btn||'Open')+'</button>':'')
+      return '<div style="padding:11px 0;border-top:1px solid var(--hair)">'
+        +'<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span class="pill" style="background:'+c[0]+';color:'+c[1]+';white-space:nowrap"><span class="dot" style="background:'+c[1]+'"></span>'+c[2]+'</span><b style="flex:1 1 auto;min-width:0">'+a.t+'</b></div>'
+        +'<div class="note" style="margin-top:5px">'+a.d+'</div>'
+        +(a.tab?'<div style="margin-top:10px"><button class="btn gold sm" onclick="showTab(\''+a.tab+'\')">'+esc(a.btn||'Open')+'</button></div>':'')
         +'</div>';
     }).join('');
   }
