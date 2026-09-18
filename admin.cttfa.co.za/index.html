@@ -1902,8 +1902,7 @@
         h+='<div class="deb-gate-clubs">'+aRows+'</div>';
         var allDone=auto.every(function(it){ return stA[it.id]==='sent'||stA[it.id]==='failed'; });
         if(!allDone){
-          if(autoDaily){ h+='<p class="hint" style="font-size:11px;margin-top:8px">Sending automatically…</p>'; }
-          else{ h+='<div class="deb-corr-actions" style="justify-content:space-between;align-items:center;margin-top:10px;gap:12px"><label class="hint" style="display:flex;align-items:center;gap:6px;font-size:11.5px"><input type="checkbox" id="debAutoDaily"> Send these automatically at 11:00 in future</label><button class="btn gold sm" id="debSendRoutine">Send '+auto.length+' routine email'+(auto.length>1?'s':'')+' now</button></div>'; }
+          h+='<div class="deb-corr-actions" style="justify-content:flex-end;align-items:center;margin-top:10px;gap:12px"><button class="btn gold sm" id="debSendRoutine">Send '+auto.length+' routine email'+(auto.length>1?'s':'')+' now</button></div>';
         }
       }
 
@@ -1921,7 +1920,7 @@
       var x=document.getElementById('debMrX'); if(x) x.onclick=close;
       var d=document.getElementById('debMrDone'); if(d) d.onclick=close;
       var sr=document.getElementById('debSendRoutine'); if(sr) sr.onclick=async function(){ this.disabled=true; this.textContent='Sending…'; await sendAuto(); };
-      var ad=document.getElementById('debAutoDaily'); if(ad) ad.onchange=async function(){ var v=this.checked; try{ await sb.rpc('deb_send_config_set',{p:{auto_daily:v}}); autoDaily=v; }catch(e){ alert('Could not save: '+(e.message||e)); this.checked=!v; } };
+      // U04: auto-send toggle removed — routine correspondence is sent only by explicit click.
       Array.prototype.forEach.call(m.querySelectorAll('[data-ohold]'),function(b){ b.onclick=function(){ stO[Number(b.dataset.ohold)]='held'; draw(); }; });
       Array.prototype.forEach.call(m.querySelectorAll('[data-osend]'),function(b){ b.onclick=async function(){
         var id=Number(b.dataset.osend), it=ooc.filter(function(x){return x.id===id;})[0]; if(!it) return;
@@ -1939,10 +1938,7 @@
     }
 
     draw();
-    if(autoDaily && auto.length){
-      var guard=false; try{ guard=(localStorage.getItem('debMorningAutoDay')===today); }catch(e){}
-      if(!guard){ try{ localStorage.setItem('debMorningAutoDay',today); }catch(e){} sendAuto(); }
-    }
+    // U04: the daily run never sends on page load. Sending is always an explicit Treasurer click.
   }
 
   function debFlowchartSVG(){
