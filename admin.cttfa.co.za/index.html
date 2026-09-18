@@ -4795,7 +4795,7 @@
     });
     s+='</svg>'; $("regChart").innerHTML=s;
   }
-  var _clubTeams=null,_clubTeamsTotal=0;
+  var _clubTeams=null,_clubTeamsTotal=0,_clubTeamsClubs=0,_clubTeamsUnmapped=[];
   function clubTeamsFor(name){ return (_clubTeams && _clubTeams[name]!=null)?_clubTeams[name]:null; }
   function regClubTable(cl,total,q){
     q=q||""; var grouped={"Non current":1,"Referees & Officials":1};
@@ -4811,13 +4811,15 @@
     var S=rows.reduce(function(a,c){var tm=clubTeamsFor(c.club); return {s:a.s+c.seniors,j:a.j+c.juniors,f:a.f+c.foreign,t:a.t+c.total,tm:a.tm+(tm||0)};},{s:0,j:0,f:0,t:0,tm:0});
     var perAll=S.tm>0?Math.round(S.t/S.tm):null;
     h+='</tbody><tfoot><tr><th style="text-align:left">'+(q?"Filtered":"All clubs")+' ('+rows.length+')</th><td class="num">'+regFmt(S.s)+'</td><td class="num">'+regFmt(S.j)+'</td><td class="num">'+regFmt(S.f)+'</td><td class="num"><b>'+regFmt(S.t)+'</b></td><td class="num"><b>'+regFmt(S.tm)+'</b></td><td class="num">'+(perAll!=null?regFmt(perAll):'—')+'</td></tr></tfoot></table>';
-    h+='<p class="hint" style="margin:8px 0 0">Teams entered = teams in the current season’s league standings'+(_clubTeams!==null?(' ('+regFmt(_clubTeamsTotal||0)+' across all clubs)'):'')+', mapped to each club the same way as the public website'+(_clubTeams===null?' — loading…':'')+'. Registered members do not track teams entered: a club with members but 0 teams is no longer fielding sides (e.g. a club that has left the Association), and clubs that field teams without a matching carded roll are not listed here.</p>';
+    if(_clubTeams!==null && _clubTeamsClubs){ h+='<p class="hint" style="margin:8px 0 0"><b>'+regFmt(_clubTeamsClubs)+'</b> clubs fielding <b>'+regFmt(_clubTeamsTotal||0)+'</b> teams this season. Clubs and teams are counted separately: each club is counted once, and B-teams and name variants fold into the one club.</p>'; }
+    if(_clubTeamsUnmapped && _clubTeamsUnmapped.length){ h+='<p class="hint" style="margin:6px 0 0;color:#9A3130">'+_clubTeamsUnmapped.length+' league label'+(_clubTeamsUnmapped.length>1?'s do':' does')+' not yet map to a club: '+_clubTeamsUnmapped.map(function(u){return esc(u.label)+' ('+regFmt(u.teams)+')';}).join(', ')+'. Add an approved alias on the Club Database tab so the club and team counts stay accurate.</p>'; }
+    h+='<p class="hint" style="margin:8px 0 0">Teams entered = teams in the current season’s league standings'+(_clubTeams!==null?(' ('+regFmt(_clubTeamsTotal||0)+' across '+regFmt(_clubTeamsClubs||0)+' clubs)'):'')+', mapped to each club the same way as the public website'+(_clubTeams===null?' — loading…':'')+'. Registered members do not track teams entered: a club with members but 0 teams is no longer fielding sides (e.g. a club that has left the Association), and clubs that field teams without a matching carded roll are not listed here.</p>';
     $("regClubWrap").innerHTML=h;
   }
   async function loadClubTeams(){
     if(_clubTeams!==null) return;
-    try{ var r=await sb.rpc("reg_club_teams_current"); if(r.error) throw r.error; var d=r.data||{}; _clubTeams=d.map||{}; _clubTeamsTotal=d.total||0; }
-    catch(e){ _clubTeams={}; _clubTeamsTotal=0; }
+    try{ var r=await sb.rpc("reg_club_teams_current"); if(r.error) throw r.error; var d=r.data||{}; _clubTeams=d.map||{}; _clubTeamsTotal=(d.teams!=null?d.teams:(d.total||0)); _clubTeamsClubs=d.clubs||0; _clubTeamsUnmapped=d.unmapped||[]; }
+    catch(e){ _clubTeams={}; _clubTeamsTotal=0; _clubTeamsClubs=0; _clubTeamsUnmapped=[]; }
     try{ var q=($("regSearch")&&$("regSearch").value)?$("regSearch").value.trim().toLowerCase():""; if(_reg&&_reg.clubs) regClubTable(_reg.clubs,_reg.current.persons,q); }catch(e){}
   }
   function regTopClubs(cl){
