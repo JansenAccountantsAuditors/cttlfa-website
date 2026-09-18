@@ -2573,7 +2573,7 @@
         +'<td class="num">'+dR(c.over60)+'</td>'
         +'<td>'+dStage(c.stage)+'</td>'
         +'<td>'+logged+'</td>'
-        +'<td class="num">'+(c.last_receipt?dDateZA(c.last_receipt):(Number(c.last_receipt_days)>=999?'–':c.last_receipt_days+'d'))+'</td></tr>';
+        +'<td class="num">'+(c.last_receipt?dDateZA(c.last_receipt):(c.last_receipt_days==null||Number(c.last_receipt_days)>=999?'–':c.last_receipt_days+'d'))+'</td></tr>';
     });
     var _mem=clubs.filter(function(c){return c.is_member;}).length;
     var _oth=clubs.length-_mem;
