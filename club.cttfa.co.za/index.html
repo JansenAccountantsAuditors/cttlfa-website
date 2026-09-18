@@ -562,7 +562,7 @@ function obligationsCard(reg){
   // Delegate voting eligibility — governed by the compliance rule, not the same thing as match eligibility
   var votePill, voteStmt;
   if(HOME.out_of_compliance){ votePill='<span class="pill bad"><span class="dot"></span>Suspended</span>'; voteStmt='Delegate voting rights are suspended while your club is out of compliance. They are restored once the account is settled.'; }
-  else { votePill='<span class="pill good"><span class="dot"></span>Eligible</span>'; voteStmt='Your accredited delegate may vote at LFA meetings.'; }
+  else { votePill='<span class="pill good"><span class="dot"></span>In good standing</span>'; voteStmt='Your club is in good standing to nominate a delegate. Accreditation to vote at a specific meeting is confirmed at that meeting.'; }
   // Membership category
   var memLabel=(HOME.type==='full'?'Full member':(HOME.type==='associate'?'Associate member':'Not set'));
   var memPill='<span class="pill neutral"><span class="dot"></span>'+memLabel+'</span>';
@@ -582,7 +582,7 @@ function obligationsCard(reg){
     +'<p class="note" style="margin-top:12px;border-top:1px solid var(--hair);padding-top:10px">Each area is shown on its own because each is governed separately. A finance or voting standing is not a determination of any team&rsquo;s eligibility to play &mdash; match eligibility and discipline are dealt with under the competition rules. Please contact the Treasurer (treasurer@cttfa.co.za) with any query.</p></div>';
 }
 function upcomingFixturesCard(){
-  var all=myUpcoming();
+  var all=myUpcoming().filter(function(x){return !fxIsPast(x);});
   if(!all.length) return '';
   var next=all.slice(0,5);
   var rows=next.map(function(x){ var dt=fxParts(x.date);
@@ -653,7 +653,7 @@ function renderOverview(meet, reg){
       +'<div class="fact"><div class="fl">Balance</div><div class="fv tabnum">'+money(bal)+'</div></div>'
       +'<div class="fact"><div class="fl">Overdue</div><div class="fv tabnum">'+money(over)+'</div></div>'
       +'<div class="fact"><div class="fl">Payment reference</div><div class="fv">'+esc(HOME.code||'—')+'</div></div>'
-      +'<div class="fact"><div class="fl">Last receipt</div><div class="fv">'+(HOME.last_receipt_days==null||Number(HOME.last_receipt_days)>=999?'No receipt on record':(Number(HOME.last_receipt_days)<=0?'Today':(HOME.last_receipt_days+(Number(HOME.last_receipt_days)===1?' day ago':' days ago'))))+'</div></div>'
+      +'<div class="fact"><div class="fl">Last receipt</div><div class="fv">'+(HOME.last_receipt?dateZA(HOME.last_receipt):'Receipt date unavailable')+'</div></div>'
       +'</div></div>';
   html+='</div>';
   html+='</div>';
@@ -661,10 +661,12 @@ function renderOverview(meet, reg){
 }
 
 /* ---------------- LEAGUE & FIXTURES ---------------- */
+function fxTimeMin(t){ var m=String(t||'').match(/(\d{1,2}):(\d{2})/); return m?(Number(m[1])*60+Number(m[2])):9999; }
+function fxIsPast(x){ var ts=fxSort(x.date); if(ts>=9e14) return false; var d=new Date(); return ts < new Date(d.getFullYear(),d.getMonth(),d.getDate()).getTime(); }
 function myUpcoming(){
   var divs=myDivisions(), all=[];
   divs.forEach(function(d){ d.fixtures.forEach(function(f){ all.push({div:d.name, home:f[0], away:f[1], date:f[2], time:f[3]||'', venue:f[4]||''}); }); });
-  all.sort(function(a,b){ return fxSort(a.date)-fxSort(b.date); });
+  all.sort(function(a,b){ var ds=fxSort(a.date)-fxSort(b.date); return ds!==0?ds:(fxTimeMin(a.time)-fxTimeMin(b.time)); });
   return all;
 }
 function loadLeague(){
@@ -673,12 +675,19 @@ function loadLeague(){
   if(!SEASON){ h='<div class="card"><p class="empty">Fixtures are not available right now. Please try again shortly.</p></div>'; el('lgBody').innerHTML=h; el('lgLoading').hidden=true; el('lgBody').hidden=false; return; }
   if(!divs.length){ h='<div class="card"><p class="empty">We could not confidently match your club to the published league feed yet. Team-to-club linking is being finalised and your standings and fixtures will appear here shortly.</p></div>'; el('lgBody').innerHTML=h; el('lgLoading').hidden=true; el('lgBody').hidden=false; return; }
   var allFix=myUpcoming();
+  var upFix=allFix.filter(function(x){return !fxIsPast(x);});
+  var outFix=allFix.filter(fxIsPast);
   h+='<div class="card"><div class="sechead"><h2>Your upcoming fixtures</h2><div style="display:flex;gap:8px">'
     +'<button class="btn ghost sm" id="fxCsv">Download CSV</button><button class="btn ghost sm" id="fxPdf">Download PDF</button></div></div>';
-  if(!allFix.length){ h+='<p class="empty">No upcoming fixtures listed.</p>'; }
-  else { allFix.slice(0,20).forEach(function(x){ var dt=fxParts(x.date);
+  if(!upFix.length){ h+='<p class="empty">No upcoming fixtures listed.</p>'; }
+  else { upFix.slice(0,20).forEach(function(x){ var dt=fxParts(x.date);
     h+='<div class="fx"><div class="d"><div class="dd">'+dt.dd+'</div><div class="mm">'+dt.mm+'</div></div>'
       +'<div class="m"><div class="tm">'+esc(x.home)+' v '+esc(x.away)+'</div><div class="cp">'+esc(x.div)+(x.time?(' &middot; '+esc(x.time)):'')+(x.venue?(' &middot; '+esc(x.venue)):'')+'</div></div></div>'; }); }
+  if(outFix.length){ h+='<div style="border-top:1px solid var(--hair);margin-top:12px;padding-top:10px"><h4 style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin:0 0 6px">Result or rescheduling outstanding</h4><p class="note" style="margin:0 0 8px">Past their date but not yet resulted on the feed &mdash; the result or a new date is awaited.</p>';
+    outFix.slice(0,20).forEach(function(x){ var dt=fxParts(x.date);
+      h+='<div class="fx"><div class="d"><div class="dd">'+dt.dd+'</div><div class="mm">'+dt.mm+'</div></div>'
+        +'<div class="m"><div class="tm">'+esc(x.home)+' v '+esc(x.away)+'</div><div class="cp">'+esc(x.div)+(x.time?(' &middot; '+esc(x.time)):'')+(x.venue?(' &middot; '+esc(x.venue)):'')+'</div></div></div>'; });
+    h+='</div>'; }
   h+='</div>';
   divs.forEach(function(d){
     h+='<div class="card"><div class="sechead"><h2>'+esc(d.name)+'</h2>'
