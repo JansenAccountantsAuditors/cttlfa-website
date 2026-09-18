@@ -1645,20 +1645,25 @@
       if(pr[0].error) throw pr[0].error;
       acts=pr[0].data||{items:[]}; season=pr[1];
     }catch(e){ box.innerHTML='<div class="card"><h3 style="margin:0 0 4px">Your action queue</h3><p class="hint" style="color:#9A3130">Could not load the action queue: '+esc(e.message||String(e))+'</p></div>'; return; }
-    box.innerHTML=homeInboxHtml(acts, season);
+    try{ box.innerHTML=homeInboxHtml(acts, season); }
+    catch(re){ box.innerHTML='<div class="card"><h3 style="margin:0 0 4px">Your action queue</h3><p class="hint" style="color:#9A3130">Could not display the action queue: '+esc(re.message||String(re))+'</p><button class="btn ghost sm" id="homeInboxRetry" type="button">Try again</button></div>'; var _rb=document.getElementById('homeInboxRetry'); if(_rb) _rb.onclick=homeLoadInbox; return; }
     Array.prototype.forEach.call(box.querySelectorAll('[data-goto]'),function(b){ b.onclick=function(){ goTab(b.getAttribute('data-goto')); }; });
+  }
+  function homePill(txt,kind){
+    var c=kind==='bad'?{bg:'#F7E4E3',fg:'#9A3130'}:(kind==='ok'?{bg:'#E1EFE7',fg:'#1C5136'}:{bg:'#F6EBD8',fg:'#8A5A15'});
+    return '<span style="display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:700;background:'+c.bg+';color:'+c.fg+'">'+esc(txt)+'</span>';
   }
   function homeInboxHtml(acts, season){
     var items=((acts&&acts.items)||[]).slice();
     var upd=season&&season.updated, ageH=upd?(Date.now()-new Date(upd).getTime())/3.6e6:null;
     if(ageH!=null && ageH>12){ items.push({label:'League and fixtures feed is stale',detail:'The public feed last updated about '+Math.round(ageH)+' hours ago. Refresh it in Website Admin.',goto:'webadmin',severity:'warn'}); }
     var order={bad:0,warn:1,info:2};
-    items.sort(function(a,b){ return (order[a.severity]||9)-(order[b.severity]||9); });
+    items.sort(function(a,b){ var oa=order[a.severity], ob=order[b.severity]; return (oa==null?9:oa)-(ob==null?9:ob); });
     if(!items.length){ return '<div class="card" style="border-left:4px solid #1f7a4d"><h3 style="margin:0 0 3px">Your action queue</h3><p class="hint" style="margin:0">Nothing needs your attention right now. Approvals, debtor letters, a stalled feed or a failed notice will appear here when they arise.</p></div>'; }
     var sevWord={bad:'Action',warn:'Attention',info:'For info'};
     var rows=items.map(function(it){
       return '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-top:1px solid #EEF1F5">'
-        +shPill(sevWord[it.severity]||'Item', it.severity==='bad'?'bad':(it.severity==='info'?'ok':'warn'))
+        +homePill(sevWord[it.severity]||'Item', it.severity==='bad'?'bad':(it.severity==='info'?'ok':'warn'))
         +'<div style="flex:1;min-width:200px"><b>'+esc(it.label)+'</b>'+(it.detail?'<div class="hint" style="margin-top:1px">'+esc(it.detail)+'</div>':'')+'</div>'
         +'<button class="btn gold sm" data-goto="'+esc(it.goto||'home')+'">Open</button></div>';
     }).join('');
