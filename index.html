@@ -1472,6 +1472,14 @@ a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,te
 .snap .s .sl{font-family:var(--cond);text-transform:uppercase;letter-spacing:.06em;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:7px}
 .snap .s .sv{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14.5px;color:var(--ink)}
 .snap .s .sv small{color:var(--muted);font-weight:600;font-size:12px}
+/* match centre: selected club row + per-team filter chip */
+.tbl tr.mc-sel td{background:#EAF1FF !important}
+.tbl tr.mc-sel td.pos{box-shadow:inset 3px 0 0 var(--blue)}
+.mc-teamchip{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;background:#EEF3FE;border:1px solid #d5e0f5;border-radius:12px;padding:9px 12px;margin:2px 0 12px}
+.mc-teamchip .nm{display:inline-flex;align-items:center;gap:7px;font-weight:800;color:var(--navy);font-size:14px}
+.mc-teamchip>span:not(.nm){font-family:var(--cond);text-transform:uppercase;letter-spacing:.05em;font-size:11px;color:var(--muted)}
+.mc-teamchip .x{margin-left:auto;cursor:pointer;border:1px solid #d5e0f5;background:#fff;border-radius:8px;padding:5px 10px;font-weight:700;font-size:12.5px;color:var(--navy)}
+.mc-teamchip .x:hover{background:#f4f7ff}
 /* comparison */
 /* generic Phase 2 pages */
 .p2hero{padding-top:104px;padding-bottom:38px}
@@ -2072,7 +2080,7 @@ body .card-f{background:#FBF7F0}
           <div class="card mc2-log">
             <div class="card-h"><h3 id="mcLogTitle">Premier Division</h3><span class="lr"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#F4B41A" stroke-width="2"><path d="M4 20V10M12 20V4M20 20v-6"/></svg>League Log</span></div>
             <div class="card-b" style="padding:8px 18px 14px"><div class="tbl-scroll"><table class="tbl" id="mcLogTable"></table></div></div>
-            <div class="card-f mc2-legend"><span><i class="lz-p"></i>Promotion</span><span><i class="lz-r"></i>Relegation</span><span>Tap a club for its hub</span></div>
+            <div class="card-f mc2-legend"><span><i class="lz-p"></i>Promotion</span><span><i class="lz-r"></i>Relegation</span><span>Tap a club for its fixtures &amp; results</span></div>
           </div>
           <div class="card mc2-side">
             <div class="mc2-tabs">
@@ -4544,31 +4552,25 @@ let mcView='fixtures';
 const mcSel=document.getElementById('mcLeague');
 function activeLeagues(){const k=Object.keys(LRLIVE);return k.length?k.map(x=>({key:x,name:LRLIVE[x].name||x,group:LRLIVE[x].group||'Other'})):LEAGUES;}
 let mcMode='detailed';
+let mcTeam=null;   // when set, the fixtures/results side is filtered to this club
 function sparkHtml(s){s=(s||'').slice(-5);if(!s)return '';const H={W:20,D:13,L:8};
   return '<span class="spark" aria-hidden="true">'+s.split('').map(c=>`<i class="${c.toLowerCase()}" style="height:${H[c]||6}px"></i>`).join('')+'</span>';}
 function gdBar(gd,max){const w=Math.min(48,Math.round(Math.abs(gd)/(max||1)*48));
   return `<span class="gdbar"><span class="bar"><span class="${gd>=0?'pos':'neg'}" style="width:${w}%"></span></span><b>${gd>0?'+':''}${gd}</b></span>`;}
 function mcTableHtml(rows,compact,pr){
   const maxGd=Math.max(1,...rows.map(r=>Math.abs(r[5]-r[6])));
-  let head=`<thead><tr><th>#</th><th class="l">Club</th><th>P</th><th>W</th><th>D</th><th>L</th>${compact?'':'<th>GF</th><th>GA</th>'}<th class="l">GD</th><th>Pts</th>${compact?'':'<th class="fh">Form</th>'}</tr></thead>`;
-  let body=rows.map((r,i)=>{const gd=r[5]-r[6];const _u=(pr&&pr.up)||0,_d=(pr&&pr.down)||0,_ok=rows.length>_u+_d;const promo=_ok&&_u>0&&i<_u;const releg=_ok&&_d>0&&i>=rows.length-_d;const nm=r[0].replace(/'/g,"\\'");
-    return `<tr class="${promo?'promo':releg?'releg':''}" tabindex="0" role="button" data-clickable aria-label="View ${r[0]} club hub" onclick="openClub('${nm}')" title="View ${r[0]} club hub"><td class="pos">${i+1}</td>
+  let head=`<thead><tr><th>#</th><th class="l">Club</th><th>P</th>${compact?'':'<th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th>'}<th class="l">GD</th><th>Pts</th>${compact?'':'<th class="fh">Form</th>'}</tr></thead>`;
+  let body=rows.map((r,i)=>{const gd=r[5]-r[6];const _u=(pr&&pr.up)||0,_d=(pr&&pr.down)||0,_ok=rows.length>_u+_d;const promo=_ok&&_u>0&&i<_u;const releg=_ok&&_d>0&&i>=rows.length-_d;const nm=r[0].replace(/'/g,"\\'");const sel=mcTeam===r[0];
+    return `<tr class="${promo?'promo':releg?'releg':''}${sel?' mc-sel':''}" tabindex="0" role="button" data-clickable aria-label="Show ${r[0]} fixtures and results" onclick="mcPickTeam('${nm}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();mcPickTeam('${nm}')}" title="Show ${r[0]} fixtures and results"><td class="pos">${i+1}</td>
     <td class="l"><span class="clubcell">${crest(r[0],compact?20:24)}${r[0]}</span></td>
-    <td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>
-    ${compact?'':`<td>${r[5]}</td><td>${r[6]}</td>`}<td class="l">${gdBar(gd,maxGd)}</td><td class="pts">${r[7]}</td>
+    <td>${r[1]}</td>${compact?'':`<td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>`}<td class="l">${gdBar(gd,maxGd)}</td><td class="pts">${r[7]}</td>
     ${compact?'':`<td class="fc">${r[8]?sparkHtml(r[8]):formHtml(r[8])}</td>`}</tr>`;}).join('');
   return head+'<tbody>'+body+'</tbody>';}
 function mcSnapshot(d,name){const t=d.table||[];if(!t.length){document.getElementById('mcSnap').innerHTML='';return;}
   const leader=t[0];
-  // tightest race = smallest points gap between adjacent top-6
-  let tight=null,gap=99;for(let i=0;i<Math.min(5,t.length-1);i++){const g=t[i][7]-t[i+1][7];if(g<gap){gap=g;tight=[t[i][0],t[i+1][0]];}}
-  // standout result from recent results (biggest margin)
-  let best=null,bm=-1;(d.results||[]).forEach(r=>{const m=Math.abs(+r[2]-+r[3]);if(m>bm){bm=m;best=r;}});
   const goals=t.reduce((s,r)=>s+r[5],0);
   document.getElementById('mcSnap').innerHTML=`
     <div class="s"><div class="sl">Leaders</div><div class="sv">${crest(leader[0],22)}${leader[0]} <small>${leader[7]} pts</small></div></div>
-    <div class="s"><div class="sl">Tightest at the top</div><div class="sv">${tight?tight[0]+' v '+tight[1]:'—'}${tight?` <small>${gap} pt${gap===1?'':'s'}</small>`:''}</div></div>
-    <div class="s"><div class="sl">Standout result</div><div class="sv">${best?`${best[0]} ${best[2]}-${best[3]} ${best[1]}`:'—'}</div></div>
     <div class="s"><div class="sl">Goals in ${name}</div><div class="sv">${goals}</div></div>`;}
 function mcRender(){const L=activeLeagues();const lg=L[+mcSel.value||0]||L[0];const d=fillForm(leagueData(lg));
   document.getElementById('mcLogTitle').textContent=lg.name;
@@ -4578,7 +4580,21 @@ function mcRender(){const L=activeLeagues();const lg=L[+mcSel.value||0]||L[0];co
   tbl.innerHTML=mcTableHtml(rows,mcMode==='compact',prFor(lg.key));
   if(q){tbl.querySelectorAll('tbody tr').forEach(tr=>{const on=tr.textContent.toLowerCase().includes(q);tr.style.display=on?'':'none';});}
   mcSnapshot(d,lg.name);
-  const el=document.getElementById('mcSide');mcView==='fixtures'?fixtureCard(d.fixtures,el):resultCard(d.results,el);
+  const el=document.getElementById('mcSide');
+  if(mcTeam){
+    const tt=mcTeam.trim().toLowerCase(),inv=r=>((r[0]||'').trim().toLowerCase()===tt||(r[1]||'').trim().toLowerCase()===tt);
+    const esc=mcTeam.replace(/'/g,"\\'");
+    if(mcView==='fixtures'){const fx=(d.fixtures||[]).filter(inv);
+      if(upcomingFixtures(fx).length)fixtureCard(fx,el);
+      else el.innerHTML='<div class="fx-empty" style="padding:18px;color:var(--muted);font-size:14px">No upcoming fixtures are scheduled for '+mcTeam+' in this division right now.</div>';}
+    else{const rs=(d.results||[]).filter(inv);
+      if(rs.length)resultCard(rs,el);
+      else el.innerHTML='<div class="fx-empty" style="padding:18px;color:var(--muted);font-size:14px">No results have been captured for '+mcTeam+' in this division yet.</div>';}
+    el.insertAdjacentHTML('afterbegin','<div class="mc-teamchip"><span class="nm">'+crest(mcTeam,20)+mcTeam+'</span><span>'+(mcView==='fixtures'?'upcoming fixtures':'recent results')+'</span><button class="x" type="button" onclick="mcPickTeam(\''+esc+'\')" aria-label="Clear team filter">Clear ✕</button></div>');
+    el.insertAdjacentHTML('beforeend','<div style="margin-top:12px;text-align:center"><a class="btn btn-outline" style="cursor:pointer" onclick="openClub(\''+esc+'\')">Full club profile ↗</a></div>');
+  }else{
+    mcView==='fixtures'?fixtureCard(d.fixtures,el):resultCard(d.results,el);
+  }
   if(typeof mcSyncHeights==='function')requestAnimationFrame(mcSyncHeights);}
 /* Keep the fixtures/results column the same height as the league log so the two
    sit as one neat, symmetrical block; the list scrolls inside its card if long.
@@ -4597,7 +4613,11 @@ function mcSyncHeights(){
 function mcPopulate(){const L=activeLeagues();const groups=[...new Set(L.map(l=>l.group))];
   mcSel.innerHTML=groups.map(g=>`<optgroup label="${g}">`+L.map((l,i)=>l.group===g?`<option value="${i}">${l.name}</option>`:'').join('')+`</optgroup>`).join('');
   mcSel.value='0';mcRender();}
-mcSel.onchange=()=>{mcRender();};
+mcSel.onchange=()=>{mcTeam=null;mcRender();};
+/* Click a club on the log to filter the fixtures/results panel to that team;
+   click it again (or Clear) to return to the whole division. */
+function mcPickTeam(name){mcTeam=(mcTeam===name)?null:name;mcRender();
+  if(mcTeam&&window.innerWidth<=900){const s=document.querySelector('.mc2-side');if(s)s.scrollIntoView({behavior:'smooth',block:'start'});}}
 document.querySelectorAll('.mc2-tab').forEach(t=>t.onclick=()=>{
   document.querySelectorAll('.mc2-tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
   mcView=t.dataset.v;mcRender();});
