@@ -2123,7 +2123,7 @@ body .card-f{background:#FBF7F0}
       </div>
       <div class="jc-tabs" id="jcTabs"></div>
       <div id="jcBody"></div>
-      <p class="jc-src">Shading marks the leader (top), the promotion places (top two) and the relegation zone (bottom four), shown where a tier has more than six clubs. <b>Pts</b>, <b>GD</b> and <b>P</b> under "Combined" are the club's totals across all four junior age groups; the right-hand columns show each club's position in its own age-group log.</p>
+      <p class="jc-src">Shading marks the leader (top) and the promotion places (top two); in Premier Division 1 and 2 the bottom four are the relegation zone (there is no relegation from Premier Division 3 A and 3 B). <b>Pts</b>, <b>GD</b> and <b>P</b> under "Combined" are the club's totals across all four junior age groups; the right-hand columns show each club's position in its own age-group log.</p>
     </div>
   </section>
 </div>
@@ -4664,7 +4664,7 @@ function jcTableHtml(tier){const {rows,present}=jcBuild(tier.label);
   const body=rows.map((a,i)=>{
     const ages=JC_AGES.map(n=>{const x=a.ages[n];return x?`<td>${x.pld}</td><td>${jcSign(x.gd)}</td><td class="jc-p">${x.pts}</td>`:`<td>–</td><td>–</td><td>–</td>`;}).join('');
     const posc=JC_AGES.map(n=>{const x=a.ages[n];return `<td class="jc-pos">${x&&x.pos?x.pos:'–'}</td>`;}).join('');
-    const _ok=rows.length>6,_pr=_ok&&i<2,_rl=_ok&&i>=rows.length-4;
+    const _rel=(tier.key==='P1'||tier.key==='P2'),_ok=rows.length>6,_pr=_ok&&i<2,_rl=_ok&&_rel&&i>=rows.length-4;
     return `<tr class="${i===0?'jc-leader ':''}${_pr?'jc-promo':_rl?'jc-releg':''}"><td class="jc-rank">${i+1}</td><td class="jc-club"><span class="clubcell">${crest(a.name,22)}${a.name}</span></td>${ages}<td class="jc-c">${a.PTS}</td><td class="jc-c">${jcSign(a.GD)}</td><td class="jc-c">${a.PLD}</td>${posc}</tr>`;}).join('');
   return `<div class="jc-scroll"><table class="jc-table"><thead>
     <tr class="jc-grp"><th class="jc-rank" rowspan="2">#</th><th class="jc-club" rowspan="2">Club</th>${grpAges}<th colspan="3" class="jc-comb">Combined</th><th colspan="4" class="jc-poscol">Log positions</th></tr>
@@ -4711,6 +4711,7 @@ function jcExportPDF(){
   y+=24;
   JC_TIERS.forEach(function(tier){
     const rows=jcBuild(tier.label).rows,n=rows.length;
+    const rel=(tier.key==='P1'||tier.key==='P2');  // relegation only in Premier Div 1 and 2
     // Keep each tier's heading, table and legend together on one page.
     const blockH=24+(n?((n+1)*16+6):20)+34;
     if(y+blockH>BOTTOM){doc.addPage();header();y=TOP;}
@@ -4738,12 +4739,12 @@ function jcExportPDF(){
         if(d.section!=='body')return;const i=d.row.index,ok=n>6;
         if(i===0)d.cell.styles.fillColor=[250,243,224];
         else if(ok&&i<2)d.cell.styles.fillColor=[233,242,235];
-        else if(ok&&i>=n-4)d.cell.styles.fillColor=[247,235,235];
+        else if(ok&&rel&&i>=n-4)d.cell.styles.fillColor=[247,235,235];
       }
     });
     y=doc.lastAutoTable.finalY+9;
     doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(MUT[0],MUT[1],MUT[2]);
-    doc.text('Shading: leader (top row), promotion places (top two) and relegation places (bottom four), shown where a tier has more than six clubs. U12–U18 columns show each club’s position on that age-group log.',LX,y,{maxWidth:TABLE_W});
+    doc.text('Shading: leader (top row) and promotion places (top two); in Premier Division 1 and 2 the bottom four are the relegation zone (there is no relegation from Premier Division 3 A and 3 B). U12–U18 columns show each club’s position on that age-group log.',LX,y,{maxWidth:TABLE_W});
     y+=26;
   });
   const pc=doc.internal.getNumberOfPages();
