@@ -504,6 +504,7 @@
           <div><label class="f">Venue</label><input type="text" id="mVenue" placeholder="Venue"></div>
           <div><label class="f">Google Drive link (documents)</label><input type="text" id="mDrive" placeholder="https://drive.google.com/..."></div>
         </div>
+        <label style="display:flex;gap:8px;align-items:center;margin-top:4px;font-size:13px;color:var(--ink)"><input type="checkbox" id="mPractice" style="width:auto"> <span>Practice run &mdash; a training meeting, marked as practice and kept out of the formal record. Leave unticked for a real AGM, SGM, General or Mancom meeting.</span></label>
         <div class="btnrow"><button class="btn gold" id="createMeeting" title="Save this meeting and make it the working meeting. You can create it days ahead and set it up before the delegates arrive.">Create meeting</button></div>
         <div id="meetingMsg"></div>
       </div>
@@ -696,8 +697,13 @@
     <section id="tab-audit" class="hidden">
       <div class="card">
         <h3 data-help="A read-only trail of every accreditation, removal, compliance change and motion start or close, with who did it and when. This is your evidence if a result is ever questioned. It cannot be edited." data-help-first>Audit log <button class="btn ghost sm" id="reloadAudit" style="float:right">Refresh</button></h3>
-        <p class="hint">Every accreditation, removal, compliance change and motion start/close, with who did it and when. Read-only.</p>
+        <p class="hint">Every accreditation, removal, compliance change, quorum entry and motion start/close, with who did it and when. Read-only. A quorum snapshot is recorded automatically each time a vote is opened.</p>
         <div id="auditList"><p class="hint">Loading...</p></div>
+      </div>
+      <div class="card">
+        <h3 data-help="A read-only record of every time a club revealed its members' ID numbers on the club portal, with the club, who did it, when and how many. Personal data under the Protection of Personal Information Act 4 of 2013; kept for accountability.">Member ID reveals <span class="kv">(POPIA access log)</span> <button class="btn ghost sm" id="reloadReveals" style="float:right">Refresh</button></h3>
+        <p class="hint">Each time a club opens its members' ID numbers on the club portal it is logged here. A club only ever sees its own members. Not meeting-specific; shows the most recent reveals across all clubs.</p>
+        <div id="revealList"><p class="hint">Loading...</p></div>
       </div>
     </section>
 
@@ -1218,10 +1224,10 @@
   /* ---------- meetings ---------- */
   $("createMeeting").onclick=async function(){
     var name=$("mName").value.trim(); if(!name){msg($("meetingMsg"),"Enter a meeting name.","err");return;}
-    var rec={name:name,kind:$("mKind").value,meeting_date:$("mDate").value||null,venue:$("mVenue").value.trim()||null,drive_url:$("mDrive").value.trim()||null,status:"setup",created_by:null};
+    var rec={name:name,kind:$("mKind").value,meeting_date:$("mDate").value||null,venue:$("mVenue").value.trim()||null,drive_url:$("mDrive").value.trim()||null,status:"setup",is_practice:($("mPractice")&&$("mPractice").checked)||false,created_by:null};
     var r=await sb.from("meetings").insert(rec).select().single();
     if(r.error){msg($("meetingMsg"),r.error.message,"err");return;}
-    msg($("meetingMsg"),"Meeting created.","ok"); $("mName").value="";$("mVenue").value="";$("mDrive").value="";
+    msg($("meetingMsg"),"Meeting created.","ok"); $("mName").value="";$("mVenue").value="";$("mDrive").value="";if($("mPractice"))$("mPractice").checked=false;
     await loadMeetings(); selectMeeting(r.data);
   };
   async function loadMeetings(){
@@ -1231,8 +1237,9 @@
     var ms=r.data||[];
     if(!ms.length){l.innerHTML='<p class="hint">No meetings yet.</p>';return;}
     var h='<table><thead><tr><th>Meeting</th><th>Type</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>';
-    ms.forEach(function(m){
-      h+='<tr><td><b>'+esc(m.name)+'</b></td><td>'+esc((m.kind||"").toUpperCase())+'</td><td>'+esc(m.meeting_date||"-")+'</td><td><span class="tag draft">'+esc(m.status)+'</span></td><td><button class="btn ghost sm" data-pick="'+m.id+'">Select</button></td></tr>';
+    ms.slice().sort(function(a,b){ return (a.is_practice?1:0)-(b.is_practice?1:0); }).forEach(function(m){
+      var badge=m.is_practice?' <span class="tag" style="background:#FBF1E2;color:#996A16">PRACTICE</span>':'';
+      h+='<tr'+(m.is_practice?' style="opacity:.72"':'')+'><td><b>'+esc(m.name)+'</b>'+badge+'</td><td>'+esc((m.kind||"").toUpperCase())+'</td><td>'+esc(m.meeting_date||"-")+'</td><td><span class="tag draft">'+esc(m.status)+'</span></td><td><button class="btn ghost sm" data-pick="'+m.id+'">Select</button></td></tr>';
     });
     h+='</tbody></table>'; l.innerHTML=h;
     Array.prototype.forEach.call(l.querySelectorAll("[data-pick]"),function(b){ b.onclick=function(){ selectMeeting(ms.filter(function(x){return x.id===b.dataset.pick;})[0]); }; });
@@ -1240,7 +1247,7 @@
   function selectMeeting(m){
     curMeeting=m;
     $("curMeetingName").textContent=m.name;
-    $("curMeetingMeta").textContent=(m.kind||"").toUpperCase()+(m.meeting_date?(" · "+m.meeting_date):"")+(m.venue?(" · "+m.venue):"");
+    $("curMeetingMeta").textContent=(m.kind||"").toUpperCase()+(m.meeting_date?(" · "+m.meeting_date):"")+(m.venue?(" · "+m.venue):"")+(m.is_practice?" · PRACTICE RUN":"");
   }
 
   /* ---------- accreditation ---------- */
@@ -1426,9 +1433,16 @@
     Array.prototype.forEach.call(l.querySelectorAll("[data-showcode]"),function(b){ b.onclick=function(){ var rg=activeRegs.filter(function(x){return x.id===b.dataset.showcode;})[0]; if(rg) showQR(clubById(rg.club_id),rg.code,rg.vote_weight); }; });
     return activeRegs;
   }
-  function mkey(){ return curMeeting?("cttlfa_mancom_"+curMeeting.id):"cttlfa_mancom"; }
-  function getMancom(){ try{ var v=JSON.parse(localStorage.getItem(mkey())||"{}"); return {p:parseInt(v.p,10)||0,t:parseInt(v.t,10)||0}; }catch(e){ return {p:0,t:0}; } }
-  function setMancom(p,t){ try{ localStorage.setItem(mkey(),JSON.stringify({p:p,t:t})); }catch(e){} }
+  function getMancom(){ return {p:(curMeeting&&curMeeting.mancom_present)||0,t:(curMeeting&&curMeeting.mancom_total)||0}; }
+  async function saveMancom(p,t){
+    if(!curMeeting) return;
+    curMeeting.mancom_present=p; curMeeting.mancom_total=t;
+    var mm=$("qMancomMsg"); if(mm) mm.textContent="Saving…";
+    try{ var r=await sb.rpc("meeting_set_mancom",{p_meeting:curMeeting.id,p_present:p,p_total:t}); if(r.error) throw r.error;
+      if(r.data&&r.data.ok===false) throw new Error(r.data.error||"save failed");
+      if(mm){ mm.textContent="Saved on the meeting record"; setTimeout(function(){ if($("qMancomMsg")===mm) mm.textContent=""; },1600); }
+    }catch(e){ if(mm) mm.textContent="Could not save: "+(e.message||e); }
+  }
   function limbHTML(title,present,total,need){
     var met=(total>0 && present>=need), pct=total>0?Math.min(100,Math.round(present/total*100)):0;
     return '<div class="qlimb"><div class="qh"><span class="qt">'+title+'</span><span class="qmet '+(met?"ok":"no")+'">'+(met?"met":"short")+'</span></div>'+
@@ -1443,16 +1457,18 @@
     panel.innerHTML=limbHTML("Clubs present",clubsPresent||0,totalClubs,clubsNeed)+
       '<div class="qlimb"><div class="qh"><span class="qt">Mancom present</span><span class="qmet '+((mc.t>0&&mc.p>=mancomNeed)?"ok":"no")+'" id="qMancomMet">'+((mc.t>0&&mc.p>=mancomNeed)?"met":"short")+'</span></div>'+
       '<div style="display:flex;align-items:center;gap:8px;margin:6px 0"><input class="qmini" id="qMancomP" type="number" min="0" value="'+mc.p+'"> <span class="kv">present of</span> <input class="qmini" id="qMancomT" type="number" min="0" value="'+mc.t+'"> <span class="kv">Mancom</span></div>'+
-      '<div class="kv">Needs more than half of Mancom</div></div>';
+      '<div class="kv">Needs more than half of Mancom <span id="qMancomMsg" style="color:#996A16;margin-left:4px"></span></div></div>';
     var clubsMet=(totalClubs>0 && (clubsPresent||0)>=clubsNeed);
     function recompute(){
-      var p=parseInt($("qMancomP").value,10)||0, t=parseInt($("qMancomT").value,10)||0; setMancom(p,t);
+      var p=parseInt($("qMancomP").value,10)||0, t=parseInt($("qMancomT").value,10)||0;
       var need=t>0?Math.floor(t/2)+1:1, mm=(t>0&&p>=need);
       $("qMancomMet").className="qmet "+(mm?"ok":"no"); $("qMancomMet").textContent=mm?"met":"short";
       var overall=clubsMet&&mm;
       $("quorumOverall").innerHTML='<span class="qmet '+(overall?"ok":"no")+'">'+(overall?"QUORATE":"NOT QUORATE")+'</span>';
     }
-    $("qMancomP").oninput=recompute; $("qMancomT").oninput=recompute; recompute();
+    function persist(){ recompute(); saveMancom(parseInt($("qMancomP").value,10)||0, parseInt($("qMancomT").value,10)||0); }
+    $("qMancomP").oninput=recompute; $("qMancomT").oninput=recompute;
+    $("qMancomP").onchange=persist; $("qMancomT").onchange=persist; recompute();
   }
   function pdfHead(doc,title){
     doc.setFillColor(7,26,74); doc.rect(0,0,doc.internal.pageSize.getWidth(),64,"F");
@@ -1571,8 +1587,19 @@
     Array.prototype.forEach.call(l.querySelectorAll("[data-close]"),function(b){b.onclick=function(){closeMotion(b.dataset.close);};});
   }
   function ruleLabel(m){return m.rule==="two_thirds"?"Two-thirds":(m.rule==="custom"?((m.custom_pct||0)+"%"):"Simple majority");}
-  async function openMotion(id){ delete _closing[id]; await sb.from("motions").update({status:"open",opened_at:new Date().toISOString()}).eq("id",id); loadMotions(); renderLive(); }
-  async function closeMotion(id){ await sb.from("motions").update({status:"closed",closed_at:new Date().toISOString()}).eq("id",id); loadMotions(); renderLive(); }
+  async function openMotion(id){
+    delete _closing[id];
+    try{ var r=await sb.rpc("motion_open",{p_motion:id}); if(r.error) throw r.error; var d=r.data||{};
+      if(d.ok===false){ alert(d.error==="another_open"?"Another motion is already open. Close it before starting this one.":(d.error==="not_draft"?"This motion has already been started.":"Could not start the vote: "+(d.error||"unknown"))); }
+    }catch(e){ alert("Could not start the vote: "+(e.message||e)); }
+    loadMotions(); renderLive();
+  }
+  async function closeMotion(id){
+    try{ var r=await sb.rpc("motion_close",{p_motion:id}); if(r.error) throw r.error; var d=r.data||{};
+      if(d.ok===false && d.error!=="not_open"){ alert("Could not close the vote: "+(d.error||"unknown")); }
+    }catch(e){ alert("Could not close the vote: "+(e.message||e)); }
+    loadMotions(); renderLive();
+  }
   /* global countdown ticker: updates timer badges and auto-closes at zero */
   setInterval(function(){
     var els=document.querySelectorAll('[data-tmr]');
@@ -5046,17 +5073,34 @@
     if(r.error){ l.innerHTML='<p class="hint">'+esc(r.error.message)+'</p>'; return; }
     var rows=r.data||[];
     if(!rows.length){ l.innerHTML='<p class="hint">No audit entries'+(curMeeting?" for this meeting":"")+" yet.</p>"; return; }
-    var lab={accredit:"Accredited",remove_delegate:"Removed delegate",compliance:"Compliance change",motion_open:"Started motion",motion_closed:"Closed motion",motion_draft:"Reset motion"};
+    var lab={accredit:"Accredited",remove_delegate:"Removed delegate",compliance:"Compliance change",motion_open:"Started motion",motion_closed:"Closed motion",motion_draft:"Reset motion",quorum_set:"Quorum numbers set",quorum_snapshot:"Quorum at vote open"};
     var h='<table><thead><tr><th>When</th><th>Who</th><th>Action</th><th>Details</th></tr></thead><tbody>';
     rows.forEach(function(x){
       var det=x.detail||{}, extra="";
-      if(det.club_id){ var c=clubById(det.club_id); extra=(c?c.name:"")+(det.code?(" · "+det.code):"")+(det.compliant!==undefined?(" · "+(det.compliant?"compliant":"not compliant")):"")+(det.weight?(" · "+det.weight+" vote"+(det.weight>1?"s":"")):""); }
+      if(x.action==="quorum_snapshot"){ extra=(det.quorate?"QUORATE":"not quorate")+" · clubs "+(det.clubs_present!=null?det.clubs_present:"?")+"/"+(det.clubs_total!=null?det.clubs_total:"?")+" (need "+(det.clubs_need!=null?det.clubs_need:"?")+") · Mancom "+(det.mancom_present!=null?det.mancom_present:"?")+"/"+(det.mancom_total!=null?det.mancom_total:"?")+(det.practice?" · PRACTICE":""); }
+      else if(x.action==="quorum_set"){ extra="Mancom "+(det.mancom_present!=null?det.mancom_present:"?")+" present of "+(det.mancom_total!=null?det.mancom_total:"?"); }
+      else if(det.club_id){ var c=clubById(det.club_id); extra=(c?c.name:"")+(det.code?(" · "+det.code):"")+(det.compliant!==undefined?(" · "+(det.compliant?"compliant":"not compliant")):"")+(det.weight?(" · "+det.weight+" vote"+(det.weight>1?"s":"")):""); }
       else if(det.title){ extra="Motion "+(det.seq||"")+": "+det.title; }
       h+='<tr><td class="kv" style="white-space:nowrap">'+esc(new Date(x.at).toLocaleString("en-ZA"))+'</td><td>'+esc(x.actor||"")+'</td><td>'+esc(lab[x.action]||x.action)+'</td><td>'+esc(extra)+'</td></tr>';
     });
     h+='</tbody></table>'; l.innerHTML=h;
+    loadReveals();
+  }
+  async function loadReveals(){
+    var l=$("revealList"); if(!l) return;
+    try{ var r=await sb.rpc("reveal_log",{p_limit:200}); if(r.error) throw r.error; var d=r.data||{};
+      if(d.ok===false) throw new Error(d.error||"forbidden");
+      var rows=d.rows||[];
+      if(!rows.length){ l.innerHTML='<p class="hint">No member ID reveals recorded yet.</p>'; return; }
+      var h='<table><thead><tr><th>When</th><th>Club</th><th>By</th><th>IDs shown</th><th>Cycle</th></tr></thead><tbody>';
+      rows.forEach(function(x){
+        h+='<tr><td class="kv" style="white-space:nowrap">'+esc(new Date(x.at).toLocaleString("en-ZA"))+'</td><td>'+esc(x.club_key||"")+'</td><td>'+esc(x.actor||"")+'</td><td class="num">'+esc(x.count!=null?String(x.count):"")+'</td><td class="kv">'+esc(x.cycle_start?(x.cycle_start+"/"+(Number(x.cycle_start)+1)):"")+'</td></tr>';
+      });
+      h+='</tbody></table>'; l.innerHTML=h;
+    }catch(e){ l.innerHTML='<p class="hint">Could not load reveal log: '+esc(e.message||String(e))+'</p>'; }
   }
   $("reloadAudit") && ($("reloadAudit").onclick=loadAudit);
+  $("reloadReveals") && ($("reloadReveals").onclick=loadReveals);
 
   /* ---------- share guide to a club ---------- */
   var shTimer=null;
