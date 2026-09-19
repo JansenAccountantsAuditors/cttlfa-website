@@ -138,34 +138,63 @@
         L.results = L.results.map(function (r) { return r.slice(0, 5); });
         L.fixtures = L.fixtures.map(function (r) { return r.slice(0, 5); });
       });
-      // tables (per-division standings, in parallel)
-      return pmap(divGroups, 6, function (gp) {
-        return jget("/getStandingsForFixtureGroup/1/" + gp.fixtureGroupIdentifier).then(function (st) {
-          if (st && st[0] && st[0].standingsLines) {
-            leagues[keyByFgid[gp.fixtureGroupIdentifier]].table = st[0].standingsLines.map(function (l) {
-              return [clean(l.teamName), ni(l.overallPlayed), ni(l.overallWon), ni(l.overallTied),
-                      ni(l.overallLoss), ni(l.overallScoreFor), ni(l.overallScoreAgainst), ni(l.points), l.recentForm || ""];
-            });
+      // Standings computed here from the season's own fixtures. LeagueRepublic
+      // now rate-limits to 60 API calls/minute, and one standings call per
+      // division (~60 of them) blew that budget on load, emptying every table
+      // (and often the whole feed), so the site fell back to placeholder data.
+      // getFixturesForSeason already carries every result, including walkovers,
+      // so we build the tables here with NO extra calls. Verified row-for-row
+      // against LeagueRepublic's official standings. Points 3/1/0; a walkover is
+      // a 3-0 award to the winner; order by points, goal difference, goals for.
+      (function () {
+        var tabs = {};
+        function row(k, nm) {
+          var m = tabs[k] || (tabs[k] = { o: [], t: {} });
+          if (!m.t[nm]) { m.t[nm] = [nm, 0, 0, 0, 0, 0, 0, 0, ""]; m.o.push(nm); }
+          return m.t[nm];
+        }
+        fixtures.forEach(function (f) {
+          if (f.fixtureTypeID !== 1) return;
+          var k = keyByFgid[f.fixtureGroupIdentifier]; if (!k) return;
+          var h = clean(f.homeTeamName), a = clean(f.roadTeamName); if (!h || !a) return;
+          var H = row(k, h), A = row(k, a);
+          if (!f.result) return;
+          var st = f.fixtureStatusDesc || "";
+          if (isNum(f.homeScore) && isNum(f.roadScore)) {
+            var hs = +f.homeScore, as = +f.roadScore;
+            H[1]++; A[1]++; H[5] += hs; H[6] += as; A[5] += as; A[6] += hs;
+            if (hs > as) { H[2]++; H[7] += 3; A[4]++; }
+            else if (hs < as) { A[2]++; A[7] += 3; H[4]++; }
+            else { H[3]++; A[3]++; H[7]++; A[7]++; }
+          } else if (st === "Home Walkover") {
+            H[1]++; A[1]++; H[2]++; H[7] += 3; A[4]++; H[5] += 3; A[6] += 3;
+          } else if (st === "Away Walkover") {
+            H[1]++; A[1]++; A[2]++; A[7] += 3; H[4]++; A[5] += 3; H[6] += 3;
           }
         });
-      }).then(function () {
-        // cups from the same season-fixtures payload
-        var cupFix = {};
-        fixtures.forEach(function (f) {
-          if (f.fixtureTypeID !== 2) return;
-          (cupFix[f.fixtureGroupIdentifier] = cupFix[f.fixtureGroupIdentifier] || []).push(f);
+        Object.keys(leagues).forEach(function (k) {
+          var m = tabs[k]; if (!m) { leagues[k].table = []; return; }
+          leagues[k].table = m.o.map(function (n) { return m.t[n]; }).sort(function (a, b) {
+            return b[7] - a[7] || ((b[5] - b[6]) - (a[5] - a[6])) || (b[5] - a[5]) || a[0].localeCompare(b[0]);
+          });
         });
-        var cups = BAKED.cups.map(function (cm) {
-          var fgid = +cm.key.split("_")[1], fx = cupFix[fgid] || [];
-          return { key: cm.key, name: cm.name, group: cm.group, bracket: buildBracket(fx) };
-        }).filter(function (c) { return c.bracket.cols.length; });
-        if (!Object.keys(leagues).length) return null;
-        return {
-          season: BAKED.seasonNo[fileKey], label: BAKED.labels[fileKey],
-          crestBase: BAKED.crestBase, crests: BAKED.crests,
-          updated: new Date().toISOString(), leagues: leagues, cups: cups
-        };
+      })();
+      // cups from the same season-fixtures payload (no extra API calls)
+      var cupFix = {};
+      fixtures.forEach(function (f) {
+        if (f.fixtureTypeID !== 2) return;
+        (cupFix[f.fixtureGroupIdentifier] = cupFix[f.fixtureGroupIdentifier] || []).push(f);
       });
+      var cups = BAKED.cups.map(function (cm) {
+        var fgid = +cm.key.split("_")[1], fx = cupFix[fgid] || [];
+        return { key: cm.key, name: cm.name, group: cm.group, bracket: buildBracket(fx) };
+      }).filter(function (c) { return c.bracket.cols.length; });
+      if (!Object.keys(leagues).length) return null;
+      return {
+        season: BAKED.seasonNo[fileKey], label: BAKED.labels[fileKey],
+        crestBase: BAKED.crestBase, crests: BAKED.crests,
+        updated: new Date().toISOString(), leagues: leagues, cups: cups
+      };
     });
   }
   g.LRLive = { buildSeason: buildSeason, _baked: BAKED };
