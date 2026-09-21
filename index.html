@@ -32,6 +32,7 @@
       });
   }
   function clean(n) { return n ? String(n).replace(CODE_RE, "").trim() : (n || ""); }
+  function isBye(n) { return /^bye\b/i.test((n || "").trim()); }
   function isNum(x) { return x !== null && x !== "" && !isNaN(+x); }
   function ni(x) { var f = parseFloat(x); return isNaN(f) ? x : (f === Math.round(f) ? Math.round(f) : f); }
   function fmt(s) {
@@ -124,6 +125,7 @@
         var k = keyByFgid[f.fixtureGroupIdentifier]; if (!k) return;
         var L = leagues[k], d = fmt(f.fixtureDate);
         var home = clean(f.homeTeamName), away = clean(f.roadTeamName);
+        if (isBye(home) || isBye(away)) return;   // a bye is not a real fixture — keep it out of results/fixtures lists
         var hs = f.homeScore, as = f.roadScore, ms = f.fixtureDateInMilliseconds || 0;
         if (f.result && isNum(hs) && isNum(as)) {
           L.results.push([home, away, String(+hs), String(+as), d[0], ms]);
@@ -157,6 +159,7 @@
           if (f.fixtureTypeID !== 1) return;
           var k = keyByFgid[f.fixtureGroupIdentifier]; if (!k) return;
           var h = clean(f.homeTeamName), a = clean(f.roadTeamName); if (!h || !a) return;
+          if (isBye(h) || isBye(a)) return;   // a bye is not a team and not a played game — excluded from the log
           var H = row(k, h), A = row(k, a);
           if (!f.result) return;
           var st = f.fixtureStatusDesc || "";
