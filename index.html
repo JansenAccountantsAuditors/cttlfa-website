@@ -1167,6 +1167,14 @@ img[data-broken]{display:none!important}
 .jc-table tbody tr.jc-leader td.jc-club{background:rgba(31,164,99,.14)}
 .jc-table tbody tr.jc-leader td.jc-rank{color:var(--green)}
 .jc-table .clubcell{display:flex;align-items:center;gap:8px}
+@media (max-width:720px){
+  .jc-scroll{overflow-x:visible}
+  .jc-table{min-width:0}
+  .jc-table thead th.jc-age,.jc-table thead th.jc-poscol,
+  .jc-table .jc-ageh,.jc-table .jc-posh,.jc-table td.jc-pos{display:none}
+  .jc-table th.jc-club,.jc-table td.jc-club{position:static;min-width:0}
+  .jc-table td.jc-club{white-space:normal}
+}
 .jc-empty{background:#fff;border:1px solid var(--line);border-radius:16px;padding:30px;text-align:center;color:var(--muted);font-size:14.5px}
 .jc-src{text-align:center;color:var(--muted);font-size:12.5px;margin-top:16px}
 /* ---- Weekend Results (auto) ---- */
@@ -4706,15 +4714,15 @@ const jcSign=v=>(v>0?'+':'')+v;
 function jcTableHtml(tier){const {rows,present}=jcBuild(tier.label);
   if(!rows.length)return `<div class="jc-empty"><b>The ${tier.name} combined log will appear here.</b><br>It will show once the Under-12 to Under-18 age-group logs for this tier are published for the season.</div>`;
   const grpAges=JC_AGES.map(n=>`<th colspan="3" class="jc-age">Under ${n}</th>`).join('');
-  const sub=JC_AGES.map(()=>`<th>P</th><th>GD</th><th>Pts</th>`).join('');
+  const sub=JC_AGES.map(()=>`<th class="jc-ageh">P</th><th class="jc-ageh">GD</th><th class="jc-ageh">Pts</th>`).join('');
   const body=rows.map((a,i)=>{
-    const ages=JC_AGES.map(n=>{const x=a.ages[n];return x?`<td>${x.pld}</td><td>${jcSign(x.gd)}</td><td class="jc-p">${x.pts}</td>`:`<td>–</td><td>–</td><td>–</td>`;}).join('');
+    const ages=JC_AGES.map(n=>{const x=a.ages[n];return x?`<td class="jc-ageh">${x.pld}</td><td class="jc-ageh">${jcSign(x.gd)}</td><td class="jc-ageh jc-p">${x.pts}</td>`:`<td class="jc-ageh">–</td><td class="jc-ageh">–</td><td class="jc-ageh">–</td>`;}).join('');
     const posc=JC_AGES.map(n=>{const x=a.ages[n];return `<td class="jc-pos">${x&&x.pos?x.pos:'–'}</td>`;}).join('');
     const _rel=(tier.key==='P1'||tier.key==='P2'),_ok=rows.length>6,_pr=_ok&&i<2,_rl=_ok&&_rel&&i>=rows.length-4;
     return `<tr class="${i===0?'jc-leader ':''}${_pr?'jc-promo':_rl?'jc-releg':''}"><td class="jc-rank">${i+1}</td><td class="jc-club"><span class="clubcell">${crest(a.name,22)}${a.name}</span></td>${ages}<td class="jc-c">${a.PTS}</td><td class="jc-c">${jcSign(a.GD)}</td><td class="jc-c">${a.PLD}</td>${posc}</tr>`;}).join('');
   return `<div class="jc-scroll"><table class="jc-table"><thead>
     <tr class="jc-grp"><th class="jc-rank" rowspan="2">#</th><th class="jc-club" rowspan="2">Club</th>${grpAges}<th colspan="3" class="jc-comb">Combined</th><th colspan="4" class="jc-poscol">Log positions</th></tr>
-    <tr>${sub}<th>Pts</th><th>GD</th><th>P</th><th>U12</th><th>U14</th><th>U16</th><th>U18</th></tr>
+    <tr>${sub}<th>Pts</th><th>GD</th><th>P</th><th class="jc-posh">U12</th><th class="jc-posh">U14</th><th class="jc-posh">U16</th><th class="jc-posh">U18</th></tr>
     </thead><tbody>${body}</tbody></table></div>`;}
 function renderJuniorCombined(){const tabsEl=document.getElementById('jcTabs'),body=document.getElementById('jcBody');
   if(!tabsEl||!body)return;
