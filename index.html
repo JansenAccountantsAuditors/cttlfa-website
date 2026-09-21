@@ -148,21 +148,27 @@
       // so we build the tables here with NO extra calls. Verified row-for-row
       // against LeagueRepublic's official standings. Points 3/1/0; a walkover is
       // a 3-0 award to the winner; order by points, goal difference, goals for.
+      // Byes match LeagueRepublic: a bye is a played, 0-point draw for the real team
+      // (so Played reconciles with LR), and each bye placeholder is kept as its own
+      // row (index 9 = bye flag) so a division's two "Bye" entries do not merge.
+      // Byes are sorted to the bottom and never carry points.
       (function () {
         var tabs = {};
-        function row(k, nm) {
+        function row(k, key, name, bye) {
           var m = tabs[k] || (tabs[k] = { o: [], t: {} });
-          if (!m.t[nm]) { m.t[nm] = [nm, 0, 0, 0, 0, 0, 0, 0, ""]; m.o.push(nm); }
-          return m.t[nm];
+          if (!m.t[key]) { m.t[key] = [name, 0, 0, 0, 0, 0, 0, 0, "", bye]; m.o.push(key); }
+          return m.t[key];
         }
         fixtures.forEach(function (f) {
           if (f.fixtureTypeID !== 1) return;
           var k = keyByFgid[f.fixtureGroupIdentifier]; if (!k) return;
           var h = clean(f.homeTeamName), a = clean(f.roadTeamName); if (!h || !a) return;
-          if (isBye(h) || isBye(a)) return;   // a bye is not a team and not a played game — excluded from the log
-          var H = row(k, h), A = row(k, a);
+          var hB = isBye(h), aB = isBye(a);
+          var H = row(k, hB ? ("\u0000bye:" + f.homeTeam) : h, h, hB);
+          var A = row(k, aB ? ("\u0000bye:" + f.roadTeam) : a, a, aB);
           if (!f.result) return;
           var st = f.fixtureStatusDesc || "";
+          if (hB || aB) { H[1]++; A[1]++; H[3]++; A[3]++; return; }   // bye = played 0-point draw, no goals
           if (isNum(f.homeScore) && isNum(f.roadScore)) {
             var hs = +f.homeScore, as = +f.roadScore;
             H[1]++; A[1]++; H[5] += hs; H[6] += as; A[5] += as; A[6] += hs;
@@ -178,6 +184,8 @@
         Object.keys(leagues).forEach(function (k) {
           var m = tabs[k]; if (!m) { leagues[k].table = []; return; }
           leagues[k].table = m.o.map(function (n) { return m.t[n]; }).sort(function (a, b) {
+            if (!!a[9] !== !!b[9]) return a[9] ? 1 : -1;          // byes always last
+            if (a[9]) return b[1] - a[1];                         // among byes, most played first
             return b[7] - a[7] || ((b[5] - b[6]) - (a[5] - a[6])) || (b[5] - a[5]) || a[0].localeCompare(b[0]);
           });
         });
@@ -4591,7 +4599,13 @@ function gdBar(gd,max){const w=Math.min(48,Math.round(Math.abs(gd)/(max||1)*48))
 function mcTableHtml(rows,compact,pr){
   const maxGd=Math.max(1,...rows.map(r=>Math.abs(r[5]-r[6])));
   let head=`<thead><tr><th>#</th><th class="l">Club</th><th>P</th>${compact?'':'<th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th>'}<th class="l">GD</th><th>Pts</th>${compact?'':'<th class="fh">Form</th>'}</tr></thead>`;
-  let body=rows.map((r,i)=>{const gd=r[5]-r[6];const _u=(pr&&pr.up)||0,_d=(pr&&pr.down)||0,_ok=rows.length>_u+_d;const promo=_ok&&_u>0&&i<_u;const releg=_ok&&_d>0&&i>=rows.length-_d;const nm=r[0].replace(/'/g,"\\'");const sel=mcTeam===r[0];
+  const nReal=rows.filter(r=>!(r[9]||/^bye\b/i.test(r[0]||''))).length;
+  let body=rows.map((r,i)=>{const gd=r[5]-r[6];const bye=r[9]||/^bye\b/i.test(r[0]||'');
+    if(bye){return `<tr class="mc-byerow" style="color:var(--muted)"><td class="pos">–</td>
+    <td class="l"><span class="clubcell">${crest(r[0],compact?20:24)}${r[0]}</span></td>
+    <td>${r[1]}</td>${compact?'':`<td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>`}<td class="l">${gdBar(gd,maxGd)}</td><td class="pts">${r[7]}</td>
+    ${compact?'':'<td class="fc"></td>'}</tr>`;}
+    const _u=(pr&&pr.up)||0,_d=(pr&&pr.down)||0,_ok=nReal>_u+_d;const promo=_ok&&_u>0&&i<_u;const releg=_ok&&_d>0&&i>=nReal-_d;const nm=r[0].replace(/'/g,"\\'");const sel=mcTeam===r[0];
     return `<tr class="${promo?'promo':releg?'releg':''}${sel?' mc-sel':''}" tabindex="0" role="button" data-clickable aria-label="Show ${r[0]} fixtures and results" onclick="mcPickTeam('${nm}')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();mcPickTeam('${nm}')}" title="Show ${r[0]} fixtures and results"><td class="pos">${i+1}</td>
     <td class="l"><span class="clubcell">${crest(r[0],compact?20:24)}${r[0]}</span></td>
     <td>${r[1]}</td>${compact?'':`<td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td>`}<td class="l">${gdBar(gd,maxGd)}</td><td class="pts">${r[7]}</td>
@@ -4675,14 +4689,15 @@ function jcTierLogs(tierLabel){const out={};
   JC_AGES.forEach(n=>{const want='Under '+n+' '+tierLabel;
     for(const k in LRLIVE){if((LRLIVE[k].name||'')===want){out[n]=LRLIVE[k];break;}}});
   return out;}
+const jcIsBye=r=>r[9]||/^bye\b/i.test(r[0]||'');
 function jcPositions(log){if(!log||!log.table)return {};
-  const rows=log.table.map(r=>({n:r[0],pts:r[7],gd:r[5]-r[6]})).sort((a,b)=>b.pts-a.pts||b.gd-a.gd);
+  const rows=log.table.filter(r=>!jcIsBye(r)).map(r=>({n:r[0],pts:r[7],gd:r[5]-r[6]})).sort((a,b)=>b.pts-a.pts||b.gd-a.gd);
   const m={};rows.forEach((r,i)=>m[r.n]=i+1);return m;}
 function jcBuild(tierLabel){const logs=jcTierLogs(tierLabel);
   const pos={};JC_AGES.forEach(n=>pos[n]=jcPositions(logs[n]));
   const agg={};
   JC_AGES.forEach(n=>{const L=logs[n];if(!L||!L.table)return;
-    L.table.forEach(r=>{const nm=r[0],gd=r[5]-r[6];
+    L.table.forEach(r=>{if(jcIsBye(r))return;const nm=r[0],gd=r[5]-r[6];
       const a=agg[nm]||(agg[nm]={name:nm,PLD:0,GD:0,PTS:0,ages:{}});
       a.PLD+=r[1];a.GD+=gd;a.PTS+=r[7];a.ages[n]={pld:r[1],gd,pts:r[7],pos:pos[n][nm]};});});
   const rows=Object.values(agg).sort((a,b)=>b.PTS-a.PTS||b.GD-a.GD||a.PLD-b.PLD);
