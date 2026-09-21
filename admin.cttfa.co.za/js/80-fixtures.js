@@ -155,7 +155,7 @@
     if (key.indexOf("date:") === 0) { var iso = key.slice(5); return { title: "Fixtures on " + fmtDate(iso), fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && d.iso === iso && nonBye(f); }) }; }
     if (key.indexOf("club:") === 0) { var cn = key.slice(5); return { title: cn + " — all fixtures", fx: fx.filter(function (f) { return (clubOf(f.homeTeamName) === cn || clubOf(f.roadTeamName) === cn) && nonBye(f); }) }; }
     if (key.indexOf("div:") === 0) { var gid = key.slice(4); return { title: (fx.filter(function (f) { return String(f.fixtureGroupIdentifier) === gid; })[0] || {}).fixtureGroupDesc || "Division", fx: fx.filter(function (f) { return String(f.fixtureGroupIdentifier) === gid; }) }; }
-    if (key.indexOf("overdue:") === 0) { var g = key.slice(8); var now = Date.now(); return { title: "Overdue fixtures", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && d.t < now && !f.result && nonBye(f) && !/postpon/i.test(f.fixtureStatusDesc || "") && (g === "*" || String(f.fixtureGroupIdentifier) === g); }) }; }
+    if (key.indexOf("overdue:") === 0) { var g = key.slice(8); var now = Date.now(); return { title: "Overdue fixtures", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && d.t < now && !f.result && nonBye(f) && !/postpon|abandon/i.test(f.fixtureStatusDesc || "") && (g === "*" || String(f.fixtureGroupIdentifier) === g); }) }; }
     if (key === "teamClash") return { title: "Teams scheduled twice at the same time", fx: teamClashes().fx };
     if (key === "rainfx") return { title: "Fixtures on wet days (5 mm or more)", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && ctxRain(d.iso) >= 5 && nonBye(f); }) };
     if (key === "holfx") return { title: "Fixtures on public holidays", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && ctxHol(d.iso) && nonBye(f); }) };
@@ -357,7 +357,7 @@
       var g = f.fixtureGroupIdentifier; if (!divs[g]) divs[g] = { name: f.fixtureGroupDesc || "?", type: f.fixtureTypeID, total: 0, played: 0, overdue: 0, last: 0 };
       var D = divs[g]; D.total++; if (f.result) D.played++;
       var d = dParts(f.fixtureDate);
-      if (d) { if (d.t > D.last) D.last = d.t; var bye = isBye(f.homeTeamName) || isBye(f.roadTeamName); if (d.t < now && !f.result && !bye && !/postpon/i.test(f.fixtureStatusDesc || "")) D.overdue++; }
+      if (d) { if (d.t > D.last) D.last = d.t; var bye = isBye(f.homeTeamName) || isBye(f.roadTeamName); if (d.t < now && !f.result && !bye && !/postpon|abandon/i.test(f.fixtureStatusDesc || "")) D.overdue++; }
     });
     var arr = Object.keys(divs).map(function (g) { var D = divs[g]; D.gid = g; D.pct = D.total ? Math.round(D.played / D.total * 100) : 0; D.remaining = D.total - D.played; return D; })
       .sort(function (a, b) { return b.overdue - a.overdue || a.pct - b.pct; });
@@ -366,12 +366,12 @@
 
     var h = '<div class="fa-tiles">';
     h += tile(arr.length, "Competitions", "divisions and cups in view", "");
-    h += tile(totOver, "Overdue fixtures", "date passed, no result", "overdue:*");
+    h += tile(totOver, "Overdue fixtures", "date passed, result not captured", "overdue:*");
     h += tile(tc.slots, "Scheduling clashes", "a team booked twice at one time", "teamClash");
     h += tile(vl.length ? vl[0].n : 0, "Busiest venue-day", vl.length ? (vl[0].venue.split(" ").slice(0, 2).join(" ")) : "", "");
     h += '</div>';
 
-    h += '<div class="card"><h3>Completion by competition</h3><p class="hint" style="margin-bottom:8px">Played versus scheduled, with fixtures whose date has passed but no result is recorded. Sorted by overdue, then by lowest completion. Click a row to list its fixtures.</p>';
+    h += '<div class="card"><h3>Completion by competition</h3><p class="hint" style="margin-bottom:8px">Played versus scheduled. "Overdue" is a fixture whose date has passed with no result yet captured; walkovers, postponements and abandonments are excluded, as those are already resolved. Sorted by overdue, then by lowest completion. Click a row to list its fixtures.</p>';
     h += '<table><thead><tr><th>Competition</th><th style="text-align:right">Played</th><th style="text-align:right">Total</th><th>Progress</th><th style="text-align:right">Overdue</th></tr></thead><tbody>';
     arr.forEach(function (D) {
       var barc = D.overdue > 0 ? "red" : (D.pct >= 100 ? "green" : "");
