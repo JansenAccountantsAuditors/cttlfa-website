@@ -2148,8 +2148,8 @@
         +'<td><b>'+esc(c.name)+'</b> '+typeChip+'</td>'
         +'<td>'+sageCell+'</td>'
         +'<td>'+(c.contact_email?cdbChip(true,'yes',''):cdbChip(false,'','missing'))+'</td>'
-        +'<td class="num">'+(c.portal_logins>0?c.portal_logins:cdbChip(false,'','0'))+'</td>'
-        +'<td class="num">'+(c.players>0?c.players:'<span class="hint">0</span>')+'</td>'
+        +'<td class="num">'+(c.portal_eligible===false?'<span class="hint" title="Guest / non-member — not eligible for a portal login">N/A</span>':(c.portal_logins>0?c.portal_logins:cdbChip(false,'','0')))+'</td>'
+        +'<td class="num">'+(c.portal_eligible===false?'<span class="hint">N/A</span>':(c.players>0?c.players:'<span class="hint">0</span>'))+'</td>'
         +'<td>'+(w.name?cdbChip(true,'listed',''):cdbChip(false,'','missing'))+'</td>'
         +'<td>'+(w.name?(w.has_lr?cdbChip(true,'mapped',''):cdbChip(false,'','no alias')):'<span class="hint">&ndash;</span>')+'</td>'
         +'<td>'+statusCell+'</td></tr>';
@@ -2229,7 +2229,7 @@
       +row('Voting register', esc(c.name)+' &middot; '+esc(c.type)+' &middot; '+c.weight+' vote'+(c.weight>1?'s':''))
       +row('Sage / debtors', sg.linked?(esc(sg.code||'')+' &middot; '+(sg.n_accounts>1?(sg.n_accounts+' accounts: '+esc((sg.keys||[]).join(', '))):esc((sg.keys||[])[0]||''))+' &middot; balance '+dR(sg.balance)):'<span style="color:#8a3c17">No Sage account</span>')
       +row('Contact', c.contact_email?esc(c.contact_email):'<span style="color:#8a3c17">None on record</span>')
-      +row('Portal logins', c.portal_logins>0?(c.portal_logins+' active'):'<span style="color:#8a3c17">None</span>')
+      +row('Portal logins', c.portal_eligible===false?'<span class="hint">N/A &middot; guests and non-members do not receive a portal login</span>':(c.portal_logins>0?(c.portal_logins+' active'):'<span style="color:#8a3c17">None</span>'))
       +row('Player registrations', (c.players||0)+' in '+esc((_cdb&&_cdb.season)||''))
       +row('Website', w.name?(esc(w.name)+(w.suburb?(' &middot; '+esc(w.suburb)):'')+(w.teams?(' &middot; '+esc(w.teams)+' teams'):'')):'<span style="color:#8a3c17">Not on the website list</span>')
       +row('LeagueRepublic', lr.length?esc(lr.join(', ')):'<span style="color:#8a3c17">No alias mapped</span>')
