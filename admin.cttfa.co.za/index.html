@@ -2167,7 +2167,7 @@
     }
     var seas=esc((_cdb&&_cdb.season)||'');
     var h=list('Sage accounts not linked to a member club','Sage customer accounts not mapped to a registered club &mdash; guest teams, dormant or duplicate accounts. Link one to a club, or leave it as a non-member.',um.sage_accounts,function(items){
-      return '<thead><tr><th>Sage account</th><th>Key</th><th>Type</th><th class="num">Balance</th>'+actH+'</tr></thead><tbody>'+items.map(function(x){return '<tr><td>'+esc(x.name||'')+'</td><td class="hint">'+esc(x.club_key||'')+'</td><td>'+esc(x.club_type||'')+'</td><td class="num">'+dR(x.balance)+'</td>'+(canE?'<td><button class="btn ghost sm cdb-act" data-act="sage" data-v="'+esc(x.club_key||'')+'">Link to club&hellip;</button></td>':'')+'</tr>';}).join('')+'</tbody>';
+      return '<thead><tr><th>Sage account</th><th>Key</th><th>Type</th><th class="num">Balance</th>'+actH+'</tr></thead><tbody>'+items.map(function(x){return '<tr><td>'+esc(x.name||'')+'</td><td class="hint">'+esc(x.club_key||'')+'</td><td>'+esc(x.club_type||'')+'</td><td class="num">'+dR(x.balance)+'</td>'+(canE?'<td><button class="btn ghost sm cdb-act" data-act="sage" data-v="'+esc(x.club_key||'')+'" data-name="'+esc(x.name||'')+'">Link to club&hellip;</button></td>':'')+'</tr>';}).join('')+'</tbody>';
     });
     h+=list('Website clubs not matched to the register','Clubs on the public website / LeagueRepublic list not matched to a registered club by name &mdash; a name variant to link, or a genuine non-member (guest).',um.website_clubs,function(items){
       return '<thead><tr><th>Website club</th><th>Type</th><th class="num">Teams 2026</th>'+actH+'</tr></thead><tbody>'+items.map(function(x){return '<tr><td>'+esc(x.name||'')+'</td><td>'+esc(x.type||'')+'</td><td class="num">'+esc(x.teams||'')+'</td>'+(canE?'<td><button class="btn ghost sm cdb-act" data-act="web" data-v="'+esc(x.name||'')+'">Link to club&hellip;</button></td>':'')+'</tr>';}).join('')+'</tbody>';
@@ -2178,26 +2178,29 @@
     return h;
   }
   function cdbWireUnmatched(root){
-    Array.prototype.forEach.call(root.querySelectorAll('.cdb-act'),function(b){ b.onclick=function(){ var act=b.dataset.act, v=b.dataset.v;
-      cdbPick('Link "'+v+'" to which registered club?', async function(regId){
+    Array.prototype.forEach.call(root.querySelectorAll('.cdb-act'),function(b){ b.onclick=function(){ var act=b.dataset.act, v=b.dataset.v, nm=b.dataset.name||v;
+      cdbPick('Link "'+nm+'" to a club', async function(regId){
         try{
           if(act==='sage'){ await sb.rpc('club_link_sage',{p_club_key:v,p_register_id:regId}); }
           else if(act==='web'){ await sb.rpc('club_alias_add',{p_register_id:regId,p_system:'website',p_alias:v}); }
           else if(act==='reg'){ await sb.rpc('club_map_registration',{p_name:v,p_register_id:regId}); }
           await cdbReload();
         }catch(e){ alert('Could not link: '+(e.message||e)); }
-      });
+      }, nm);
     }; });
   }
-  function cdbPick(title, onPick){
+  function cdbPick(title, onPick, defaultName){
     var clubs=((_cdb&&_cdb.clubs)||[]).slice().sort(function(a,b){return (a.name||'').localeCompare(b.name);});
     var m=debModal();
     m.innerHTML='<div class="deb-mhead"><div><h3>Choose a club</h3><div class="dsub">'+esc(title)+'</div></div><button class="dx" id="cdbPkX" aria-label="Close">&times;</button></div>'
-      +'<div class="deb-mbody"><input id="cdbPkQ" type="search" placeholder="Search&hellip;" style="width:100%;max-width:340px;padding:9px 11px;margin-bottom:10px"><div id="cdbPkList" class="tscroll"></div></div>';
+      +'<div class="deb-mbody"><input id="cdbPkQ" type="search" placeholder="Search, or type a new guest club name&hellip;" style="width:100%;max-width:340px;padding:9px 11px;margin-bottom:10px"><div id="cdbPkList" class="tscroll"></div></div>';
     document.getElementById('cdbPkX').onclick=debModalClose;
-    function draw(q){ q=(q||'').toLowerCase(); var list=clubs.filter(function(c){return !q||(c.name||'').toLowerCase().indexOf(q)>=0;});
-      document.getElementById('cdbPkList').innerHTML='<table class="deb-table"><tbody>'+list.map(function(c){return '<tr class="cdb-pk" data-id="'+esc(c.register_id)+'" style="cursor:pointer"><td><b>'+esc(c.name)+'</b> <span class="hint">'+esc(c.type)+((c.sage&&c.sage.code)?(' &middot; '+esc(c.sage.code)):'')+'</span></td></tr>';}).join('')+'</tbody></table>';
+    function draw(q){ var raw=(q||''); var ql=raw.toLowerCase(); var list=clubs.filter(function(c){return !ql||(c.name||'').toLowerCase().indexOf(ql)>=0;});
+      var createName=(raw.trim()||defaultName||'').trim();
+      var mkRow=createName?('<tr class="cdb-mk" data-nm="'+esc(createName)+'" style="cursor:pointer;background:#EFF4F0"><td>+ <b>Create guest club</b> &ldquo;'+esc(createName)+'&rdquo;</td></tr>'):'';
+      document.getElementById('cdbPkList').innerHTML='<table class="deb-table"><tbody>'+mkRow+list.map(function(c){return '<tr class="cdb-pk" data-id="'+esc(c.register_id)+'" style="cursor:pointer"><td><b>'+esc(c.name)+'</b> <span class="hint">'+esc(c.type)+((c.sage&&c.sage.code)?(' &middot; '+esc(c.sage.code)):'')+'</span></td></tr>';}).join('')+'</tbody></table>';
       Array.prototype.forEach.call(document.querySelectorAll('#cdbPkList .cdb-pk'),function(tr){ tr.onclick=function(){ debModalClose(); onPick(tr.dataset.id); }; });
+      Array.prototype.forEach.call(document.querySelectorAll('#cdbPkList .cdb-mk'),function(tr){ tr.onclick=async function(){ try{ var r=await sb.rpc('club_create_guest',{p_name:tr.dataset.nm}); if(r.error) throw r.error; debModalClose(); onPick(r.data); }catch(e){ alert('Could not create guest club: '+(e.message||e)); } }; });
     }
     var qi=document.getElementById('cdbPkQ'); qi.oninput=function(){ draw(this.value); }; draw('');
   }
