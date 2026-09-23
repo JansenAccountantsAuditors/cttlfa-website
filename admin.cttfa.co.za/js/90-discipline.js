@@ -45,17 +45,26 @@
     return {t:new Date(y,m-1,d,hh,mm).getTime(), iso:y+"-"+(m<10?"0":"")+m+"-"+(d<10?"0":"")+d, hh:hh, mm:mm}; }
   function clubFixtures(all, aliases, clubName){
     var keys={}; (aliases||[]).concat([clubName]).forEach(function(a){ var k=nrm(lrClubOf(a)); if(k) keys[k]=1; });
-    var teams={}, played=0, toplay=0, mine=[];
+    // In LeagueRepublic a club fields a SEPARATE team in each division it enters,
+    // and every one of those teams carries the same base club name (Tramway,
+    // Tramway B). A team is therefore a (side-name x division) pair, not just a
+    // name — a club can even field an A and a B side in one division. Count teams
+    // that way so "Teams entered" reconciles with the website and LR (11 for
+    // Tramway across 10 divisions), and track distinct divisions on their own.
+    var teamMap={}, divSet={}, played=0, toplay=0, mine=[];
     (all||[]).forEach(function(f){
       var hIn=keys[nrm(lrClubOf(f.homeTeamName))], rIn=keys[nrm(lrClubOf(f.roadTeamName))];
       if(!hIn && !rIn) return;
       var hb=lrBye(f.homeTeamName), rb=lrBye(f.roadTeamName), bye=hb||rb;
-      if(hIn && !hb) teams[lrClean(f.homeTeamName)]=1;
-      if(rIn && !rb) teams[lrClean(f.roadTeamName)]=1;
+      var div=lrClean(f.fixtureGroupDesc||"");
+      if(hIn && !hb){ var hn=lrClean(f.homeTeamName); teamMap[hn+"||"+div]={name:hn,division:div}; if(div) divSet[div]=1; }
+      if(rIn && !rb){ var rn=lrClean(f.roadTeamName); teamMap[rn+"||"+div]={name:rn,division:div}; if(div) divSet[div]=1; }
       if(f.result) played++; else if(!bye) toplay++;
       if(!bye) mine.push(f);
     });
-    return {teams:Object.keys(teams).sort(), played:played, toplay:toplay, fixtures:mine};
+    var teamList=Object.keys(teamMap).sort().map(function(k){ return teamMap[k]; });
+    return {teams:teamList, teamCount:teamList.length, divisions:Object.keys(divSet).length,
+            played:played, toplay:toplay, fixtures:mine};
   }
 
   /* ---------- styles ---------- */
@@ -420,6 +429,7 @@
 
   /* ==================== CLUB PROFILE ==================== */
   var _cpfIndex = null;
+  var _cpfData=null, _cpfWeb=null, _cpfFx=null;   // stashed for the PDF export
 
   function renderClubProfile(){
     ensureStyle();
@@ -503,6 +513,7 @@
   function drawClub(box, d){
     if(!d.found){ box.innerHTML='<div class="card" style="margin-bottom:12px"><p class="hint">Club not found.</p></div>'; return; }
     var c=d.club||{}, reg=d.registrations||{}, deb=d.debtors, dis=d.discipline||{}, meta=d.meta||{}, web=d.web||{};
+    _cpfData=d; _cpfWeb=web; _cpfFx=null;   // stash for the PDF; fixtures fill in below
     var byCat=(reg.by_category||[]).map(function(x){ return esc(x.category)+" "+num(x.n); }).join(" &middot; ");
 
     // ---- header: logo, identity, ground/address, Sage contact, links ----
@@ -545,11 +556,11 @@
             '<div class="sub">'+esc(c.type||"club")+(c.active?"":" &middot; inactive")+(loc?" &middot; "+esc(loc):"")+(web.founded?" &middot; est. "+esc(web.founded):"")+'</div>'+
             (conBits.length?'<div class="con">'+conBits.join("")+'</div>':'')+
           '</div>'+
-          '<div class="cpf-hd-actions noprint"><button class="btn gold sm" id="cpfPrintBtn">Print / PDF</button><button class="btn ghost sm" id="cpfClose">Close</button></div>'+
+          '<div class="cpf-hd-actions noprint"><button class="btn gold sm" id="cpfPrintBtn">Download PDF</button><button class="btn ghost sm" id="cpfClose">Close</button></div>'+
         '</div>'+
         '<div class="cpf-snapkpi">'+
           '<div class="kp"><div class="l">Players</div><div class="v">'+num(reg.players)+'</div></div>'+
-          '<div class="kp"><div class="l">Teams 2026</div><div class="v">'+(teams2026==null?"–":num(teams2026))+'</div></div>'+
+          '<div class="kp"><div class="l">Teams 2026</div><div class="v" id="cpfTeamsKpi">'+(teams2026==null?"–":num(teams2026))+'</div></div>'+
           '<div class="kp"><div class="l">Yellow cards</div><div class="v">'+num(dis.cards_total)+'</div></div>'+
           '<div class="kp"><div class="l">Rulings</div><div class="v">'+num(dis.rulings_total)+'</div></div>'+
           '<div class="kp"><div class="l">Fines out</div><div class="v">'+(Number(dis.fines_outstanding_amount)>0?rand(dis.fines_outstanding_amount):"–")+'</div></div>'+
@@ -583,7 +594,7 @@
       '</div>';
 
     var cl=NS.$("cpfClose"); if(cl) cl.onclick=function(){ box.innerHTML=""; };
-    var pb=NS.$("cpfPrintBtn"); if(pb) pb.onclick=function(){ try{ window.print(); }catch(e){} };
+    var pb=NS.$("cpfPrintBtn"); if(pb) pb.onclick=function(){ cpfPDF(); };
     fillClubFixtures(web, c.name);
   }
 
@@ -611,12 +622,18 @@
       var upcoming=cf.fixtures.filter(function(f){return !f.result;}).sort(function(a,b){ var da=lrDate(a.fixtureDate),db=lrDate(b.fixtureDate); return (da?da.t:0)-(db?db.t:0); }).slice(0,6);
       function score(f){ var h=f.homeScore,r=f.roadScore; return (h!=null&&r!=null&&h!==""&&r!=="")?(esc(h)+"–"+esc(r)):esc(f.fixtureStatusDesc||"Result"); }
       function fdate(f){ var dd=lrDate(f.fixtureDate); return dd?dt(dd.iso):"TBC"; }
-      var teamChips=cf.teams.map(function(t){ return '<span class="dsc-pill mut" style="margin:2px 3px 2px 0">'+esc(t)+'</span>'; }).join("");
+      var baseKey=nrm(name);
+      var teamChips=cf.teams.map(function(t){
+        // Label each team by its division. Where the side name differs from the
+        // base club name (a B/C side), show that name too so every team is distinct.
+        var lab = (nrm(t.name)===baseKey) ? (t.division||t.name) : (t.name+(t.division?" · "+t.division:""));
+        return '<span class="dsc-pill mut" style="margin:2px 3px 2px 0" title="'+esc(t.name+(t.division?" — "+t.division:""))+'">'+esc(lab)+'</span>'; }).join("");
       var resBody=results.map(function(f){ return '<tr><td>'+fdate(f)+'</td><td class="wrap">'+esc(f.fixtureGroupDesc||"")+'</td><td>'+esc(lrClean(f.homeTeamName))+'</td><td>'+esc(lrClean(f.roadTeamName))+'</td><td class="num">'+score(f)+'</td></tr>'; }).join("");
       var upBody=upcoming.map(function(f){ return '<tr><td>'+fdate(f)+'</td><td class="wrap">'+esc(f.fixtureGroupDesc||"")+'</td><td>'+esc(lrClean(f.homeTeamName))+'</td><td>'+esc(lrClean(f.roadTeamName))+'</td><td class="wrap">'+esc(f.venueAndSubVenueDesc||"–")+'</td></tr>'; }).join("");
       el.innerHTML =
-        '<div class="cpf-snapkpi" style="grid-template-columns:repeat(3,1fr);margin:4px 0 12px">'+
-          '<div class="kp"><div class="l">Teams entered</div><div class="v">'+num(cf.teams.length)+'</div></div>'+
+        '<div class="cpf-snapkpi" style="grid-template-columns:repeat(4,1fr);margin:4px 0 12px">'+
+          '<div class="kp"><div class="l">Teams entered</div><div class="v">'+num(cf.teamCount)+'</div></div>'+
+          '<div class="kp"><div class="l">Divisions</div><div class="v">'+num(cf.divisions)+'</div></div>'+
           '<div class="kp"><div class="l">Fixtures played</div><div class="v">'+num(cf.played)+'</div></div>'+
           '<div class="kp"><div class="l">Still to play</div><div class="v">'+num(cf.toplay)+'</div></div>'+
         '</div>'+
@@ -627,7 +644,138 @@
           '<div><div class="dsc-sec" style="font-size:12px;color:var(--muted)">Upcoming fixtures</div>'+
             '<div class="dsc-tblwrap" style="max-height:230px"><table class="dsc-tbl"><thead><tr><th>Date</th><th>Comp</th><th>Home</th><th>Away</th><th>Venue</th></tr></thead><tbody>'+(upBody||'<tr><td colspan="5" class="hint">None scheduled.</td></tr>')+'</tbody></table></div></div>'+
         '</div>';
+      // Reconcile the header "Teams 2026" tile to the LeagueRepublic count so the
+      // header, this block and the website all agree on one number.
+      var tk=NS.$("cpfTeamsKpi"); if(tk && cf.teamCount) tk.textContent=num(cf.teamCount);
+      // Stash for the PDF export.
+      _cpfFx={teams:cf.teams, teamCount:cf.teamCount, divisions:cf.divisions, played:cf.played, toplay:cf.toplay,
+              results:results, upcoming:upcoming, baseKey:baseKey};
     }
+  }
+
+  /* ---------- Club Profile PDF (house download format, matches the other admin PDFs) ---------- */
+  function cpfPDF(){
+    if(!window.jspdf){ alert("PDF library still loading, try again."); return; }
+    var d=_cpfData; if(!d||!d.found) return;
+    var c=d.club||{}, reg=d.registrations||{}, deb=d.debtors, dis=d.discipline||{}, meta=d.meta||{}, web=_cpfWeb||{}, fx=_cpfFx;
+    var doc=new window.jspdf.jsPDF({unit:"pt",format:"a4"});
+    var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight(), M=40;
+    var NAVY=[7,26,74], INK=[20,30,50], MUT=[90,101,119], LINE=[230,234,243];
+    var y=0;
+    function need(h){ if(y+h > H-46){ doc.addPage(); y=54; } }
+    function secHead(title){ need(30); doc.setFont("helvetica","bold"); doc.setFontSize(11); doc.setTextColor(7,26,74);
+      doc.text(title, M, y); doc.setDrawColor(230,234,243); doc.setLineWidth(0.8); doc.line(M,y+4,W-M,y+4); y+=15; }
+    function afterTable(){ y=doc.lastAutoTable.finalY+16; }
+    function kv(rows){ doc.autoTable({ startY:y, body:rows, theme:"plain",
+        styles:{fontSize:9.5,cellPadding:{top:2.5,bottom:2.5,left:0,right:0},textColor:INK},
+        columnStyles:{0:{textColor:MUT,cellWidth:150},1:{halign:"left",fontStyle:"bold"}}, margin:{left:M,right:M} });
+      afterTable(); }
+
+    // ---- header band with the CTTLFA crest ----
+    doc.setFillColor(7,26,74); doc.rect(0,0,W,94,"F");
+    var tx=M;
+    try{ if(window.LOGO_URI){ doc.addImage(window.LOGO_URI,"JPEG",M,21,52,52); tx=M+66; } }catch(e){ tx=M; }
+    doc.setTextColor(255,255,255); doc.setFont("helvetica","bold"); doc.setFontSize(19);
+    doc.text(String(c.name||"Club"), tx, 42);
+    var subBits=[c.type||"club"]; if(!c.active) subBits.push("inactive");
+    var loc=[web.ground, web.suburb].filter(Boolean).join(", "); if(loc) subBits.push(loc);
+    if(web.founded) subBits.push("est. "+web.founded);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(196,208,230);
+    doc.text(subBits.join("   ·   "), tx, 60);
+    doc.setFontSize(8); doc.setTextColor(150,167,200);
+    doc.text("Cape Town Tygerberg Local Football Association", tx, 74);
+    doc.setDrawColor(244,180,26); doc.setLineWidth(2.2); doc.line(0,94,W,94);
+
+    // ---- provenance ----
+    y=110; doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(90,101,119);
+    var prov="Club two-pager for Mancom · 2026 season · figures in Rand · sources: registration master, Sage debtors (current snapshot), dash.cttlfa.com disciplinary mirror, LeagueRepublic (live) and the association website · generated "+new Date().toLocaleString("en-ZA")+" · operational management information.";
+    var pl=doc.splitTextToSize(prov, W-2*M); doc.text(pl, M, y); y+= pl.length*10 + 8;
+
+    // ---- KPI strip ----
+    var teams = fx?fx.teamCount:(web&&web.teams2026!=null?web.teams2026:null);
+    doc.autoTable({ startY:y,
+      head:[["Players","Teams 2026","Divisions","Yellow cards","Rulings","Fines out","Debtor"]],
+      body:[[ num(reg.players), (teams==null?"–":num(teams)), (fx?num(fx.divisions):"–"),
+              num(dis.cards_total), num(dis.rulings_total),
+              (Number(dis.fines_outstanding_amount)>0?rand(dis.fines_outstanding_amount):"–"),
+              (deb?rand(deb.bal):"–") ]],
+      theme:"grid", styles:{fontSize:9.5,halign:"center",cellPadding:5,textColor:INK,lineColor:LINE},
+      headStyles:{fillColor:NAVY,textColor:255,fontStyle:"bold",halign:"center",fontSize:8}, margin:{left:M,right:M} });
+    afterTable();
+
+    // ---- registrations & debtor (side by side is hard in autoTable; stack them) ----
+    secHead("Registrations");
+    kv([["Players",num(reg.players)],["Active players",num(reg.active_players)],["Referees",num(reg.referees)],
+        ["Seniors / Juniors",num(reg.seniors)+" / "+num(reg.juniors)],["Foreign players",num(reg.foreign_players)],
+        ["Latest season",String(reg.latest_season||"–")]]);
+
+    secHead("Debtor position (Sage)");
+    if(deb){ kv([["Balance",rand(deb.bal)],["Status",String(deb.status||"–")],["Current",rand(deb.cur)],
+        ["30 / 60 / 90 / 120+",rand(deb.b30)+" / "+rand(deb.b60)+" / "+rand(deb.b90)+" / "+rand(deb.b120)],
+        ["Last receipt",(deb.last_receipt_days==null?"–":num(deb.last_receipt_days)+" days ago")]]); }
+    else { doc.setFont("helvetica","italic"); doc.setFontSize(9); doc.setTextColor(90,101,119);
+      doc.text("No Sage debtor account matched to this club in the current snapshot.", M, y); y+=18; }
+
+    // ---- teams & fixtures ----
+    secHead("Teams & fixtures (LeagueRepublic, 2026)");
+    if(fx){
+      kv([["Teams entered",num(fx.teamCount)],["Divisions",num(fx.divisions)],
+          ["Fixtures played",num(fx.played)],["Still to play",num(fx.toplay)]]);
+      if(fx.teams && fx.teams.length){
+        var teamRows=fx.teams.map(function(t){ return [ (nrm(t.name)===fx.baseKey?(c.name||t.name):t.name), (t.division||"–") ]; });
+        need(40); doc.autoTable({ startY:y, head:[["Team","Division"]], body:teamRows,
+          styles:{fontSize:8.5,cellPadding:3,textColor:INK,lineColor:LINE},
+          headStyles:{fillColor:NAVY,textColor:255,fontStyle:"bold",fontSize:8}, alternateRowStyles:{fillColor:[247,249,253]}, margin:{left:M,right:M} });
+        afterTable();
+      }
+      if(fx.results && fx.results.length){
+        need(40); doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(90,101,119); doc.text("Recent results", M, y); y+=6;
+        doc.autoTable({ startY:y, head:[["Date","Comp","Home","Away","Score"]],
+          body:fx.results.map(function(f){ return [fxDate(f), lrClean(f.fixtureGroupDesc||""), lrClean(f.homeTeamName), lrClean(f.roadTeamName), fxScore(f)]; }),
+          styles:{fontSize:8.5,cellPadding:3,textColor:INK,lineColor:LINE},
+          headStyles:{fillColor:NAVY,textColor:255,fontStyle:"bold",fontSize:8}, columnStyles:{4:{halign:"right"}}, alternateRowStyles:{fillColor:[247,249,253]}, margin:{left:M,right:M} });
+        afterTable();
+      }
+      if(fx.upcoming && fx.upcoming.length){
+        need(40); doc.setFont("helvetica","bold"); doc.setFontSize(9); doc.setTextColor(90,101,119); doc.text("Upcoming fixtures", M, y); y+=6;
+        doc.autoTable({ startY:y, head:[["Date","Comp","Home","Away","Venue"]],
+          body:fx.upcoming.map(function(f){ return [fxDate(f), lrClean(f.fixtureGroupDesc||""), lrClean(f.homeTeamName), lrClean(f.roadTeamName), (f.venueAndSubVenueDesc||"–")]; }),
+          styles:{fontSize:8.5,cellPadding:3,textColor:INK,lineColor:LINE},
+          headStyles:{fillColor:NAVY,textColor:255,fontStyle:"bold",fontSize:8}, alternateRowStyles:{fillColor:[247,249,253]}, margin:{left:M,right:M} });
+        afterTable();
+      }
+    } else {
+      doc.setFont("helvetica","italic"); doc.setFontSize(9); doc.setTextColor(90,101,119);
+      doc.text("LeagueRepublic teams and fixtures were still loading. Open the profile, let it load, then download again.", M, y); y+=18;
+    }
+
+    // ---- discipline ----
+    secHead("Discipline");
+    kv([["Yellow cards",num(dis.cards_total)],["Rulings",num(dis.rulings_total)],
+        ["Fines issued / paid",rand(dis.fines_issued_amount)+" / "+rand(dis.fines_paid_amount)],
+        ["Fines outstanding",rand(dis.fines_outstanding_amount)]]);
+    var unpaid=(dis.unpaid||[]);
+    if(unpaid.length){
+      need(40); doc.autoTable({ startY:y, head:[["Case","Player","Article","Fine","Invoice"]],
+        body:unpaid.map(function(u){ return [ (u.case_number||"–"), (u.player||"–"), (u.article||"–"), rand(u.fine_amount), (u.invoice_number||"–") ]; }),
+        styles:{fontSize:8.5,cellPadding:3,textColor:INK,lineColor:LINE,overflow:"linebreak"},
+        headStyles:{fillColor:NAVY,textColor:255,fontStyle:"bold",fontSize:8},
+        columnStyles:{2:{cellWidth:200},3:{halign:"right"}}, alternateRowStyles:{fillColor:[247,249,253]}, margin:{left:M,right:M} });
+      afterTable();
+    }
+
+    // ---- footer on every page ----
+    var pc=doc.internal.getNumberOfPages();
+    for(var i=1;i<=pc;i++){ doc.setPage(i);
+      doc.setDrawColor(230,234,243); doc.setLineWidth(0.8); doc.line(M,H-30,W-M,H-30);
+      doc.setFont("helvetica","normal"); doc.setFontSize(7.5); doc.setTextColor(140,150,165);
+      doc.text("CTTLFA · "+String(c.name||"")+" · operational management information · generated "+new Date().toLocaleDateString("en-ZA"), M, H-18);
+      doc.text("Page "+i+" of "+pc, W-M-44, H-18);
+    }
+    doc.save(slug(c.name||"club")+"-profile.pdf");
+
+    function fxDate(f){ var dd=lrDate(f.fixtureDate); return dd?dt(dd.iso):"TBC"; }
+    function fxScore(f){ var h=f.homeScore,r=f.roadScore; return (h!=null&&r!=null&&h!==""&&r!=="")?(h+"–"+r):(f.fixtureStatusDesc||"Result"); }
   }
 
   NS.renderDiscipline = renderDiscipline;
