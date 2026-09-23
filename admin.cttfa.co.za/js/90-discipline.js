@@ -65,6 +65,7 @@
       ".dsc-dh{background:var(--navy);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.dsc-dh h3{color:#fff;margin:0;font-family:var(--head);font-size:17px}.dsc-dh .dsub{color:#C7D2EC;font-size:12px;margin-top:2px}.dsc-dx{background:transparent;border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:17px;flex:0 0 auto}"+
       ".dsc-db{padding:14px 18px 30px;overflow:auto;flex:1}"+
       ".cpf-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}.cpf-controls input{flex:1;min-width:200px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px}"+
+      ".dsc-refkpi{display:flex;flex-wrap:wrap;gap:10px}.dsc-st{flex:1;min-width:112px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff}.dsc-st .l{font-size:11px;color:var(--muted);font-weight:600}.dsc-st .v{font-family:var(--head);font-weight:800;font-size:21px;font-variant-numeric:tabular-nums;margin-top:2px}.dsc-st.warn{border-color:#F1CFCB;background:#FDF6F5}.dsc-st.warn .v{color:#9A3130}"+
       ".cpf-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:900px){.cpf-two{grid-template-columns:1fr}}";
     document.head.appendChild(st);
   }
@@ -151,6 +152,7 @@
 
   function regTxt(r){ return r?"Registered":"Not in register"; }
   function regPill(r){ return r?'<span class="dsc-pill ok" title="SAFA number found in the registration master">Reg</span>':'<span class="dsc-pill bad" title="This SAFA number is not in the registration master — confirm the player/referee">Not reg</span>'; }
+  function stat(l,v,tone){ return '<div class="dsc-st'+(tone==='warn'?' warn':'')+'"><div class="l">'+esc(l)+'</div><div class="v">'+v+'</div></div>'; }
 
   /* ==================== DISCIPLINE DASHBOARD ==================== */
   function renderDiscipline(){
@@ -258,17 +260,28 @@
         '<p class="hint" style="margin-top:6px">SAFA numbers are confirmed against the registration master (Reg = found). Invoice numbers tie fines to Sage. Click a row for that player&rsquo;s full disciplinary record. Unaudited.</p></div>';
 
     // Referees | suspensions
-    var raRows=(refs.top_appointments||[]).map(function(x){return [x.referee,x.safa||"–",regTxt(x.registered),x.appts];});
-    var raBody=(refs.top_appointments||[]).map(function(x){
+    var rfRoster=refs.roster||[];
+    var raRows=rfRoster.map(function(x){return [x.referee,x.safa||"–",regTxt(x.registered),x.level||"no level",x.appts];});
+    var raBody=rfRoster.map(function(x){
       var dk = x.safa ? ('rsafa|'+esc(x.safa)) : ('referee|'+esc(x.referee));
-      return '<tr class="clk" data-drill="'+dk+'"><td>'+esc(x.referee)+'</td><td>'+esc(x.safa||"–")+'</td><td>'+regPill(x.registered)+'</td><td class="num">'+num(x.appts)+'</td></tr>'; }).join("");
+      var lvl = x.level ? esc(x.level) : '<span class="dsc-pill warn">No level</span>';
+      return '<tr class="clk" data-drill="'+dk+'"><td>'+esc(x.referee)+'</td><td>'+esc(x.safa||"–")+'</td><td>'+regPill(x.registered)+'</td><td>'+lvl+'</td><td class="num">'+num(x.appts)+'</td></tr>'; }).join("");
     var refBlock=
       '<div class="card">'+
-        '<div class="dsc-bh"><span class="dsc-sec">Referees</span>'+acts("Referees by level",["Level","Count"],(refs.by_level||[]).map(function(x){return [x.level,x.n];}))+'</div>'+
-        '<div class="dsc-kv"><span>On record</span><b>'+num(refs.total)+'</b><span>Active</span><b>'+num(refs.active)+'</b><span>Accreditations</span><b>'+num(refs.accreditations)+'</b></div>'+
-        '<div class="dsc-sec" style="margin:8px 0 6px;font-size:12px;color:var(--muted)">By level</div>'+bars(refs.by_level,"level","n",null)+
-        '<div class="dsc-bh" style="margin-top:10px"><span class="dsc-sec" style="font-size:12px;color:var(--muted)">Most appointments</span>'+acts("Referee appointments",["Referee","SAFA","Registered","Appointments"],raRows)+'</div>'+
-        '<div class="dsc-tblwrap" style="max-height:200px"><table class="dsc-tbl"><thead><tr><th>Referee</th><th>SAFA</th><th>Reg</th><th class="num">Appts</th></tr></thead><tbody>'+(raBody||'<tr><td colspan="4" class="hint">None.</td></tr>')+'</tbody></table></div></div>';
+        '<div class="dsc-bh"><span class="dsc-sec">Referees &amp; accreditation</span>'+acts("Referee roster",["Referee","SAFA","Registered","Level","Appointments"],raRows)+'</div>'+
+        '<div class="dsc-refkpi">'+
+          stat("Appointed",num(refs.appointed))+
+          stat("With a level",num(refs.with_level))+
+          stat("No level",num(refs.no_level),Number(refs.no_level)>0?"warn":"")+
+          stat("SAFA linked",num(refs.with_safa))+
+          stat("On the referee register",num(refs.cttlfa_registered))+
+        '</div>'+
+        '<div class="dsc-grid" style="margin-top:12px">'+
+          '<div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Appointed referees by accreditation level</div>'+bars(refs.by_level,"level","n",null)+'</div>'+
+          '<div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">On record</div><div class="dsc-kv"><span>Total referees</span><b>'+num(refs.total)+'</b><span>Active</span><b>'+num(refs.active)+'</b><span>Accreditations held</span><b>'+num(refs.accreditations)+'</b></div><p class="hint" style="margin-top:6px">Level is the referee&rsquo;s most recent SAFA accreditation; &ldquo;No level&rdquo; means no accreditation is on record. SAFA number links each referee to the register. Click a referee for their appointments.</p></div>'+
+        '</div>'+
+        '<div class="dsc-bh" style="margin-top:12px"><span class="dsc-sec" style="font-size:12px;color:var(--muted)">Appointed referee roster</span></div>'+
+        '<div class="dsc-tblwrap" style="max-height:360px"><table class="dsc-tbl"><thead><tr><th>Referee</th><th>SAFA</th><th>Reg</th><th>Level</th><th class="num">Appts</th></tr></thead><tbody>'+(raBody||'<tr><td colspan="5" class="hint">None.</td></tr>')+'</tbody></table></div></div>';
     var ruleRows=(sus.rules||[]).map(function(x){return [x.card_count,x.suspension_matches];});
     var atRows=(sus.at_risk||[]).map(function(x){return [x.player,x.safa||"–",regTxt(x.registered),x.club||"–",x.cards];});
     var atBody=(sus.at_risk||[]).map(function(x){
@@ -286,7 +299,8 @@
       '<div class="dsc-grid" style="margin-top:16px">'+monthCard+clubCard+'</div>'+
       '<div style="margin-top:16px">'+rulingsBlock+'</div>'+
       '<div style="margin-top:16px">'+unpaidBlock+'</div>'+
-      '<div class="dsc-grid" style="margin-top:16px">'+refBlock+susBlock+'</div>';
+      '<div style="margin-top:16px">'+refBlock+'</div>'+
+      '<div style="margin-top:16px">'+susBlock+'</div>';
 
     wireToolbar();
     // wire exports

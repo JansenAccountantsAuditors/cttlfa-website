@@ -1224,7 +1224,10 @@
 
   /* ---------- clubs ---------- */
   async function loadClubs(){
-    var r=await sb.from("clubs").select("id,name,type,weight").order("name");
+    // Voting-eligible members only. Guest clubs are not part of the voting
+    // structure and carry no vote, so they are excluded from accreditation,
+    // compliance and allocation.
+    var r=await sb.from("clubs").select("id,name,type,weight").in("type",["full","associate"]).order("name");
     clubs=r.data||[];
   }
   function setClubFilter(id){
@@ -5455,7 +5458,7 @@ tr.fa-click:hover{background:#f2f6ff}
 <script src="js/80-fixtures.js?v=11"></script>
 <script src="js/82-lognotes.js?v=1"></script>
 <script src="js/20-users.js?v=1"></script>
-<script src="js/90-discipline.js?v=3"></script>
+<script src="js/90-discipline.js?v=4"></script>
 <script>
 /* Wrap every table (static, or rendered later when a tab opens) in a horizontal
    scroll container, so no wide table can force the whole page sideways on a phone.
