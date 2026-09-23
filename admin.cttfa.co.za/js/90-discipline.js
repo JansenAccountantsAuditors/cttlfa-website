@@ -29,6 +29,35 @@
   function ym(s){ if(!s) return ""; var p=String(s).split("-"); return MON[(+p[1])-1]+" "+p[0].slice(2); }
   function slug(s){ return "cttlfa-"+String(s||"discipline").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-+|-+$/g,"").slice(0,60); }
 
+  /* ---------- LeagueRepublic (live teams & fixtures) ---------- */
+  var LR_SEASON = 47708359;           // 2026 season id
+  var _lrSeason = null;
+  function lrGet(){ if(_lrSeason) return _lrSeason;
+    _lrSeason = fetch("https://api.leaguerepublic.com/json/getFixturesForSeason/"+LR_SEASON+".json",{cache:"no-store"})
+      .then(function(r){ return r.ok?r.json():[]; }).catch(function(){ return []; });
+    return _lrSeason; }
+  function lrClean(n){ return String(n||"").replace(/^[A-Za-z0-9]+-\s*\d+\s*-\s*/,"").replace(/\s+/g," ").trim(); }
+  function lrClubOf(n){ return lrClean(n).replace(/\s+[A-Z]$/,"").replace(/\s+\d+$/,"").trim(); }
+  function lrBye(n){ return /(^|\s)bye\.?$/i.test(lrClean(n)); }
+  function nrm(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,""); }
+  function lrDate(s){ if(!s||String(s).length<8) return null; s=String(s);
+    var y=+s.slice(0,4),m=+s.slice(4,6),d=+s.slice(6,8),hh=s.length>=14?+s.slice(9,11):0,mm=s.length>=14?+s.slice(12,14):0;
+    return {t:new Date(y,m-1,d,hh,mm).getTime(), iso:y+"-"+(m<10?"0":"")+m+"-"+(d<10?"0":"")+d, hh:hh, mm:mm}; }
+  function clubFixtures(all, aliases, clubName){
+    var keys={}; (aliases||[]).concat([clubName]).forEach(function(a){ var k=nrm(lrClubOf(a)); if(k) keys[k]=1; });
+    var teams={}, played=0, toplay=0, mine=[];
+    (all||[]).forEach(function(f){
+      var hIn=keys[nrm(lrClubOf(f.homeTeamName))], rIn=keys[nrm(lrClubOf(f.roadTeamName))];
+      if(!hIn && !rIn) return;
+      var hb=lrBye(f.homeTeamName), rb=lrBye(f.roadTeamName), bye=hb||rb;
+      if(hIn && !hb) teams[lrClean(f.homeTeamName)]=1;
+      if(rIn && !rb) teams[lrClean(f.roadTeamName)]=1;
+      if(f.result) played++; else if(!bye) toplay++;
+      if(!bye) mine.push(f);
+    });
+    return {teams:Object.keys(teams).sort(), played:played, toplay:toplay, fixtures:mine};
+  }
+
   /* ---------- styles ---------- */
   function ensureStyle(){
     if(document.getElementById("dscStyle")) return;
@@ -66,7 +95,18 @@
       ".dsc-db{padding:14px 18px 30px;overflow:auto;flex:1}"+
       ".cpf-controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:12px 0}.cpf-controls input{flex:1;min-width:200px;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:14px}"+
       ".dsc-refkpi{display:flex;flex-wrap:wrap;gap:10px}.dsc-st{flex:1;min-width:112px;border:1px solid var(--line);border-radius:10px;padding:9px 12px;background:#fff}.dsc-st .l{font-size:11px;color:var(--muted);font-weight:600}.dsc-st .v{font-family:var(--head);font-weight:800;font-size:21px;font-variant-numeric:tabular-nums;margin-top:2px}.dsc-st.warn{border-color:#F1CFCB;background:#FDF6F5}.dsc-st.warn .v{color:#9A3130}"+
-      ".cpf-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:900px){.cpf-two{grid-template-columns:1fr}}";
+      ".cpf-two{display:grid;grid-template-columns:1fr 1fr;gap:16px}@media(max-width:900px){.cpf-two{grid-template-columns:1fr}}"+
+      ".cpf-snap{border:1.5px solid var(--blue)}"+
+      ".cpf-hd{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;border-bottom:2px solid var(--navy);padding-bottom:12px;margin-bottom:14px}"+
+      ".cpf-logo{width:76px;height:76px;object-fit:contain;border-radius:12px;border:1px solid var(--line);background:#fff;flex:0 0 auto}"+
+      ".cpf-logoi{display:flex;align-items:center;justify-content:center;font-family:var(--head);font-weight:800;font-size:30px;color:#fff;background:var(--navy)}"+
+      ".cpf-hd-main{flex:1;min-width:220px}.cpf-hd-main h2{font-family:var(--head);color:var(--navy);margin:0;font-size:23px}"+
+      ".cpf-hd-main .sub{color:var(--muted);font-size:13px;margin-top:3px}.cpf-hd-main .con{font-size:12.5px;margin-top:7px;color:var(--ink);display:flex;flex-wrap:wrap;gap:3px 16px}.cpf-hd-main .con a{color:var(--blue);text-decoration:none}"+
+      ".cpf-hd-actions{display:flex;gap:6px;flex:0 0 auto}"+
+      ".cpf-snapkpi{display:grid;grid-template-columns:repeat(6,1fr);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:14px;background:#fff}@media(max-width:820px){.cpf-snapkpi{grid-template-columns:repeat(3,1fr)}}"+
+      ".cpf-snapkpi .kp{padding:11px 13px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}.cpf-snapkpi .kp .l{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.03em}.cpf-snapkpi .kp .v{font-family:var(--head);font-weight:800;font-size:19px;margin-top:2px;font-variant-numeric:tabular-nums}"+
+      ".cpf-foot{margin-top:14px;padding-top:10px;border-top:1px solid var(--line);font-size:11px;color:var(--muted)}"+
+      "@media print{@page{size:A4;margin:11mm} body *{visibility:hidden!important} #cpfPrint,#cpfPrint *{visibility:visible!important} #cpfPrint{position:absolute;left:0;top:0;width:100%;border:0!important;box-shadow:none!important;margin:0!important} .noprint{display:none!important} .dsc-tblwrap{max-height:none!important;overflow:visible!important;border:0!important}}";
     document.head.appendChild(st);
   }
 
@@ -427,8 +467,23 @@
 
   function drawClub(box, d){
     if(!d.found){ box.innerHTML='<div class="card" style="margin-bottom:12px"><p class="hint">Club not found.</p></div>'; return; }
-    var c=d.club||{}, reg=d.registrations||{}, deb=d.debtors, dis=d.discipline||{}, meta=d.meta||{};
+    var c=d.club||{}, reg=d.registrations||{}, deb=d.debtors, dis=d.discipline||{}, meta=d.meta||{}, web=d.web||{};
     var byCat=(reg.by_category||[]).map(function(x){ return esc(x.category)+" "+num(x.n); }).join(" &middot; ");
+
+    // ---- header: logo, identity, ground/address, Sage contact, links ----
+    var logoUrl = web && web.logo ? ("https://www.cttfa.co.za/wp-content/uploads/"+web.logo) : "";
+    var logoHtml = logoUrl
+      ? '<img class="cpf-logo" src="'+esc(logoUrl)+'" alt="'+esc(c.name)+' crest" onerror="this.style.visibility=\'hidden\'">'
+      : '<div class="cpf-logo cpf-logoi">'+esc((c.name||"?").slice(0,1).toUpperCase())+'</div>';
+    var loc = [web.ground, web.suburb].filter(Boolean).join(", ");
+    var contact = deb && deb.contact ? deb.contact : {};
+    var conBits = [];
+    if(contact.email) conBits.push('✉ <a href="mailto:'+esc(contact.email)+'">'+esc(contact.email)+'</a>');
+    if(contact.phone) conBits.push('☎ '+esc(contact.phone));
+    if(web.address) conBits.push('\u{1F4CD} '+esc(web.address));
+    if(web.facebook) conBits.push('<a href="'+esc(web.facebook)+'" target="_blank" rel="noopener">Facebook</a>');
+    if(web.website) conBits.push('<a href="'+esc(web.website)+'" target="_blank" rel="noopener">Website</a>');
+
     var debBlock;
     if(deb){
       var st=deb.status||"–";
@@ -440,25 +495,32 @@
           '<span>Current</span><b>'+rand(deb.cur)+'</b>'+
           '<span>30 / 60 / 90 / 120+</span><b>'+rand(deb.b30)+' / '+rand(deb.b60)+' / '+rand(deb.b90)+' / '+rand(deb.b120)+'</b>'+
           '<span>Last receipt</span><b>'+(deb.last_receipt_days==null?"–":num(deb.last_receipt_days)+" days ago")+'</b>'+
-        '</div>'+
-        (deb.contact ? '<div class="hint" style="margin-top:4px">Contact: '+esc(deb.contact.email||"–")+(deb.contact.phone?" &middot; "+esc(deb.contact.phone):"")+'</div>' : '');
-    } else {
-      debBlock = '<p class="hint">No Sage debtor account matched to this club in the current snapshot.</p>';
-    }
+        '</div>';
+    } else { debBlock = '<p class="hint">No Sage debtor account matched to this club in the current snapshot.</p>'; }
 
     var unpaid=(dis.unpaid||[]).map(function(u){
       return '<tr><td>'+esc(u.case_number||"–")+'</td><td>'+esc(u.player||"–")+'</td><td class="wrap">'+esc(u.article||"–")+'</td><td class="num">'+rand(u.fine_amount)+'</td><td>'+esc(u.invoice_number||"–")+'</td></tr>'; }).join("");
-    var atRisk=(dis.at_risk||[]).map(function(x){ return esc(x.player)+" ("+num(x.cards)+")"; }).join(", ");
     var topP=(dis.top_players||[]).map(function(x){ return esc(x.player)+" ("+num(x.n)+")"; }).join(", ");
+    var teams2026 = web && web.teams2026!=null ? web.teams2026 : null;
 
     box.innerHTML =
-      '<div class="card" style="margin-bottom:14px;border:1.5px solid var(--blue)">'+
-        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">'+
-          '<div><h2 style="font-family:var(--head);color:var(--navy);margin:0">'+esc(c.name)+'</h2>'+
-            '<div class="hint">'+esc(c.type||"club")+(c.active?"":" &middot; inactive")+' &middot; generated '+dt(meta.generated)+'</div></div>'+
-          '<button class="btn ghost sm" id="cpfClose">Close</button>'+
+      '<div class="card cpf-snap" id="cpfPrint" style="margin-bottom:14px">'+
+        '<div class="cpf-hd">'+ logoHtml +
+          '<div class="cpf-hd-main"><h2>'+esc(c.name)+'</h2>'+
+            '<div class="sub">'+esc(c.type||"club")+(c.active?"":" &middot; inactive")+(loc?" &middot; "+esc(loc):"")+(web.founded?" &middot; est. "+esc(web.founded):"")+'</div>'+
+            (conBits.length?'<div class="con">'+conBits.join("")+'</div>':'')+
+          '</div>'+
+          '<div class="cpf-hd-actions noprint"><button class="btn gold sm" id="cpfPrintBtn">Print / PDF</button><button class="btn ghost sm" id="cpfClose">Close</button></div>'+
         '</div>'+
-        '<div class="cpf-two" style="margin-top:12px">'+
+        '<div class="cpf-snapkpi">'+
+          '<div class="kp"><div class="l">Players</div><div class="v">'+num(reg.players)+'</div></div>'+
+          '<div class="kp"><div class="l">Teams 2026</div><div class="v">'+(teams2026==null?"–":num(teams2026))+'</div></div>'+
+          '<div class="kp"><div class="l">Yellow cards</div><div class="v">'+num(dis.cards_total)+'</div></div>'+
+          '<div class="kp"><div class="l">Rulings</div><div class="v">'+num(dis.rulings_total)+'</div></div>'+
+          '<div class="kp"><div class="l">Fines out</div><div class="v">'+(Number(dis.fines_outstanding_amount)>0?rand(dis.fines_outstanding_amount):"–")+'</div></div>'+
+          '<div class="kp"><div class="l">Debtor</div><div class="v">'+(deb?rand(deb.bal):"–")+'</div></div>'+
+        '</div>'+
+        '<div class="cpf-two">'+
           '<div><div class="dsc-sec">Registrations</div>'+
             '<div class="dsc-kv">'+
               '<span>Players</span><b>'+num(reg.players)+'</b>'+
@@ -467,11 +529,11 @@
               '<span>Seniors / Juniors</span><b>'+num(reg.seniors)+' / '+num(reg.juniors)+'</b>'+
               '<span>Foreign players</span><b>'+num(reg.foreign_players)+'</b>'+
               '<span>Latest season</span><b>'+esc(reg.latest_season||"–")+'</b>'+
-            '</div>'+
-            (byCat?'<div class="hint">'+byCat+'</div>':'')+
+            '</div>'+(byCat?'<div class="hint">'+byCat+'</div>':'')+
           '</div>'+
           '<div><div class="dsc-sec">Debtor position (Sage)</div>'+debBlock+'</div>'+
         '</div>'+
+        '<div style="margin-top:14px"><div class="dsc-sec">Teams &amp; fixtures (LeagueRepublic, 2026)</div><div id="cpfFx"><p class="hint">Loading teams &amp; fixtures…</p></div></div>'+
         '<div class="dsc-sec" style="margin-top:14px">Discipline</div>'+
         '<div class="dsc-kv">'+
           '<span>Yellow cards</span><b>'+num(dis.cards_total)+'</b>'+
@@ -480,12 +542,43 @@
           '<span>Fines outstanding</span><b>'+rand(dis.fines_outstanding_amount)+'</b>'+
         '</div>'+
         (topP?'<div class="hint" style="margin-top:4px">Most carded: '+topP+'</div>':'')+
-        (atRisk?'<div class="hint" style="margin-top:2px">At suspension risk: '+atRisk+'</div>':'')+
         (unpaid?'<div class="dsc-tblwrap" style="margin-top:8px;max-height:220px"><table class="dsc-tbl"><thead><tr><th>Case</th><th>Player</th><th>Article</th><th class="num">Fine</th><th>Invoice</th></tr></thead><tbody>'+unpaid+'</tbody></table></div>':'')+
         (meta.has_dash?'':'<p class="hint" style="margin-top:8px">Discipline figures await the first dash sync.</p>')+
+        '<div class="cpf-foot">Generated '+dt(meta.generated)+'. Sources: registration master, Sage debtors (current snapshot), dash.cttlfa.com disciplinary mirror, LeagueRepublic (live), and the association website. Operational, unaudited.</div>'+
       '</div>';
 
     var cl=NS.$("cpfClose"); if(cl) cl.onclick=function(){ box.innerHTML=""; };
+    var pb=NS.$("cpfPrintBtn"); if(pb) pb.onclick=function(){ try{ window.print(); }catch(e){} };
+    fillClubFixtures(web, c.name);
+  }
+
+  function fillClubFixtures(web, name){
+    var el=NS.$("cpfFx"); if(!el) return;
+    lrGet().then(function(all){
+      var cf=clubFixtures(all, (web&&web.lr_aliases)||[], name);
+      if(!cf.teams.length && !cf.fixtures.length){
+        el.innerHTML='<p class="hint">No LeagueRepublic fixtures matched this club for the 2026 season.</p>'; return; }
+      var results=cf.fixtures.filter(function(f){return f.result;}).sort(function(a,b){ var da=lrDate(a.fixtureDate),db=lrDate(b.fixtureDate); return (db?db.t:0)-(da?da.t:0); }).slice(0,6);
+      var upcoming=cf.fixtures.filter(function(f){return !f.result;}).sort(function(a,b){ var da=lrDate(a.fixtureDate),db=lrDate(b.fixtureDate); return (da?da.t:0)-(db?db.t:0); }).slice(0,6);
+      function score(f){ var h=f.homeScore,r=f.roadScore; return (h!=null&&r!=null&&h!==""&&r!=="")?(esc(h)+"–"+esc(r)):esc(f.fixtureStatusDesc||"Result"); }
+      function fdate(f){ var dd=lrDate(f.fixtureDate); return dd?dt(dd.iso):"TBC"; }
+      var teamChips=cf.teams.map(function(t){ return '<span class="dsc-pill mut" style="margin:2px 3px 2px 0">'+esc(t)+'</span>'; }).join("");
+      var resBody=results.map(function(f){ return '<tr><td>'+fdate(f)+'</td><td class="wrap">'+esc(f.fixtureGroupDesc||"")+'</td><td>'+esc(lrClean(f.homeTeamName))+'</td><td>'+esc(lrClean(f.roadTeamName))+'</td><td class="num">'+score(f)+'</td></tr>'; }).join("");
+      var upBody=upcoming.map(function(f){ return '<tr><td>'+fdate(f)+'</td><td class="wrap">'+esc(f.fixtureGroupDesc||"")+'</td><td>'+esc(lrClean(f.homeTeamName))+'</td><td>'+esc(lrClean(f.roadTeamName))+'</td><td class="wrap">'+esc(f.venueAndSubVenueDesc||"–")+'</td></tr>'; }).join("");
+      el.innerHTML =
+        '<div class="cpf-snapkpi" style="grid-template-columns:repeat(3,1fr);margin:4px 0 12px">'+
+          '<div class="kp"><div class="l">Teams entered</div><div class="v">'+num(cf.teams.length)+'</div></div>'+
+          '<div class="kp"><div class="l">Fixtures played</div><div class="v">'+num(cf.played)+'</div></div>'+
+          '<div class="kp"><div class="l">Still to play</div><div class="v">'+num(cf.toplay)+'</div></div>'+
+        '</div>'+
+        (teamChips?'<div style="margin-bottom:10px">'+teamChips+'</div>':'')+
+        '<div class="cpf-two">'+
+          '<div><div class="dsc-sec" style="font-size:12px;color:var(--muted)">Recent results</div>'+
+            '<div class="dsc-tblwrap" style="max-height:230px"><table class="dsc-tbl"><thead><tr><th>Date</th><th>Comp</th><th>Home</th><th>Away</th><th class="num">Score</th></tr></thead><tbody>'+(resBody||'<tr><td colspan="5" class="hint">None yet.</td></tr>')+'</tbody></table></div></div>'+
+          '<div><div class="dsc-sec" style="font-size:12px;color:var(--muted)">Upcoming fixtures</div>'+
+            '<div class="dsc-tblwrap" style="max-height:230px"><table class="dsc-tbl"><thead><tr><th>Date</th><th>Comp</th><th>Home</th><th>Away</th><th>Venue</th></tr></thead><tbody>'+(upBody||'<tr><td colspan="5" class="hint">None scheduled.</td></tr>')+'</tbody></table></div></div>'+
+        '</div>';
+    }).catch(function(){ el.innerHTML='<p class="hint">Could not load LeagueRepublic fixtures right now.</p>'; });
   }
 
   NS.renderDiscipline = renderDiscipline;
