@@ -55,15 +55,25 @@
         ['Last fetch finished',shDT(A.last_finished_at)],
         ['Last result',NS.esc(A.last_result||'&mdash;')]
       ],A.online?'The office PC fetch agent is running.':'The office PC is not reporting in. Start it, run the CTTLFA Sage fetch agent, then press Fetch on Club Debtors.');
-    var dbState=D.extracted_at?(D.reconciled?{w:'Reconciled',c:'ok'}:{w:'Not reconciled',c:'warn'}):{w:'No snapshot',c:'bad'};
-    var dbReconTxt=D.recon_note?NS.esc(D.recon_note):(D.reconciled?'The itemised ledger tied to the ageing at fetch.':'The ledger did not tie to the ageing at fetch; run a fresh fetch before sending statements.');
+    // Club debtor data: separate three distinct things — the ledger tie (reconciled),
+    // the balance currency (live to the fetch) and the ageing bucket date (Sage report
+    // date, which can lag). The Club Debtors "In sync" badge uses the same tie.
+    var dbLag=Number(D.ageing_lag_days||0), dbStale=dbLag>2;
+    var dbState = !D.extracted_at ? {w:'No snapshot',c:'bad'}
+                : (!D.reconciled ? {w:(D.out_of_sync||0)+' out of sync',c:'warn'}
+                : (dbStale ? {w:'Ageing '+dbLag+'d old',c:'warn'} : {w:'Reconciled',c:'ok'}));
+    var dbNote;
+    if(!D.extracted_at){ dbNote='No debtor snapshot yet. Run Fetch from Sage on Club Debtors.'; }
+    else if(!D.reconciled){ dbNote='The itemised ledger does not tie to the ageing for '+(D.out_of_sync||0)+' club'+((D.out_of_sync||0)===1?'':'s')+'. Run a fresh fetch before sending statements.'; }
+    else if(dbStale){ dbNote='Net debtors ('+(D.net_total!=null?NS.dR(D.net_total):'&mdash;')+') are current to the last fetch and all '+(D.n_clubs||0)+' clubs tie to the ledger. The ageing buckets are dated '+shDate(D.as_at)+' because Sage&rsquo;s aged-balances report carries that date; set the report date to today in Sage to date the ageing to today.'; }
+    else { dbNote='All '+(D.n_clubs||0)+' clubs tie to the Sage ledger.'+(D.recon_note?' '+NS.esc(D.recon_note):''); }
     var dbTile=shTile('Club debtor data',shPill(dbState.w,dbState.c),[
-        ['As at',shDate(D.as_at)],
-        ['Fetched',shDT(D.extracted_at)+(D.extracted_at?(' ('+shAgo(D.extracted_at)+')'):'')],
-        ['Snapshot',D.snapshot_id!=null?NS.esc(String(D.snapshot_id).slice(0,8)):'&mdash;'],
+        ['Balances (net)',D.net_total!=null?NS.dR(D.net_total):'&mdash;'],
+        ['Current to',shDT(D.extracted_at)+(D.extracted_at?(' ('+shAgo(D.extracted_at)+')'):'')],
+        ['Ageing dated',shDate(D.as_at)+(dbStale?(' &middot; '+dbLag+'d back'):'')],
         ['Clubs / owing',(D.n_clubs!=null?D.n_clubs:'&mdash;')+' / '+(D.n_owing!=null?D.n_owing:'&mdash;')],
-        ['Net debtors',D.net_total!=null?NS.dR(D.net_total):'&mdash;']
-      ],dbReconTxt+' Per-club live status is on the &ldquo;In sync with Sage&rdquo; badge on Club Debtors.');
+        ['Ledger tie',D.reconciled?('all '+(D.n_clubs||0)+' in sync'):((D.out_of_sync||0)+' out of sync')]
+      ],dbNote+' Per-club status is on the &ldquo;In sync with Sage&rdquo; badge on Club Debtors.');
     var emFailed=Number(E.failed||0);
     var emTile=shTile('Email delivery (30 days)',shPill(emFailed>0?(emFailed+' failed'):'None failed',emFailed>0?'warn':'ok'),[
         ['Sent',(E.total!=null?E.total:0)],
@@ -71,13 +81,20 @@
         ['Failed / bounced',emFailed],
         ['Last sent',shDT(E.last_sent_at)]
       ],emFailed>0?'Some emails failed or bounced. Check the club contact address on the Correspondence log and re-send that one.':'No send failures or bounces recorded by Resend in the last 30 days. This tracks acceptance and bounces, not whether the recipient opened it.');
-    var coAw=Number(C.awaiting||0), coF=Number(C.failed||0);
+    // Correspondence: "awaiting" counts only items that genuinely need a decision or send —
+    // it excludes superseded drafts (auto-replaced by a newer statement), the same rule the
+    // home action queue uses. Superseded are shown separately so the number is explained.
+    var coAw=Number(C.awaiting||0), coF=Number(C.failed||0), coSup=Number(C.superseded||0);
     var coState=coF>0?{w:coF+' failed',c:'bad'}:(coAw>0?{w:coAw+' awaiting',c:'warn'}:{w:'Clear',c:'ok'});
-    var coTile=shTile('Correspondence queue',shPill(coState.w,coState.c),[
+    var coRows=[
         ['Last run',shDT(C.last_run_at)],
         ['Awaiting decision or send',coAw],
         ['Failed',coF]
-      ],coAw>0?'Items are waiting in the correspondence queue on Club Debtors.':'Nothing is waiting in the correspondence queue.');
+      ];
+    if(coSup>0) coRows.push(['Superseded (auto-replaced)',coSup]);
+    var coTile=shTile('Correspondence queue',shPill(coState.w,coState.c),coRows,
+      coAw>0?'Items are waiting in the correspondence queue on Club Debtors.'
+            :('Nothing is awaiting a decision or send.'+(coSup>0?(' '+coSup+' earlier draft'+(coSup===1?'':'s')+' were superseded by newer statements and need no action.'):'')));
     var upd=season&&season.updated;
     var fxAgeH=upd?(Date.now()-new Date(upd).getTime())/3.6e6:null;
     var fxState=(upd==null)?{w:'Not reachable',c:'warn'}:(fxAgeH>12?{w:'Ageing',c:'warn'}:{w:'Fresh',c:'ok'});
@@ -89,7 +106,7 @@
         ['Last receipt',shDate(W.last_receipt_date)],
         ['Receipt age',W.receipt_age_days!=null?(W.receipt_age_days+' days'):'&mdash;'],
         ['Checked',shDT(W.last_checked_at)]
-      ],W.alert_active?('Watchdog alert: '+NS.esc(W.alert_kind||'see Club Debtors')):'No receipts-processing alert.');
+      ],(W.alert_active?('Watchdog alert: '+NS.esc(W.alert_kind||'see Club Debtors')+'. '):'No receipts-processing alert. ')+'This reads the itemised ledger, which is rebuilt from the periodic Sage catch-up and can lag the live balances, so the last receipt may be older than a receipt already posted in Sage.');
     // ----- operations: monitoring, backups, access sync -----
     var P=data.platform||{}, B=data.backup||{}, X=data.access||{};
     var role=(NS.session?NS.session().role:null), canRun=(role==='administrator'||role==='staff');
