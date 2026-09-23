@@ -338,8 +338,7 @@
       <button class="snav" data-tab="webadmin" title="Edit the public cttfa.co.za content in-house."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>Website Admin</button>
       <button class="snav" data-tab="webstats" title="Live Google Analytics for the public cttfa.co.za site."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg>Website Analytics</button>
       <div class="side-lbl" style="margin-top:14px">System</div>
-      <button class="snav" data-tab="syshealth" title="System health — the Sage feed, correspondence, email delivery and fixture data, and who to call when something stops."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>System Health</button>
-      <button class="snav" data-tab="integrity" title="Data integrity — freshness, identity, reconciliation and referential checks across every feed, with the exceptions behind each one."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v5c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V6z"/><path d="M9 12l2 2 4-4"/></svg>Data Integrity</button>
+      <button class="snav" data-tab="integrity" title="Data integrity — the four inputs (Sage, LeagueRepublic, SAFA registrations, dash), the internal mapping that arranges them, and the platform and operations monitors."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v5c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V6z"/><path d="M9 12l2 2 4-4"/></svg>Data Integrity</button>
       <button class="snav" data-tab="users" title="The user list — who may sign in, and their access level. Administrators manage this."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users</button>
       <button class="snav" data-tab="help" title="Full how-to guidance for every part of the Admin Centre."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help</button>
     </aside>
@@ -505,9 +504,7 @@
     </section>
 
     <!-- SYSTEM HEALTH -->
-    <section id="tab-syshealth" class="hidden">
-      <div id="sysHealthRoot"><div class="card"><p class="hint">Loading system health&hellip;</p></div></div>
-    </section>
+    <!-- System Health merged into Data Integrity (js/95-integrity.js): four inputs + internal mapping + platform & operations. -->
 
     <!-- WEBSITE ADMIN (in-house content editor) -->
     <section id="tab-webadmin" class="hidden">
@@ -5469,7 +5466,7 @@ tr.fa-click:hover{background:#f2f6ff}
 <script src="js/82-lognotes.js?v=1"></script>
 <script src="js/20-users.js?v=1"></script>
 <script src="js/90-discipline.js?v=7"></script>
-<script src="js/95-integrity.js?v=1"></script>
+<script src="js/95-integrity.js?v=2"></script>
 <script>
 /* Wrap every table (static, or rendered later when a tab opens) in a horizontal
    scroll container, so no wide table can force the whole page sideways on a phone.
