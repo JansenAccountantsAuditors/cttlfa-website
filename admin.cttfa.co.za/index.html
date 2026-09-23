@@ -339,6 +339,7 @@
       <button class="snav" data-tab="webstats" title="Live Google Analytics for the public cttfa.co.za site."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg>Website Analytics</button>
       <div class="side-lbl" style="margin-top:14px">System</div>
       <button class="snav" data-tab="syshealth" title="System health — the Sage feed, correspondence, email delivery and fixture data, and who to call when something stops."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>System Health</button>
+      <button class="snav" data-tab="integrity" title="Data integrity — freshness, identity, reconciliation and referential checks across every feed, with the exceptions behind each one."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v5c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V6z"/><path d="M9 12l2 2 4-4"/></svg>Data Integrity</button>
       <button class="snav" data-tab="users" title="The user list — who may sign in, and their access level. Administrators manage this."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users</button>
       <button class="snav" data-tab="help" title="Full how-to guidance for every part of the Admin Centre."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help</button>
     </aside>
@@ -470,6 +471,10 @@
     </section>
 
     <!-- DISCIPLINE, REFEREES & CARDS (read live from the dash mirror) -->
+    <section id="tab-integrity" class="hidden">
+      <div id="integrityRoot"><div class="card"><p class="hint">Running the data integrity checks&hellip;</p></div></div>
+    </section>
+
     <section id="tab-discipline" class="hidden">
       <div id="disciplineRoot"><div class="card"><p class="hint">Loading Discipline, Referees &amp; Cards&hellip;</p></div></div>
     </section>
@@ -1156,9 +1161,9 @@
     if(meRole==="fincom") name="fincom";
     var _a=tabArea(name); if(_a && !canSee(_a)) name="home";
     var votingSubs=["meetings","accredit","compliance","motions","live","audit"];
-    var sideActive = votingSubs.indexOf(name)>=0 ? "meetings" : (["home","registrations","clubdb","clubprofile","clubcontacts","clubportal","debtors","discipline","fincom","fixtures","lognotes","planner27","webadmin","webstats","syshealth","users","help"].indexOf(name)>=0 ? name : "home");
+    var sideActive = votingSubs.indexOf(name)>=0 ? "meetings" : (["home","registrations","clubdb","clubprofile","clubcontacts","clubportal","debtors","discipline","fincom","fixtures","lognotes","planner27","webadmin","webstats","syshealth","integrity","users","help"].indexOf(name)>=0 ? name : "home");
     Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav"),function(x){x.classList.toggle("on",x.dataset.tab===sideActive);});
-    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom","fixtures","lognotes","planner27","webstats","syshealth","debtors","clubportal","clubdb","clubcontacts","discipline","clubprofile"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
+    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom","fixtures","lognotes","planner27","webstats","syshealth","integrity","debtors","clubportal","clubdb","clubcontacts","discipline","clubprofile"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
     var sub=$("votingSubnav"); if(sub){ var inV=votingSubs.indexOf(name)>=0; sub.style.display=inV?"":"none"; Array.prototype.forEach.call(sub.querySelectorAll(".subtab"),function(x){x.classList.toggle("on",x.dataset.tab===name);}); }
     var _mp=$("meetingPick"); if(_mp) _mp.style.display=(["meetings","accredit","compliance","motions","live"].indexOf(name)>=0)?"":"none";
     if(name!=="accredit") stopCiTimer();
@@ -1180,6 +1185,7 @@
     if(name==="clubdb" && typeof renderClubDatabase==="function") renderClubDatabase();
     if(name==="clubcontacts" && typeof renderClubContacts==="function") renderClubContacts();
     if(name==="discipline" && window.AC && window.AC.renderDiscipline) window.AC.renderDiscipline();
+    if(name==="integrity" && window.AC && window.AC.renderIntegrity) window.AC.renderIntegrity();
     if(name==="clubprofile" && window.AC && window.AC.renderClubProfile) window.AC.renderClubProfile();
     if(name==="fixtures" && window.AC && window.AC.renderFixtures) window.AC.renderFixtures();
     if(name==="lognotes" && window.AC && window.AC.renderLogNotes) window.AC.renderLogNotes();
@@ -1213,6 +1219,7 @@
       items.push(tab("Website Analytics","webstats"));
       items.push(tab("Website Admin","webadmin"));
       items.push(tab("Fincom Dashboard","fincom"));
+      items.push(tab("Data Integrity","integrity"));
       if(meRole==="administrator") items.push(tab("Users","users"));
       items.push(ext("Fixtures & Results","https://cttfass.leaguerepublic.com"));
       items.push(ext("Live website","https://www.cttfa.co.za"));
@@ -5459,6 +5466,7 @@ tr.fa-click:hover{background:#f2f6ff}
 <script src="js/82-lognotes.js?v=1"></script>
 <script src="js/20-users.js?v=1"></script>
 <script src="js/90-discipline.js?v=5"></script>
+<script src="js/95-integrity.js?v=1"></script>
 <script>
 /* Wrap every table (static, or rendered later when a tab opens) in a horizontal
    scroll container, so no wide table can force the whole page sideways on a phone.
