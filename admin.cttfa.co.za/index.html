@@ -340,6 +340,7 @@
       <div class="side-lbl" style="margin-top:14px">System</div>
       <button class="snav" data-tab="integrity" title="Data integrity — the four inputs (Sage, LeagueRepublic, SAFA registrations, dash), the internal mapping that arranges them, and the platform and operations monitors."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v5c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V6z"/><path d="M9 12l2 2 4-4"/></svg>Data Integrity</button>
       <button class="snav" data-tab="users" title="The user list — who may sign in, and their access level. Administrators manage this."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users</button>
+      <button class="snav" data-tab="guides" title="Guides and infographics — one-look visual explainers of how each part of the Admin Centre works."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>Guides</button>
       <button class="snav" data-tab="help" title="Full how-to guidance for every part of the Admin Centre."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help</button>
     </aside>
     <main class="main">
@@ -505,6 +506,68 @@
 
     <!-- SYSTEM HEALTH -->
     <!-- System Health merged into Data Integrity (js/95-integrity.js): four inputs + internal mapping + platform & operations. -->
+
+    <!-- GUIDES (visual how-it-works library; gated with the rest of the Admin Centre) -->
+    <section id="tab-guides" class="hidden">
+      <div class="card">
+        <h3>Guides &amp; infographics</h3>
+        <p class="hint">Plain-language, one-look explainers of how each part of the Admin Centre works. Open any guide to view it full size, or download it to share in the Mancom group. This library grows as new modules are built.</p>
+      </div>
+      <style>
+        #tab-guides .gd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:16px}
+        #tab-guides .gd-card{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(9,20,48,.06);display:flex;flex-direction:column}
+        #tab-guides .gd-thumb{display:block;position:relative;height:190px;overflow:hidden;background:var(--navy);border-bottom:1px solid var(--line)}
+        #tab-guides .gd-thumb img{width:100%;height:100%;object-fit:cover;object-position:top center;display:block}
+        #tab-guides .gd-tag{position:absolute;top:10px;left:10px;background:var(--gold);color:var(--navy);font-family:var(--cond,sans-serif);font-weight:700;font-size:11px;line-height:1;letter-spacing:.04em;text-transform:uppercase;padding:5px 9px;border-radius:20px}
+        #tab-guides .gd-body{padding:15px 17px 17px;display:flex;flex-direction:column;flex:1}
+        #tab-guides .gd-body h4{color:var(--navy);font-family:var(--head,sans-serif);font-weight:800;font-size:16px;line-height:1.2;margin:0}
+        #tab-guides .gd-body p{color:var(--muted);font-size:13px;line-height:1.45;margin:7px 0 0}
+        #tab-guides .gd-act{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:13px}
+        #tab-guides .gd-btn{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:12.5px;line-height:1;padding:8px 12px;border-radius:9px;text-decoration:none;border:1px solid var(--line);color:var(--navy);background:#fff;cursor:pointer}
+        #tab-guides .gd-btn.p{background:var(--navy);color:#fff;border-color:var(--navy)}
+        #tab-guides .gd-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+        #tab-guides .gd-sub{margin-top:9px;font-size:11.5px;color:var(--muted)}
+        #tab-guides .gd-sub a{color:var(--gold-d);font-weight:700;text-decoration:none}
+      </style>
+      <div class="gd-grid">
+        <div class="gd-card">
+          <a class="gd-thumb" href="guides/admin-centre-overview.png" target="_blank" rel="noopener"><span class="gd-tag">Overview</span><img src="guides/admin-centre-overview.png" loading="lazy" alt="The Admin Centre — one place, every job"></a>
+          <div class="gd-body"><h4>The Admin Centre — the whole picture</h4>
+            <p>Every module at a glance, and how they all feed off, and report back to, one central system.</p>
+            <div class="gd-act"><a class="gd-btn p" href="guides/admin-centre-overview.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/admin-centre-overview.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+          </div>
+        </div>
+        <div class="gd-card">
+          <a class="gd-thumb" href="guides/club-profile-how-its-built.png" target="_blank" rel="noopener"><span class="gd-tag">Clubs</span><img src="guides/club-profile-how-its-built.png" loading="lazy" alt="The Club Profile — one document, every system"></a>
+          <div class="gd-body"><h4>The Club Profile — how it is built</h4>
+            <p>How a club's whole picture is compiled live from five systems into one branded page.</p>
+            <div class="gd-act"><a class="gd-btn p" href="guides/club-profile-how-its-built.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/club-profile-how-its-built.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+          </div>
+        </div>
+        <div class="gd-card">
+          <a class="gd-thumb" href="guides/debtors-track-and-chase.png" target="_blank" rel="noopener"><span class="gd-tag">Finance</span><img src="guides/debtors-track-and-chase.png" loading="lazy" alt="Club Debtors — track, then chase, fairly"></a>
+          <div class="gd-body"><h4>Club Debtors — track &amp; chase</h4>
+            <p>From the Sage fetch through ageing to the reminder ladder, with the guardrails that keep chasing fair.</p>
+            <div class="gd-act"><a class="gd-btn p" href="guides/debtors-track-and-chase.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/debtors-track-and-chase.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+          </div>
+        </div>
+        <div class="gd-card">
+          <a class="gd-thumb" href="guides/data-integrity.png" target="_blank" rel="noopener"><span class="gd-tag">System</span><img src="guides/data-integrity.png" loading="lazy" alt="Data Integrity — the numbers reconcile"></a>
+          <div class="gd-body"><h4>Data Integrity — it reconciles</h4>
+            <p>Five sources into one trusted record, and the checks that keep the numbers honest.</p>
+            <div class="gd-act"><a class="gd-btn p" href="guides/data-integrity.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/data-integrity.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+          </div>
+        </div>
+        <div class="gd-card">
+          <a class="gd-thumb" href="guides/how-voting-works.pdf" target="_blank" rel="noopener"><span class="gd-tag">2 pages · PDF</span><img src="guides/voting-p1.png" loading="lazy" alt="How CTTLFA voting works, page 1"></a>
+          <div class="gd-body"><h4>Delegate e-voting — how voting works</h4>
+            <p>Who votes and the weighting (full clubs two, associates one), eligibility and thresholds, and the full run from accreditation and code to the sealed, weighted result.</p>
+            <div class="gd-act"><a class="gd-btn p" href="guides/how-voting-works.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open PDF</a><a class="gd-btn" href="guides/how-voting-works.pdf" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+            <div class="gd-sub">View pages: <a href="guides/voting-p1.png" target="_blank" rel="noopener">Page 1</a> &middot; <a href="guides/voting-p2.png" target="_blank" rel="noopener">Page 2</a></div>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- WEBSITE ADMIN (in-house content editor) -->
     <section id="tab-webadmin" class="hidden">
@@ -1158,9 +1221,9 @@
     if(meRole==="fincom") name="fincom";
     var _a=tabArea(name); if(_a && !canSee(_a)) name="home";
     var votingSubs=["meetings","accredit","compliance","motions","live","audit"];
-    var sideActive = votingSubs.indexOf(name)>=0 ? "meetings" : (["home","registrations","clubdb","clubprofile","clubcontacts","clubportal","debtors","discipline","fincom","fixtures","lognotes","planner27","webadmin","webstats","syshealth","integrity","users","help"].indexOf(name)>=0 ? name : "home");
+    var sideActive = votingSubs.indexOf(name)>=0 ? "meetings" : (["home","registrations","clubdb","clubprofile","clubcontacts","clubportal","debtors","discipline","fincom","fixtures","lognotes","planner27","webadmin","webstats","syshealth","integrity","guides","users","help"].indexOf(name)>=0 ? name : "home");
     Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav"),function(x){x.classList.toggle("on",x.dataset.tab===sideActive);});
-    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom","fixtures","lognotes","planner27","webstats","syshealth","integrity","debtors","clubportal","clubdb","clubcontacts","discipline","clubprofile"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
+    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom","fixtures","lognotes","planner27","webstats","syshealth","integrity","guides","debtors","clubportal","clubdb","clubcontacts","discipline","clubprofile"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
     var sub=$("votingSubnav"); if(sub){ var inV=votingSubs.indexOf(name)>=0; sub.style.display=inV?"":"none"; Array.prototype.forEach.call(sub.querySelectorAll(".subtab"),function(x){x.classList.toggle("on",x.dataset.tab===name);}); }
     var _mp=$("meetingPick"); if(_mp) _mp.style.display=(["meetings","accredit","compliance","motions","live"].indexOf(name)>=0)?"":"none";
     if(name!=="accredit") stopCiTimer();
