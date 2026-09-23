@@ -12,47 +12,249 @@
  ],
  "senior": [
   [
+   "A1 - Premier League",
+   "2026-09-24",
+   "15:45",
+   "Edgemead G/W",
+   "Durbanville",
+   "R Arendse",
+   "M Matiwane",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-24",
+   "15:45",
+   "Fish Hoek",
+   "Holy Cross",
+   "S Mnyanda",
+   "Z Smith",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-24",
+   "15:45",
+   "Table View",
+   "Rygersdal",
+   "P Arendse",
+   "S Bhali",
+   "Club Ref"
+  ],
+  [
+   "B1 - First Division",
+   "2026-09-24",
+   "15:45",
+   "Kuilsriver",
+   "Kensington",
+   "M Swartz",
+   "Club Ref",
+   "Club Ref"
+  ],
+  [
+   "B1 - First Division",
+   "2026-09-24",
+   "15:45",
+   "Brooklyn Superstars",
+   "Garden Village",
+   "J Absalon",
+   "Club Ref",
+   "Club Ref"
+  ],
+  [
    "C1 - Second Division",
-   "2026-09-21",
-   "20:30",
-   "Barmsley Spurs",
+   "2026-09-24",
+   "15:45",
+   "Avendale Athletico",
+   "Young Bafana",
+   "J Paulse",
+   "Club Ref",
+   "Club Ref"
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-24",
+   "15:45",
+   "Camps Bay",
+   "De Beers",
+   "A Hayward",
+   "Club Ref",
+   "Club Ref"
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-24",
+   "15:45",
+   "Queens Park",
+   "Goodwood",
+   "D Solomons",
+   "Club Ref",
+   "Club Ref"
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-24",
+   "15:45",
+   "West End United",
    "Mutual FC",
-   "D Grant",
+   "D Vaughan",
+   "Club Ref",
+   "Club Ref"
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-24",
+   "15:45",
+   "YSD Macassar",
+   "Clyde Pinelands",
+   "K Cupido",
+   "Club Ref",
+   "Club Ref"
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-24",
+   "15:45",
+   "FC Kapstadt",
+   "Barmsley Spurs",
+   "R Kalamdien",
+   "Club Ref",
+   "Club Ref"
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-24",
+   "14:00",
+   "Varsity College",
+   "Chelsea Bridgetown",
+   "M Sino",
+   "Club Ref",
+   "Club Ref"
+  ],
+  [
+   "A1 - Premier League",
+   "2026-09-25",
+   "20:30",
+   "Hanover Park",
+   "U C T",
+   "L Somi",
+   "S Mahono",
+   "Club Ref"
+  ]
+ ],
+ "junior": [
+  [
+   "K1 - Under 16 Premier One",
+   "2026-09-24",
+   "10:50",
+   "Rygersdal",
+   "FC Kapstadt",
+   "J Absalon",
    "",
    ""
   ],
   [
-   "A1 - Premier League",
-   "2026-09-22",
-   "19:30",
-   "Holy Cross",
-   "Green Point",
-   "L De Klerk",
-   "A Hayward",
-   "Club Ref"
-  ],
-  [
-   "A1 - Premier League",
-   "2026-09-22",
-   "20:30",
-   "Norway Parks",
-   "Wynberg st Johns",
-   "T Daames",
+   "I1 - Under 18 Premier One",
+   "2026-09-24",
+   "12:30",
+   "Rygersdal",
+   "FC Kapstadt",
    "J Absalon",
-   "Club Ref"
+   "",
+   ""
   ],
   [
-   "C1 - Second Division",
-   "2026-09-22",
-   "20:30",
-   "Chelsea Bridgetown",
-   "YSD Macassar",
-   "M Swartz",
-   "Club Ref",
-   "Club Ref"
+   "I1 - Under 18 Premier One",
+   "2026-09-24",
+   "12:00",
+   "Table View",
+   "Wynberg st Johns",
+   "S Bhali",
+   "",
+   ""
+  ],
+  [
+   "I1 - Under 18 Premier One",
+   "2026-09-24",
+   "12:30",
+   "C.R Vasco da Gama",
+   "Cape Town Spurs",
+   "S Mhlaba",
+   "",
+   ""
+  ],
+  [
+   "K1 - Under 16 Premier One",
+   "2026-09-24",
+   "10:50",
+   "C.R Vasco da Gama",
+   "Cape Town Spurs",
+   "G Brown",
+   "",
+   ""
+  ],
+  [
+   "M1 - Under 14 Premier One",
+   "2026-09-24",
+   "09:30",
+   "C.R Vasco da Gama",
+   "Cape Town Spurs",
+   "S Mhlaba",
+   "",
+   ""
+  ],
+  [
+   "O1 - Under 12 Premier One",
+   "2026-09-24",
+   "08:15",
+   "C.R Vasco da Gama",
+   "Cape Town Spurs",
+   "G Brown",
+   "",
+   ""
   ]
  ],
- "junior": [],
- "ladies": [],
- "week_label": "2026-09-21 to 2026-09-22"
+ "ladies": [
+  [
+   "H2 - Womans First Division",
+   "2026-09-24",
+   "13:00",
+   "Magic Ladies",
+   "Kensington",
+   "L Van Rooyen",
+   "",
+   ""
+  ],
+  [
+   "H2 - Womans First Division",
+   "2026-09-25",
+   "19:00",
+   "Green Point",
+   "Saxon Rovers",
+   "M Swartz",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-24",
+   "15:00",
+   "Magic Ladies",
+   "U C T",
+   "N Julius",
+   "",
+   ""
+  ],
+  [
+   "H1 - Womans Premier League",
+   "2026-09-24",
+   "18:00",
+   "Green Point",
+   "FN Rangers",
+   "S Maphempeni",
+   "",
+   ""
+  ]
+ ],
+ "week_label": "2026-09-24 to 2026-09-25"
 }
