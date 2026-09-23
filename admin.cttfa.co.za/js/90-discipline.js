@@ -350,7 +350,7 @@
     Array.prototype.forEach.call(root.querySelectorAll("[data-drill]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); var p=b.getAttribute("data-drill").split("|"); openDrill(p[0],p[1]||"",_subtitle); }; });
   }
 
-  /* ---------- Fetch now (queues dash agent) ---------- */
+  /* ---------- Fetch now (dispatches the GitHub Actions dash fetch) ---------- */
   var _dscPoll=null;
   function dscFStat(txt,tone){ var el=NS.$("dscFetchStatus"); if(!el) return; el.textContent=txt||""; el.style.color=(tone==="bad")?"#9A3130":(tone==="ok")?"#1c5136":"var(--muted)"; }
   function wireToolbar(){
@@ -358,18 +358,22 @@
     var rl=NS.$("dscReload"); if(rl) rl.onclick=function(){ renderDiscipline(); };
   }
   function dscFetchNow(){
-    var b=NS.$("dscFetch"); if(b) b.disabled=true; dscFStat("Requesting a fetch…","");
-    NS.sb.rpc("dash_request_refresh").then(function(r){
-      if(r.error){ dscFStat(r.error.message||String(r.error),"bad"); if(b) b.disabled=false; return; }
+    var b=NS.$("dscFetch"); if(b) b.disabled=true; dscFStat("Starting the fetch on GitHub...","");
+    NS.sb.functions.invoke("dash-refresh",{body:{}}).then(function(r){
+      var d=(r&&r.data)||{};
+      if((r&&r.error)||d.configured===false||d.ok===false){
+        dscFStat((d&&(d.hint||d.detail))||(r&&r.error&&r.error.message)||"Could not start the fetch.","bad");
+        if(b) b.disabled=false; return;
+      }
       dscStartPoll();
-    });
+    }).catch(function(e){ dscFStat(e.message||String(e),"bad"); if(b) b.disabled=false; });
   }
   function dscStateText(d){
-    var up=d.agent_up, st=d.status||"idle";
-    if(st==="queued") return up?["Queued — waiting for the fetch agent…",""]:["Queued — the fetch agent looks offline; it will run on the next agent start or the nightly 02h00 task.","bad"];
-    if(st==="running") return ["Fetching from dash…",""];
-    if(st==="error") return ["Last fetch failed: "+(d.message||""),"bad"];
-    if(st==="done") return ["Done — "+num(d.rows)+" rows synced.","ok"];
+    var st=d.status||"idle";
+    if(st==="queued") return ["Queued - starting the fetch on GitHub...",""];
+    if(st==="running") return ["Fetching from dash..."+(d.message?(" ("+d.message+")"):""),""];
+    if(st==="error") return ["Last fetch failed: "+(d.message||"see the GitHub Actions run."),"bad"];
+    if(st==="done") return ["Done - "+num(d.rows)+" rows synced.","ok"];
     return ["",""];
   }
   function dscStartPoll(){
@@ -378,8 +382,8 @@
       NS.sb.rpc("dash_refresh_state").then(function(r){ if(r.error||!r.data) return; var d=r.data, t=dscStateText(d); dscFStat(t[0],t[1]);
         if(d.status==="done"){ clearInterval(_dscPoll); _dscPoll=null; var b=NS.$("dscFetch"); if(b) b.disabled=false; renderDiscipline(); }
         else if(d.status==="error"){ clearInterval(_dscPoll); _dscPoll=null; var b=NS.$("dscFetch"); if(b) b.disabled=false; }
-        else if(!d.agent_up && d.status==="queued" && tries>=3){ clearInterval(_dscPoll); _dscPoll=null; var b=NS.$("dscFetch"); if(b) b.disabled=false; }
       });
+      if(tries>150){ clearInterval(_dscPoll); _dscPoll=null; var b=NS.$("dscFetch"); if(b) b.disabled=false; }
     }, 4000);
   }
 

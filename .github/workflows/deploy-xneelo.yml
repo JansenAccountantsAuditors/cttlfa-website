@@ -53,4 +53,5 @@ jobs:
             build_deploy.py
             lr_sync.py
             cttlfa_api_fetch.py
+            dash_fetch.py
             prerender.js

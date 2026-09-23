@@ -1,0 +1,56 @@
+name: Dash disciplinary mirror
+
+# Pulls every table off the disciplinary / cards / fixtures dashboard
+# (dash.cttlfa.com) and mirrors it into the main CTTLFA Supabase as dash_*
+# data, replacing the office-PC dash agent. Runs nightly and on demand (the
+# Discipline page "Fetch now" button dispatches this workflow via the
+# dash-refresh edge function). The admin login comes from repository secrets;
+# no secret value is stored here. DASH_ANON_KEY is the site's public anon key.
+
+on:
+  schedule:
+    - cron: "0 0 * * *"       # 00:00 UTC = 02:00 SAST, nightly
+  workflow_dispatch: {}
+
+concurrency:
+  group: dash-fetch
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    env:
+      DASH_EMAIL: ${{ secrets.DASH_EMAIL }}
+      DASH_PASSWORD: ${{ secrets.DASH_PASSWORD }}
+      SUPABASE_INGEST_TOKEN: ${{ secrets.SUPABASE_INGEST_TOKEN }}
+      DASH_URL: "https://thwfepmpcmxakajryutt.supabase.co"
+      DASH_ANON_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRod2ZlcG1wY214YWthanJ5dXR0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc1ODMxNDgsImV4cCI6MjA2MzE1OTE0OH0.GKBff-GWytMu3VNjqYu9E3AvAYtt012-6MCSbTrvObc"
+      SUPABASE_URL: "https://fbbbsvkshajollduapaw.supabase.co"
+      SUPABASE_PUBLISHABLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiYmJzdmtzaGFqb2xsZHVhcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODYyODgsImV4cCI6MjEwMzY2MjI4OH0.8heeqe-03Mji2NgHt17ZOCoctijRhF78cHvSQkrUUi0"
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install httpx
+      - name: Secrets present?
+        if: env.DASH_EMAIL == '' || env.DASH_PASSWORD == '' || env.SUPABASE_INGEST_TOKEN == ''
+        run: echo "::warning::Dash secrets are not set yet. Add DASH_EMAIL, DASH_PASSWORD and SUPABASE_INGEST_TOKEN in Settings -> Secrets and variables -> Actions, then re-run."
+      - name: Mark running
+        if: env.DASH_EMAIL != '' && env.DASH_PASSWORD != '' && env.SUPABASE_INGEST_TOKEN != ''
+        run: |
+          curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_ci_status" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\",\"p_status\":\"running\",\"p_message\":\"Fetching on GitHub Actions\"}" || true
+      - name: Mirror dash.cttlfa.com into the dashboard
+        if: env.DASH_EMAIL != '' && env.DASH_PASSWORD != '' && env.SUPABASE_INGEST_TOKEN != ''
+        run: python dash_fetch.py --push
+      - name: Mark done
+        if: success() && env.DASH_EMAIL != '' && env.DASH_PASSWORD != '' && env.SUPABASE_INGEST_TOKEN != ''
+        run: |
+          curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_ci_status" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\",\"p_status\":\"done\",\"p_message\":\"Mirrored via GitHub Actions\"}" || true
+      - name: Mark failed
+        if: failure() && env.DASH_EMAIL != '' && env.DASH_PASSWORD != '' && env.SUPABASE_INGEST_TOKEN != ''
+        run: |
+          curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_ci_status" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\",\"p_status\":\"error\",\"p_message\":\"GitHub Actions fetch failed - see the run log\"}" || true
