@@ -1,0 +1,12 @@
+Club Database: portal/players are member-only; guest LR aliases matched
+
+Portal login and player-registration gaps now apply only to full and
+associate members. Guests and other non-members show N/A on the System Map
+and in the club detail (they are not eligible for a portal login), and no
+longer count as "to fix". LeagueRepublic aliases were matched for all
+registered clubs that play, from the fixtures feed, so "No LeagueRepublic
+name" clears. The remaining difference is the real one: clubs on two Sage
+accounts.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX

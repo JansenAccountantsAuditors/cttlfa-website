@@ -71,6 +71,7 @@
       ".dsc-kpi{padding:15px 18px;border-right:1px solid var(--line)}.dsc-kpi:last-child{border-right:0}"+
       ".dsc-kpi .k{font-size:12px;font-weight:600;color:var(--muted)}.dsc-kpi .v{font-family:var(--head);font-weight:800;font-size:26px;line-height:1.05;margin-top:3px;font-variant-numeric:tabular-nums}.dsc-kpi .s{font-size:11.5px;margin-top:3px;color:var(--muted)}"+
       "@media(max-width:820px){.dsc-kpis{grid-template-columns:1fr 1fr}.dsc-kpi{border-bottom:1px solid var(--line)}}"+
+      ".dsc-kpiclk,.dsc-stclk{cursor:pointer;transition:background .12s}.dsc-kpiclk:hover,.dsc-kpiclk:focus,.dsc-stclk:hover,.dsc-stclk:focus{background:#F5F8FD;outline:none}.dsc-kpiclk:focus-visible,.dsc-stclk:focus-visible{box-shadow:inset 0 0 0 2px var(--blue)}"+
       ".dsc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}@media(max-width:900px){.dsc-grid{grid-template-columns:1fr}}"+
       ".dsc-grid > .card{height:100%;display:flex;flex-direction:column;margin:0}"+
       ".dsc-bh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}"+
@@ -137,7 +138,7 @@
   }
 
   // export registry: buttons carry a key; wired after render
-  var _exp={}, _expN=0, _subtitle="";
+  var _exp={}, _expN=0, _subtitle="", _dscData=null;
   function acts(title, columns, rows){ var k="e"+(++_expN); _exp[k]={title:title,columns:columns,rows:rows};
     return '<span class="dsc-acts"><button class="dsc-x" data-pdf="'+k+'">PDF</button><button class="dsc-x" data-csv="'+k+'">CSV</button></span>'; }
   function bhead(title, title2, columns, rows){
@@ -192,7 +193,35 @@
 
   function regTxt(r){ return r?"Registered":"Not in register"; }
   function regPill(r){ return r?'<span class="dsc-pill ok" title="SAFA number found in the registration master">Reg</span>':'<span class="dsc-pill bad" title="This SAFA number is not in the registration master — confirm the player/referee">Not reg</span>'; }
-  function stat(l,v,tone){ return '<div class="dsc-st'+(tone==='warn'?' warn':'')+'"><div class="l">'+esc(l)+'</div><div class="v">'+v+'</div></div>'; }
+  function stat(l,v,tone,kpi){ var a=kpi?(' dsc-stclk" data-kpi="'+kpi+'" role="button" tabindex="0" title="Click to list these referees'):''; return '<div class="dsc-st'+(tone==='warn'?' warn':'')+a+'"><div class="l">'+esc(l)+'</div><div class="v">'+v+'</div></div>'; }
+
+  /* ---------- KPI drill (client-side, from the loaded dashboard data) ---------- */
+  function showKpiDrawer(title, cols, rows){
+    ensureDrawer();
+    NS.$("dscScrim").classList.add("on"); NS.$("dscDrawer").classList.add("on");
+    NS.$("dscDT").textContent=title; NS.$("dscDS").textContent=num(rows.length)+" record"+(rows.length===1?"":"s");
+    var head=cols.map(function(c){ var n=/fine|cards|amount|appoint/i.test(c); return '<th'+(n?' class="num"':'')+'>'+esc(c)+'</th>'; }).join("");
+    var body=rows.map(function(r){ return '<tr>'+r.map(function(v,i){ var n=/fine|cards|amount|appoint/i.test(cols[i]||''); return '<td'+(n?' class="num"':'')+'>'+esc(v)+'</td>'; }).join("")+'</tr>'; }).join("");
+    NS.$("dscDB").innerHTML='<div class="dsc-bh"><span class="dsc-sec">'+esc(title)+'</span><span class="dsc-acts"><button class="dsc-x" id="dscKPDF">PDF</button><button class="dsc-x" id="dscKCSV">CSV</button></span></div><div class="dsc-tblwrap" style="max-height:calc(100vh - 150px)"><table class="dsc-tbl"><thead><tr>'+head+'</tr></thead><tbody>'+(body||'<tr><td colspan="'+cols.length+'" class="hint">No records.</td></tr>')+'</tbody></table></div>';
+    NS.$("dscKPDF").onclick=function(){ expPDF(title,_subtitle,cols,rows); };
+    NS.$("dscKCSV").onclick=function(){ expCSV(title,cols,rows); };
+  }
+  function dscRosterDrill(title, filt){
+    var refs=(_dscData&&_dscData.referees)||{}, roster=refs.roster||[];
+    var rows=roster.filter(filt).map(function(x){ return [x.referee, x.safa||"–", x.registered?"Registered":"Not in register", x.level||"No level", x.appts]; });
+    showKpiDrawer(title, ["Referee","SAFA","On register","Level","Appointments"], rows);
+  }
+  function dscKpiDrill(kind){
+    var d=_dscData||{}, cards=d.cards||{}, ru=d.rulings||{}, sus=d.suspensions||{};
+    if(kind==="cards"){ showKpiDrawer("Most-carded players", ["Player","SAFA","Register","Club","Cards"], (cards.top_players||[]).map(function(p){ return [p.player, p.safa||"–", p.registered?"Reg":"Not reg", p.club||"–", p.n]; })); }
+    else if(kind==="risk"){ showKpiDrawer("Players at suspension risk", ["Player","SAFA","Club","Cards"], (sus.at_risk||[]).map(function(x){ return [x.player||x.name||"–", x.safa||"–", x.club||"–", (x.cards!=null?x.cards:(x.n!=null?x.n:""))]; })); }
+    else if(kind==="fines"){ showKpiDrawer("Outstanding fines", ["Case","Player","Article","Fine","Invoice"], (ru.unpaid||[]).map(function(u){ return [u.case_number||"–", u.player||"–", u.article||"–", (u.fine_amount!=null?rand(u.fine_amount):""), u.invoice_number||"–"]; })); }
+    else if(kind==="ref:appointed"){ dscRosterDrill("Appointed referees", function(){return true;}); }
+    else if(kind==="ref:level"){ dscRosterDrill("Referees with an accreditation level", function(x){return !!x.level;}); }
+    else if(kind==="ref:nolevel"){ dscRosterDrill("Referees with no accreditation level", function(x){return !x.level;}); }
+    else if(kind==="ref:safa"){ dscRosterDrill("Referees linked to a SAFA number", function(x){return !!(x.safa&&String(x.safa).trim());}); }
+    else if(kind==="ref:reg"){ dscRosterDrill("Referees on the referee register", function(x){return !!x.registered;}); }
+  }
 
   /* ==================== DISCIPLINE DASHBOARD ==================== */
   function renderDiscipline(){
@@ -210,7 +239,7 @@
 
   function drawDiscipline(root, d){
     _exp={}; _expN=0;
-    var meta=d.meta||{}, cards=d.cards||{}, ru=d.rulings||{}, refs=d.referees||{}, sus=d.suspensions||{};
+    var meta=d.meta||{}, cards=d.cards||{}, ru=d.rulings||{}, refs=d.referees||{}, sus=d.suspensions||{}; _dscData=d;
     _subtitle = "dash.cttlfa.com mirror · last sync "+dtime(meta.last_pull)+" · operational";
 
     var head =
@@ -236,9 +265,9 @@
 
     var kpi =
       '<div class="dsc-kpis">'+
-        '<div class="dsc-kpi"><div class="k">Yellow cards</div><div class="v">'+num(cards.total)+'</div><div class="s">across '+num((cards.by_division||[]).length)+' divisions</div></div>'+
-        '<div class="dsc-kpi"><div class="k">Players at suspension risk</div><div class="v">'+num((sus.at_risk||[]).length)+'</div><div class="s">at or over the card threshold</div></div>'+
-        '<div class="dsc-kpi"><div class="k">Fines outstanding</div><div class="v">'+rand(ru.outstanding_amount)+'</div><div class="s">'+num(ru.outstanding_n)+' unpaid of '+num(ru.issued_n)+' issued</div></div>'+
+        '<div class="dsc-kpi dsc-kpiclk" data-kpi="cards" role="button" tabindex="0" title="Click to list the most-carded players"><div class="k">Yellow cards</div><div class="v">'+num(cards.total)+'</div><div class="s">across '+num((cards.by_division||[]).length)+' divisions</div></div>'+
+        '<div class="dsc-kpi dsc-kpiclk" data-kpi="risk" role="button" tabindex="0" title="Click to list the players at suspension risk"><div class="k">Players at suspension risk</div><div class="v">'+num((sus.at_risk||[]).length)+'</div><div class="s">at or over the card threshold</div></div>'+
+        '<div class="dsc-kpi dsc-kpiclk" data-kpi="fines" role="button" tabindex="0" title="Click to list the outstanding fines"><div class="k">Fines outstanding</div><div class="v">'+rand(ru.outstanding_amount)+'</div><div class="s">'+num(ru.outstanding_n)+' unpaid of '+num(ru.issued_n)+' issued</div></div>'+
         '<div class="dsc-kpi"><div class="k">Referees active</div><div class="v">'+num(refs.active)+'</div><div class="s">of '+num(refs.total)+' on record</div></div>'+
       '</div>';
 
@@ -310,11 +339,11 @@
       '<div class="card">'+
         '<div class="dsc-bh"><span class="dsc-sec">Referees &amp; accreditation</span>'+acts("Referee roster",["Referee","SAFA","Registered","Level","Appointments"],raRows)+'</div>'+
         '<div class="dsc-refkpi">'+
-          stat("Appointed",num(refs.appointed))+
-          stat("With a level",num(refs.with_level))+
-          stat("No level",num(refs.no_level),Number(refs.no_level)>0?"warn":"")+
-          stat("SAFA linked",num(refs.with_safa))+
-          stat("On the referee register",num(refs.cttlfa_registered))+
+          stat("Appointed",num(refs.appointed),"","ref:appointed")+
+          stat("With a level",num(refs.with_level),"","ref:level")+
+          stat("No level",num(refs.no_level),Number(refs.no_level)>0?"warn":"","ref:nolevel")+
+          stat("SAFA linked",num(refs.with_safa),"","ref:safa")+
+          stat("On the referee register",num(refs.cttlfa_registered),"","ref:reg")+
         '</div>'+
         '<div class="dsc-grid" style="margin-top:12px">'+
           '<div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Appointed referees by accreditation level</div>'+bars(refs.by_level,"level","n",null)+'</div>'+
@@ -348,6 +377,8 @@
     Array.prototype.forEach.call(root.querySelectorAll("[data-csv]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-csv")]; if(e) expCSV(e.title,e.columns,e.rows); }; });
     // wire drills
     Array.prototype.forEach.call(root.querySelectorAll("[data-drill]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); var p=b.getAttribute("data-drill").split("|"); openDrill(p[0],p[1]||"",_subtitle); }; });
+    // wire KPI tiles (client-side drill from the loaded dashboard data)
+    Array.prototype.forEach.call(root.querySelectorAll("[data-kpi]"),function(b){ var go=function(){ dscKpiDrill(b.getAttribute("data-kpi")); }; b.onclick=function(ev){ ev.stopPropagation(); go(); }; b.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }; });
   }
 
   /* ---------- Fetch now (dispatches the GitHub Actions dash fetch) ---------- */

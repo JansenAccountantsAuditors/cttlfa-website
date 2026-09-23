@@ -54,6 +54,7 @@
       ".ntg-tally{display:flex;gap:10px;flex-wrap:wrap;margin-left:auto}"+
       ".ntg-t{border:1px solid var(--line);border-radius:11px;padding:8px 14px;min-width:78px;background:#fff}.ntg-t .l{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--muted)}.ntg-t .v{font-family:var(--head);font-weight:800;font-size:21px;font-variant-numeric:tabular-nums;margin-top:1px}"+
       ".ntg-t.ok .v{color:#1c5136}.ntg-t.warn .v{color:#7a4d10}.ntg-t.bad .v{color:#8a2e26}"+
+      ".ntg-t.ntg-tclk{cursor:pointer;transition:border-color .12s,background .12s}.ntg-t.ntg-tclk:hover,.ntg-t.ntg-tclk:focus{background:#F3F6FC;border-color:var(--navy);outline:none}"+
       ".ntg-sech{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--navy);font-size:13px;margin:18px 0 2px}"+
       ".ntg-sub{font-size:12px;color:var(--muted);margin:0 0 10px}"+
       ".ntg-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}"+
@@ -208,7 +209,7 @@
   }
 
   /* ==================== PAGE ==================== */
-  var _last=null, _sys=null, _season=null, _mapOpen=false;
+  var _last=null, _sys=null, _season=null, _mapOpen=false, _tallyInputs=[], _tallyMap=[];
 
   function renderIntegrity(){
     ensureStyle();
@@ -325,9 +326,9 @@
       '<div class="ntg-band '+band.cls+'">'+
         '<div class="head"><div class="big"><span aria-hidden="true">'+band.glyph+'</span> Overall: '+band.word+'</div><div class="sub">'+esc(overallLine)+'</div></div>'+
         '<div class="ntg-tally">'+
-          tally("Failing", cRed, "bad")+
-          tally("To review", cAmb, "warn")+
-          tally("Inputs", 4, "")+
+          tally("Failing", cRed, "bad", "red")+
+          tally("To review", cAmb, "warn", "amber")+
+          tally("Inputs", 4, "", "inputs")+
         '</div>'+
       '</div>'+
       '<div class="ntg-sech">The four inputs</div>'+
@@ -357,13 +358,42 @@
       '<p class="hint" style="margin-top:10px">Reviewed by the Treasurer. Operational data from the live Admin Centre feeds. Generated '+dtime(d.generated)+'.</p>'+
       '</div>';
 
+    _tallyInputs = [
+      {src:"Sage · accounting", name:"Club debtors ledger", rag:sageRag, note:sageNote},
+      {src:"LeagueRepublic · API", name:"Fixtures & results", rag:lrRag, note:lrNote},
+      {src:"SAFA · manual capture", name:"Registrations", rag:regRag, note:regNote},
+      {src:"dash.cttlfa.com", name:"Disciplinary mirror", rag:dashRag, note:dashNote}
+    ];
+    _tallyMap = mapChecks;
     root.innerHTML = head + report;
     // stash mapping export for the roll-up buttons
     d.overall = overall;
     wire(root, d, sys);
   }
 
-  function tally(label, v, cls){ return '<div class="ntg-t '+(cls||"")+'"><div class="l">'+esc(label)+'</div><div class="v">'+num(v)+'</div></div>'; }
+  function tally(label, v, cls, kind){ var a=kind?(' ntg-tclk" role="button" tabindex="0" data-tally="'+kind+'" title="Click to see what these are and action them"'):'"'; return '<div class="ntg-t '+(cls||"")+a+'><div class="l">'+esc(label)+'</div><div class="v">'+num(v)+'</div></div>'; }
+
+  /* dynamic tally drill: click Failing / To review / Inputs to see exactly what they are */
+  function openTallyDrill(kind){
+    ensureDrawer();
+    NS.$("ntgScrim").classList.add("on"); NS.$("ntgDrawer").classList.add("on");
+    NS.$("ntgDT").textContent = kind==="red"?"Failing":kind==="amber"?"To review":"The four inputs";
+    var items=[];
+    _tallyInputs.forEach(function(ic){ if(kind==="inputs"||ic.rag===kind) items.push({group:ic.src,name:ic.name,status:ic.rag,detail:ic.note}); });
+    if(kind!=="inputs"){ (_tallyMap||[]).forEach(function(c){ if(c.status===kind) items.push({group:"Internal mapping",name:c.title,status:c.status,detail:c.detail,key:c.key,n:c.n,drill:c.drill}); }); }
+    NS.$("ntgDS").textContent = items.length+" item"+(items.length===1?"":"s");
+    if(!items.length){ NS.$("ntgDB").innerHTML='<div style="border:1px dashed var(--line);border-radius:12px;padding:26px;text-align:center;color:var(--muted)">Nothing '+(kind==="red"?"failing":"to review")+' — all clear.</div>'; return; }
+    var body=items.map(function(it){
+      var drill = it.drill && Number(it.n)>0;
+      return '<tr'+(drill?' class="clk" data-drill="'+esc(it.key)+'" data-title="'+esc(it.name)+'" data-detail="'+esc(it.detail)+'"':'')+'>'+
+        '<td><b>'+esc(it.name)+'</b><div class="hint" style="font-size:11px">'+esc(it.group)+'</div></td>'+
+        '<td>'+stPill(it.status)+'</td>'+
+        '<td>'+esc(it.detail)+(drill?' <button class="ntg-more" type="button">View '+num(it.n)+'</button>':'')+'</td>'+
+      '</tr>';
+    }).join("");
+    NS.$("ntgDB").innerHTML='<div class="ntg-tblwrap"><table class="ntg-tbl" style="table-layout:auto"><thead><tr><th>Item</th><th>Status</th><th>What it is / what to do</th></tr></thead><tbody>'+body+'</tbody></table></div>';
+    Array.prototype.forEach.call(NS.$("ntgDB").querySelectorAll("tr.clk"),function(tr){ tr.onclick=function(){ openDrill(tr.dataset.drill, tr.dataset.title, tr.dataset.detail); }; });
+  }
 
   /* mapping detail: the three internal groups as properly sized tables */
   function mapDetailHtml(d){
@@ -438,20 +468,20 @@
     // email delivery
     var emFailed=Number(E.failed||0);
     var emTile=opsTile("Email delivery (30 days)", emFailed>0?"amber":"green", emFailed>0?num(emFailed)+" failed":"None failed", [
-        ["Sent", E.total!=null?num(E.total):0, null],
-        ["Live / test", (E.live!=null?num(E.live):0)+" / "+(E.test!=null?num(E.test):0), null],
+        ["Live emails sent", E.total!=null?num(E.total):0, null],
         ["Failed / bounced", num(emFailed), (emFailed>0?"amber":null)],
-        ["Last sent", dtime(E.last_sent_at), null]
-      ], emFailed>0?"Some emails failed or bounced. Check the club contact address on the Correspondence log and re-send that one.":"No send failures or bounces recorded by Resend in the last 30 days.", "");
+        ["Last sent", dtime(E.last_sent_at), null],
+        ["Test sends (excluded)", (E.test!=null?num(E.test):0), null]
+      ], emFailed>0?"Some emails failed or bounced. Check the club contact address on the Correspondence log and re-send that one.":"Live club emails only; test-mode setup sends are excluded. No failures or bounces recorded by Resend in the last 30 days.", "");
 
     // correspondence
     var coAw=Number(C.awaiting||0), coF=Number(C.failed||0), coSup=Number(C.superseded||0);
-    var coState=coF>0?"red":(coAw>0?"amber":"green");
-    var coWord=coF>0?num(coF)+" failed":(coAw>0?num(coAw)+" awaiting":"Clear");
-    var coRows=[["Last run", dtime(C.last_run_at), null],["Awaiting decision or send", num(coAw), (coAw>0?"amber":null)],["Failed", num(coF), (coF>0?"bad":null)]];
+    var coState=coF>0?"red":"green";
+    var coWord=coF>0?num(coF)+" failed":(coAw>0?num(coAw)+" queued":"Clear");
+    var coRows=[["Last run", dtime(C.last_run_at), null],["Queued for the next send", num(coAw), null],["Failed", num(coF), (coF>0?"bad":null)]];
     if(coSup>0) coRows.push(["Superseded (auto-replaced)", num(coSup), null]);
     var coTile=opsTile("Correspondence queue", coState, coWord, coRows,
-      coAw>0?"Items are waiting in the correspondence queue on Club Debtors.":("Nothing is awaiting a decision or send."+(coSup>0?(" "+num(coSup)+" earlier draft(s) were superseded by newer statements and need no action."):"")), "");
+      (coF>0?"Some letters failed to send — correct the club contact address on the Correspondence log and re-send those.":(coAw>0?(num(coAw)+" letter(s) are queued for the next scheduled send run; this is expected, not a backlog."):"Nothing is queued."))+(coSup>0?(" "+num(coSup)+" earlier draft(s) were superseded by newer statements and need no action."):""), "");
 
     // receipts watchdog
     var wState=W.alert_active?"amber":"green";
@@ -512,6 +542,8 @@
     var cn=NS.$("shCheckNow"); if(cn) cn.onclick=function(){ shRunFn(cn,"shCheckMsg","check"); };
     var bn=NS.$("shBackupNow"); if(bn) bn.onclick=function(){ shRunFn(bn,"shBackupMsg","backup"); };
     var sn=NS.$("shSyncNow"); if(sn) sn.onclick=function(){ shSync(sn); };
+    // dynamic tally tiles (Failing / To review / Inputs)
+    Array.prototype.forEach.call(root.querySelectorAll("[data-tally]"),function(el){ el.onclick=function(){ openTallyDrill(el.getAttribute("data-tally")); }; el.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openTallyDrill(el.getAttribute("data-tally")); } }; });
   }
 
   NS.renderIntegrity = renderIntegrity;

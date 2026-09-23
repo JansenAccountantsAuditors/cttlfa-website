@@ -1851,10 +1851,10 @@
     var b=m.querySelector('.deb-mbody'); if(b) b.innerHTML=debCashBody(_debCash);
   }
   function debProvNote(s){
-    var base='The live balance and ageing come from the automated Sage fetch. ';
+    var base='The balance and ageing come from the automated Sage fetch. ';
     var mid;
     if(_debSync && _debSync.in_sync){
-      mid='The itemised transaction detail currently matches the live Sage balance for every club, so the statements and notices you send reflect exactly what is in Sage.';
+      mid='The itemised transaction detail currently matches the Sage balance for every club, so the statements and notices you send reflect exactly what is in Sage.';
     } else if(_debSync && _debSync.n_out>0){
       mid='The itemised transaction detail is a separate export, and '+_debSync.n_out+' club'+(_debSync.n_out===1?' has':'s have')+' changed in Sage since it was last taken; those clubs’ statements catch up on the next fetch. Every other club reconciles to Sage.';
     } else {
@@ -2472,9 +2472,7 @@
     var h='';
     // Correspondence mode notice — reflects the live deb_send_config state.
     var _liveMode=!!(_sendSetup && _sendSetup.config && _sendSetup.config.test_mode===false);
-    if(_liveMode){
-      h+='<div style="background:#E7F5EC;border:1px solid #BFE3CC;border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start"><span style="font-size:11px;font-weight:700;letter-spacing:.3px;background:#1c5136;color:#fff;border-radius:6px;padding:3px 8px;white-space:nowrap">LIVE</span><div style="font-size:13px;color:#14462b"><b>Correspondence is live.</b> Statements, reminders and notices now go to clubs&rsquo; real email addresses on file, with the Treasurer and ops copied on every send. Nothing sends automatically &mdash; each batch is sent by hand, and a club holding unallocated cash or out of sync with Sage is held back until that is cleared. Balances and ageing come straight from Sage.</div></div>';
-    } else {
+    if(!_liveMode){
       h+='<div class="deb-notlive"><span class="nl-tag">Test mode</span><div><b>Correspondence is in test mode.</b> Balances, ageing and stages are the real Sage figures, but no correspondence goes out to clubs &mdash; every send reaches the Treasurer only. Switch to live in Email setup when ready.</div></div>';
     }
     // data-freshness / stale-fetch warning
@@ -5469,8 +5467,8 @@ tr.fa-click:hover{background:#f2f6ff}
 <script src="js/80-fixtures.js?v=11"></script>
 <script src="js/82-lognotes.js?v=1"></script>
 <script src="js/20-users.js?v=1"></script>
-<script src="js/90-discipline.js?v=8"></script>
-<script src="js/95-integrity.js?v=3"></script>
+<script src="js/90-discipline.js?v=9"></script>
+<script src="js/95-integrity.js?v=4"></script>
 <script>
 /* Wrap every table (static, or rendered later when a tab opens) in a horizontal
    scroll container, so no wide table can force the whole page sideways on a phone.
