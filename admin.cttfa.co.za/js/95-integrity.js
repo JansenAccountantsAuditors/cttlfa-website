@@ -10,7 +10,7 @@
    Reads live from data_integrity(), data_integrity_rows(p_check) and sys_health().
    Status is always a word plus a shape, never colour alone.
    Figures follow SA conventions: space thousands, brackets for negatives,
-   en dash for nil. Operational data, unaudited. */
+   en dash for nil. Operational data. */
 (function (NS) {
   "use strict";
 
@@ -103,7 +103,7 @@
   function pdfFoot(doc){
     var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
     doc.setFontSize(8); doc.setTextColor(140,150,165);
-    doc.text("CTTLFA Admin Centre - data integrity - operational, unaudited - generated "+new Date().toLocaleString("en-ZA"), 40, H-20);
+    doc.text("CTTLFA Admin Centre - data integrity - operational - generated "+new Date().toLocaleString("en-ZA"), 40, H-20);
     doc.text("Page "+doc.internal.getCurrentPageInfo().pageNumber, W-64, H-20);
   }
   function expPDF(title, subtitle, columns, rows){
@@ -127,7 +127,7 @@
   function fullReportPDF(d){
     if(!window.jspdf){ alert("PDF library still loading, try again."); return; }
     var doc=new window.jspdf.jsPDF({unit:"pt",format:"a4"});
-    var sub="Inputs and internal mapping - overall "+stWord(d.overall)+" - generated "+dtime(d.generated)+" - operational, unaudited";
+    var sub="Inputs and internal mapping - overall "+stWord(d.overall)+" - generated "+dtime(d.generated)+" - operational";
     pdfHead(doc, "Data Integrity report", sub);
     var y=84;
     (d.groups||[]).forEach(function(g){
@@ -309,7 +309,7 @@
         '<h2 style="font-family:var(--head);color:var(--navy);margin:0 0 2px">Data Integrity</h2>'+
         '<div class="ntg-prov">'+
           '<span>Inputs: <b>Sage, LeagueRepublic, SAFA registrations, dash</b></span>'+
-          '<span>Basis: <b>operational, unaudited</b></span>'+
+          '<span>Basis: <b>operational</b></span>'+
           '<span>Checked: <b>'+dtime(d.generated)+'</b></span>'+
         '</div>'+
         '<div class="ntg-toolbar">'+
@@ -354,7 +354,7 @@
         '<span>'+stPill("red")+' failing — act now</span>'+
         '<span>Click any mapping row with a count to see the records behind it.</span>'+
       '</div>'+
-      '<p class="hint" style="margin-top:10px">Reviewed by the Treasurer. Operational data from the live Admin Centre feeds, unaudited. Generated '+dtime(d.generated)+'.</p>'+
+      '<p class="hint" style="margin-top:10px">Reviewed by the Treasurer. Operational data from the live Admin Centre feeds. Generated '+dtime(d.generated)+'.</p>'+
       '</div>';
 
     root.innerHTML = head + report;

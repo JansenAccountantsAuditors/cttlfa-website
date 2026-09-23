@@ -6,7 +6,7 @@
    dash_refresh_state() while a dash agent (dash_fetch.py --agent) services it.
    Read-only reporting for Mancom. Figures follow SA conventions: space
    thousands, full stop decimal, brackets for negatives, en dash for nil.
-   Operational data, unaudited. */
+   Operational data. */
 (function (NS) {
   "use strict";
 
@@ -124,7 +124,7 @@
       headStyles:{fillColor:[7,26,74],textColor:255,fontStyle:"bold"},
       alternateRowStyles:{fillColor:[247,249,253]}, margin:{left:40,right:40},
       didDrawPage:function(){ doc.setFontSize(8); doc.setTextColor(140,150,165);
-        doc.text("dash.cttlfa.com mirror · operational, unaudited · generated "+new Date().toLocaleString("en-ZA"), 40, H-20);
+        doc.text("dash.cttlfa.com mirror · operational · generated "+new Date().toLocaleString("en-ZA"), 40, H-20);
         doc.text("Page "+doc.internal.getCurrentPageInfo().pageNumber, W-64, H-20); } });
     doc.save(slug(title)+".pdf");
   }
@@ -211,7 +211,7 @@
   function drawDiscipline(root, d){
     _exp={}; _expN=0;
     var meta=d.meta||{}, cards=d.cards||{}, ru=d.rulings||{}, refs=d.referees||{}, sus=d.suspensions||{};
-    _subtitle = "dash.cttlfa.com mirror · last sync "+dtime(meta.last_pull)+" · operational, unaudited";
+    _subtitle = "dash.cttlfa.com mirror · last sync "+dtime(meta.last_pull)+" · operational";
 
     var head =
       '<div class="card">'+
@@ -297,7 +297,7 @@
       '<div class="card">'+bhead("Unpaid fines","Unpaid fines",["Case","Player","SAFA","Registered","Club","Article","Fine","Invoice","Match date"],upRows)+
         '<div class="dsc-tblwrap" style="max-height:360px"><table class="dsc-tbl"><thead><tr><th>Case</th><th>Player</th><th>SAFA</th><th>Reg</th><th>Club</th><th>Article</th><th class="num">Fine</th><th>Invoice</th><th>Match date</th></tr></thead>'+
         '<tbody>'+(upBody||'<tr><td colspan="9" class="hint">No unpaid fines recorded.</td></tr>')+'</tbody></table></div>'+
-        '<p class="hint" style="margin-top:6px">SAFA numbers are confirmed against the registration master (Reg = found). Invoice numbers tie fines to Sage. Click a row for that player&rsquo;s full disciplinary record. Unaudited.</p></div>';
+        '<p class="hint" style="margin-top:6px">SAFA numbers are confirmed against the registration master (Reg = found). Invoice numbers tie fines to Sage. Click a row for that player&rsquo;s full disciplinary record.</p></div>';
 
     // Referees | suspensions
     var rfRoster=refs.roster||[];
@@ -438,7 +438,7 @@
           '<th>Club</th><th class="num">Players</th><th class="num">Snr</th><th class="num">Jnr</th>'+
           '<th class="num">Debtor</th><th>Status</th><th class="num">Cards</th><th class="num">Rulings</th><th class="num">Fines out</th>'+
         '</tr></thead><tbody id="cpfRows">'+(tbl(clubs)||'<tr><td colspan="9" class="hint">No clubs.</td></tr>')+'</tbody></table></div>'+
-        '<p class="hint" style="margin-top:6px">Players and categories from the registration master; debtor balances from Sage (brackets denote credits); cards, rulings and fines from the disciplinary system. Operational, unaudited.</p>'+
+        '<p class="hint" style="margin-top:6px">Players and categories from the registration master; debtor balances from Sage (brackets denote credits); cards, rulings and fines from the disciplinary system. Operational.</p>'+
       '</div>';
 
     root.innerHTML = head + table;
@@ -548,7 +548,7 @@
         (topP?'<div class="hint" style="margin-top:4px">Most carded: '+topP+'</div>':'')+
         (unpaid?'<div class="dsc-tblwrap" style="margin-top:8px;max-height:220px"><table class="dsc-tbl"><thead><tr><th>Case</th><th>Player</th><th>Article</th><th class="num">Fine</th><th>Invoice</th></tr></thead><tbody>'+unpaid+'</tbody></table></div>':'')+
         (meta.has_dash?'':'<p class="hint" style="margin-top:8px">Discipline figures await the first dash sync.</p>')+
-        '<div class="cpf-foot">Generated '+dt(meta.generated)+'. Sources: registration master, Sage debtors (current snapshot), dash.cttlfa.com disciplinary mirror, LeagueRepublic (live), and the association website. Operational, unaudited.</div>'+
+        '<div class="cpf-foot">Generated '+dt(meta.generated)+'. Sources: registration master, Sage debtors (current snapshot), dash.cttlfa.com disciplinary mirror, LeagueRepublic (live), and the association website. Operational.</div>'+
       '</div>';
 
     var cl=NS.$("cpfClose"); if(cl) cl.onclick=function(){ box.innerHTML=""; };
