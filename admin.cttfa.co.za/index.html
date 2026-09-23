@@ -2426,7 +2426,7 @@
     var bg=strong?'#FBECEA':'#FCF3D8', bd=strong?'#E4B4AE':'#E7D3A8', col=strong?'#8a3c17':'#7a5312';
     return '<div style="background:'+bg+';border:1px solid '+bd+';border-radius:12px;padding:12px 14px;margin-bottom:12px;display:flex;gap:12px;align-items:flex-start">'
       +'<span style="font-size:11px;font-weight:700;letter-spacing:.3px;background:'+col+';color:#fff;border-radius:6px;padding:3px 8px;white-space:nowrap">'+(strong?'DATA STALE':'CHECK FRESHNESS')+'</span>'
-      +'<div style="font-size:13px;color:'+col+'"><b>Sage was last fetched '+n+' days ago.</b> The balances and ageing on this page are from that fetch. The automated fetch runs twice a week (Tuesday and Friday); if it has not run, the office-PC agent may be off or signed out of Sage. Press <b>Fetch from Sage</b> to refresh before relying on these figures or sending anything.</div></div>';
+      +'<div style="font-size:13px;color:'+col+'"><b>Sage was last fetched '+n+' days ago.</b> The balances and ageing on this page are from that fetch. The automated fetch runs nightly on GitHub Actions. Press <b>Fetch from Sage</b> to refresh now before relying on these figures or sending anything.</div></div>';
   }
   // ---- Next best actions: a priority-ordered worklist derived from the live
   // position. Cash and out-of-sync clubs come first because reminders and
@@ -2592,18 +2592,17 @@
     Array.prototype.forEach.call(m.querySelectorAll('.deb-drow'),function(tr){ tr.style.cursor='pointer'; tr.onclick=function(){ debModalClose(); debOpenClub(tr.getAttribute('data-key')); }; });
   }
 
-  /* ---- Fetch from Sage (queues the office-PC agent) ---- */
+  /* ---- Fetch from Sage (dispatches the GitHub Actions fetch) ---- */
   var _debPoll=null;
   function debSetFetchStatus(txt,tone){ var el=$("debFetchStatus"); if(!el) return; el.innerHTML=txt; el.style.color=(tone==='bad')?'#9A3130':(tone==='ok'?'#1c5136':'var(--muted)'); }
   function debFetchBtnDisabled(x){ var b=$("debFetch"); if(b) b.disabled=!!x; }
   function debStateText(r){
-    var age=r.heartbeat?(Date.now()-new Date(r.heartbeat).getTime())/1000:1e9, agentDown=age>200, st=r.status||'idle';
-    if(st==='queued') return ['Queued — waiting for the office PC…',''];
+    var st=r.status||'idle';
+    if(st==='queued') return ['Queued — starting the fetch on GitHub…',''];
     if(st==='running') return ['Fetching from Sage… '+(r.last_result?('('+esc(r.last_result)+')'):''),''];
-    if(st==='needs_login') return ['Sign in to CTTLFA Sage on the office PC (run signin.bat once), then Fetch again.','bad'];
-    if(st==='error') return [esc(r.last_result||'Last fetch failed.'),'bad'];
+    if(st==='needs_login') return [esc(r.last_result||'Sage sign-in failed — check the Sage secrets in the repository.'),'bad'];
+    if(st==='error') return [esc(r.last_result||'Last fetch failed — see the GitHub Actions run.'),'bad'];
     var base=r.last_result?esc(r.last_result):'Ready.';
-    if(agentDown) return ['Refresh agent offline — start the office PC. '+base,'bad'];
     return ['Up to date · '+base,'ok'];
   }
   function debShowRefreshState(){
@@ -2611,11 +2610,15 @@
       if(r.data.status==='queued'||r.data.status==='running') debStartPolling(); });
   }
   function debFetchFromSage(){
-    debFetchBtnDisabled(true); debSetFetchStatus('Requesting a fetch…','');
-    sb.rpc('deb_request_refresh').then(function(r){
-      if(r.error){ debSetFetchStatus(esc(r.error.message||String(r.error)),'bad'); debFetchBtnDisabled(false); return; }
+    debFetchBtnDisabled(true); debSetFetchStatus('Starting the fetch on GitHub…','');
+    sb.functions.invoke('sage-refresh',{body:{}}).then(function(r){
+      var d=(r&&r.data)||{};
+      if((r&&r.error)||d.configured===false||d.ok===false){
+        debSetFetchStatus(esc((d&&(d.hint||d.detail))||(r&&r.error&&r.error.message)||'Could not start the fetch.'),'bad');
+        debFetchBtnDisabled(false); return;
+      }
       debStartPolling();
-    });
+    }).catch(function(e){ debSetFetchStatus(esc(e.message||String(e)),'bad'); debFetchBtnDisabled(false); });
   }
   function debStartPolling(){
     if(_debPoll) clearInterval(_debPoll); var tries=0;
@@ -5459,7 +5462,7 @@ tr.fa-click:hover{background:#f2f6ff}
 .fa-plan-scn{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center;padding-left:12px;border-left:1px solid var(--line,#e6e9f2)}
 .fa-planctl input[type=text]{font-size:13px;padding:5px 8px;border:1px solid var(--line,#e6e9f2);border-radius:8px;color:var(--navy,#071A4A)}
 </style>
-<script src="js/50-system.js?v=5"></script>
+<script src="js/50-system.js?v=6"></script>
 <script src="js/70-webstats.js?v=1"></script>
 <script src="js/81-fixtures-context.js?v=1"></script>
 <script src="js/80-fixtures.js?v=11"></script>

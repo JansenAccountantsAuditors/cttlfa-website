@@ -48,13 +48,17 @@
   }
   function sysHealthHtml(data,season){
     var A=data.agent||{}, D=data.debtors||{}, E=data.email||{}, C=data.correspondence||{}, W=data.watchdog||{};
-    var agState=A.online?{w:'Online',c:'ok'}:{w:'Offline',c:'bad'};
-    var agTile=shTile('Sage fetch agent',shPill(agState.w,agState.c),[
+    var agAgeH=(A.fetch_age_hours!=null)?Number(A.fetch_age_hours):null;
+    var agState = (A.status==='error') ? {w:'Last run failed',c:'bad'}
+                : (A.status==='running'||A.status==='queued') ? {w:'Running',c:'warn'}
+                : (agAgeH!=null && agAgeH>30) ? {w:'Stale',c:'warn'}
+                : {w:'Healthy',c:'ok'};
+    var agTile=shTile('Sage fetch (GitHub Actions)',shPill(agState.w,agState.c),[
+        ['Runs on','GitHub Actions'],
+        ['Last run',shDT(A.last_finished_at)+(A.last_finished_at?(' ('+shAgo(A.last_finished_at)+')'):'')],
         ['Status',NS.esc(A.status||'unknown')],
-        ['Agent heartbeat',A.heartbeat_min_ago!=null?(A.heartbeat_min_ago+' min ago'):'&mdash;'],
-        ['Last fetch finished',shDT(A.last_finished_at)],
-        ['Last result',NS.esc(A.last_result||'&mdash;')]
-      ],A.online?'The office PC fetch agent is running.':'The office PC is not reporting in. Start it, run the CTTLFA Sage fetch agent, then press Fetch on Club Debtors.');
+        ['Result',NS.esc(A.last_result||'&mdash;')]
+      ],'The Sage fetch runs on GitHub Actions, nightly and on demand. Press &ldquo;Fetch from Sage&rdquo; on Club Debtors to run it now; the office PC is no longer involved.');
     // Club debtor data: separate three distinct things — the ledger tie (reconciled),
     // the balance currency (live to the fetch) and the ageing bucket date (Sage report
     // date, which can lag). The Club Debtors "In sync" badge uses the same tie.
