@@ -52,4 +52,5 @@ jobs:
             **/*.md
             build_deploy.py
             lr_sync.py
+            cttlfa_api_fetch.py
             prerender.js

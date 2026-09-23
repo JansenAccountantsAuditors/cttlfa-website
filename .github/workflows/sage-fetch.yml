@@ -1,0 +1,50 @@
+name: Sage debtors fetch
+
+# Pulls CTTLFA club balances, ageing and the itemised ledger from the Sage
+# Accounting API and loads them into the admin dashboard (Supabase), replacing
+# the office-PC fetch agent. Runs nightly and on demand (the "Fetch from Sage"
+# button dispatches this workflow). Credentials come from repository secrets;
+# no secret value is stored in this file. It only runs once the four Sage
+# secrets are set: Settings -> Secrets and variables -> Actions.
+
+on:
+  schedule:
+    - cron: "20 1 * * *"      # 01:20 UTC = 03:20 SAST, nightly
+  workflow_dispatch: {}
+
+concurrency:
+  group: sage-fetch
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    env:
+      # Secrets (you add these once in the repo settings)
+      SAGE_API_KEY: ${{ secrets.SAGE_API_KEY }}
+      SAGE_USER: ${{ secrets.SAGE_USER }}
+      SAGE_PASS: ${{ secrets.SAGE_PASS }}
+      SUPABASE_INGEST_TOKEN: ${{ secrets.SUPABASE_INGEST_TOKEN }}
+      # Non-secret config (the publishable key is the public anon key already served in the browser)
+      SUPABASE_URL: "https://fbbbsvkshajollduapaw.supabase.co"
+      SUPABASE_PUBLISHABLE_KEY: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiYmJzdmtzaGFqb2xsZHVhcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODYyODgsImV4cCI6MjEwMzY2MjI4OH0.8heeqe-03Mji2NgHt17ZOCoctijRhF78cHvSQkrUUi0"
+      SAGE_COMPANY_ID: "364261"
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install httpx
+
+      - name: Secrets present?
+        if: env.SAGE_API_KEY == '' || env.SUPABASE_INGEST_TOKEN == ''
+        run: echo "::warning::Sage secrets are not set yet. Add SAGE_API_KEY, SAGE_USER, SAGE_PASS and SUPABASE_INGEST_TOKEN in Settings -> Secrets and variables -> Actions, then re-run."
+
+      - name: Fetch from Sage and load the dashboard
+        if: env.SAGE_API_KEY != '' && env.SUPABASE_INGEST_TOKEN != ''
+        run: python cttlfa_api_fetch.py --push
