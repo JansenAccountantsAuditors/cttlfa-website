@@ -3422,7 +3422,7 @@
     if(without.length){ h+='<details style="margin-top:10px"><summary style="cursor:pointer;font-size:13px;color:var(--navy);font-weight:600">Clubs without portal access ('+without.length+')</summary><div style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.9">'+without.map(function(c){return esc(c.name);}).join(' &middot; ')+'</div></details>'; }
     h+='</div>';
     h+='<div id="cpEditsWrap"></div>';
-    h+='<div class="card"><div class="deb-sec" style="margin-top:0;border-top:0;padding-top:0">Preview a club&rsquo;s portal</div>'
+    h+='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div class="deb-sec" style="margin:0;border-top:0;padding-top:0">Preview a club&rsquo;s portal</div><span style="display:flex;gap:8px"><button class="btn ghost sm" id="cpAccCsv" type="button" title="Download the club portal access list as CSV">CSV</button><button class="btn ghost sm" id="cpAccPdf" type="button" title="Download the club portal access list as PDF">PDF</button></span></div>'
       +'<p class="hint" style="font-size:13px;margin:0 0 10px">A read-only preview of a club&rsquo;s portal, rebuilt from the same data &mdash; no login needed.</p>'
       +'<input id="cpPvSearch" placeholder="Search a club or code&hellip;" style="width:100%;max-width:340px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font:inherit;margin-bottom:10px">'
       +'<div id="cpPvList" class="deb-tblwrap"></div></div>';
@@ -3448,6 +3448,10 @@
     }
     drawList('');
     var s=document.getElementById('cpPvSearch'); if(s) s.oninput=function(){ drawList(s.value); };
+    function cpAccessRows(){ return clubs.slice().sort(function(a,b){return (a.name||'').localeCompare(b.name||'');}).map(function(c){ var acc=Number(amap[c.club_key]||0); return [c.name||'', c.code||'', dR(c.bal), acc, acc>0?'Yes':'No']; }); }
+    var _cpHead=["Club","Code","Balance","Portal logins","Has access"];
+    var _cpc=document.getElementById('cpAccCsv'); if(_cpc) _cpc.onclick=function(){ regCSV("CTTLFA club portal access.csv",_cpHead,cpAccessRows()); };
+    var _cpp=document.getElementById('cpAccPdf'); if(_cpp) _cpp.onclick=function(){ regPDF("Club portal access",withA+" of "+total+" registered clubs have a login · access = number of portal logins",_cpHead,cpAccessRows(),"CTTLFA club portal access.pdf"); };
   }
 
   // ---- Collections Desk ----
