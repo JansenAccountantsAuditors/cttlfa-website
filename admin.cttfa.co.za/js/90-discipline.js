@@ -149,6 +149,9 @@
     }).join("")+'</div>';
   }
 
+  function regTxt(r){ return r?"Registered":"Not in register"; }
+  function regPill(r){ return r?'<span class="dsc-pill ok" title="SAFA number found in the registration master">Reg</span>':'<span class="dsc-pill bad" title="This SAFA number is not in the registration master — confirm the player/referee">Not reg</span>'; }
+
   /* ==================== DISCIPLINE DASHBOARD ==================== */
   function renderDiscipline(){
     ensureStyle();
@@ -201,11 +204,11 @@
     var divRows=(cards.by_division||[]).map(function(x){return [x.division,x.n];});
     var divCard='<div class="card">'+bhead("Yellow cards by division","Cards by division",["Division","Cards"],divRows)+
       bars(cards.by_division,"division","n","division")+'</div>';
-    var plRows=(cards.top_players||[]).map(function(p){return [p.player,p.club||"–",p.n];});
+    var plRows=(cards.top_players||[]).map(function(p){return [p.player,p.safa||"–",regTxt(p.registered),p.club||"–",p.n];});
     var plBody=(cards.top_players||[]).map(function(p){
-      return '<tr class="clk" data-drill="player|'+esc(p.player)+'"><td>'+esc(p.player)+'</td><td>'+esc(p.club||"–")+'</td><td class="num">'+num(p.n)+'</td></tr>'; }).join("");
-    var plCard='<div class="card">'+bhead("Most-carded players","Most carded players",["Player","Club","Cards"],plRows)+
-      '<div class="dsc-tblwrap"><table class="dsc-tbl"><thead><tr><th>Player</th><th>Club</th><th class="num">Cards</th></tr></thead><tbody>'+(plBody||'<tr><td colspan="3" class="hint">No data.</td></tr>')+'</tbody></table></div></div>';
+      return '<tr class="clk" data-drill="psafa|'+esc(p.safa||"")+'"><td>'+esc(p.player)+'</td><td>'+esc(p.safa||"–")+'</td><td>'+regPill(p.registered)+'</td><td>'+esc(p.club||"–")+'</td><td class="num">'+num(p.n)+'</td></tr>'; }).join("");
+    var plCard='<div class="card">'+bhead("Most-carded players","Most carded players",["Player","SAFA","Registered","Club","Cards"],plRows)+
+      '<div class="dsc-tblwrap"><table class="dsc-tbl"><thead><tr><th>Player</th><th>SAFA</th><th>Reg</th><th>Club</th><th class="num">Cards</th></tr></thead><tbody>'+(plBody||'<tr><td colspan="5" class="hint">No data.</td></tr>')+'</tbody></table></div></div>';
 
     // Row 2: cards by month (chart) | cards by club (bars)
     var bm=cards.by_month||[];
@@ -245,37 +248,38 @@
       '</div>';
 
     // Unpaid fines (full-width, drillable rows, exportable)
-    var upRows=(ru.unpaid||[]).map(function(u){ return [u.case_number||"–",u.club||"–",u.player||"–",u.article||"–",u.fine_amount==null?"–":Number(u.fine_amount).toFixed(2),u.invoice_number||"–",u.match_date?String(u.match_date).slice(0,10):"–"]; });
+    var upRows=(ru.unpaid||[]).map(function(u){ return [u.case_number||"–",u.player||"–",u.safa||"–",regTxt(u.registered),u.club||"–",u.article||"–",u.fine_amount==null?"–":Number(u.fine_amount).toFixed(2),u.invoice_number||"–",u.match_date?String(u.match_date).slice(0,10):"–"]; });
     var upBody=(ru.unpaid||[]).map(function(u){
-      return '<tr class="clk" data-drill="article|'+esc(u.article||"")+'"><td>'+esc(u.case_number||"–")+'</td><td>'+esc(u.club||"–")+'</td><td>'+esc(u.player||"–")+'</td><td class="wrap">'+esc(u.article||"–")+'</td><td class="num">'+rand(u.fine_amount)+'</td><td>'+esc(u.invoice_number||"–")+'</td><td>'+dt(u.match_date)+'</td></tr>'; }).join("");
+      return '<tr class="clk" data-drill="psafa|'+esc(u.safa||"")+'"><td>'+esc(u.case_number||"–")+'</td><td>'+esc(u.player||"–")+'</td><td>'+esc(u.safa||"–")+'</td><td>'+regPill(u.registered)+'</td><td>'+esc(u.club||"–")+'</td><td class="wrap">'+esc(u.article||"–")+'</td><td class="num">'+rand(u.fine_amount)+'</td><td>'+esc(u.invoice_number||"–")+'</td><td>'+dt(u.match_date)+'</td></tr>'; }).join("");
     var unpaidBlock=
-      '<div class="card">'+bhead("Unpaid fines","Unpaid fines",["Case","Club","Player","Article","Fine","Invoice","Match date"],upRows)+
-        '<div class="dsc-tblwrap" style="max-height:360px"><table class="dsc-tbl"><thead><tr><th>Case</th><th>Club</th><th>Player</th><th>Article</th><th class="num">Fine</th><th>Invoice</th><th>Match date</th></tr></thead>'+
-        '<tbody>'+(upBody||'<tr><td colspan="7" class="hint">No unpaid fines recorded.</td></tr>')+'</tbody></table></div>'+
-        '<p class="hint" style="margin-top:6px">Invoice numbers tie disciplinary fines to Sage and the debtors ledger. Click a row for the article detail. Unaudited operational extract.</p></div>';
+      '<div class="card">'+bhead("Unpaid fines","Unpaid fines",["Case","Player","SAFA","Registered","Club","Article","Fine","Invoice","Match date"],upRows)+
+        '<div class="dsc-tblwrap" style="max-height:360px"><table class="dsc-tbl"><thead><tr><th>Case</th><th>Player</th><th>SAFA</th><th>Reg</th><th>Club</th><th>Article</th><th class="num">Fine</th><th>Invoice</th><th>Match date</th></tr></thead>'+
+        '<tbody>'+(upBody||'<tr><td colspan="9" class="hint">No unpaid fines recorded.</td></tr>')+'</tbody></table></div>'+
+        '<p class="hint" style="margin-top:6px">SAFA numbers are confirmed against the registration master (Reg = found). Invoice numbers tie fines to Sage. Click a row for that player&rsquo;s full disciplinary record. Unaudited.</p></div>';
 
     // Referees | suspensions
-    var raRows=(refs.top_appointments||[]).map(function(x){return [x.referee,x.appts];});
+    var raRows=(refs.top_appointments||[]).map(function(x){return [x.referee,x.safa||"–",regTxt(x.registered),x.appts];});
     var raBody=(refs.top_appointments||[]).map(function(x){
-      return '<tr class="clk" data-drill="referee|'+esc(x.referee)+'"><td>'+esc(x.referee)+'</td><td class="num">'+num(x.appts)+'</td></tr>'; }).join("");
+      var dk = x.safa ? ('rsafa|'+esc(x.safa)) : ('referee|'+esc(x.referee));
+      return '<tr class="clk" data-drill="'+dk+'"><td>'+esc(x.referee)+'</td><td>'+esc(x.safa||"–")+'</td><td>'+regPill(x.registered)+'</td><td class="num">'+num(x.appts)+'</td></tr>'; }).join("");
     var refBlock=
       '<div class="card">'+
         '<div class="dsc-bh"><span class="dsc-sec">Referees</span>'+acts("Referees by level",["Level","Count"],(refs.by_level||[]).map(function(x){return [x.level,x.n];}))+'</div>'+
         '<div class="dsc-kv"><span>On record</span><b>'+num(refs.total)+'</b><span>Active</span><b>'+num(refs.active)+'</b><span>Accreditations</span><b>'+num(refs.accreditations)+'</b></div>'+
         '<div class="dsc-sec" style="margin:8px 0 6px;font-size:12px;color:var(--muted)">By level</div>'+bars(refs.by_level,"level","n",null)+
-        '<div class="dsc-bh" style="margin-top:10px"><span class="dsc-sec" style="font-size:12px;color:var(--muted)">Most appointments</span>'+acts("Referee appointments",["Referee","Appointments"],raRows)+'</div>'+
-        '<div class="dsc-tblwrap" style="max-height:200px"><table class="dsc-tbl"><thead><tr><th>Referee</th><th class="num">Appts</th></tr></thead><tbody>'+(raBody||'<tr><td colspan="2" class="hint">None.</td></tr>')+'</tbody></table></div></div>';
+        '<div class="dsc-bh" style="margin-top:10px"><span class="dsc-sec" style="font-size:12px;color:var(--muted)">Most appointments</span>'+acts("Referee appointments",["Referee","SAFA","Registered","Appointments"],raRows)+'</div>'+
+        '<div class="dsc-tblwrap" style="max-height:200px"><table class="dsc-tbl"><thead><tr><th>Referee</th><th>SAFA</th><th>Reg</th><th class="num">Appts</th></tr></thead><tbody>'+(raBody||'<tr><td colspan="4" class="hint">None.</td></tr>')+'</tbody></table></div></div>';
     var ruleRows=(sus.rules||[]).map(function(x){return [x.card_count,x.suspension_matches];});
-    var atRows=(sus.at_risk||[]).map(function(x){return [x.player,x.club||"–",x.cards];});
+    var atRows=(sus.at_risk||[]).map(function(x){return [x.player,x.safa||"–",regTxt(x.registered),x.club||"–",x.cards];});
     var atBody=(sus.at_risk||[]).map(function(x){
-      return '<tr class="clk" data-drill="player|'+esc(x.player)+'"><td>'+esc(x.player)+'</td><td>'+esc(x.club||"–")+'</td><td class="num">'+num(x.cards)+'</td></tr>'; }).join("");
+      return '<tr class="clk" data-drill="psafa|'+esc(x.safa||"")+'"><td>'+esc(x.player)+'</td><td>'+esc(x.safa||"–")+'</td><td>'+regPill(x.registered)+'</td><td>'+esc(x.club||"–")+'</td><td class="num">'+num(x.cards)+'</td></tr>'; }).join("");
     var susBlock=
       '<div class="card">'+
-        '<div class="dsc-bh"><span class="dsc-sec">Suspensions</span>'+acts("Players at risk",["Player","Club","Cards"],atRows)+'</div>'+
+        '<div class="dsc-bh"><span class="dsc-sec">Suspensions</span>'+acts("Players at risk",["Player","SAFA","Registered","Club","Cards"],atRows)+'</div>'+
         '<div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:4px">Accumulation thresholds</div>'+
         '<table class="dsc-tbl" style="margin-bottom:10px"><thead><tr><th class="num">Cards</th><th class="num">Matches suspended</th></tr></thead><tbody>'+((sus.rules||[]).map(function(x){return '<tr><td class="num">'+num(x.card_count)+'</td><td class="num">'+num(x.suspension_matches)+'</td></tr>';}).join(""))+'</tbody></table>'+
         '<div class="dsc-sec" style="font-size:12px;color:var(--muted)">Players at risk <span class="dsc-pill warn">'+num((sus.at_risk||[]).length)+'</span></div>'+
-        '<div class="dsc-tblwrap" style="max-height:200px;margin-top:6px"><table class="dsc-tbl"><thead><tr><th>Player</th><th>Club</th><th class="num">Cards</th></tr></thead><tbody>'+(atBody||'<tr><td colspan="3" class="hint">None at threshold.</td></tr>')+'</tbody></table></div></div>';
+        '<div class="dsc-tblwrap" style="max-height:200px;margin-top:6px"><table class="dsc-tbl"><thead><tr><th>Player</th><th>SAFA</th><th>Reg</th><th>Club</th><th class="num">Cards</th></tr></thead><tbody>'+(atBody||'<tr><td colspan="5" class="hint">None at threshold.</td></tr>')+'</tbody></table></div></div>';
 
     root.innerHTML = head + kpi +
       '<div class="dsc-grid">'+divCard+plCard+'</div>'+
