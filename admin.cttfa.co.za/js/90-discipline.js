@@ -552,10 +552,24 @@
     fillClubFixtures(web, c.name);
   }
 
+  function lrKeys(aliases, name){
+    var keys={}; (aliases||[]).concat([name]).forEach(function(a){ var k=nrm(lrClubOf(a)); if(k) keys[k]=1; });
+    return Object.keys(keys);
+  }
   function fillClubFixtures(web, name){
     var el=NS.$("cpfFx"); if(!el) return;
-    lrGet().then(function(all){
-      var cf=clubFixtures(all, (web&&web.lr_aliases)||[], name);
+    var aliases=(web&&web.lr_aliases)||[];
+    // Read the LeagueRepublic mirror in the database first; fall back to the live API.
+    var keys=lrKeys(aliases, name);
+    NS.sb.rpc("lr_club_fixtures",{p_keys:keys}).then(function(r){
+      if(r.error) throw r.error;
+      var rows=r.data||[];
+      if(!rows.length){ return lrGet().then(render); }
+      render(rows);
+    }).catch(function(){ lrGet().then(render).catch(function(){ el.innerHTML='<p class="hint">Could not load LeagueRepublic fixtures right now.</p>'; }); });
+
+    function render(all){
+      var cf=clubFixtures(all, aliases, name);
       if(!cf.teams.length && !cf.fixtures.length){
         el.innerHTML='<p class="hint">No LeagueRepublic fixtures matched this club for the 2026 season.</p>'; return; }
       var results=cf.fixtures.filter(function(f){return f.result;}).sort(function(a,b){ var da=lrDate(a.fixtureDate),db=lrDate(b.fixtureDate); return (db?db.t:0)-(da?da.t:0); }).slice(0,6);
@@ -578,7 +592,7 @@
           '<div><div class="dsc-sec" style="font-size:12px;color:var(--muted)">Upcoming fixtures</div>'+
             '<div class="dsc-tblwrap" style="max-height:230px"><table class="dsc-tbl"><thead><tr><th>Date</th><th>Comp</th><th>Home</th><th>Away</th><th>Venue</th></tr></thead><tbody>'+(upBody||'<tr><td colspan="5" class="hint">None scheduled.</td></tr>')+'</tbody></table></div></div>'+
         '</div>';
-    }).catch(function(){ el.innerHTML='<p class="hint">Could not load LeagueRepublic fixtures right now.</p>'; });
+    }
   }
 
   NS.renderDiscipline = renderDiscipline;
