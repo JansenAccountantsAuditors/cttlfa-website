@@ -1,0 +1,376 @@
+<!doctype html><html lang="en-ZA"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CTTLFA Voting — Practice Sandbox</title>
+<meta name="theme-color" content="#0B1F4E">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0B1F4E;--navy2:#12306e;--gold:#F4B41A;--gold-d:#9a7213;--ink:#12203f;--muted:#5A667C;
+--line:#E6EAF3;--line2:#EEF2F9;--soft:#F5F8FD;--good:#1c7a4d;--good-bg:#eaf6ee;--bad:#B23A32;--bad-bg:#fbeceb;--white:#fff}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:#eef2fa;font-family:Inter,system-ui,sans-serif;color:var(--ink)}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 60px}
+header{background:linear-gradient(150deg,var(--navy),#0c2358 60%,var(--navy2));color:#fff;position:relative}
+header:after{content:"";position:absolute;left:0;bottom:0;width:100%;height:4px;background:var(--gold)}
+.hin{max-width:1180px;margin:0 auto;padding:18px 16px;display:flex;align-items:center;gap:14px}
+.hin .tile{width:48px;height:48px;border-radius:11px;background:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.hin .tile img{width:38px;height:38px;object-fit:contain}
+.hin .t{font-weight:800;font-size:20px;line-height:1.1}
+.hin .s{color:#aebbdb;font-size:13px;margin-top:2px}
+.badge{margin-left:auto;background:rgba(244,180,26,.18);border:1px solid rgba(244,180,26,.5);color:var(--gold);
+font-weight:800;font-size:12px;letter-spacing:.06em;text-transform:uppercase;padding:7px 13px;border-radius:20px}
+.reset{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.22);color:#fff;font-weight:700;font-size:13px;
+padding:8px 14px;border-radius:9px;cursor:pointer;margin-left:12px}
+.reset:hover{background:rgba(255,255,255,.18)}
+/* tabs */
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 4px}
+.tab{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:13px 14px;cursor:pointer;
+display:flex;align-items:center;gap:11px;font-weight:700;color:var(--muted)}
+.tab .n{width:26px;height:26px;border-radius:50%;background:var(--line2);color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;flex:0 0 auto}
+.tab.on{border-color:var(--navy);color:var(--navy);box-shadow:0 6px 18px rgba(11,31,78,.1)}
+.tab.on .n{background:var(--gold);color:var(--navy)}
+.panel{display:none;margin-top:16px}.panel.on{display:block}
+.card{background:#fff;border:1px solid var(--line);border-radius:15px;box-shadow:0 6px 20px rgba(9,20,48,.05);padding:20px}
+.card+.card{margin-top:16px}
+h2{font-size:21px;color:var(--navy);font-weight:800}
+h3{font-size:16px;color:var(--navy);font-weight:800;margin-bottom:4px}
+.hint{color:var(--muted);font-size:14px;line-height:1.5;margin-top:6px}
+.hint b{color:var(--navy)}
+.btn{display:inline-flex;align-items:center;gap:8px;font-weight:800;font-size:14px;padding:11px 16px;border-radius:10px;border:1px solid var(--navy);background:var(--navy);color:#fff;cursor:pointer}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:var(--navy)}
+.btn.ghost{background:#fff;color:var(--navy)}
+.btn.good{background:var(--good);border-color:var(--good)}
+.btn.sm{padding:8px 12px;font-size:13px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end}
+label.f{font-size:12px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:6px}
+input[type=text],input[type=number],select{border:1px solid var(--line);border-radius:10px;padding:11px 13px;font-size:15px;font-family:inherit;color:var(--navy);font-weight:600;background:#fff;width:100%}
+.pill{display:inline-block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;padding:4px 10px;border-radius:20px}
+.pill.full{background:#eef3ff;color:#1e3f9e}.pill.assoc{background:#eef7f1;color:#1c7a4d}
+/* club/delegate rows */
+.clist{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.crow{border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.crow .nm{font-weight:800;color:var(--navy);font-size:16px}
+.crow .mt{font-size:13px;color:var(--muted);margin-top:2px}
+.crow .sp{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dchip{background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-size:13px;color:var(--navy);font-weight:700;display:flex;gap:8px;align-items:center}
+.dchip .code{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.08em;color:var(--gold-d);font-weight:800}
+.dchip .rm{color:var(--bad);cursor:pointer;font-weight:800;font-size:15px;line-height:1}
+.tot{margin-top:16px;background:var(--navy);color:#fff;border-radius:12px;padding:14px 18px;display:flex;gap:22px;align-items:center;flex-wrap:wrap}
+.tot .k{color:#aebbdb;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em}
+.tot .v{font-size:26px;font-weight:800;color:var(--gold);line-height:1}
+.note{background:var(--soft);border:1px solid var(--line);border-left:4px solid var(--gold);border-radius:10px;padding:12px 15px;font-size:13.5px;color:var(--ink);margin-top:14px;line-height:1.5}
+/* phones */
+.phones{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;margin-top:16px}
+.ph{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff;box-shadow:0 8px 22px rgba(11,31,78,.08)}
+.ph .top{background:linear-gradient(150deg,var(--navy),#12306e);color:#fff;padding:14px;text-align:center}
+.ph .top .c{font-weight:800;font-size:15px}.ph .top .v{color:#aebbdb;font-size:12px;margin-top:2px}
+.ph .bd{padding:14px}
+.ph .opt{border:2px solid var(--line);border-radius:10px;padding:11px;text-align:center;font-weight:800;font-size:15px;color:var(--navy);cursor:pointer;margin-bottom:9px}
+.ph .opt.yes.sel{background:var(--good);color:#fff;border-color:var(--good)}
+.ph .opt.no.sel{background:var(--bad);color:#fff;border-color:var(--bad)}
+.ph .opt.ab.sel{background:#8b93a6;color:#fff;border-color:#8b93a6}
+.ph .done{text-align:center;padding:18px 10px;color:var(--good);font-weight:800;font-size:15px}
+.ph .waiting{text-align:center;padding:18px 10px;color:var(--muted);font-weight:700;font-size:14px}
+/* result / projector */
+.count{text-align:center;padding:30px}
+.count .cd{font-size:84px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;line-height:1}
+.count .cd.red{color:var(--bad)}
+.count .lbl{color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.1em;font-size:14px;margin-bottom:10px}
+.verdict{text-align:center;font-size:44px;font-weight:800;letter-spacing:.02em}
+.verdict.carried{color:var(--good)}.verdict.not{color:var(--bad)}
+.bars{max-width:640px;margin:24px auto 0;display:flex;flex-direction:column;gap:14px}
+.bar{display:flex;align-items:center;gap:14px}
+.bar .bl{width:90px;font-weight:800;color:var(--navy)}
+.bar .track{flex:1;height:38px;background:var(--soft);border:1px solid var(--line);border-radius:9px;overflow:hidden}
+.bar .fill{height:100%;display:flex;align-items:center;justify-content:flex-end;padding-right:12px;color:#fff;font-weight:800;transition:width .5s}
+.bar.f .fill{background:var(--good)}.bar.a .fill{background:var(--bad)}.bar.b .fill{background:#8b93a6}
+.proj{position:fixed;inset:0;background:linear-gradient(150deg,#071634,#0c2358);color:#fff;z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px}
+.proj.on{display:flex}
+.proj .close{position:absolute;top:22px;right:26px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;padding:10px 16px;border-radius:9px;cursor:pointer;font-weight:700}
+.proj .m{font-size:40px;font-weight:800;margin-bottom:10px}
+.proj .big{font-size:190px;font-weight:800;color:var(--gold);line-height:.95;font-variant-numeric:tabular-nums}
+.proj .big.red{color:#ff8f6b}
+.proj .vd{font-size:96px;font-weight:800}
+.proj .vd.carried{color:#59d98e}.proj .vd.not{color:#ff8f6b}
+.proj .sub{color:#aebbdb;font-size:22px;margin-top:16px}
+.msg{margin-top:12px;padding:11px 14px;border-radius:10px;font-size:13.5px;font-weight:600}
+.msg.ok{background:var(--good-bg);color:var(--good)}.msg.err{background:var(--bad-bg);color:var(--bad)}
+.foot{text-align:center;color:var(--muted);font-size:12.5px;margin-top:26px}
+.foot b{color:var(--navy)}
+@media(max-width:640px){.tab{min-width:calc(50% - 4px)}.hin .t{font-size:17px}}
+</style></head><body>
+<header><div class="hin">
+  <div class="tile"><img src="data:image/jpeg;base64,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" alt="CTTLFA"></div>
+  <div><div class="t">Voting — Practice Sandbox</div><div class="s">Rehearse the whole flow · runs in your browser</div></div>
+  <span class="badge">Practice · nothing is recorded</span>
+  <button class="reset" onclick="resetAll()">Reset</button>
+</div></header>
+
+<div class="wrap">
+  <div class="tabs">
+    <div class="tab on" data-p="accredit"><span class="n">1</span>Accredit</div>
+    <div class="tab" data-p="motion"><span class="n">2</span>Motion</div>
+    <div class="tab" data-p="vote"><span class="n">3</span>Vote</div>
+    <div class="tab" data-p="result"><span class="n">4</span>Result &amp; projector</div>
+  </div>
+
+  <!-- ACCREDIT -->
+  <div class="panel on" id="p-accredit">
+    <div class="card">
+      <h2>Accreditation — at the door</h2>
+      <p class="hint">Check delegates in. A <b>full club</b> gets <b>2 votes</b>; if a <b>second delegate</b> from the same full club checks in, the two votes <b>split 1 + 1</b> and each gets their own code. An <b>associate club</b> has <b>one delegate, one vote</b> — a second is refused.</p>
+      <div class="clist" id="clubList"></div>
+      <div class="tot"><div><div class="k">Clubs accredited</div><div class="v" id="tClubs">0</div></div>
+        <div><div class="k">Delegates checked in</div><div class="v" id="tDel">0</div></div>
+        <div><div class="k">Voting strength</div><div class="v" id="tStr">0</div></div></div>
+      <div class="note">This is a demo roll of clubs. In the real Admin Centre you search the register and confirm each delegate's SAFA card before accrediting.</div>
+    </div>
+  </div>
+
+  <!-- MOTION -->
+  <div class="panel" id="p-motion">
+    <div class="card">
+      <h2>Write &amp; open a motion</h2>
+      <p class="hint">Set the wording, the majority it needs and a timer, then start it. The rule is fixed before voting opens.</p>
+      <div class="row" style="margin-top:14px">
+        <div style="flex:2;min-width:260px"><label class="f">Motion</label><input type="text" id="mText" value="That the 2026 affiliation fee be approved."></div>
+      </div>
+      <div class="row" style="margin-top:12px">
+        <div style="flex:1;min-width:160px"><label class="f">Majority needed</label>
+          <select id="mRule"><option value="simple">Simple majority</option><option value="two_thirds">Two-thirds</option></select></div>
+        <div style="flex:1;min-width:140px"><label class="f">Timer (seconds)</label><input type="number" id="mTimer" value="60" min="10" max="600"></div>
+        <div><button class="btn good" id="startBtn" onclick="startMotion()">▶ Start motion</button></div>
+      </div>
+      <div id="motionState"></div>
+    </div>
+  </div>
+
+  <!-- VOTE -->
+  <div class="panel" id="p-vote">
+    <div class="card">
+      <h2>Cast the votes</h2>
+      <p class="hint">One simulated phone per accredited delegate. Tap a choice and Confirm — the club's weight goes one way, as one sealed ballot. No running tally is shown while the motion is open.</p>
+      <div class="row" style="margin-top:12px">
+        <button class="btn ghost sm" onclick="autoCast()">⚡ Auto-cast the rest (simulate the room)</button>
+        <span id="voteStatus" class="hint" style="margin:0"></span>
+      </div>
+      <div class="phones" id="phones"></div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div class="panel" id="p-result">
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+        <h2 style="margin:0">Result &amp; projector</h2>
+        <button class="btn gold sm" style="margin-left:auto" onclick="openProjector()">🖥 Open projector view</button>
+      </div>
+      <div id="resultBody"></div>
+    </div>
+  </div>
+
+  <div class="foot">CTTLFA Voting · <b>Practice sandbox</b> · everything here is a demo, nothing is saved or sent. Reload to start over.</div>
+</div>
+
+<!-- projector overlay -->
+<div class="proj" id="proj"><button class="close" onclick="closeProjector()">Close</button><div id="projBody"></div></div>
+
+<script>
+"use strict";
+var CLUBS=[
+ {id:1,name:"Demo Rovers FC",type:"full"},{id:2,name:"Northside United",type:"full"},
+ {id:3,name:"Table View AFC",type:"full"},{id:4,name:"Parow Rangers",type:"full"},
+ {id:5,name:"Goodwood FC",type:"full"},{id:6,name:"Kensington FC",type:"full"},
+ {id:7,name:"Belhar Spurs",type:"assoc"},{id:8,name:"Delft Rovers",type:"assoc"}
+];
+var state;
+function fresh(){ return {dele:[], motion:null, ballots:{}, timer:null}; }
+function code(){var A="ABCDEFGHJKMNPQRSTUVWXYZ23456789",s="";for(var i=0;i<6;i++)s+=A[Math.floor(Math.random()*A.length)];return s;}
+function clubDele(cid){return state.dele.filter(function(d){return d.club===cid;});}
+function reweight(cid){ // full: 1 delegate=2, 2 delegates=1+1 ; assoc: 1
+  var ds=clubDele(cid), club=CLUBS.find(function(c){return c.id===cid;});
+  if(club.type==="assoc"){ if(ds[0]) ds[0].votes=1; return; }
+  if(ds.length===1) ds[0].votes=2; else if(ds.length===2){ds[0].votes=1;ds[1].votes=1;}
+}
+function checkin(cid){
+  var club=CLUBS.find(function(c){return c.id===cid;}), ds=clubDele(cid);
+  var max = club.type==="assoc"?1:2;
+  if(ds.length>=max){ flash(cid, club.type==="assoc"?"An associate club has one delegate only.":"A full club has at most two delegates."); return; }
+  if(state.motion){ flash(cid,"Close the current motion before changing accreditation."); return; }
+  state.dele.push({id:Date.now()+Math.random(), club:cid, code:code(), votes:0, name:"Delegate "+(ds.length+1)});
+  reweight(cid); render();
+}
+function removeDele(did){
+  if(state.motion){ return; }
+  var d=state.dele.find(function(x){return x.id===did;}); if(!d) return;
+  state.dele=state.dele.filter(function(x){return x.id!==did;});
+  reweight(d.club); render();
+}
+function strength(){return state.dele.reduce(function(a,d){return a+d.votes;},0);}
+
+function render(){ renderAccredit(); renderMotion(); renderPhones(); renderResult(); }
+function renderAccredit(){
+  var host=document.getElementById("clubList"); host.innerHTML="";
+  CLUBS.forEach(function(c){
+    var ds=clubDele(c.id);
+    var chips=ds.map(function(d){return '<span class="dchip">'+d.name+' · <b>'+d.votes+'</b> vote'+(d.votes>1?'s':'')+
+      ' <span class="code">'+d.code+'</span> <span class="rm" title="remove" onclick="removeDele('+d.id+')">&times;</span></span>';}).join("");
+    var max=c.type==="assoc"?1:2;
+    var btn = ds.length<max ? '<button class="btn gold sm" onclick="checkin('+c.id+')">+ Check in delegate</button>' : '<span class="hint" style="margin:0">Fully accredited</span>';
+    host.insertAdjacentHTML("beforeend",
+      '<div class="crow"><div><div class="nm">'+c.name+' <span class="pill '+(c.type==="assoc"?"assoc":"full")+'">'+(c.type==="assoc"?"Associate · 1 vote":"Full · 2 votes")+'</span></div>'+
+      '<div class="mt" id="msg'+c.id+'">'+(ds.length?ds.length+' checked in':'No delegate yet')+'</div></div>'+
+      '<div class="sp">'+chips+btn+'</div></div>');
+  });
+  var clubs=CLUBS.filter(function(c){return clubDele(c.id).length>0;}).length;
+  document.getElementById("tClubs").textContent=clubs;
+  document.getElementById("tDel").textContent=state.dele.length;
+  document.getElementById("tStr").textContent=strength();
+}
+function flash(cid,t){var m=document.getElementById("msg"+cid); if(m){m.innerHTML='<span style="color:var(--bad);font-weight:700">'+t+'</span>'; setTimeout(render,2200);} }
+
+function startMotion(){
+  if(state.motion){ return; }
+  if(state.dele.length===0){ document.getElementById("motionState").innerHTML='<div class="msg err">Accredit at least one delegate first (tab 1).</div>'; return; }
+  var secs=Math.max(10,Math.min(600,parseInt(document.getElementById("mTimer").value)||60));
+  state.motion={text:document.getElementById("mText").value||"Motion", rule:document.getElementById("mRule").value,
+    secs:secs, remain:secs, open:true};
+  state.ballots={};
+  tick();
+  state.timer=setInterval(tick,1000);
+  render(); go("vote");
+}
+function tick(){
+  if(!state.motion||!state.motion.open){return;}
+  renderMotionState(); renderProjectorLive();
+  if(state.motion.remain<=0){ closeMotion(); return; }
+  state.motion.remain--;
+}
+function closeMotion(){
+  if(state.timer){clearInterval(state.timer);state.timer=null;}
+  if(state.motion) state.motion.open=false;
+  render(); renderProjector(); go("result");
+}
+function renderMotion(){ renderMotionState(); document.getElementById("startBtn").disabled = !!state.motion; }
+function renderMotionState(){
+  var host=document.getElementById("motionState"); if(!host) return;
+  if(!state.motion){ host.innerHTML=""; return; }
+  var m=state.motion;
+  if(m.open){
+    var mm=String(Math.floor(m.remain/60)).padStart(2,"0"), ss=String(m.remain%60).padStart(2,"0");
+    host.innerHTML='<div class="note" style="border-left-color:var(--good)"><b>Open:</b> "'+m.text+'" · '+ruleName(m.rule)+
+      ' · <b>'+mm+':'+ss+'</b> remaining · '+voted()+' of '+state.dele.length+' delegates voted '+
+      '<div style="margin-top:10px"><button class="btn sm" onclick="closeMotion()">Close now</button> '+
+      '<button class="btn ghost sm" onclick="go(\'vote\')">Go to voting</button></div></div>';
+  } else {
+    host.innerHTML='<div class="note"><b>Closed.</b> See the result on tab 4. <button class="btn ghost sm" onclick="newMotion()">New motion</button></div>';
+  }
+}
+function newMotion(){ state.motion=null; state.ballots={}; render(); go("motion"); }
+function ruleName(r){return r==="two_thirds"?"Two-thirds":"Simple majority";}
+function voted(){return Object.keys(state.ballots).length;}
+
+function renderPhones(){
+  var host=document.getElementById("phones"); if(!host) return; host.innerHTML="";
+  var st=document.getElementById("voteStatus");
+  if(!state.motion){ host.innerHTML='<div class="hint">No motion is open. Start one on tab 2.</div>'; if(st)st.textContent=""; return; }
+  if(!state.motion.open){ host.innerHTML='<div class="hint">The motion is closed — see tab 4 for the result.</div>'; if(st)st.textContent=""; return; }
+  if(st) st.textContent = voted()+" of "+state.dele.length+" delegates have voted (tally hidden until close).";
+  state.dele.forEach(function(d){
+    var club=CLUBS.find(function(c){return c.id===d.club;});
+    var b=state.ballots[d.code];
+    var bd;
+    if(b){ bd='<div class="done">✓ Recorded: '+b.toUpperCase()+'<div style="color:var(--muted);font-weight:600;font-size:12px;margin-top:4px">'+d.votes+' vote'+(d.votes>1?'s':'')+' cast</div></div>'; }
+    else {
+      bd='<div class="bd">'+
+        '<div class="opt yes" onclick="pick(\''+d.code+'\',\'yes\',this)">Yes</div>'+
+        '<div class="opt no" onclick="pick(\''+d.code+'\',\'no\',this)">No</div>'+
+        '<div class="opt ab" onclick="pick(\''+d.code+'\',\'abstain\',this)">Abstain</div>'+
+        '<button class="btn good sm" style="width:100%;justify-content:center;margin-top:4px" onclick="confirmVote(\''+d.code+'\')">Confirm vote</button></div>';
+    }
+    host.insertAdjacentHTML("beforeend",
+      '<div class="ph"><div class="top"><div class="c">'+club.name+'</div><div class="v">'+d.name+' · '+d.votes+' vote'+(d.votes>1?'s':'')+'</div></div>'+
+      (b?bd:bd)+'</div>');
+  });
+}
+var picks={};
+function pick(code,choice,el){ picks[code]=choice; var p=el.parentNode;
+  Array.prototype.forEach.call(p.querySelectorAll(".opt"),function(o){o.classList.remove("sel");}); el.classList.add("sel"); }
+function confirmVote(code){
+  if(!state.motion||!state.motion.open) return;
+  var ch=picks[code]; if(!ch){ return; }
+  state.ballots[code]=ch; renderPhones(); renderMotionState();
+  if(voted()>=state.dele.length){ /* everyone voted */ }
+}
+function autoCast(){
+  if(!state.motion||!state.motion.open) return;
+  state.dele.forEach(function(d){ if(!state.ballots[d.code]){ var r=Math.random(); state.ballots[d.code]= r<0.62?"yes":(r<0.85?"no":"abstain"); } });
+  renderPhones(); renderMotionState();
+}
+function tally(){
+  var f=0,a=0,abx=0;
+  state.dele.forEach(function(d){var b=state.ballots[d.code]; if(b==="yes")f+=d.votes; else if(b==="no")a+=d.votes; else if(b==="abstain")abx+=d.votes;});
+  var str=strength(); var noshow=str-(f+a+abx); if(noshow<0)noshow=0;
+  var abTotal=abx+noshow;
+  var carried = state.motion.rule==="two_thirds" ? (f>0 && f>=2*a && f> (f+a)*0-1 && f/(f+a||1)>=2/3) : (f>a);
+  if(state.motion.rule==="two_thirds"){ carried = (f+a)>0 && (f/(f+a))>=2/3; }
+  else { carried = f>a; }
+  return {f:f,a:a,ab:abTotal,noshow:noshow,str:str,carried:carried};
+}
+function renderResult(){
+  var host=document.getElementById("resultBody"); if(!host) return;
+  if(!state.motion){ host.innerHTML='<p class="hint" style="margin-top:12px">No motion yet. Run one on tabs 2 and 3.</p>'; return; }
+  var m=state.motion;
+  if(m.open){
+    var mm=String(Math.floor(m.remain/60)).padStart(2,"0"), ss=String(m.remain%60).padStart(2,"0");
+    host.innerHTML='<div class="count"><div class="lbl">Motion open · voting</div>'+
+      '<div style="font-size:22px;font-weight:800;color:var(--navy);margin-bottom:8px">'+m.text+'</div>'+
+      '<div class="cd'+(m.remain<=10?' red':'')+'">'+mm+':'+ss+'</div>'+
+      '<p class="hint">No live tally — the result appears when the motion closes.</p>'+
+      '<button class="btn sm" style="margin-top:12px" onclick="closeMotion()">Close now</button></div>';
+    return;
+  }
+  var t=tally(), tot=t.f+t.a+t.ab||1;
+  host.innerHTML='<div style="margin-top:14px">'+
+    '<div class="verdict '+(t.carried?'carried':'not')+'">'+(t.carried?'CARRIED':'NOT CARRIED')+'</div>'+
+    '<p class="hint" style="text-align:center">"'+m.text+'" · '+ruleName(m.rule)+'</p>'+
+    '<div class="bars">'+
+    bar("f","For",t.f,tot)+bar("a","Against",t.a,tot)+bar("b","Abstain",t.ab,tot)+
+    '</div>'+
+    '<p class="hint" style="text-align:center;margin-top:16px">Counted at weight · voting strength '+t.str+
+    (t.noshow>0?' · '+t.noshow+' no-show'+(t.noshow>1?'s':'')+' counted as abstentions':'')+'</p>'+
+    '<div style="text-align:center;margin-top:10px"><button class="btn ghost sm" onclick="newMotion()">Run another motion</button></div></div>';
+}
+function bar(cls,label,val,tot){var w=Math.round(val/tot*100);
+  return '<div class="bar '+cls+'"><div class="bl">'+label+'</div><div class="track"><div class="fill" style="width:'+Math.max(val>0?8:0,w)+'%">'+val+'</div></div></div>';}
+
+/* projector */
+function openProjector(){document.getElementById("proj").classList.add("on"); renderProjector();}
+function closeProjector(){document.getElementById("proj").classList.remove("on");}
+function renderProjector(){ if(!document.getElementById("proj").classList.contains("on")) return;
+  if(state.motion&&state.motion.open) renderProjectorLive(); else renderProjectorResult(); }
+function renderProjectorLive(){
+  var el=document.getElementById("proj"); if(!el.classList.contains("on")) return;
+  if(!state.motion){document.getElementById("projBody").innerHTML='<div class="m">No motion open</div>';return;}
+  var m=state.motion, mm=String(Math.floor(m.remain/60)).padStart(2,"0"), ss=String(m.remain%60).padStart(2,"0");
+  document.getElementById("projBody").innerHTML='<div class="sub" style="letter-spacing:.2em;text-transform:uppercase">Motion open · voting</div>'+
+    '<div class="m">'+m.text+'</div><div class="big'+(m.remain<=10?' red':'')+'">'+mm+':'+ss+'</div>'+
+    '<div class="sub">'+ruleName(m.rule)+' · no live tally</div>';
+}
+function renderProjectorResult(){
+  if(!state.motion){document.getElementById("projBody").innerHTML='<div class="m">No result yet</div>';return;}
+  var t=tally();
+  document.getElementById("projBody").innerHTML='<div class="m">'+state.motion.text+'</div>'+
+    '<div class="vd '+(t.carried?'carried':'not')+'">'+(t.carried?'CARRIED':'NOT CARRIED')+'</div>'+
+    '<div class="sub">For '+t.f+' · Against '+t.a+' · Abstain '+t.ab+'</div>';
+}
+
+/* nav */
+function go(p){ Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){t.classList.toggle("on",t.dataset.p===p);});
+  Array.prototype.forEach.call(document.querySelectorAll(".panel"),function(pn){pn.classList.toggle("on",pn.id==="p-"+p);}); }
+Array.prototype.forEach.call(document.querySelectorAll(".tab"),function(t){t.onclick=function(){go(t.dataset.p);};});
+function resetAll(){ if(state&&state.timer)clearInterval(state.timer); picks={}; state=fresh(); render(); go("accredit"); }
+resetAll();
+</script>
+</body></html>
