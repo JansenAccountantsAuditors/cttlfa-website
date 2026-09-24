@@ -1811,7 +1811,9 @@
     try{ var hc=$("homeCrest"); if(hc && typeof LOGO!=="undefined" && LOGO && !hc.firstChild) hc.innerHTML='<img src="'+LOGO+'" alt="CTTLFA crest">'; }catch(e){}
     try{ Array.prototype.forEach.call(document.querySelectorAll('#tab-home .hmod'),function(c){ var a=c.getAttribute('data-area'); c.style.display=canSee(a)?'':'none'; }); }catch(e){}
     try{ var un=document.querySelector('#sideNav .snav[data-tab="users"]'); if(un) un.style.display=(meRole==="administrator")?'':'none'; }catch(e){}
-    try{ await homeLoadInbox(); }catch(e){}
+    /* Action queue removed from the Home landing page — those items are treasurer/finance-specific
+       and now live only in their own modules (Club Debtors, Data Integrity, correspondence). */
+    try{ var _hi=$("homeInbox"); if(_hi){ _hi.classList.add("hidden"); _hi.innerHTML=""; } }catch(e){}
   }
   async function homeLoadInbox(){
     var box=$("homeInbox"); if(!box) return;
