@@ -452,6 +452,7 @@
       .deb-sugg{background:#F7F9FC;border:1px solid var(--line);border-radius:10px;padding:12px 13px;font-size:12px;white-space:pre-wrap;line-height:1.5}
       .deb-logrow{padding:5px 0;border-bottom:1px solid var(--line2);font-size:12px}
       </style>
+      <div class="modguide" style="max-width:1180px;margin:12px auto 0;padding:0 4px"><a href="#" onclick="goGuide('debtors');return false" style="display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:12.5px;color:#9a7213;text-decoration:none"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>Guide: how Club Debtors works</a></div>
       <div id="debtorsRoot"><div class="card"><p class="hint">Loading club debtors&hellip;</p></div></div>
     </section>
 
@@ -472,6 +473,7 @@
 
     <!-- DISCIPLINE, REFEREES & CARDS (read live from the dash mirror) -->
     <section id="tab-integrity" class="hidden">
+      <div class="modguide" style="max-width:1180px;margin:12px auto 0;padding:0 4px"><a href="#" onclick="goGuide('integrity');return false" style="display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:12.5px;color:#9a7213;text-decoration:none"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>Guide: how Data Integrity works</a></div>
       <div id="integrityRoot"><div class="card"><p class="hint">Running the data integrity checks&hellip;</p></div></div>
     </section>
 
@@ -481,6 +483,7 @@
 
     <!-- CLUB PROFILE (one club, all systems: registrations, debtors, discipline) -->
     <section id="tab-clubprofile" class="hidden">
+      <div class="modguide" style="max-width:1180px;margin:12px auto 0;padding:0 4px"><a href="#" onclick="goGuide('clubprofile');return false" style="display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:12.5px;color:#9a7213;text-decoration:none"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>Guide: how the Club Profile is built</a></div>
       <div id="clubProfileRoot"><div class="card"><p class="hint">Loading Club Profile&hellip;</p></div></div>
     </section>
 
@@ -491,6 +494,7 @@
 
     <!-- LOG NOTES (public annotations on the league logs: no-results, points adjustments, notes) -->
     <section id="tab-lognotes" class="hidden">
+      <div class="modguide" style="max-width:1180px;margin:12px auto 0;padding:0 4px"><a href="#" onclick="goGuide('lognotes');return false" style="display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:12.5px;color:#9a7213;text-decoration:none"><svg viewBox="0 0 24 24" style="width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2zM20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>Guide: how to amend a league log</a></div>
       <div id="lognotesRoot"><div class="card"><p class="hint">Loading Log Notes&hellip;</p></div></div>
     </section>
 
@@ -510,8 +514,8 @@
     <!-- GUIDES (visual how-it-works library; gated with the rest of the Admin Centre) -->
     <section id="tab-guides" class="hidden">
       <div class="card">
-        <h3>Guides &amp; infographics</h3>
-        <p class="hint">Plain-language, one-look explainers of how each part of the Admin Centre works. Open any guide to view it full size, or download it to share in the Mancom group. This library grows as new modules are built.</p>
+        <h3>Guides &amp; training</h3>
+        <p class="hint">One place for the how-it-works guides, the training video and the practice vote. Open a guide to view it full size or download it to share, and use the gold <b>&ldquo;Open&hellip;&rdquo;</b> link on each card to jump straight to the page it explains. Every module page carries a <b>Guide</b> link back here.</p>
       </div>
       <style>
         #tab-guides .gd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:16px}
@@ -528,70 +532,90 @@
         #tab-guides .gd-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
         #tab-guides .gd-sub{margin-top:9px;font-size:11.5px;color:var(--muted)}
         #tab-guides .gd-sub a{color:var(--gold-d);font-weight:700;text-decoration:none}
+        #tab-guides .gd-sec{margin:28px 4px 2px;color:var(--navy);font-family:var(--head,sans-serif);font-weight:800;font-size:19px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+        #tab-guides .gd-sec:before{content:"";width:22px;height:3px;background:var(--gold);border-radius:2px;align-self:center}
+        #tab-guides .gd-sec .sub{font-weight:600;font-size:13px;color:var(--muted);font-family:var(--body,sans-serif)}
+        #tab-guides .gd-golink{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:12px;color:var(--gold-d);text-decoration:none;margin-top:11px;cursor:pointer}
+        #tab-guides .gd-golink svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+        #tab-guides .gd-card.gd-flash{box-shadow:0 0 0 3px var(--gold),0 6px 20px rgba(9,20,48,.06);transition:box-shadow .25s}
       </style>
+      <div class="gd-sec">Voting &mdash; training &amp; practice <span class="sub">watch it, practise it, hand it out</span></div>
       <div class="gd-grid">
-        <div class="gd-card">
+        <div class="gd-card" id="guidecard-video">
           <a class="gd-thumb" href="guides/CTTLFA-Voting-Training.mp4" target="_blank" rel="noopener" style="background:linear-gradient(150deg,#0B1F4E,#12306e);display:flex;align-items:center;justify-content:center"><span class="gd-tag">Video · 5 min</span><span style="width:74px;height:74px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.35)"><svg viewBox="0 0 24 24" style="width:30px;height:30px;fill:#0B1F4E;stroke:none;margin-left:4px"><path d="M8 5v14l11-7z"/></svg></span></a>
           <div class="gd-body"><h4>Voting — training video</h4>
             <p>A narrated walkthrough for Mancom and staff, with a worked demo vote from accreditation and code to the sealed, weighted result.</p>
             <div class="gd-act"><a class="gd-btn p" href="guides/CTTLFA-Voting-Training.mp4" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M8 5v14l11-7z"/></svg>Watch</a><a class="gd-btn" href="guides/CTTLFA-Voting-Training.mp4" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+            <a class="gd-golink" href="#" onclick="goModule('meetings');return false">Open Meetings &amp; Voting <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           </div>
         </div>
-        <div class="gd-card">
-          <a class="gd-thumb" href="voting-practice.html" target="_blank" rel="noopener" style="background:linear-gradient(150deg,#12306e,#0B1F4E);display:flex;align-items:center;justify-content:center"><span class="gd-tag">Interactive</span><span style="width:74px;height:74px;border-radius:18px;background:var(--gold);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.35)"><svg viewBox="0 0 24 24" style="width:34px;height:34px;fill:none;stroke:#0B1F4E;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span></a>
-          <div class="gd-body"><h4>Voting — practice sandbox</h4>
-            <p>Rehearse the whole flow yourself: accredit delegates (with the 1 + 1 split), open a motion, cast on simulated phones, and see the weighted result and projector view. Nothing is recorded.</p>
-            <div class="gd-act"><a class="gd-btn p" href="voting-practice.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M14 3h7v7M21 3l-9 9M10 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>Open sandbox</a></div>
+        <div class="gd-card" id="guidecard-practice">
+          <a class="gd-thumb" href="voting-practice.html" target="_blank" rel="noopener" style="background:linear-gradient(150deg,#12306e,#0B1F4E);display:flex;align-items:center;justify-content:center"><span class="gd-tag">Practice</span><span style="width:74px;height:74px;border-radius:18px;background:var(--gold);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.35)"><svg viewBox="0 0 24 24" style="width:34px;height:34px;fill:none;stroke:#0B1F4E;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span></a>
+          <div class="gd-body"><h4>Practice vote</h4>
+            <p>A safe practice version of the voting system. Rehearse the whole flow yourself — accredit delegates (with the 1 + 1 split), open a motion, cast on simulated phones, and see the weighted result and projector view. Nothing is recorded.</p>
+            <div class="gd-act"><a class="gd-btn p" href="voting-practice.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M14 3h7v7M21 3l-9 9M10 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>Open practice vote</a></div>
+            <a class="gd-golink" href="#" onclick="goModule('meetings');return false">Open Meetings &amp; Voting <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           </div>
         </div>
-        <div class="gd-card">
+        <div class="gd-card" id="guidecard-meeting">
           <a class="gd-thumb" href="guides/how-a-meeting-runs.jpg" target="_blank" rel="noopener"><span class="gd-tag">Voting</span><img src="guides/how-a-meeting-runs.jpg" loading="lazy" alt="How a meeting vote works — arrive and check in, the chair opens a motion, vote on your phone, the result on the screen"></a>
           <div class="gd-body"><h4>How a meeting vote works</h4>
             <p>The four steps of a typical meeting vote at a glance — check in, the chair opens a motion, vote on your phone, and the result on the screen.</p>
             <div class="gd-act"><a class="gd-btn p" href="guides/how-a-meeting-runs.jpg" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/how-a-meeting-runs.jpg" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+            <a class="gd-golink" href="#" onclick="goModule('meetings');return false">Open Meetings &amp; Voting <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           </div>
         </div>
-        <div class="gd-card">
-          <a class="gd-thumb" href="guides/admin-centre-overview.png" target="_blank" rel="noopener"><span class="gd-tag">Overview</span><img src="guides/admin-centre-overview.png" loading="lazy" alt="The Admin Centre — one place, every job"></a>
-          <div class="gd-body"><h4>The Admin Centre — the whole picture</h4>
-            <p>Every module at a glance, and how they all feed off, and report back to, one central system.</p>
-            <div class="gd-act"><a class="gd-btn p" href="guides/admin-centre-overview.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/admin-centre-overview.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
-          </div>
-        </div>
-        <div class="gd-card">
-          <a class="gd-thumb" href="guides/club-profile-how-its-built.png" target="_blank" rel="noopener"><span class="gd-tag">Clubs</span><img src="guides/club-profile-how-its-built.png" loading="lazy" alt="The Club Profile — one document, every system"></a>
-          <div class="gd-body"><h4>The Club Profile — how it is built</h4>
-            <p>How a club's whole picture is compiled live from five systems into one branded page.</p>
-            <div class="gd-act"><a class="gd-btn p" href="guides/club-profile-how-its-built.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/club-profile-how-its-built.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
-          </div>
-        </div>
-        <div class="gd-card">
-          <a class="gd-thumb" href="guides/debtors-track-and-chase.png" target="_blank" rel="noopener"><span class="gd-tag">Finance</span><img src="guides/debtors-track-and-chase.png" loading="lazy" alt="Club Debtors — track, then chase, fairly"></a>
-          <div class="gd-body"><h4>Club Debtors — track &amp; chase</h4>
-            <p>From the Sage fetch through ageing to the reminder ladder, with the guardrails that keep chasing fair.</p>
-            <div class="gd-act"><a class="gd-btn p" href="guides/debtors-track-and-chase.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/debtors-track-and-chase.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
-          </div>
-        </div>
-        <div class="gd-card">
-          <a class="gd-thumb" href="guides/data-integrity.png" target="_blank" rel="noopener"><span class="gd-tag">System</span><img src="guides/data-integrity.png" loading="lazy" alt="Data Integrity — the numbers reconcile"></a>
-          <div class="gd-body"><h4>Data Integrity — it reconciles</h4>
-            <p>Five sources into one trusted record, and the checks that keep the numbers honest.</p>
-            <div class="gd-act"><a class="gd-btn p" href="guides/data-integrity.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/data-integrity.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
-          </div>
-        </div>
-        <div class="gd-card">
-          <a class="gd-thumb" href="guides/log-notes-quick-guide.jpg" target="_blank" rel="noopener"><span class="gd-tag">Football</span><img src="guides/log-notes-quick-guide.jpg" loading="lazy" alt="Log Notes — adding a public note or amendment to a league log"></a>
-          <div class="gd-body"><h4>Log Notes — how to amend a league log</h4>
-            <p>Mark a fixture as a no result, apply a points adjustment, or add a footnote that shows under that division's log on the public site.</p>
-            <div class="gd-act"><a class="gd-btn p" href="guides/log-notes-quick-guide.jpg" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/log-notes-quick-guide.jpg" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
-          </div>
-        </div>
-        <div class="gd-card">
+        <div class="gd-card" id="guidecard-howvoting">
           <a class="gd-thumb" href="guides/how-voting-works.pdf" target="_blank" rel="noopener"><span class="gd-tag">2 pages · PDF</span><img src="guides/voting-p1.png" loading="lazy" alt="How CTTLFA voting works, page 1"></a>
           <div class="gd-body"><h4>Delegate e-voting — how voting works</h4>
             <p>Who votes and the weighting (full clubs two, associates one), eligibility and thresholds, and the full run from accreditation and code to the sealed, weighted result.</p>
             <div class="gd-act"><a class="gd-btn p" href="guides/how-voting-works.pdf" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open PDF</a><a class="gd-btn" href="guides/how-voting-works.pdf" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
             <div class="gd-sub">View pages: <a href="guides/voting-p1.png" target="_blank" rel="noopener">Page 1</a> &middot; <a href="guides/voting-p2.png" target="_blank" rel="noopener">Page 2</a></div>
+            <a class="gd-golink" href="#" onclick="goModule('meetings');return false">Open Meetings &amp; Voting <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="gd-sec">How the Admin Centre works <span class="sub">what each module does</span></div>
+      <div class="gd-grid">
+        <div class="gd-card" id="guidecard-overview">
+          <a class="gd-thumb" href="guides/admin-centre-overview.png" target="_blank" rel="noopener"><span class="gd-tag">Overview</span><img src="guides/admin-centre-overview.png" loading="lazy" alt="The Admin Centre — one place, every job"></a>
+          <div class="gd-body"><h4>The Admin Centre — the whole picture</h4>
+            <p>Every module at a glance, and how they all feed off, and report back to, one central system.</p>
+            <div class="gd-act"><a class="gd-btn p" href="guides/admin-centre-overview.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/admin-centre-overview.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+            <a class="gd-golink" href="#" onclick="goModule('home');return false">Open Home <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+        <div class="gd-card" id="guidecard-clubprofile">
+          <a class="gd-thumb" href="guides/club-profile-how-its-built.png" target="_blank" rel="noopener"><span class="gd-tag">Clubs</span><img src="guides/club-profile-how-its-built.png" loading="lazy" alt="The Club Profile — one document, every system"></a>
+          <div class="gd-body"><h4>The Club Profile — how it is built</h4>
+            <p>How a club's whole picture is compiled live from five systems into one branded page.</p>
+            <div class="gd-act"><a class="gd-btn p" href="guides/club-profile-how-its-built.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/club-profile-how-its-built.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+            <a class="gd-golink" href="#" onclick="goModule('clubprofile');return false">Open Club Profile <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+        <div class="gd-card" id="guidecard-debtors">
+          <a class="gd-thumb" href="guides/debtors-track-and-chase.png" target="_blank" rel="noopener"><span class="gd-tag">Finance</span><img src="guides/debtors-track-and-chase.png" loading="lazy" alt="Club Debtors — track, then chase, fairly"></a>
+          <div class="gd-body"><h4>Club Debtors — track &amp; chase</h4>
+            <p>From the Sage fetch through ageing to the reminder ladder, with the guardrails that keep chasing fair.</p>
+            <div class="gd-act"><a class="gd-btn p" href="guides/debtors-track-and-chase.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/debtors-track-and-chase.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+            <a class="gd-golink" href="#" onclick="goModule('debtors');return false">Open Club Debtors <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+        <div class="gd-card" id="guidecard-integrity">
+          <a class="gd-thumb" href="guides/data-integrity.png" target="_blank" rel="noopener"><span class="gd-tag">System</span><img src="guides/data-integrity.png" loading="lazy" alt="Data Integrity — the numbers reconcile"></a>
+          <div class="gd-body"><h4>Data Integrity — it reconciles</h4>
+            <p>Five sources into one trusted record, and the checks that keep the numbers honest.</p>
+            <div class="gd-act"><a class="gd-btn p" href="guides/data-integrity.png" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/data-integrity.png" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+            <a class="gd-golink" href="#" onclick="goModule('integrity');return false">Open Data Integrity <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+          </div>
+        </div>
+        <div class="gd-card" id="guidecard-lognotes">
+          <a class="gd-thumb" href="guides/log-notes-quick-guide.jpg" target="_blank" rel="noopener"><span class="gd-tag">Football</span><img src="guides/log-notes-quick-guide.jpg" loading="lazy" alt="Log Notes — adding a public note or amendment to a league log"></a>
+          <div class="gd-body"><h4>Log Notes — how to amend a league log</h4>
+            <p>Mark a fixture as a no result, apply a points adjustment, or add a footnote that shows under that division's log on the public site.</p>
+            <div class="gd-act"><a class="gd-btn p" href="guides/log-notes-quick-guide.jpg" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>Open</a><a class="gd-btn" href="guides/log-notes-quick-guide.jpg" download><svg viewBox="0 0 24 24"><path d="M12 3v12M7 12l5 5 5-5M5 21h14"/></svg>Download</a></div>
+            <a class="gd-golink" href="#" onclick="goModule('lognotes');return false">Open Log Notes <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           </div>
         </div>
       </div>
@@ -604,6 +628,14 @@
 
     <!-- MEETINGS -->
     <section id="tab-meetings" class="hidden">
+      <div class="card" style="border-left:4px solid var(--gold)">
+        <h3>New to voting? Practise first</h3>
+        <p class="hint">Run the whole flow in a safe <b>practice vote</b> — nothing is recorded — or watch the training video and read the guide.</p>
+        <div style="margin-top:11px;display:flex;gap:10px;flex-wrap:wrap">
+          <a class="btn gold" href="voting-practice.html" target="_blank" rel="noopener">Open the practice vote</a>
+          <button class="btn ghost" onclick="goGuide('video')">Voting guide &amp; video</button>
+        </div>
+      </div>
       <div class="card">
         <h3 data-help="Start here for every meeting. Fill in the name, type, date and venue and press Create meeting. It becomes the working meeting straight away, shown in the grey bar at the top of every tab. You can set it up days in advance.">Create a meeting</h3>
         <p class="hint">An AGM, SGM or Mancom meeting. Everything else, accreditation and motions, hangs off the meeting you select.</p>
@@ -5586,5 +5618,19 @@ tr.fa-click:hover{background:#f2f6ff}
     if(document.body) mo.observe(document.body,{childList:true,subtree:true});
   }catch(e){}
   document.addEventListener('DOMContentLoaded',function(){ scan(document); });
+})();
+</script>
+<script>
+/* Guides <-> module cross-links. goModule opens a module tab from a guide card;
+   goGuide opens the Guides tab and scrolls to the matching card. Both use the
+   app's exposed router (window.AC.goTab). */
+(function(){
+  function gt(t){ try{ if(window.AC && window.AC.goTab) window.AC.goTab(t); }catch(e){} }
+  window.goModule=function(t){ gt(t); };
+  window.goGuide=function(card){ gt('guides'); setTimeout(function(){
+    var el=document.getElementById('guidecard-'+card); if(!el) return;
+    try{ el.scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ el.scrollIntoView(); }
+    el.classList.add('gd-flash'); setTimeout(function(){ el.classList.remove('gd-flash'); },1800);
+  },160); };
 })();
 </script>
