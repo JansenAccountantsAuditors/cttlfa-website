@@ -76,6 +76,14 @@ jobs:
         if: success() && env.SUPABASE_INGEST_TOKEN != ''
         run: |
           curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_fine_recon_persist" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\"}" || true
+      - name: Tick fines paid from Sage
+        # Sync the dash paid indicator from Sage: every fine reconciled as Settled
+        # has its fine_paid flag ticked true on the mirror. Additive only (never
+        # unticks), so genuinely unpaid fines stay visible. Keeps the disciplinary
+        # and Sage data in step as clubs pay. Token-guarded.
+        if: success() && env.SUPABASE_INGEST_TOKEN != ''
+        run: |
+          curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_apply_fine_paid_from_sage" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\"}" || true
       - name: Mark failed
         if: failure() && env.DASH_EMAIL != '' && env.DASH_PASSWORD != '' && env.SUPABASE_INGEST_TOKEN != ''
         run: |

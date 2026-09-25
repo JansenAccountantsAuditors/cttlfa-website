@@ -56,6 +56,13 @@ jobs:
         if: success() && env.SUPABASE_INGEST_TOKEN != ''
         run: |
           curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_fine_recon_persist" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\"}" || true
+      - name: Tick fines paid from Sage
+        # After the Sage ledger refresh, tick the dash fine_paid flag true for every
+        # fine now reconciled as Settled, so a club paying in Sage clears the fine on
+        # the disciplinary side too. Additive only; never unticks. Token-guarded.
+        if: success() && env.SUPABASE_INGEST_TOKEN != ''
+        run: |
+          curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_apply_fine_paid_from_sage" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\"}" || true
       - name: Mark failed
         if: failure() && env.SAGE_API_KEY != '' && env.SUPABASE_INGEST_TOKEN != ''
         run: |
