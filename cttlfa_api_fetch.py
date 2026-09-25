@@ -161,7 +161,7 @@ def build():
     for c in cust:
         nm = c.get("Name", "") or ""; m = CODE.search(nm); code = m.group(1) if m else None
         bal = round(float(c.get("Balance") or 0), 2); active = (c.get("Active") is not False)
-        if code: code_bal[code] = bal
+        if code: code_bal[code] = round(code_bal.get(code, 0.0) + bal, 2)  # sum if >1 customer shares a code
         if code is None and abs(bal) < 0.005:
             continue
         ib = B.get(code) if code else None
@@ -181,6 +181,40 @@ def build():
             bal=bal, cur=bk["cur"], b30=bk["d30"], b60=bk["d60"], b90=bk["d90"], b120=bk["d120"], over=over,
             status=st, last_receipt_days=None, tx_last_balance=None, recon_diff=0))
 
+    # Collapse any customers that share one club code (e.g. two Sage customers both
+    # coded CTTxxx) into a single club row, so the snapshot primary key
+    # (snapshot_id, club_key) stays unique and the push cannot fail on a duplicate.
+    # Balance comes from the summed code_bal; buckets are rebuilt from the
+    # authoritative aged figures B[code] rather than summed, to avoid double counting.
+    _seen = collections.OrderedDict(); _dups = 0
+    for _c in clubs:
+        _k = _c["club_key"]
+        if _k in _seen:
+            _dups += 1; _a = _seen[_k]
+            if not _a["code"] and _c["code"]: _a["code"] = _c["code"]
+            if _c["code"] and len(_c["name"]) > len(_a["name"]): _a["name"] = _c["name"]
+            _a["active"] = _a["active"] or _c["active"]
+        else:
+            _seen[_k] = _c
+    if _dups:
+        clubs = list(_seen.values())
+        for _c in clubs:
+            _code = _c.get("code")
+            if not _code: continue
+            _bal = code_bal.get(_code, _c["bal"])
+            _ib = B.get(_code) or dict(cur=0., d30=0., d60=0., d90=0., d120=0.)
+            if abs(round(sum(_ib.values()), 2) - _bal) <= 1.0:
+                _bk = {kk: round(_ib[kk], 2) for kk in _ib}
+            else:
+                _bk = dict(cur=_bal, d30=0., d60=0., d90=0., d120=0.)
+            _c["bal"] = _bal; _c["cur"] = _bk["cur"]; _c["b30"] = _bk["d30"]; _c["b60"] = _bk["d60"]
+            _c["b90"] = _bk["d90"]; _c["b120"] = _bk["d120"]
+            _c["over"] = round(_bk["d30"] + _bk["d60"] + _bk["d90"] + _bk["d120"], 2)
+            _c["status"] = ("Credit" if _bal < -0.01 else "Paid up" if abs(_bal) <= 0.01 else "Below threshold" if _bal <= 500
+                else "Suspension review" if (_bk["d120"] > 0 or _bk["d90"] > 0) else "Formal notice" if _bk["d60"] > 0
+                else "Reminder" if _bk["d30"] > 0 else "Current")
+        _log("info", "merged %d duplicate club-code row(s) into the balances snapshot" % _dups)
+
     # ---- contact details (email / cc / phone) so the statement + notice layer stays current ----
     # Replaces the retired browser scraper's Customer Listing parse. Upsert-only and email-gated:
     # a club is pushed only when Sage holds an email, so a blank can never overwrite a good contact,
@@ -197,6 +231,14 @@ def build():
         ph = (c.get("Mobile") or c.get("MobileNumber") or c.get("CellNumber") or
               c.get("Telephone") or c.get("TelephoneNumber") or c.get("Phone") or "").strip() or None
         contacts.append(dict(club_key=cd.lower(), name=clean_name(nm), email=pri, cc_email=ccm, phone=ph))
+    # keep one contact per club_key (first with an email wins) so the upsert cannot
+    # fail on two customers sharing a code
+    if len(set(c["club_key"] for c in contacts)) != len(contacts):
+        _cseen = set(); _cd2 = []
+        for c in contacts:
+            if c["club_key"] in _cseen: continue
+            _cseen.add(c["club_key"]); _cd2.append(c)
+        contacts = _cd2
 
     pos = [c for c in clubs if c["bal"] > 0.01]; neg = [c for c in clubs if c["bal"] < -0.01]
     def S(k, rows=pos): return round(sum(r[k] for r in rows), 2)
