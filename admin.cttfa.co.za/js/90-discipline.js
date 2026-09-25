@@ -131,6 +131,7 @@
       ".dsc-col .bar{width:100%;max-width:38px;background:var(--blue);border-radius:3px 3px 0 0;min-height:2px;position:relative}.dsc-col:hover .bar{background:var(--navy)}"+
       ".dsc-col .cv{font-size:10.5px;font-weight:700;color:var(--navy);font-variant-numeric:tabular-nums;margin-bottom:3px}.dsc-col .cl{font-size:10px;color:var(--muted);margin-top:5px;white-space:nowrap}"+
       ".dsc-kv{display:grid;grid-template-columns:auto 1fr;gap:5px 14px;font-size:13px;margin:2px 0 8px}.dsc-kv span{color:var(--muted)}.dsc-kv b{text-align:right;font-variant-numeric:tabular-nums}"+
+      ".dsc-kv b.fkpi{cursor:pointer;border-bottom:1px dotted var(--blue);padding-bottom:1px}.dsc-kv b.fkpi:hover{color:var(--blue)}.dsc-kv b.fkpi:focus{outline:none}.dsc-kv b.fkpi:focus-visible{box-shadow:0 0 0 2px var(--blue);border-radius:3px}"+
       ".dsc-empty{border:1px dashed var(--line);border-radius:12px;padding:26px;text-align:center;color:var(--muted);background:#fff}"+
       ".dsc-scrim{position:fixed;inset:0;background:rgba(7,20,55,.42);opacity:0;pointer-events:none;transition:opacity .18s;z-index:998}.dsc-scrim.on{opacity:1;pointer-events:auto}"+
       ".dsc-drawer{position:fixed;top:0;right:0;height:100vh;width:min(720px,97vw);background:#fff;box-shadow:-16px 0 44px rgba(7,20,55,.24);transform:translateX(100%);transition:transform .2s;z-index:999;display:flex;flex-direction:column}.dsc-drawer.on{transform:none}"+
@@ -419,16 +420,59 @@
     NS.$("frCSV").onclick=function(){ expCSV("Fines — invoicing and payment (Sage-reconciled)",FR_COLS,frRowsArr(frFiltered())); };
     frSetStatus(_frF.status);
   }
+  // Build a filtered fine list for one status and open it in the shared drawer
+  // (with the drawer's built-in PDF/CSV export). Reads the already-loaded _fineRec.
+  function openFineList(statusKey, title){
+    var fines=(_fineRec&&_fineRec.fines)||[];
+    var list=(statusKey==='all')?fines.slice():fines.filter(function(f){ return f.status===statusKey; });
+    var cols=["Case","Player","Club","Article","Fine (R)","Invoice #","Status","Match date"];
+    var rows=list.map(function(f){
+      var st=frLabel(f.status)+(f.manual_settled?" (confirmed in Sage)":"");
+      return [f.case_number||"–", f.player||"–", f.club||"–", f.article||"–",
+              (f.fine_amount==null?"":Number(f.fine_amount).toFixed(2)), f.invoice||"–", st, f.match_date||"–"];
+    });
+    showKpiDrawer(title, cols, rows);
+  }
+  // Rewrite the "Administrative rulings & fines" tile with the Sage-reconciled
+  // figures and make each fine figure clickable to its downloadable list. Runs
+  // once _fineRec has loaded, so the tile shows the same Sage truth as the panel
+  // below and the top KPI, never the stale manual paid flag.
+  function patchRulingsRecon(){
+    var kv=NS.$("rulingsKv"); if(!kv) return;
+    var s=(_fineRec&&_fineRec.summary)||{};
+    var total=(_dscData&&_dscData.rulings&&_dscData.rulings.total!=null)?_dscData.rulings.total:null;
+    kv.setAttribute("data-recon","1");
+    kv.innerHTML=
+      '<span>Rulings on record</span><b>'+num(total)+'</b>'+
+      '<span>Fines issued</span><b class="fkpi" data-fk="all" role="button" tabindex="0" title="Click for the full list">'+num(s.issued_n)+' &middot; '+rand(s.issued_amt)+'</b>'+
+      '<span>Awaiting invoice</span><b class="fkpi" data-fk="awaiting_invoice" role="button" tabindex="0" title="Click for the list — finance to raise">'+num(s.awaiting_n)+' &middot; '+rand(s.awaiting_amt)+'</b>'+
+      '<span>Settled (per Sage)</span><b class="fkpi" data-fk="settled" role="button" tabindex="0" title="Click for the list — invoiced &amp; paid">'+num(s.settled_n)+' &middot; '+rand(s.settled_amt)+'</b>'+
+      '<span>Outstanding (per Sage)</span><b class="fkpi" data-fk="outstanding" role="button" tabindex="0" title="Click for the list — genuinely unpaid">'+num(s.outstanding_n)+' &middot; '+rand(s.outstanding_amt)+'</b>'+
+      (((s.not_in_sage_n||0)>0)?'<span>Not in Sage</span><b class="fkpi" data-fk="not_in_sage" role="button" tabindex="0" title="Invoice number not found in Sage">'+num(s.not_in_sage_n)+'</b>':'');
+    var titles={all:"Fines issued — all",awaiting_invoice:"Fines awaiting invoice",settled:"Fines settled (per Sage)",outstanding:"Fines outstanding (per Sage)",not_in_sage:"Fine invoices not found in Sage"};
+    Array.prototype.forEach.call(kv.querySelectorAll(".fkpi"),function(b){
+      var go=function(){ var k=b.getAttribute("data-fk"); openFineList(k, titles[k]||"Fines"); };
+      b.onclick=function(ev){ ev.stopPropagation(); go(); };
+      b.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } };
+    });
+    var note=NS.$("rulingsReconNote");
+    if(note){
+      var bits=['Payment status is read from Sage (FIFO on each club&rsquo;s account) &mdash; click any figure for the list (PDF / CSV).'];
+      if((s.manual_settled_n||0)>0) bits.push(num(s.manual_settled_n)+' invoice(s) confirmed settled in Sage manually (separate account or zero-value document).');
+      note.innerHTML=bits.join(' ');
+    }
+  }
   function fineRecLoad(){
     var el=NS.$("fineReconRoot"); if(!el) return;
     NS.sb.rpc("dash_fine_reconciliation").then(function(r){
-      if(r.error) throw r.error; _fineRec=r.data||{}; frDraw();
+      if(r.error) throw r.error; _fineRec=r.data||{}; frDraw(); patchRulingsRecon();
       try{ var s=_fineRec.summary||{}; var k=NS.$("kpiFines"); if(k){ var v=k.querySelector(".v"), sub=k.querySelector(".s");
         if(v) v.innerHTML=rand(s.outstanding_amt); if(sub) sub.innerHTML=num(s.outstanding_n)+' unpaid per Sage · '+rand(s.awaiting_amt)+' awaiting invoice';
         k.setAttribute("title","Invoiced fines unpaid per Sage — click for the full reconciliation");
         k.onclick=function(ev){ ev.stopPropagation(); var t=NS.$("fineReconRoot"); if(t) t.scrollIntoView({behavior:"smooth",block:"start"}); };
       } }catch(e){}
-    }).catch(function(e){ el.innerHTML='<div class="dsc-bh"><span class="dsc-sec">Fines — invoicing &amp; payment</span></div><p class="hint">Could not load the Sage reconciliation: '+esc(e.message||e)+'</p>'; });
+    }).catch(function(e){ el.innerHTML='<div class="dsc-bh"><span class="dsc-sec">Fines — invoicing &amp; payment</span></div><p class="hint">Could not load the Sage reconciliation: '+esc(e.message||e)+'</p>';
+      var note=NS.$("rulingsReconNote"); if(note) note.innerHTML='Showing the last stored fine figures — the live Sage reconciliation could not load. Use Refresh.'; });
   }
 
   /* ==================== DISCIPLINE DASHBOARD ==================== */
@@ -514,12 +558,13 @@
     var rulingsBlock =
       '<div class="card">'+
         '<div class="dsc-sec" style="margin-bottom:8px">Administrative rulings &amp; fines</div>'+
-        '<div class="dsc-kv">'+
+        '<div class="dsc-kv" id="rulingsKv" data-recon="0">'+
           '<span>Rulings on record</span><b>'+num(ru.total)+'</b>'+
           '<span>Fines issued</span><b>'+num(ru.issued_n)+' &middot; '+rand(ru.issued_amount)+'</b>'+
           '<span>Fines paid</span><b>'+num(ru.paid_n)+' &middot; '+rand(ru.paid_amount)+'</b>'+
           '<span>Outstanding</span><b>'+num(ru.outstanding_n)+' &middot; '+rand(ru.outstanding_amount)+'</b>'+
         '</div>'+
+        '<p class="hint" id="rulingsReconNote" style="margin-top:6px">Reconciling fines to Sage&hellip;</p>'+
         '<div class="dsc-grid" style="margin-top:10px">'+
           '<div class="card" style="box-shadow:none;border:1px solid var(--line)">'+bhead("By outcome","Rulings by outcome",["Outcome","Count"],ocRows)+
             '<div class="dsc-tblwrap"><table class="dsc-tbl"><thead><tr><th>Outcome</th><th class="num">Count</th></tr></thead><tbody>'+(ocBody||'<tr><td colspan="2" class="hint">No data.</td></tr>')+'</tbody></table></div></div>'+
