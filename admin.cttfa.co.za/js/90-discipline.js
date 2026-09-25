@@ -181,6 +181,21 @@
   function bhead(title, title2, columns, rows){
     return '<div class="dsc-bh"><span class="dsc-sec">'+esc(title)+'</span>'+acts(title2||title, columns, rows)+'</div>'; }
 
+  /* ---------- suspension standing (yellow-card accumulation, DC Code Art 17.3) ----------
+     Cautions accumulate across separate matches. Reaching a threshold carries an
+     automatic suspension; the thresholds are cumulative season totals, not resets. */
+  function susStand(cards, rules){
+    var asc=(rules||[]).slice().sort(function(a,b){ return (a.card_count||0)-(b.card_count||0); });
+    var n=Number(cards)||0, reached=null, next=null;
+    for(var i=0;i<asc.length;i++){ if(n>=asc[i].card_count){ reached=asc[i]; } else { next=asc[i]; break; } }
+    return { reached:reached, next:next, gap: next?(next.card_count-n):0, min: asc.length?asc[0].card_count:0 };
+  }
+  function susReach(cards, rules){ var s=susStand(cards,rules);
+    return s.reached ? (num(s.reached.card_count)+" cards → "+num(s.reached.suspension_matches)+"-match ban")
+                     : ("under "+num(s.min)+" cards"); }
+  function susNext(cards, rules){ var s=susStand(cards,rules);
+    return s.next ? (num(s.gap)+" more → "+num(s.next.suspension_matches)+"-match ban") : "Maximum threshold reached"; }
+
   /* ---------- drill drawer ---------- */
   function ensureDrawer(){
     if(document.getElementById("dscDrawer")) return;
@@ -251,7 +266,7 @@
   function dscKpiDrill(kind){
     var d=_dscData||{}, cards=d.cards||{}, ru=d.rulings||{}, sus=d.suspensions||{};
     if(kind==="cards"){ showKpiDrawer("Most-carded players", ["Player","SAFA","Register","Club","Cards"], (cards.top_players||[]).map(function(p){ return [p.player, p.safa||"–", p.registered?"Reg":"Not reg", p.club||"–", p.n]; })); }
-    else if(kind==="risk"){ showKpiDrawer("Players at suspension risk", ["Player","SAFA","Club","Cards"], (sus.at_risk||[]).map(function(x){ return [x.player||x.name||"–", x.safa||"–", x.club||"–", (x.cards!=null?x.cards:(x.n!=null?x.n:""))]; })); }
+    else if(kind==="risk"){ showKpiDrawer("Players at suspension risk", ["Player","SAFA","Club","Yellow cards","Standing","To next ban"], (sus.at_risk||[]).map(function(x){ var c=(x.cards!=null?x.cards:(x.n!=null?x.n:0)); return [x.player||x.name||"–", x.safa||"–", x.club||"–", c, susReach(c,sus.rules), susNext(c,sus.rules)]; })); }
     else if(kind==="fines"){ showKpiDrawer("Outstanding fines", ["Case","Player","Article","Fine","Invoice"], (ru.unpaid||[]).map(function(u){ return [u.case_number||"–", u.player||"–", u.article||"–", (u.fine_amount!=null?rand(u.fine_amount):""), u.invoice_number||"–"]; })); }
     else if(kind==="ref:appointed"){ dscRosterDrill("Appointed referees", function(){return true;}); }
     else if(kind==="ref:level"){ dscRosterDrill("Referees with an accreditation level", function(x){return !!x.level;}); }
@@ -277,6 +292,8 @@
   function drawDiscipline(root, d){
     _exp={}; _expN=0;
     var meta=d.meta||{}, cards=d.cards||{}, ru=d.rulings||{}, refs=d.referees||{}, sus=d.suspensions||{}; _dscData=d;
+    var susRules=(sus.rules||[]).slice().sort(function(a,b){ return (a.card_count||0)-(b.card_count||0); });
+    var susMin=susRules.length?susRules[0].card_count:4;
     _subtitle = "dash.cttlfa.com mirror · last sync "+dtime(meta.last_pull)+" · operational";
 
     var head =
@@ -302,8 +319,8 @@
 
     var kpi =
       '<div class="dsc-kpis">'+
-        '<div class="dsc-kpi dsc-kpiclk" data-kpi="cards" role="button" tabindex="0" title="Click to list the most-carded players"><div class="k">Yellow cards</div><div class="v">'+num(cards.total)+'</div><div class="s">across '+num((cards.by_division||[]).length)+' divisions</div></div>'+
-        '<div class="dsc-kpi dsc-kpiclk" data-kpi="risk" role="button" tabindex="0" title="Click to list the players at suspension risk"><div class="k">Players at suspension risk</div><div class="v">'+num((sus.at_risk||[]).length)+'</div><div class="s">at or over the card threshold</div></div>'+
+        '<div class="dsc-kpi dsc-kpiclk" data-kpi="cards" role="button" tabindex="0" title="Click to list the most-carded players"><div class="k">Yellow cards (cautions)</div><div class="v">'+num(cards.total)+'</div><div class="s">across '+num((cards.by_division||[]).length)+' divisions this season</div></div>'+
+        '<div class="dsc-kpi dsc-kpiclk" data-kpi="risk" role="button" tabindex="0" title="Click to list the players at suspension risk"><div class="k">Players at suspension risk</div><div class="v">'+num((sus.at_risk||[]).length)+'</div><div class="s">reached the '+num(susMin)+'-card threshold (Art 17.3)</div></div>'+
         '<div class="dsc-kpi dsc-kpiclk" data-kpi="fines" role="button" tabindex="0" title="Click to list the outstanding fines"><div class="k">Fines outstanding</div><div class="v">'+rand(ru.outstanding_amount)+'</div><div class="s">'+num(ru.outstanding_n)+' unpaid of '+num(ru.issued_n)+' issued</div></div>'+
         '<div class="dsc-kpi"><div class="k">Referees active</div><div class="v">'+num(refs.active)+'</div><div class="s">of '+num(refs.total)+' on record</div></div>'+
       '</div>';
@@ -388,17 +405,29 @@
         '</div>'+
         '<div class="dsc-bh" style="margin-top:12px"><span class="dsc-sec" style="font-size:12px;color:var(--muted)">Appointed referee roster</span></div>'+
         '<div class="dsc-tblwrap" style="max-height:360px"><table class="dsc-tbl"><thead><tr><th>Referee</th><th>SAFA</th><th>Reg</th><th>Level</th><th class="num">Appts</th></tr></thead><tbody>'+(raBody||'<tr><td colspan="5" class="hint">None.</td></tr>')+'</tbody></table></div></div>';
-    var ruleRows=(sus.rules||[]).map(function(x){return [x.card_count,x.suspension_matches];});
-    var atRows=(sus.at_risk||[]).map(function(x){return [x.player,x.safa||"–",regTxt(x.registered),x.club||"–",x.cards];});
+    var ruleRows=susRules.map(function(x){return [x.card_count,x.suspension_matches];});
+    var atRows=(sus.at_risk||[]).map(function(x){return [x.player,x.safa||"–",regTxt(x.registered),x.club||"–",x.cards,susReach(x.cards,susRules),susNext(x.cards,susRules)];});
     var atBody=(sus.at_risk||[]).map(function(x){
-      return '<tr class="clk" data-drill="psafa|'+esc(x.safa||"")+'"><td>'+esc(x.player)+'</td><td>'+esc(x.safa||"–")+'</td><td>'+regPill(x.registered)+'</td><td>'+esc(x.club||"–")+'</td><td class="num">'+num(x.cards)+'</td></tr>'; }).join("");
+      var s=susStand(x.cards,susRules);
+      var pill = s.reached
+        ? '<span class="dsc-pill '+(Number(s.reached.suspension_matches)>=3?"bad":"warn")+'">'+num(s.reached.suspension_matches)+'-match ban</span> <span style="color:var(--muted)">at '+num(s.reached.card_count)+' cards</span>'
+        : '<span class="dsc-pill mut">under threshold</span>';
+      var nxt = s.next
+        ? num(s.gap)+' more <span style="color:var(--muted)">&rarr; '+num(s.next.suspension_matches)+'-match</span>'
+        : '<span class="dsc-pill mut">max reached</span>';
+      return '<tr class="clk" data-drill="psafa|'+esc(x.safa||"")+'"><td>'+esc(x.player)+'</td><td>'+esc(x.safa||"–")+'</td><td>'+regPill(x.registered)+'</td><td>'+esc(x.club||"–")+'</td><td class="num">'+num(x.cards)+'</td><td class="wrap">'+pill+'</td><td class="wrap">'+nxt+'</td></tr>'; }).join("");
+    var thBody=susRules.map(function(x){ var m=Number(x.suspension_matches); return '<tr><td class="num">'+num(x.card_count)+'</td><td class="num">'+num(x.suspension_matches)+' match'+(m===1?'':'es')+'</td></tr>'; }).join("");
     var susBlock=
       '<div class="card">'+
-        '<div class="dsc-bh"><span class="dsc-sec">Suspensions</span>'+acts("Players at risk",["Player","SAFA","Registered","Club","Cards"],atRows)+'</div>'+
-        '<div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:4px">Accumulation thresholds</div>'+
-        '<table class="dsc-tbl" style="margin-bottom:10px"><thead><tr><th class="num">Cards</th><th class="num">Matches suspended</th></tr></thead><tbody>'+((sus.rules||[]).map(function(x){return '<tr><td class="num">'+num(x.card_count)+'</td><td class="num">'+num(x.suspension_matches)+'</td></tr>';}).join(""))+'</tbody></table>'+
-        '<div class="dsc-sec" style="font-size:12px;color:var(--muted)">Players at risk <span class="dsc-pill warn">'+num((sus.at_risk||[]).length)+'</span></div>'+
-        '<div class="dsc-tblwrap" style="max-height:200px;margin-top:6px"><table class="dsc-tbl"><thead><tr><th>Player</th><th>SAFA</th><th>Reg</th><th>Club</th><th class="num">Cards</th></tr></thead><tbody>'+(atBody||'<tr><td colspan="5" class="hint">None at threshold.</td></tr>')+'</tbody></table></div></div>';
+        '<div class="dsc-bh"><span class="dsc-sec">Suspensions</span>'+acts("Players at risk",["Player","SAFA","Registered","Club","Yellow cards","Standing","To next ban"],atRows)+'</div>'+
+        '<p class="hint" style="margin:0 0 12px;max-width:92ch">Yellow cards (cautions) <b>accumulate across the season</b>. A player cautioned in that many <b>separate matches</b> is automatically suspended for the matches shown — <b>CTTLFA Disciplinary Code, Article 17(3)</b> (accepted 25 February 2026). These are single yellows in different matches, not two yellows in one match (that is an indirect red card and a one-match ban in its own right).</p>'+
+        '<div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:5px">Accumulation thresholds — yellow cards to automatic suspension</div>'+
+        '<table class="dsc-tbl" style="margin-bottom:6px;max-width:520px"><thead><tr><th class="num">Yellow cards (separate matches)</th><th class="num">Automatic suspension</th></tr></thead><tbody>'+thBody+'</tbody></table>'+
+        '<p class="hint" style="margin:0 0 14px">Read it as: reach <b>'+num(susMin)+'</b> yellow cards and a suspension applies; each further block of cautions steps it up, as the table shows.</p>'+
+        '<div class="dsc-sec" style="font-size:12px;color:var(--muted)">Players at risk <span class="dsc-pill warn">'+num((sus.at_risk||[]).length)+'</span> <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">— each has reached at least '+num(susMin)+' yellow cards; the standing shows the ban their count already carries and how far to the next</span></div>'+
+        '<div class="dsc-tblwrap" style="max-height:280px;margin-top:6px"><table class="dsc-tbl"><thead><tr><th>Player</th><th>SAFA</th><th>Reg</th><th>Club</th><th class="num">Yellow cards</th><th>Standing</th><th>To next ban</th></tr></thead><tbody>'+(atBody||'<tr><td colspan="7" class="hint">No player has reached a threshold.</td></tr>')+'</tbody></table></div>'+
+        '<p class="hint" style="margin-top:6px"><b>Standing</b> is the highest threshold the player has reached and the automatic suspension it carries under Article 17(3). <b>To next ban</b> is the further cautions before the next step. Click a player for their full record. Personal data — handle under the Protection of Personal Information Act 4 of 2013.</p>'+
+      '</div>';
 
     root.innerHTML = head + kpi +
       '<div class="dsc-grid">'+divCard+plCard+'</div>'+
