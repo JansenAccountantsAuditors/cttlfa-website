@@ -118,6 +118,8 @@
       ".dsc-bar{display:flex;align-items:center;gap:9px;font-size:12.5px;cursor:pointer;border-radius:6px;padding:1px 3px}.dsc-bar:hover{background:#F5F8FD}"+
       ".dsc-bar .lab{flex:0 0 44%;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsc-bar .tr{flex:1;height:9px;background:var(--line2);border-radius:5px;overflow:hidden}.dsc-bar .tr i{display:block;height:100%;background:var(--blue);border-radius:5px}.dsc-bar .vv{flex:0 0 auto;font-variant-numeric:tabular-nums;font-weight:700;color:var(--navy);min-width:38px;text-align:right}"+
       ".dsc-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.dsc-tbl th{background:var(--navy);color:#fff;text-align:left;padding:7px 9px;font-size:11px;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:1}.dsc-tbl th.num,.dsc-tbl td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.dsc-tbl td{padding:6px 9px;border-bottom:1px solid var(--line2);vertical-align:top}.dsc-tbl tbody tr.clk{cursor:pointer}.dsc-tbl tbody tr.clk:hover td{background:#F5F8FD}.dsc-tbl td.wrap{white-space:normal;word-break:break-word;max-width:0;width:100%}"+
+      ".dsc-thr{table-layout:fixed;max-width:440px}.dsc-thr td.tc{font-weight:700;color:var(--navy)}"+
+      ".dsc-atrisk{table-layout:fixed;min-width:860px}.dsc-atrisk td{vertical-align:middle}.dsc-atrisk td.stnd,.dsc-atrisk td.nxt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsc-atrisk td.stnd .dsc-pill{margin-right:6px}"+
       ".dsc-tblwrap{overflow:auto;flex:1;min-height:40px;border:1px solid var(--line);border-radius:10px}"+
       ".dsc-pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}.dsc-pill.bad{background:#FBECEA;color:#8a2e26}.dsc-pill.warn{background:#FCF3D8;color:#7a4d10}.dsc-pill.ok{background:#E7F5EC;color:#1c5136}.dsc-pill.mut{background:#EEF2FA;color:#5A667C}"+
       ".dsc-form{display:inline-flex;gap:2px}.dsc-form i{font-style:normal;font-size:9.5px;font-weight:800;width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff}.dsc-form .fW{background:#1c7c4a}.dsc-form .fD{background:#9F6621}.dsc-form .fL{background:#9A3130}"+
@@ -272,6 +274,7 @@
     else if(kind==="ref:level"){ dscRosterDrill("Referees with an accreditation level", function(x){return !!x.level;}); }
     else if(kind==="ref:nolevel"){ dscRosterDrill("Referees with no accreditation level", function(x){return !x.level;}); }
     else if(kind==="ref:safa"){ dscRosterDrill("Referees linked to a SAFA number", function(x){return !!(x.safa&&String(x.safa).trim());}); }
+    else if(kind==="ref:nosafa"){ dscRosterDrill("Appointed referees with NO SAFA number on the dash", function(x){return !(x.safa&&String(x.safa).trim());}); }
     else if(kind==="ref:reg"){ dscRosterDrill("Referees on the referee register", function(x){return !!x.registered;}); }
   }
 
@@ -384,6 +387,7 @@
 
     // Referees | suspensions
     var rfRoster=refs.roster||[];
+    var refNoSafa=rfRoster.filter(function(x){ return !(x.safa&&String(x.safa).trim()); });
     var raRows=rfRoster.map(function(x){return [x.referee,x.safa||"–",regTxt(x.registered),x.level||"no level",x.appts];});
     var raBody=rfRoster.map(function(x){
       var dk = x.safa ? ('rsafa|'+esc(x.safa)) : ('referee|'+esc(x.referee));
@@ -393,15 +397,17 @@
       '<div class="card">'+
         '<div class="dsc-bh"><span class="dsc-sec">Referees &amp; accreditation</span>'+acts("Referee roster",["Referee","SAFA","Registered","Level","Appointments"],raRows)+'</div>'+
         '<div class="dsc-refkpi">'+
-          stat("Appointed",num(refs.appointed),"","ref:appointed")+
+          stat("Appointed this season",num(refs.appointed),"","ref:appointed")+
           stat("With a level",num(refs.with_level),"","ref:level")+
           stat("No level",num(refs.no_level),Number(refs.no_level)>0?"warn":"","ref:nolevel")+
           stat("SAFA linked",num(refs.with_safa),"","ref:safa")+
+          stat("No SAFA number",num(refNoSafa.length),refNoSafa.length>0?"warn":"","ref:nosafa")+
           stat("On the referee register",num(refs.cttlfa_registered),"","ref:reg")+
         '</div>'+
+        '<p class="hint" style="margin:8px 0 0">These tiles count referees <b>appointed to matches this season</b> ('+num(refs.appointed)+' so far). Every appointed referee should be SAFA-carded — <b>No SAFA number</b> lists the '+num(refNoSafa.length)+' whose dash record has no SAFA number captured; click it to review and download the list to chase with the referee department. The full referee database is summarised below right.</p>'+
         '<div class="dsc-grid" style="margin-top:12px">'+
           '<div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Appointed referees by accreditation level</div>'+bars(refs.by_level,"level","n",null)+'</div>'+
-          '<div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">On record</div><div class="dsc-kv"><span>Total referees</span><b>'+num(refs.total)+'</b><span>Active</span><b>'+num(refs.active)+'</b><span>Accreditations held</span><b>'+num(refs.accreditations)+'</b></div><p class="hint" style="margin-top:6px">Level is the referee&rsquo;s most recent SAFA accreditation; &ldquo;No level&rdquo; means no accreditation is on record. SAFA number links each referee to the register. Click a referee for their appointments.</p></div>'+
+          '<div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Referee database (all records)</div><div class="dsc-kv"><span>Referees in the database</span><b>'+num(refs.total)+'</b><span>Marked active</span><b>'+num(refs.active)+'</b><span>Accreditations held</span><b>'+num(refs.accreditations)+'</b></div><p class="hint" style="margin-top:6px">This is the whole referee database on dash.cttlfa.com &mdash; every referee ever registered, not just this season. Of these, <b>'+num(refs.appointed)+'</b> were appointed to CTTLFA matches this season (the tiles above), and <b>'+num(refs.active)+'</b> are marked active. &ldquo;Accreditations held&rdquo; counts all accreditation records across those referees.</p></div>'+
         '</div>'+
         '<div class="dsc-bh" style="margin-top:12px"><span class="dsc-sec" style="font-size:12px;color:var(--muted)">Appointed referee roster</span></div>'+
         '<div class="dsc-tblwrap" style="max-height:360px"><table class="dsc-tbl"><thead><tr><th>Referee</th><th>SAFA</th><th>Reg</th><th>Level</th><th class="num">Appts</th></tr></thead><tbody>'+(raBody||'<tr><td colspan="5" class="hint">None.</td></tr>')+'</tbody></table></div></div>';
@@ -415,18 +421,18 @@
       var nxt = s.next
         ? num(s.gap)+' more <span style="color:var(--muted)">&rarr; '+num(s.next.suspension_matches)+'-match</span>'
         : '<span class="dsc-pill mut">max reached</span>';
-      return '<tr class="clk" data-drill="psafa|'+esc(x.safa||"")+'"><td>'+esc(x.player)+'</td><td>'+esc(x.safa||"–")+'</td><td>'+regPill(x.registered)+'</td><td>'+esc(x.club||"–")+'</td><td class="num">'+num(x.cards)+'</td><td class="wrap">'+pill+'</td><td class="wrap">'+nxt+'</td></tr>'; }).join("");
-    var thBody=susRules.map(function(x){ var m=Number(x.suspension_matches); return '<tr><td class="num">'+num(x.card_count)+'</td><td class="num">'+num(x.suspension_matches)+' match'+(m===1?'':'es')+'</td></tr>'; }).join("");
+      return '<tr class="clk" data-drill="psafa|'+esc(x.safa||"")+'"><td>'+esc(x.player)+'</td><td>'+esc(x.safa||"–")+'</td><td>'+regPill(x.registered)+'</td><td>'+esc(x.club||"–")+'</td><td class="num">'+num(x.cards)+'</td><td class="stnd">'+pill+'</td><td class="nxt">'+nxt+'</td></tr>'; }).join("");
+    var thBody=susRules.map(function(x){ var m=Number(x.suspension_matches); return '<tr><td class="tc">'+num(x.card_count)+'</td><td>'+num(x.suspension_matches)+' match'+(m===1?'':'es')+'</td></tr>'; }).join("");
     var susBlock=
       '<div class="card">'+
         '<div class="dsc-bh"><span class="dsc-sec">Suspensions</span>'+acts("Players at risk",["Player","SAFA","Registered","Club","Yellow cards","Standing","To next ban"],atRows)+'</div>'+
-        '<p class="hint" style="margin:0 0 12px;max-width:92ch">Yellow cards (cautions) <b>accumulate across the season</b>. A player cautioned in that many <b>separate matches</b> is automatically suspended for the matches shown — <b>CTTLFA Disciplinary Code, Article 17(3)</b> (accepted 25 February 2026). These are single yellows in different matches, not two yellows in one match (that is an indirect red card and a one-match ban in its own right).</p>'+
-        '<div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:5px">Accumulation thresholds — yellow cards to automatic suspension</div>'+
-        '<table class="dsc-tbl" style="margin-bottom:6px;max-width:520px"><thead><tr><th class="num">Yellow cards (separate matches)</th><th class="num">Automatic suspension</th></tr></thead><tbody>'+thBody+'</tbody></table>'+
-        '<p class="hint" style="margin:0 0 14px">Read it as: reach <b>'+num(susMin)+'</b> yellow cards and a suspension applies; each further block of cautions steps it up, as the table shows.</p>'+
-        '<div class="dsc-sec" style="font-size:12px;color:var(--muted)">Players at risk <span class="dsc-pill warn">'+num((sus.at_risk||[]).length)+'</span> <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">— each has reached at least '+num(susMin)+' yellow cards; the standing shows the ban their count already carries and how far to the next</span></div>'+
-        '<div class="dsc-tblwrap" style="max-height:280px;margin-top:6px"><table class="dsc-tbl"><thead><tr><th>Player</th><th>SAFA</th><th>Reg</th><th>Club</th><th class="num">Yellow cards</th><th>Standing</th><th>To next ban</th></tr></thead><tbody>'+(atBody||'<tr><td colspan="7" class="hint">No player has reached a threshold.</td></tr>')+'</tbody></table></div>'+
-        '<p class="hint" style="margin-top:6px"><b>Standing</b> is the highest threshold the player has reached and the automatic suspension it carries under Article 17(3). <b>To next ban</b> is the further cautions before the next step. Click a player for their full record. Personal data — handle under the Protection of Personal Information Act 4 of 2013.</p>'+
+        '<p class="hint" style="margin:0 0 14px">Yellow cards (cautions) <b>accumulate across the season</b>. A player cautioned in that many <b>separate matches</b> is automatically suspended for the matches shown — <b>CTTLFA Disciplinary Code, Article 17(3)</b> (accepted 25 February 2026). These are single yellows in different matches, not two yellows in one match (that is an indirect red card and a one-match ban in its own right).</p>'+
+        '<div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Accumulation thresholds — yellow cards to automatic suspension</div>'+
+        '<table class="dsc-tbl dsc-thr"><colgroup><col style="width:58%"><col style="width:42%"></colgroup><thead><tr><th>Yellow cards (separate matches)</th><th>Automatic suspension</th></tr></thead><tbody>'+thBody+'</tbody></table>'+
+        '<p class="hint" style="margin:10px 0 16px">Read it as: reach <b>'+num(susMin)+'</b> yellow cards and a suspension applies; each further block of cautions steps it up, as the table shows.</p>'+
+        '<div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Players at risk <span class="dsc-pill warn">'+num((sus.at_risk||[]).length)+'</span> <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">— each has reached at least '+num(susMin)+' yellow cards; the standing shows the ban their count already carries and how far to the next</span></div>'+
+        '<div class="dsc-tblwrap" style="max-height:300px"><table class="dsc-tbl dsc-atrisk"><colgroup><col style="width:19%"><col style="width:10%"><col style="width:8%"><col style="width:18%"><col style="width:9%"><col style="width:22%"><col style="width:14%"></colgroup><thead><tr><th>Player</th><th>SAFA</th><th>Reg</th><th>Club</th><th class="num">Yellow cards</th><th>Standing</th><th>To next ban</th></tr></thead><tbody>'+(atBody||'<tr><td colspan="7" class="hint">No player has reached a threshold.</td></tr>')+'</tbody></table></div>'+
+        '<p class="hint" style="margin-top:8px"><b>Standing</b> is the highest threshold the player has reached and the automatic suspension it carries under Article 17(3). <b>To next ban</b> is the further cautions before the next step. Click a player for their full record. Personal data — handle under the Protection of Personal Information Act 4 of 2013.</p>'+
       '</div>';
 
     root.innerHTML = head + kpi +
