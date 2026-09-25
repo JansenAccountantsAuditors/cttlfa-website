@@ -58,6 +58,17 @@ jobs:
         if: success() && env.SUPABASE_INGEST_TOKEN != ''
         run: |
           curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_apply_referee_fixes" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\"}" || true
+      - name: Apply invoice-number corrections
+        # Re-applies the finance-reconciled fine invoice numbers (dash_ruling_fix)
+        # onto the freshly mirrored administrative_rulings. The dash source does not
+        # carry invoice numbers for fines finance never captured there; this overlay
+        # fills them from the Sage reconciliation so they no longer read as "no
+        # invoice number". Fills blanks only - once the source carries a number the
+        # source wins. Idempotent; must run before the fine reconciliation below so
+        # the reconciliation matches on the corrected numbers. Token-guarded.
+        if: success() && env.SUPABASE_INGEST_TOKEN != ''
+        run: |
+          curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_apply_ruling_fixes" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\"}" || true
       - name: Reconcile fines to Sage
         # Recompute and store the fine-to-invoice reconciliation after the dash
         # fines refresh (against the latest Sage ledger available). Also runs after
