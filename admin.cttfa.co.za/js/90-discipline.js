@@ -120,6 +120,7 @@
       ".dsc-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.dsc-tbl th{background:var(--navy);color:#fff;text-align:left;padding:7px 9px;font-size:11px;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:1}.dsc-tbl th.num,.dsc-tbl td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.dsc-tbl td{padding:6px 9px;border-bottom:1px solid var(--line2);vertical-align:top}.dsc-tbl tbody tr.clk{cursor:pointer}.dsc-tbl tbody tr.clk:hover td{background:#F5F8FD}.dsc-tbl td.wrap{white-space:normal;word-break:break-word;max-width:0;width:100%}"+
       ".dsc-thr{table-layout:fixed;max-width:440px}.dsc-thr td.tc{font-weight:700;color:var(--navy)}"+
       ".dsc-atrisk{table-layout:fixed;min-width:860px}.dsc-atrisk td{vertical-align:middle}.dsc-atrisk td.stnd,.dsc-atrisk td.nxt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsc-atrisk td.stnd .dsc-pill{margin-right:6px}"+
+      ".rr-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}.rr-filters input,.rr-filters select{padding:8px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;background:#fff;color:var(--ink)}.rr-filters input{flex:1;min-width:220px}.rr-chip{font-size:12px;font-weight:700;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 13px;cursor:pointer}.rr-chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}.dsc-openhint{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:11.5px;color:var(--gold-d,#9a7213);margin-top:8px}"+
       ".dsc-tblwrap{overflow:auto;flex:1;min-height:40px;border:1px solid var(--line);border-radius:10px}"+
       ".dsc-pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}.dsc-pill.bad{background:#FBECEA;color:#8a2e26}.dsc-pill.warn{background:#FCF3D8;color:#7a4d10}.dsc-pill.ok{background:#E7F5EC;color:#1c5136}.dsc-pill.mut{background:#EEF2FA;color:#5A667C}"+
       ".dsc-form{display:inline-flex;gap:2px}.dsc-form i{font-style:normal;font-size:9.5px;font-weight:800;width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center;border-radius:3px;color:#fff}.dsc-form .fW{background:#1c7c4a}.dsc-form .fD{background:#9F6621}.dsc-form .fL{background:#9A3130}"+
@@ -211,6 +212,7 @@
   function closeDrill(){ var s=NS.$("dscScrim"), d=NS.$("dscDrawer"); if(s)s.classList.remove("on"); if(d)d.classList.remove("on"); }
   function openDrill(kind, key, subtitle){
     ensureDrawer();
+    var _dw=NS.$("dscDrawer"); if(_dw) _dw.style.width="";
     NS.$("dscScrim").classList.add("on"); NS.$("dscDrawer").classList.add("on");
     NS.$("dscDT").textContent="Loading…"; NS.$("dscDS").textContent=subtitle||"";
     NS.$("dscDB").innerHTML='<p class="hint">Loading detail…</p>';
@@ -252,6 +254,7 @@
   /* ---------- KPI drill (client-side, from the loaded dashboard data) ---------- */
   function showKpiDrawer(title, cols, rows){
     ensureDrawer();
+    var _dw=NS.$("dscDrawer"); if(_dw) _dw.style.width="";
     NS.$("dscScrim").classList.add("on"); NS.$("dscDrawer").classList.add("on");
     NS.$("dscDT").textContent=title; NS.$("dscDS").textContent=num(rows.length)+" record"+(rows.length===1?"":"s");
     var head=cols.map(function(c){ var n=/fine|cards|amount|appoint/i.test(c); return '<th'+(n?' class="num"':'')+'>'+esc(c)+'</th>'; }).join("");
@@ -276,6 +279,74 @@
     else if(kind==="ref:safa"){ dscRosterDrill("Referees linked to a SAFA number", function(x){return !!(x.safa&&String(x.safa).trim());}); }
     else if(kind==="ref:nosafa"){ dscRosterDrill("Appointed referees with NO SAFA number on the dash", function(x){return !(x.safa&&String(x.safa).trim());}); }
     else if(kind==="ref:reg"){ dscRosterDrill("Referees on the referee register", function(x){return !!x.registered;}); }
+  }
+
+  /* ---------- Referee database (full population, filterable + exportable) ---------- */
+  var _refReg=null, _rrF={q:"",appointed:false,cttr:false,nosafa:false,active:false,level:""};
+  var RR_COLS=["Referee","SAFA","Club","CTTR","On register","Reg type","Level","Accreditations","Appts (season)","Active"];
+  function rrHasSafa(r){ return !!(r.safa && String(r.safa).trim()); }
+  function rrFiltered(){
+    var q=(_rrF.q||"").trim().toLowerCase();
+    return (_refReg||[]).filter(function(r){
+      if(_rrF.appointed && !r.appointed) return false;
+      if(_rrF.cttr && !r.cttr) return false;
+      if(_rrF.nosafa && rrHasSafa(r)) return false;
+      if(_rrF.active && !r.active) return false;
+      if(_rrF.level && (r.level||"")!==_rrF.level) return false;
+      if(q){ var hay=((r.referee||"")+" "+(r.safa||"")+" "+(r.club||"")).toLowerCase(); if(hay.indexOf(q)<0) return false; }
+      return true;
+    });
+  }
+  function rrRowsArr(list){
+    return list.map(function(r){ return [ r.referee||"–", r.safa||"–", r.club||"–", r.cttr?"CTTR":"", r.on_register?"Yes":"No", r.reg_type||"–", r.level||"–", num(r.accreds), r.appointed?num(r.appts):"0", r.active?"Active":"Inactive" ]; });
+  }
+  function rrRender(){
+    var list=rrFiltered();
+    var body=list.map(function(r){
+      var cttr=r.cttr?'<span class="dsc-pill warn">CTTR</span>':'<span style="color:var(--muted)">–</span>';
+      var reg=r.on_register?'<span class="dsc-pill ok">Yes</span>':'<span class="dsc-pill mut">No</span>';
+      var act=r.active?'<span class="dsc-pill ok">Active</span>':'<span class="dsc-pill mut">Inactive</span>';
+      var ap=r.appointed?('<b>'+num(r.appts)+'</b>'):'<span style="color:var(--muted)">–</span>';
+      var dk = rrHasSafa(r) ? ('rsafa|'+esc(String(r.safa))) : ('referee|'+esc(r.referee||""));
+      return '<tr class="clk" data-drill="'+dk+'"><td>'+esc(r.referee||"–")+'</td><td>'+esc(r.safa||"–")+'</td><td>'+esc(r.club||"–")+'</td><td>'+cttr+'</td><td>'+reg+'</td><td>'+esc(r.reg_type||"–")+'</td><td>'+esc(r.level||"–")+'</td><td class="num">'+num(r.accreds)+'</td><td class="num">'+ap+'</td><td>'+act+'</td></tr>';
+    }).join("");
+    var el=NS.$("rrBody"); if(el) el.innerHTML=body||'<tr><td colspan="10" class="hint">No referees match these filters.</td></tr>';
+    var c=NS.$("rrCount"); if(c) c.innerHTML='Showing <b>'+num(list.length)+'</b> of '+num((_refReg||[]).length)+' referees'+(list.length!==(_refReg||[]).length?' (filtered)':'');
+    Array.prototype.forEach.call(NS.$("dscDB").querySelectorAll("#rrBody [data-drill]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); var p=b.getAttribute("data-drill").split("|"); openDrill(p[0],p[1]||"",_subtitle); }; });
+  }
+  function rrDrawBody(){
+    var lvlSet={}; (_refReg||[]).forEach(function(r){ if(r.level) lvlSet[r.level]=1; });
+    var lvlOpts='<option value="">All levels</option>'+Object.keys(lvlSet).sort().map(function(l){return '<option value="'+esc(l)+'">'+esc(l)+'</option>';}).join("");
+    NS.$("dscDB").innerHTML=
+      '<div class="dsc-bh"><span class="dsc-sec">Referee database</span><span class="dsc-acts"><button class="dsc-x" id="rrPDF">PDF</button><button class="dsc-x" id="rrCSV">CSV</button></span></div>'+
+      '<p class="hint" style="margin:0 0 8px">The full referee database mirrored from dash.cttlfa.com. Filter, then download the current view (PDF/CSV). <b>Club</b> is the referee&rsquo;s affiliation (<b>CTTR</b> = the referee body, not a playing club); <b>Appts</b> = appointments this season (&ldquo;–&rdquo; = not appointed this season). Click a referee for their record.</p>'+
+      '<div class="rr-filters">'+
+        '<input id="rrSearch" placeholder="Search name, SAFA or club…" value="'+esc(_rrF.q)+'">'+
+        '<button class="rr-chip'+(_rrF.appointed?' on':'')+'" data-f="appointed">Appointed this season</button>'+
+        '<button class="rr-chip'+(_rrF.cttr?' on':'')+'" data-f="cttr">CTTR</button>'+
+        '<button class="rr-chip'+(_rrF.nosafa?' on':'')+'" data-f="nosafa">No SAFA number</button>'+
+        '<button class="rr-chip'+(_rrF.active?' on':'')+'" data-f="active">Active only</button>'+
+        '<select id="rrLevel">'+lvlOpts+'</select>'+
+      '</div>'+
+      '<div id="rrCount" class="hint" style="margin-bottom:6px"></div>'+
+      '<div class="dsc-tblwrap" style="max-height:calc(100vh - 260px)"><table class="dsc-tbl"><thead><tr><th>Referee</th><th>SAFA</th><th>Club</th><th>CTTR</th><th>On register</th><th>Reg type</th><th>Level</th><th class="num">Accreds</th><th class="num">Appts</th><th>Active</th></tr></thead><tbody id="rrBody"></tbody></table></div>';
+    var ls=NS.$("rrLevel"); if(ls){ ls.value=_rrF.level; ls.onchange=function(){ _rrF.level=ls.value; rrRender(); }; }
+    var si=NS.$("rrSearch"); if(si) si.oninput=function(){ _rrF.q=si.value; rrRender(); };
+    Array.prototype.forEach.call(NS.$("dscDB").querySelectorAll(".rr-chip"),function(b){ b.onclick=function(){ var f=b.getAttribute("data-f"); _rrF[f]=!_rrF[f]; b.classList.toggle("on"); rrRender(); }; });
+    NS.$("rrPDF").onclick=function(){ expPDF("Referee database",_subtitle,RR_COLS,rrRowsArr(rrFiltered())); };
+    NS.$("rrCSV").onclick=function(){ expCSV("Referee database",RR_COLS,rrRowsArr(rrFiltered())); };
+    rrRender();
+  }
+  function openRefRegister(){
+    ensureDrawer();
+    var dw=NS.$("dscDrawer"); if(dw) dw.style.width="min(1160px,98vw)";
+    NS.$("dscScrim").classList.add("on"); if(dw) dw.classList.add("on");
+    NS.$("dscDT").textContent="Referee database"; NS.$("dscDS").textContent=_subtitle||"";
+    if(_refReg){ rrDrawBody(); return; }
+    NS.$("dscDB").innerHTML='<p class="hint">Loading the referee database…</p>';
+    NS.sb.rpc("dash_referee_register").then(function(r){
+      if(r.error) throw r.error; _refReg=r.data||[]; rrDrawBody();
+    }).catch(function(e){ NS.$("dscDB").innerHTML='<p class="hint">Could not load: '+esc(e.message||e)+'</p>'; });
   }
 
   /* ==================== DISCIPLINE DASHBOARD ==================== */
@@ -407,7 +478,7 @@
         '<p class="hint" style="margin:8px 0 0">These tiles count referees <b>appointed to matches this season</b> ('+num(refs.appointed)+' so far). Every appointed referee should be SAFA-carded — <b>No SAFA number</b> lists the '+num(refNoSafa.length)+' whose dash record has no SAFA number captured; click it to review and download the list to chase with the referee department. The full referee database is summarised below right.</p>'+
         '<div class="dsc-grid" style="margin-top:12px">'+
           '<div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Appointed referees by accreditation level</div>'+bars(refs.by_level,"level","n",null)+'</div>'+
-          '<div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Referee database (all records)</div><div class="dsc-kv"><span>Referees in the database</span><b>'+num(refs.total)+'</b><span>Marked active</span><b>'+num(refs.active)+'</b><span>Accreditations held</span><b>'+num(refs.accreditations)+'</b></div><p class="hint" style="margin-top:6px">This is the whole referee database on dash.cttlfa.com &mdash; every referee ever registered, not just this season. Of these, <b>'+num(refs.appointed)+'</b> were appointed to CTTLFA matches this season (the tiles above), and <b>'+num(refs.active)+'</b> are marked active. &ldquo;Accreditations held&rdquo; counts all accreditation records across those referees.</p></div>'+
+          '<div class="card dsc-stclk" id="refDbCard" role="button" tabindex="0" title="Open the full referee database — searchable, filterable and downloadable" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Referee database (all records)</div><div class="dsc-kv"><span>Referees in the database</span><b>'+num(refs.total)+'</b><span>Marked active</span><b>'+num(refs.active)+'</b><span>Accreditation records</span><b>'+num(refs.accreditations)+'</b></div><p class="hint" style="margin-top:6px">The whole referee database on dash.cttlfa.com &mdash; every referee ever registered, not just this season. Of these, <b>'+num(refs.appointed)+'</b> were appointed to CTTLFA matches this season (the tiles above) and <b>'+num(refs.active)+'</b> are marked active. <b>Accreditation records</b> counts accreditations, not referees: a referee can hold more than one over time (re-accreditations or extra codes), so records (<b>'+num(refs.accreditations)+'</b>) exceed referees (<b>'+num(refs.total)+'</b>).</p><span class="dsc-openhint">Open the full register &mdash; search, filter, download <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>'+
         '</div>'+
         '<div class="dsc-bh" style="margin-top:12px"><span class="dsc-sec" style="font-size:12px;color:var(--muted)">Appointed referee roster</span></div>'+
         '<div class="dsc-tblwrap" style="max-height:360px"><table class="dsc-tbl"><thead><tr><th>Referee</th><th>SAFA</th><th>Reg</th><th>Level</th><th class="num">Appts</th></tr></thead><tbody>'+(raBody||'<tr><td colspan="5" class="hint">None.</td></tr>')+'</tbody></table></div></div>';
@@ -451,6 +522,8 @@
     Array.prototype.forEach.call(root.querySelectorAll("[data-drill]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); var p=b.getAttribute("data-drill").split("|"); openDrill(p[0],p[1]||"",_subtitle); }; });
     // wire KPI tiles (client-side drill from the loaded dashboard data)
     Array.prototype.forEach.call(root.querySelectorAll("[data-kpi]"),function(b){ var go=function(){ dscKpiDrill(b.getAttribute("data-kpi")); }; b.onclick=function(ev){ ev.stopPropagation(); go(); }; b.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }; });
+    // wire the referee-database card (full, filterable register)
+    var _rdb=root.querySelector("#refDbCard"); if(_rdb){ _rdb.onclick=openRefRegister; _rdb.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openRefRegister(); } }; }
   }
 
   /* ---------- Fetch now (dispatches the GitHub Actions dash fetch) ---------- */
