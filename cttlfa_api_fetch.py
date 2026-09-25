@@ -311,11 +311,24 @@ def build():
                      amount=s["amount"], net=s["net"], n=s["n"],
                      detail=sorted(s["detail"], key=lambda d: d["date"])[:20])
                 for cd, s in coa.items() if s["amount"] > 0.01]
+    # Sage's own open-item list: every invoice Sage still shows an amount due on
+    # (AmountDue != 0). An invoice absent from here is fully paid per Sage's own
+    # allocation. This is the authoritative source for whether a fine is settled.
+    open_rows = []
+    for r in inv_open:
+        cd = cc(r)
+        if not cd: continue
+        ref = str(r.get("DocumentNumber") or r.get("Reference") or "").strip()
+        if not ref: continue
+        open_rows.append(dict(club_key=cd.lower(), code=cd, reference=ref,
+            amount_due=round(float(r.get("AmountDue") or 0), 2),
+            total=round(float(r.get("Total") or 0), 2),
+            inv_date=(r.get("Date") or "")[:10]))
     stats = dict(n_clubs=len(clubs), n_owing=len(pos), owed=S("bal"), net=snap["net_total"],
                  est=est, n_ledger=len(led_clubs), n_rows=sum(len(c["rows"]) for c in led_clubs),
-                 tie_off=tie_off, n_coa=len(coa_rows), n_contacts=len(contacts),
+                 tie_off=tie_off, n_coa=len(coa_rows), n_contacts=len(contacts), n_open=len(open_rows),
                  buckets=(S("cur"), S("b30"), S("b60"), S("b90"), S("b120")))
-    return snap, lmeta, led_clubs, coa_rows, contacts, stats
+    return snap, lmeta, led_clubs, coa_rows, contacts, open_rows, stats
 
 
 def main(argv):
@@ -338,7 +351,7 @@ def main(argv):
                     print("   %s = %r" % (k, c.get(k)))
             print("---")
         return 0
-    snap, lmeta, led_clubs, coa_rows, contacts, st = build()
+    snap, lmeta, led_clubs, coa_rows, contacts, open_rows, st = build()
     print("clubs %d | owing %d | owed R%.2f | net R%.2f | estimated-ageing %d"
           % (st["n_clubs"], st["n_owing"], st["owed"], st["net"], st["est"]))
     print("buckets cur R%.0f | 30 R%.0f | 60 R%.0f | 90 R%.0f | 120 R%.0f" % st["buckets"])
@@ -366,6 +379,11 @@ def main(argv):
             print("PUSH contacts     -> skipped (no emails found — check the Sage Customer field names)")
     except Exception as e:
         print("contacts skipped:", str(e)[:120])
+    try:
+        s5, t5 = post_rpc("deb_load_open_invoices", {"p_token": CFG["ingest_token"], "p_rows": open_rows})
+        print("PUSH open-items   ->", s5, t5[:120])
+    except Exception as e:
+        print("open-items skipped:", str(e)[:120])
     return 0 if (s1 < 300 and s2 < 300) else 1
 
 
