@@ -50,6 +50,13 @@ jobs:
         if: success() && env.DASH_EMAIL != '' && env.DASH_PASSWORD != '' && env.SUPABASE_INGEST_TOKEN != ''
         run: |
           curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_ci_status" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\",\"p_status\":\"done\",\"p_message\":\"Mirrored via GitHub Actions\"}" || true
+      - name: Reconcile fines to Sage
+        # Recompute and store the fine-to-invoice reconciliation after the dash
+        # fines refresh (against the latest Sage ledger available). Also runs after
+        # the Sage fetch; either feed refreshing keeps the reconciliation live.
+        if: success() && env.SUPABASE_INGEST_TOKEN != ''
+        run: |
+          curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_fine_recon_persist" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\"}" || true
       - name: Mark failed
         if: failure() && env.DASH_EMAIL != '' && env.DASH_PASSWORD != '' && env.SUPABASE_INGEST_TOKEN != ''
         run: |
