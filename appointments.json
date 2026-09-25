@@ -140,80 +140,29 @@
    "L Somi",
    "S Mahono",
    "Club Ref"
-  ]
- ],
- "junior": [
+  ],
   [
-   "K1 - Under 16 Premier One",
-   "2026-09-24",
-   "10:50",
-   "Rygersdal",
+   "C1 - Second Division",
+   "2026-09-27",
+   "14:30",
+   "Young Bafana",
+   "Chelsea Bridgetown",
+   "D Steer",
+   "",
+   ""
+  ],
+  [
+   "C1 - Second Division",
+   "2026-09-27",
+   "15:45",
    "FC Kapstadt",
-   "J Absalon",
-   "",
-   ""
-  ],
-  [
-   "I1 - Under 18 Premier One",
-   "2026-09-24",
-   "12:30",
-   "Rygersdal",
-   "FC Kapstadt",
-   "J Absalon",
-   "",
-   ""
-  ],
-  [
-   "I1 - Under 18 Premier One",
-   "2026-09-24",
-   "12:00",
-   "Table View",
-   "Wynberg st Johns",
-   "S Bhali",
-   "",
-   ""
-  ],
-  [
-   "I1 - Under 18 Premier One",
-   "2026-09-24",
-   "12:30",
-   "C.R Vasco da Gama",
-   "Cape Town Spurs",
-   "S Mhlaba",
-   "",
-   ""
-  ],
-  [
-   "K1 - Under 16 Premier One",
-   "2026-09-24",
-   "10:50",
-   "C.R Vasco da Gama",
-   "Cape Town Spurs",
-   "G Brown",
-   "",
-   ""
-  ],
-  [
-   "M1 - Under 14 Premier One",
-   "2026-09-24",
-   "09:30",
-   "C.R Vasco da Gama",
-   "Cape Town Spurs",
-   "S Mhlaba",
-   "",
-   ""
-  ],
-  [
-   "O1 - Under 12 Premier One",
-   "2026-09-24",
-   "08:15",
-   "C.R Vasco da Gama",
-   "Cape Town Spurs",
-   "G Brown",
+   "Hellenic",
+   "J Koeries",
    "",
    ""
   ]
  ],
+ "junior": [],
  "ladies": [
   [
    "H2 - Womans First Division",
@@ -256,5 +205,5 @@
    ""
   ]
  ],
- "week_label": "2026-09-24 to 2026-09-25"
+ "week_label": "2026-09-24 to 2026-09-27"
 }
