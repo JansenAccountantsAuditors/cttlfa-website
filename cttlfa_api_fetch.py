@@ -161,9 +161,12 @@ def build():
     for c in cust:
         nm = c.get("Name", "") or ""; m = CODE.search(nm); code = m.group(1) if m else None
         bal = round(float(c.get("Balance") or 0), 2); active = (c.get("Active") is not False)
-        if code: code_bal[code] = round(code_bal.get(code, 0.0) + bal, 2)  # sum if >1 customer shares a code
-        if code is None and abs(bal) < 0.005:
+        # drop dormant accounts with nothing owing: no-code zero-balance customers,
+        # and inactive zero-balance customers (e.g. a retired duplicate marked
+        # inactive in Sage). An inactive account that still owes is kept and chased.
+        if abs(bal) < 0.005 and (code is None or not active):
             continue
+        if code: code_bal[code] = round(code_bal.get(code, 0.0) + bal, 2)  # sum if >1 customer shares a code
         ib = B.get(code) if code else None
         if ib is None: ib = dict(cur=0., d30=0., d60=0., d90=0., d120=0.)
         comp = round(sum(ib.values()), 2)
@@ -226,6 +229,7 @@ def build():
     for c in cust:
         nm = c.get("Name", "") or ""; m = CODE.search(nm); cd = m.group(1) if m else None
         if not cd: continue
+        if (c.get("Active") is False) and abs(round(float(c.get("Balance") or 0), 2)) < 0.005: continue
         pri, ccm = _emails(c.get("Email") or c.get("EmailAddress") or "")
         if not pri: continue
         ph = (c.get("Mobile") or c.get("MobileNumber") or c.get("CellNumber") or
