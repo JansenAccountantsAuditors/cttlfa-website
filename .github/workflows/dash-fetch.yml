@@ -50,6 +50,14 @@ jobs:
         if: success() && env.DASH_EMAIL != '' && env.DASH_PASSWORD != '' && env.SUPABASE_INGEST_TOKEN != ''
         run: |
           curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_ci_status" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\",\"p_status\":\"done\",\"p_message\":\"Mirrored via GitHub Actions\"}" || true
+      - name: Apply referee corrections
+        # Re-applies the curated referee corrections (dash_referee_fix) onto the
+        # freshly mirrored dash_rows: fixes swapped/misspelled names, adds confirmed
+        # SAFA numbers, and merges/retires duplicate referee records. Idempotent;
+        # keeps the referee register correct after each mirror overwrite. Token-guarded.
+        if: success() && env.SUPABASE_INGEST_TOKEN != ''
+        run: |
+          curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_apply_referee_fixes" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\"}" || true
       - name: Reconcile fines to Sage
         # Recompute and store the fine-to-invoice reconciliation after the dash
         # fines refresh (against the latest Sage ledger available). Also runs after
