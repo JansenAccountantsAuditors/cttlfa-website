@@ -427,7 +427,7 @@ def build_dc_income(push=False):
     keep_doc_ids = [str(d.get("ID")) for _, d in docs]
     known = {}
     if push:
-        _s, kn = call_rpc("dc_income_known", {"p_token": CFG["ingest_token"]})
+        _s, kn = call_rpc("dc_income_seen_get", {"p_token": CFG["ingest_token"]})
         for r in (kn or []):
             known[str(r.get("doc_id"))] = (r.get("modified") or "")[:19]
     todo = [(t, d) for (t, d) in docs if not push or (d.get("Modified") or "")[:19] != known.get(str(d.get("ID")))]
@@ -451,6 +451,11 @@ def build_dc_income(push=False):
                                                 "p_replace_doc_ids": refetch_ids if first else []})
             first = False
         call_rpc("dc_income_prune", {"p_token": CFG["ingest_token"], "p_doc_ids": keep_doc_ids})
+        # record every examined document (incl. those with no DC line) so the next fetch skips it
+        seen_rows = [{"doc_id": str(d.get("ID")), "modified": (d.get("Modified") or "")[:19]} for (t, d) in todo]
+        for i in range(0, len(seen_rows), 500):
+            call_rpc("dc_income_seen_upsert", {"p_token": CFG["ingest_token"], "p_rows": seen_rows[i:i + 500]})
+        call_rpc("dc_income_seen_prune", {"p_token": CFG["ingest_token"], "p_doc_ids": keep_doc_ids})
     # fees / refunds / adjustments posted directly to a DC account.
     # AccountReceipt/AccountPayment carry AccountId; adjustments carry an Account
     # object (customer) or an AccountName string (supplier) instead.
