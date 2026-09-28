@@ -1,7 +1,0 @@
-Remove one-off Sage GL probe/backfill workflow
-
-The nightly Sage fetch now refreshes the YTD DC income summary, so the
-manual probe/backfill workflow is no longer needed.
-
-Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
-Claude-Session: https://claude.ai/code/session_01LYzdhwyUpPCdjfCMzczULX
