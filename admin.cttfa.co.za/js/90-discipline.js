@@ -117,7 +117,7 @@
       ".dsc-bars{display:flex;flex-direction:column;gap:5px;overflow:auto;flex:1;min-height:40px}"+
       ".dsc-bar{display:flex;align-items:center;gap:9px;font-size:12.5px;cursor:pointer;border-radius:6px;padding:1px 3px}.dsc-bar:hover{background:#F5F8FD}"+
       ".dsc-bar .lab{flex:0 0 44%;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsc-bar .tr{flex:1;height:9px;background:var(--line2);border-radius:5px;overflow:hidden}.dsc-bar .tr i{display:block;height:100%;background:var(--blue);border-radius:5px}.dsc-bar .vv{flex:0 0 auto;font-variant-numeric:tabular-nums;font-weight:700;color:var(--navy);min-width:38px;text-align:right}"+
-      ".dsc-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.dsc-tbl th{background:var(--navy);color:#fff;text-align:left;padding:7px 9px;font-size:11px;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:1}.dsc-tbl th.num,.dsc-tbl td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.dsc-tbl td{padding:6px 9px;border-bottom:1px solid var(--line2);vertical-align:top}.dsc-tbl tbody tr.clk{cursor:pointer}.dsc-tbl tbody tr.clk:hover td{background:#F5F8FD}.dsc-tbl td.wrap{white-space:normal;word-break:break-word;max-width:0;width:100%}"+
+      ".dsc-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.dsc-tbl th{background:var(--navy);color:#fff;text-align:left;padding:7px 9px;font-size:11px;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:1}.dsc-tbl th.num,.dsc-tbl td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.dsc-tbl td{padding:6px 9px;border-bottom:1px solid var(--line2);vertical-align:top}.dsc-tbl tbody tr.clk{cursor:pointer}.dsc-tbl tbody tr.clk:hover td{background:#F5F8FD}.dsc-tbl td.wrap{white-space:normal;word-break:break-word;max-width:0;width:100%}.dsc-tbl tfoot th{position:static;background:#EEF3FA;color:var(--navy);border-top:2px solid var(--navy);border-bottom:none;font-size:12px}"+
       ".dsc-thr{table-layout:fixed;max-width:440px}.dsc-thr td.tc{font-weight:700;color:var(--navy)}"+
       ".dsc-atrisk{table-layout:fixed;min-width:860px}.dsc-atrisk td{vertical-align:middle}.dsc-atrisk td.stnd,.dsc-atrisk td.nxt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsc-atrisk td.stnd .dsc-pill{margin-right:6px}"+
       ".rr-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}.rr-filters input,.rr-filters select{padding:8px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;background:#fff;color:var(--ink)}.rr-filters input{flex:1;min-width:220px}.rr-chip{font-size:12px;font-weight:700;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 13px;cursor:pointer}.rr-chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}.dsc-openhint{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:11.5px;color:var(--gold-d,#9a7213);margin-top:8px}"+
@@ -629,6 +629,30 @@
     var clubCard='<div class="card">'+bhead("Cards by club","Cards by club",["Club","Cards"],clubRows)+
       bars(cards.by_club,"club","n","club")+'</div>';
 
+    // DC cases by club (administrative rulings per club — a case is a charge referred to
+    // the DC; not every case carries a fine, and fines are separate from yellow cards).
+    var casesClubRows=(ru.by_club||[]).map(function(x){return [x.club,x.n];});
+    var casesClubCard='<div class="card">'+bhead("DC cases by club","DC cases by club",["Club","Cases"],casesClubRows)+
+      bars(ru.by_club,"club","n",null)+
+      '<p class="hint" style="margin:6px 0 0">Disciplinary cases (administrative rulings) heard per club this season. Not every case carries a fine, and cases are counted separately from yellow cards.</p></div>';
+
+    // Combined "Discipline by club" — cards, cases and fines issued per club in one place.
+    var dbc=d.discipline_by_club||[];
+    var dbcRows=dbc.map(function(x){return [x.club,x.cards,x.cases,x.fines_n,Number(x.fines_amount||0).toFixed(2)];});
+    var tCards=0,tCases=0,tFinesN=0,tFinesAmt=0;
+    dbc.forEach(function(x){ tCards+=(+x.cards||0); tCases+=(+x.cases||0); tFinesN+=(+x.fines_n||0); tFinesAmt+=(+x.fines_amount||0); });
+    var dbcBody=dbc.map(function(x){
+      return '<tr><td>'+esc(x.club)+'</td><td class="num">'+num(x.cards)+'</td><td class="num">'+num(x.cases)+'</td><td class="num">'+num(x.fines_n)+'</td><td class="num">'+rand(x.fines_amount)+'</td></tr>'; }).join("");
+    var combinedCard=
+      '<div class="card">'+
+        bhead("Discipline by club","Discipline by club",["Club","Yellow cards","DC cases","Fines issued","Fines issued (R)"],dbcRows)+
+        '<p class="hint" style="margin:0 0 10px">Each club&rsquo;s disciplinary footprint this season in one place &mdash; yellow cards, disciplinary cases heard, and fines issued &mdash; ranked by total disciplinary events (cards plus cases). Cards and cases move differently: a club can sit high on cautions yet low on cases, or the reverse, which points to where indiscipline is turning into hearings and fines. Outstanding fine collection is tracked in the fines reconciliation below.</p>'+
+        '<div class="dsc-tblwrap" style="max-height:460px"><table class="dsc-tbl"><thead><tr><th>Club</th><th class="num">Yellow cards</th><th class="num">DC cases</th><th class="num">Fines issued</th><th class="num">Fines issued (R)</th></tr></thead>'+
+        '<tbody>'+(dbcBody||'<tr><td colspan="5" class="hint">No data.</td></tr>')+'</tbody>'+
+        '<tfoot><tr><th>Total</th><th class="num">'+num(tCards)+'</th><th class="num">'+num(tCases)+'</th><th class="num">'+num(tFinesN)+'</th><th class="num">'+rand(tFinesAmt)+'</th></tr></tfoot>'+
+        '</table></div>'+
+        '<p class="hint" style="margin-top:6px">Fines issued is the disciplinary register figure and reconciles to the rulings summary above. It is the value fined, not the amount still owing.</p></div>';
+
     // Rulings & fines
     var ocRows=(ru.by_outcome||[]).map(function(x){return [x.outcome,x.n];});
     var ocBody=(ru.by_outcome||[]).map(function(x){
@@ -691,7 +715,9 @@
 
     root.innerHTML = head + kpi +
       '<div class="dsc-grid">'+divCard+plCard+'</div>'+
-      '<div class="dsc-grid" style="margin-top:16px">'+monthCard+clubCard+'</div>'+
+      '<div style="margin-top:16px">'+monthCard+'</div>'+
+      '<div class="dsc-grid" style="margin-top:16px">'+clubCard+casesClubCard+'</div>'+
+      '<div style="margin-top:16px">'+combinedCard+'</div>'+
       '<div style="margin-top:16px">'+rulingsBlock+'</div>'+
       '<div style="margin-top:16px"><div class="card" id="fineReconRoot"><p class="hint">Loading fines invoicing &amp; payment reconciliation (Sage)…</p></div></div>'+
       '<div style="margin-top:16px">'+susBlock+'</div>';
