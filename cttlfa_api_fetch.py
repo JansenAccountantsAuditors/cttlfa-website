@@ -331,9 +331,186 @@ def build():
     return snap, lmeta, led_clubs, coa_rows, contacts, open_rows, stats
 
 
+# ==================== YTD DC income (GL accounts 1040/xxx) ====================
+# DC income is more than the on-field case fines: it also includes administrative
+# and compliance fines (meeting attendance, fixtures, etc.) and refundable process
+# fees (protests and appeals). Each posts to a 1040/xxx income account in Sage.
+# We reconstruct each account's financial-year movement from the postings the API
+# exposes: invoice lines and credit-note lines (fines, per document), and direct
+# AccountReceipt / AccountPayment / CustomerAdjustment on the account (fees, refunds,
+# the SAFA cost order). Invoice/credit-note lines are cached in Supabase so each
+# fetch only reads the documents that are new or changed.
+DC_FAMILY = {
+    "1040/000": ("other", "DC Fines (unallocated)"),
+    "1040/001": ("fees",  "Appeal fees"),
+    "1040/002": ("fees",  "Protest / complaint fees"),
+    "1040/003": ("admin", "Failure to attend meeting"),
+    "1040/004": ("admin", "Failure to fulfil fixture"),
+    "1040/005": ("admin", "Failure to submit referee's report"),
+    "1040/006": ("admin", "Failure to attend DC"),
+    "1040/007": ("admin", "Failure to return trophy"),
+    "1040/008": ("admin", "Failure to pay DC fine"),
+    "1040/009": ("admin", "Failure to submit results"),
+    "1040/010": ("admin", "Failure to submit protest"),
+    "1040/011": ("admin", "Failure to pay protest fee"),
+    "1040/012": ("match", "Unregistered / ineligible player"),
+    "1040/013": ("match", "Abusive behaviour"),
+    "1040/014": ("admin", "Withdrawal of team"),
+    "1040/015": ("match", "Match abandonment"),
+    "1040/016": ("match", "Misconduct towards official"),
+    "1040/017": ("match", "Match infringement"),
+    "1040/018": ("other", "Travelling / other costs"),
+}
+FAMILY_LABEL = {"match": "Match & conduct fines", "admin": "Administrative & compliance fines",
+                "fees": "Protest & appeal fees (refundable)", "other": "Other DC income"}
+FAMILY_ORDER = {"match": 1, "admin": 2, "fees": 3, "other": 4}
+
+def call_rpc(fn, body):
+    st, txt = post_rpc(fn, body)
+    try:
+        return st, (json.loads(txt) if txt not in (None, "") else None)
+    except Exception:
+        return st, txt
+
+def _dc_code_from_desc(desc):
+    m = re.search(r"1040\s*/?\s*(\d{3})\b", desc or "")
+    return ("1040/" + m.group(1)) if m else None
+
+def _dc_lines_from_doc(obj, doc_type):
+    out = []
+    did = str(obj.get("ID")); dnum = obj.get("DocumentNumber") or ""
+    ddate = (obj.get("Date") or "")[:10] or None
+    cust = obj.get("CustomerName") or ""; m = CODE.search(cust)
+    club_code = m.group(1) if m else None; club_name = clean_name(cust)
+    modified = obj.get("Modified")
+    sign = 1.0 if doc_type == "invoice" else -1.0   # credit notes reduce income
+    for ln in (obj.get("Lines") or []):
+        code = _dc_code_from_desc(ln.get("Description") or "")
+        if not code:
+            continue
+        amt = ln.get("Total")
+        if amt in (None, ""):
+            amt = float(ln.get("UnitPriceExclusive") or 0) * float(ln.get("Quantity") or 1)
+        out.append(dict(line_id=str(ln.get("ID")), doc_id=did, doc_number=dnum, doc_type=doc_type,
+                        doc_date=ddate, club_code=club_code, club_name=club_name,
+                        account_code=code, account_name=DC_FAMILY.get(code, ("other", code))[1],
+                        amount=round(sign * float(amt or 0), 2),
+                        dc_ref=((ln.get("Comments") or "").strip() or None), modified=modified))
+    return out
+
+def _get_doc(svc, iid):
+    for attempt in range(3):
+        try:
+            r = _cli.get(BASE + "/%s/Get/%s" % (svc, iid), params={"apikey": KEY, "CompanyId": CID})
+            if r.status_code == 200:
+                return r.json()
+            if r.status_code in (429, 500, 502, 503):
+                import time as _t; _t.sleep(1.5 * (attempt + 1)); continue
+            return None
+        except Exception:
+            import time as _t; _t.sleep(1.0 * (attempt + 1))
+    return None
+
+def build_dc_income(push=False):
+    """Reconstruct YTD DC income per 1040/xxx account and roll up by source family."""
+    import concurrent.futures
+    global AS; AS = datetime.date.today()
+    accs = allrows("/Account/Get")
+    dc_id2code = {}
+    for a in accs:
+        mm = re.match(r"\s*(1040/\d{3})", a.get("Name") or "")
+        if mm:
+            dc_id2code[a.get("ID")] = mm.group(1)
+    # FY posting documents that can carry a fine line
+    inv = _fy_docs("TaxInvoice"); cn = _fy_docs("CustomerReturn")
+    docs = [("invoice", d) for d in inv] + [("credit_note", d) for d in cn]
+    keep_doc_ids = [str(d.get("ID")) for _, d in docs]
+    known = {}
+    if push:
+        _s, kn = call_rpc("dc_income_known", {"p_token": CFG["ingest_token"]})
+        for r in (kn or []):
+            known[str(r.get("doc_id"))] = (r.get("modified") or "")[:19]
+    todo = [(t, d) for (t, d) in docs if not push or (d.get("Modified") or "")[:19] != known.get(str(d.get("ID")))]
+    _log("info", "DC income: FY docs %d (inv %d, cn %d) | lines to (re)fetch %d | cached docs %d"
+         % (len(docs), len(inv), len(cn), len(todo), len(known)))
+    svc_of = {"invoice": "TaxInvoice", "credit_note": "CustomerReturn"}
+    fresh = []; refetch_ids = []
+    def work(item):
+        t, d = item; return (t, str(d.get("ID")), _get_doc(svc_of[t], d.get("ID")))
+    if todo:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
+            for (t, did, obj) in ex.map(work, todo):
+                refetch_ids.append(did)
+                if obj:
+                    fresh += _dc_lines_from_doc(obj, t)
+    if push:
+        first = True
+        for i in range(0, max(len(fresh), 1), 500):
+            chunk = fresh[i:i + 500]
+            call_rpc("dc_income_upsert_lines", {"p_token": CFG["ingest_token"], "p_rows": chunk,
+                                                "p_replace_doc_ids": refetch_ids if first else []})
+            first = False
+        call_rpc("dc_income_prune", {"p_token": CFG["ingest_token"], "p_doc_ids": keep_doc_ids})
+    # fees / refunds / adjustments posted directly to a DC account
+    def acc_sum(rows, sign):
+        agg = collections.defaultdict(float); cnt = collections.defaultdict(int)
+        for r in rows:
+            code = dc_id2code.get(r.get("AccountId"))
+            if not code or (r.get("Date") or "")[:10] < FY_START:
+                continue
+            agg[code] += sign * float(r.get("Total") or r.get("Amount") or 0); cnt[code] += 1
+        return agg, cnt
+    rcp_a, rcp_n = acc_sum(allrows("/AccountReceipt/Get"), 1.0)
+    pay_a, pay_n = acc_sum(allrows("/AccountPayment/Get"), -1.0)
+    adj_a, adj_n = acc_sum(allrows("/CustomerAdjustment/Get"), 1.0)
+    # invoiced fines from the cached lines (read back the full cache on push)
+    lines_all = fresh
+    if push:
+        _s, la = call_rpc("dc_income_lines_get", {"p_token": CFG["ingest_token"]})
+        if isinstance(la, list):
+            lines_all = la
+    inv_by_code = collections.defaultdict(float); inv_n = collections.defaultdict(int)
+    for l in lines_all:
+        if (l.get("doc_date") or "")[:10] and (l.get("doc_date") or "")[:10] < FY_START:
+            continue
+        inv_by_code[l["account_code"]] += float(l.get("amount") or 0); inv_n[l["account_code"]] += 1
+    codes = set(inv_by_code) | set(rcp_a) | set(pay_a) | set(adj_a)
+    per = []
+    for code in codes:
+        fam, label = DC_FAMILY.get(code, ("other", code))
+        invoiced = round(inv_by_code.get(code, 0.0), 2); receipts = round(rcp_a.get(code, 0.0), 2)
+        payments = round(pay_a.get(code, 0.0), 2); adjust = round(adj_a.get(code, 0.0), 2)
+        per.append(dict(code=code, label=label, family=fam,
+                        invoiced=invoiced, receipts=receipts, payments=payments, adjustments=adjust,
+                        net=round(invoiced + receipts + payments + adjust, 2),
+                        n_invoiced=inv_n.get(code, 0), n_receipts=rcp_n.get(code, 0)))
+    per.sort(key=lambda p: (FAMILY_ORDER.get(p["family"], 9), -p["net"], p["code"]))
+    fam_tot = collections.OrderedDict()
+    for f in sorted(FAMILY_ORDER, key=lambda k: FAMILY_ORDER[k]):
+        fp = [p for p in per if p["family"] == f]
+        if not fp:
+            continue
+        fam_tot[f] = dict(family=f, label=FAMILY_LABEL.get(f, f),
+                          net=round(sum(p["net"] for p in fp), 2),
+                          invoiced=round(sum(p["invoiced"] for p in fp), 2),
+                          receipts=round(sum(p["receipts"] for p in fp), 2),
+                          payments=round(sum(p["payments"] for p in fp), 2),
+                          adjustments=round(sum(p["adjustments"] for p in fp), 2),
+                          accounts=fp)
+    payload = dict(fy_start=FY_START, as_at=str(AS),
+                   total=round(sum(p["net"] for p in per), 2),
+                   total_invoiced=round(sum(p["invoiced"] for p in per), 2),
+                   total_receipts=round(sum(p["receipts"] for p in per), 2),
+                   total_payments=round(sum(p["payments"] for p in per), 2),
+                   total_adjustments=round(sum(p["adjustments"] for p in per), 2),
+                   families=list(fam_tot.values()),
+                   source="Sage Accounting API (live) — GL income accounts 1040/xxx: invoice & credit-note lines, direct receipts, refunds and the SAFA cost order")
+    return payload
+
+
 def main(argv):
     need = [("SAGE_API_KEY", KEY), ("SAGE_USER", USER), ("SAGE_PASS", PASS)]
-    if "--push" in argv:
+    if "--push" in argv or "--dc-push" in argv:
         need += [("SUPABASE_URL", CFG["supabase_url"]),
                  ("SUPABASE_PUBLISHABLE_KEY", CFG["publishable_key"]),
                  ("SUPABASE_INGEST_TOKEN", CFG["ingest_token"])]
@@ -343,6 +520,23 @@ def main(argv):
                      "(GitHub Actions secrets), or on the office PC via loader.json + Credential Manager."
                      % ", ".join(miss))
         return 2
+    if "--dc" in argv or "--dc-push" in argv:   # YTD DC income by source family
+        push = "--dc-push" in argv
+        pl = build_dc_income(push=push)
+        print("YTD DC income (FY from %s, as at %s): R%.2f" % (pl["fy_start"], pl["as_at"], pl["total"]))
+        print("  invoiced R%.2f | receipts R%.2f | payments R%.2f | adjustments R%.2f"
+              % (pl["total_invoiced"], pl["total_receipts"], pl["total_payments"], pl["total_adjustments"]))
+        for fam in pl["families"]:
+            print("  [%s] %s  net R%.2f" % (fam["family"], fam["label"], fam["net"]))
+            for a in fam["accounts"]:
+                print("      %-9s %-38s net R%9.2f (inv %.0f rcp %.0f pay %.0f adj %.0f)"
+                      % (a["code"], a["label"][:38], a["net"], a["invoiced"], a["receipts"], a["payments"], a["adjustments"]))
+        if push:
+            s, t = call_rpc("dc_income_load", {"p_token": CFG["ingest_token"], "p_payload": pl})
+            print("PUSH dc_income ->", s, str(t)[:120])
+        else:
+            print("(dry run - add --dc-push to write the DC income summary)")
+        return 0
     if "--probe" in argv:   # read-only: show the Customer object field names (email/phone/address) — nothing is written
         for c in allrows("/Customer/Get")[:3]:
             print("KEYS:", sorted(c.keys()))
