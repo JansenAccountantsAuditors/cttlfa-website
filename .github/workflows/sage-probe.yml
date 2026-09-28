@@ -31,4 +31,4 @@ jobs:
         run: pip install httpx
       - name: Probe the Sage GL income accounts (read-only)
         if: env.SAGE_API_KEY != ''
-        run: python cttlfa_api_fetch.py --probe-gl2
+        run: python cttlfa_api_fetch.py --probe-gl3

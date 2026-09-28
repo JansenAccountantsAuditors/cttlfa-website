@@ -435,6 +435,19 @@ def main(argv):
                     print("   ", rr.text[:150])
             if hit: break
         return 0
+    if "--probe-gl3" in argv:   # read-only: verify JournalEntry FY movement per DC account reconciles to the report
+        DC = [(16536142, "1040/003 attend meeting", 9200), (16536143, "1040/004 fulfil fixture", 1950),
+              (16536149, "1040/010 submit protest", 250), (16536155, "1040/016 misconduct", 10700),
+              (16536156, "1040/017 match infringement", 34400), (16536140, "1040/001 appeal fee", 3800),
+              (16536141, "1040/002 protest fee", 25700), (16536319, "1040/000 DC Fines parent", 0)]
+        for aid, label, expect in DC:
+            flt = "AccountId eq %d and Date ge datetime'%sT00:00:00'" % (aid, FY_START)
+            rows = allrows("/JournalEntry/Get", flt)
+            cr = sum(float(r.get("Credit") or 0) for r in rows)
+            db = sum(float(r.get("Debit") or 0) for r in rows)
+            print("ACC %-32s n=%-4d credit=%9.2f debit=%9.2f net=%9.2f  (report %s)"
+                  % (label, len(rows), cr, db, cr - db, expect))
+        return 0
     snap, lmeta, led_clubs, coa_rows, contacts, open_rows, st = build()
     print("clubs %d | owing %d | owed R%.2f | net R%.2f | estimated-ageing %d"
           % (st["n_clubs"], st["n_owing"], st["owed"], st["net"], st["est"]))
