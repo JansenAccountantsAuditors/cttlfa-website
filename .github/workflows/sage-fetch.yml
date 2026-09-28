@@ -63,6 +63,14 @@ jobs:
         if: success() && env.SUPABASE_INGEST_TOKEN != ''
         run: |
           curl -s -X POST "$SUPABASE_URL/rest/v1/rpc/dash_apply_fine_paid_from_sage" -H "apikey: $SUPABASE_PUBLISHABLE_KEY" -H "Authorization: Bearer $SUPABASE_PUBLISHABLE_KEY" -H "Content-Type: application/json" -d "{\"p_token\":\"$SUPABASE_INGEST_TOKEN\"}" || true
+      - name: Refresh YTD DC income
+        # Rebuilds the YTD DC income summary (GL 1040/xxx income accounts: invoiced
+        # fines + direct protest/appeal fee receipts, net of refunds and adjustments)
+        # and refreshes the parsed invoice-line cache. Incremental: only new or changed
+        # documents are re-read, so this is quick after the first backfill. Runs after
+        # the debtors push so the "Fetch now" button flow is not held up by it.
+        if: success() && env.SAGE_API_KEY != '' && env.SUPABASE_INGEST_TOKEN != ''
+        run: python cttlfa_api_fetch.py --dc-push
       - name: Mark failed
         if: failure() && env.SAGE_API_KEY != '' && env.SUPABASE_INGEST_TOKEN != ''
         run: |

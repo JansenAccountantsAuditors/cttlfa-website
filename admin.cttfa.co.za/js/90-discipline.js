@@ -118,6 +118,7 @@
       ".dsc-bar{display:flex;align-items:center;gap:9px;font-size:12.5px;cursor:pointer;border-radius:6px;padding:1px 3px}.dsc-bar:hover{background:#F5F8FD}"+
       ".dsc-bar .lab{flex:0 0 44%;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsc-bar .tr{flex:1;height:9px;background:var(--line2);border-radius:5px;overflow:hidden}.dsc-bar .tr i{display:block;height:100%;background:var(--blue);border-radius:5px}.dsc-bar .vv{flex:0 0 auto;font-variant-numeric:tabular-nums;font-weight:700;color:var(--navy);min-width:38px;text-align:right}"+
       ".dsc-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.dsc-tbl th{background:var(--navy);color:#fff;text-align:left;padding:7px 9px;font-size:11px;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:1}.dsc-tbl th.num,.dsc-tbl td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.dsc-tbl td{padding:6px 9px;border-bottom:1px solid var(--line2);vertical-align:top}.dsc-tbl tbody tr.clk{cursor:pointer}.dsc-tbl tbody tr.clk:hover td{background:#F5F8FD}.dsc-tbl td.wrap{white-space:normal;word-break:break-word;max-width:0;width:100%}.dsc-tbl tfoot th{position:static;background:#EEF3FA;color:var(--navy);border-top:2px solid var(--navy);border-bottom:none;font-size:12px}"+
+      ".dc-tbl tbody tr.dcfam td{background:#EFF4F7;font-weight:700;color:var(--navy);border-top:1px solid var(--line)}.dc-tbl td.dcacc{padding-left:18px}.dc-tbl .dccode{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700;margin-right:7px;font-size:11px}.dsc-kpi.dc-total{background:#F5F8FD}.dsc-kpi.dc-total .v{color:var(--navy)}"+
       ".dsc-thr{table-layout:fixed;max-width:440px}.dsc-thr td.tc{font-weight:700;color:var(--navy)}"+
       ".dsc-atrisk{table-layout:fixed;min-width:860px}.dsc-atrisk td{vertical-align:middle}.dsc-atrisk td.stnd,.dsc-atrisk td.nxt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsc-atrisk td.stnd .dsc-pill{margin-right:6px}"+
       ".rr-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}.rr-filters input,.rr-filters select{padding:8px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;background:#fff;color:var(--ink)}.rr-filters input{flex:1;min-width:220px}.rr-chip{font-size:12px;font-weight:700;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 13px;cursor:pointer}.rr-chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}.dsc-openhint{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:11.5px;color:var(--gold-d,#9a7213);margin-top:8px}"+
@@ -582,6 +583,82 @@
         '<div class="dsc-tblwrap" style="max-height:360px"><table class="dsc-tbl"><thead><tr><th>Referee</th><th>SAFA</th><th>Reg</th><th>Level</th><th class="num">Appts</th></tr></thead><tbody>'+(raBody||'<tr><td colspan="5" class="hint">None.</td></tr>')+'</tbody></table></div></div>';
   }
 
+  /* ==================== YTD DC income (Sage GL 1040/xxx) ==================== */
+  // Loaded separately from dash_dc_income() (populated by the Sage fetch). DC income
+  // is more than the on-field case fines: administrative/compliance fines and the
+  // refundable protest & appeal fees are separate income streams, each its own Sage
+  // account. This shows the year-to-date total and how it is sourced, by family.
+  var _dcFamTone = { match:"", admin:"", fees:"", other:"" };
+  function dcIncomeLoad(){
+    var root = NS.$("dcIncomeRoot"); if(!root) return;
+    NS.sb.rpc("dash_dc_income").then(function(r){
+      if(r.error) throw r.error;
+      drawDcIncome(root, r.data || {});
+    }).catch(function(e){
+      root.innerHTML = '<div class="dsc-sec">YTD DC income by source</div><p class="hint">Could not load: '+esc(e.message||e)+'</p>';
+    });
+  }
+  function drawDcIncome(root, d){
+    var pl = d.payload || {}; var fams = pl.families || [];
+    if(!fams.length){
+      root.innerHTML = '<div class="dsc-sec">YTD DC income by source</div>'+
+        '<p class="hint">No DC income summary yet — it populates on the next Sage fetch (nightly, or press <b>Fetch now</b> above).</p>';
+      return;
+    }
+    var total = Number(pl.total)||0;
+    var nAcc = 0; fams.forEach(function(f){ nAcc += (f.accounts||[]).length; });
+    // headline + family tiles
+    var famTiles = fams.map(function(f){
+      return '<div class="dsc-kpi"><div class="k">'+esc(f.label)+'</div><div class="v">'+rand(f.net)+'</div>'+
+        '<div class="s">'+num((f.accounts||[]).length)+' account'+(((f.accounts||[]).length)===1?'':'s')+'</div></div>';
+    }).join("");
+    // family bars (relative size, labelled with the rand value in the row)
+    var famBars = bars(fams.map(function(f){ return {label:f.label, net:Math.abs(Number(f.net)||0)}; }), "label", "net", null);
+    // detailed table, grouped by family with sub-totals and a grand total
+    var expRows = [];
+    var body = "";
+    fams.forEach(function(f){
+      body += '<tr class="dcfam"><td>'+esc(f.label)+'</td>'+
+        '<td class="num">'+rand(f.invoiced)+'</td>'+
+        '<td class="num">'+rand(f.receipts)+'</td>'+
+        '<td class="num">'+rand(round2(Number(f.payments||0)+Number(f.adjustments||0)))+'</td>'+
+        '<td class="num">'+rand(f.net)+'</td></tr>';
+      (f.accounts||[]).forEach(function(a){
+        var refadj = round2(Number(a.payments||0)+Number(a.adjustments||0));
+        body += '<tr><td class="dcacc"><span class="dccode">'+esc(a.code)+'</span> '+esc(a.label)+'</td>'+
+          '<td class="num">'+rand(a.invoiced)+'</td>'+
+          '<td class="num">'+rand(a.receipts)+'</td>'+
+          '<td class="num">'+rand(refadj)+'</td>'+
+          '<td class="num">'+rand(a.net)+'</td></tr>';
+        expRows.push([f.label, a.code, a.label, Number(a.invoiced||0).toFixed(2), Number(a.receipts||0).toFixed(2), refadj.toFixed(2), Number(a.net||0).toFixed(2)]);
+      });
+    });
+    var expCols = ["Source family","Account","Description","Fines invoiced","Fees received","Refunds & adjustments","Net YTD"];
+    var refadjTot = round2(Number(pl.total_payments||0)+Number(pl.total_adjustments||0));
+    var table =
+      '<div class="dsc-tblwrap" style="max-height:520px"><table class="dsc-tbl dc-tbl"><thead><tr>'+
+        '<th>Source / account</th><th class="num">Fines invoiced</th><th class="num">Fees received</th><th class="num">Refunds &amp; adj</th><th class="num">Net YTD</th></tr></thead>'+
+        '<tbody>'+body+'</tbody>'+
+        '<tfoot><tr><th>Total DC income</th><th class="num">'+rand(pl.total_invoiced)+'</th><th class="num">'+rand(pl.total_receipts)+'</th><th class="num">'+rand(refadjTot)+'</th><th class="num">'+rand(pl.total)+'</th></tr></tfoot>'+
+      '</table></div>';
+    root.innerHTML =
+      '<div class="dsc-bh"><span class="dsc-sec">YTD DC income by source</span>'+acts("YTD DC income by source", expCols, expRows)+'</div>'+
+      '<div class="dsc-prov"><span>Financial year <b>'+dt(pl.fy_start)+'</b> to <b>'+dt(pl.as_at)+'</b></span>'+
+        '<span>Source: <b>Sage Accounting</b> (live GL) &middot; management-prepared, unaudited</span>'+
+        (d.fetched_at?('<span>Synced: <b>'+dtime(d.fetched_at)+'</b></span>'):'')+'</div>'+
+      '<div class="dsc-kpis" style="margin-top:10px">'+
+        '<div class="dsc-kpi dc-total"><div class="k">Total DC income (YTD)</div><div class="v">'+rand(total)+'</div><div class="s">'+num(nAcc)+' income accounts, '+num(fams.length)+' sources</div></div>'+
+        famTiles+
+      '</div>'+
+      '<p class="hint" style="margin:10px 0 8px">How it is sourced: <b>fines</b> (match &amp; conduct, and administrative &amp; compliance) are invoiced to clubs and collected as debtors; <b>protest and appeal fees</b> are received up front and are <b>refundable</b> if the DC upholds the club, so their net is after any refund. Figures are each account&rsquo;s financial-year movement in Sage, net of credit notes, refunds and the SAFA cost order. Fines invoiced here tie to the administrative rulings above; outstanding collection is in the fines reconciliation.</p>'+
+      '<div class="dsc-grid" style="margin-top:6px"><div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Income by source family</div>'+famBars+'</div>'+
+        '<div class="card" style="box-shadow:none;border:1px solid var(--line);overflow:hidden">'+table+'</div></div>';
+    // wire the export buttons in this section
+    Array.prototype.forEach.call(root.querySelectorAll("[data-pdf]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-pdf")]; if(e) expPDF(e.title,_subtitle,e.columns,e.rows); }; });
+    Array.prototype.forEach.call(root.querySelectorAll("[data-csv]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-csv")]; if(e) expCSV(e.title,e.columns,e.rows); }; });
+  }
+  function round2(n){ return Math.round((Number(n)||0)*100)/100; }
+
   function drawDiscipline(root, d){
     _exp={}; _expN=0;
     var meta=d.meta||{}, cards=d.cards||{}, ru=d.rulings||{}, refs=d.referees||{}, sus=d.suspensions||{}; _dscData=d;
@@ -720,6 +797,7 @@
       '<div style="margin-top:16px">'+combinedCard+'</div>'+
       '<div style="margin-top:16px">'+rulingsBlock+'</div>'+
       '<div style="margin-top:16px"><div class="card" id="fineReconRoot"><p class="hint">Loading fines invoicing &amp; payment reconciliation (Sage)…</p></div></div>'+
+      '<div style="margin-top:16px"><div class="card" id="dcIncomeRoot"><p class="hint">Loading YTD DC income (Sage)…</p></div></div>'+
       '<div style="margin-top:16px">'+susBlock+'</div>';
 
     wireToolbar(root, renderDiscipline);
@@ -732,6 +810,8 @@
     Array.prototype.forEach.call(root.querySelectorAll("[data-kpi]"),function(b){ var go=function(){ dscKpiDrill(b.getAttribute("data-kpi")); }; b.onclick=function(ev){ ev.stopPropagation(); go(); }; b.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }; });
     // load the fines invoicing & payment reconciliation (second RPC, marries fines to the Sage ledger)
     fineRecLoad();
+    // load the YTD DC income summary (Sage GL income accounts, by source family)
+    dcIncomeLoad();
   }
 
   /* ---------- Fetch now (dispatches the GitHub Actions dash fetch) ---------- */
