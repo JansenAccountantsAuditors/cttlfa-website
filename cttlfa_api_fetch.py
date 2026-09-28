@@ -545,6 +545,23 @@ def main(argv):
                     print("   %s = %r" % (k, c.get(k)))
             print("---")
         return 0
+    if "--probe-adj" in argv:   # read-only: CustomerAdjustment shape + detail (how it attributes to an account)
+        for path in ["/CustomerAdjustment/Get", "/SupplierAdjustment/Get"]:
+            r = _cli.get(BASE + path, params={"apikey": KEY, "CompanyId": CID, "$top": 3})
+            print("== %s HTTP %s" % (path, r.status_code))
+            if r.status_code == 200:
+                d = r.json(); rows = d.get("Results", d) if isinstance(d, dict) else d
+                if rows:
+                    print("   keys:", sorted(rows[0].keys()))
+                    for rr in rows[:3]:
+                        print("   row:", json.dumps(rr)[:500])
+                    iid = rows[0].get("ID")
+                    rd = _cli.get(BASE + path.replace("/Get", "/Get/%s" % iid), params={"apikey": KEY, "CompanyId": CID})
+                    print("   detail Get/%s HTTP %s:" % (iid, rd.status_code), rd.text[:700])
+        # a known FY customer adjustment on the protest account (reference CADJ0000137)
+        r = _cli.get(BASE + "/CustomerAdjustment/Get", params={"apikey": KEY, "CompanyId": CID, "$filter": "Reference eq 'CADJ0000137'", "$top": 3})
+        print("== CADJ0000137 lookup HTTP %s:" % r.status_code, r.text[:600])
+        return 0
     if "--probe-gl" in argv:   # read-only: discover the DC income GL accounts and posting shapes
         def _show(label, path, top=2, flt=None, expand=None):
             prm = {"apikey": KEY, "CompanyId": CID, "$top": top}
