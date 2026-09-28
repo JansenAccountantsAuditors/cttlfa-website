@@ -610,7 +610,7 @@
     var nAcc = 0; fams.forEach(function(f){ nAcc += (f.accounts||[]).length; });
     // headline + family tiles
     var famTiles = fams.map(function(f){
-      return '<div class="dsc-kpi"><div class="k">'+esc(f.label)+'</div><div class="v">'+rand(f.net)+'</div>'+
+      return '<div class="dsc-kpi dsc-kpiclk" data-dctxn="family|'+esc(f.family)+'" role="button" tabindex="0" title="Click for the transactions"><div class="k">'+esc(f.label)+'</div><div class="v">'+rand(f.net)+'</div>'+
         '<div class="s">'+num((f.accounts||[]).length)+' account'+(((f.accounts||[]).length)===1?'':'s')+'</div></div>';
     }).join("");
     // family bars (relative size, labelled with the rand value in the row)
@@ -619,14 +619,14 @@
     var expRows = [];
     var body = "";
     fams.forEach(function(f){
-      body += '<tr class="dcfam"><td>'+esc(f.label)+'</td>'+
+      body += '<tr class="dcfam clk" data-dctxn="family|'+esc(f.family)+'"><td>'+esc(f.label)+'</td>'+
         '<td class="num">'+rand(f.invoiced)+'</td>'+
         '<td class="num">'+rand(f.receipts)+'</td>'+
         '<td class="num">'+rand(round2(Number(f.payments||0)+Number(f.adjustments||0)))+'</td>'+
         '<td class="num">'+rand(f.net)+'</td></tr>';
       (f.accounts||[]).forEach(function(a){
         var refadj = round2(Number(a.payments||0)+Number(a.adjustments||0));
-        body += '<tr><td class="dcacc"><span class="dccode">'+esc(a.code)+'</span> '+esc(a.label)+'</td>'+
+        body += '<tr class="clk" data-dctxn="account|'+esc(a.code)+'"><td class="dcacc"><span class="dccode">'+esc(a.code)+'</span> '+esc(a.label)+'</td>'+
           '<td class="num">'+rand(a.invoiced)+'</td>'+
           '<td class="num">'+rand(a.receipts)+'</td>'+
           '<td class="num">'+rand(refadj)+'</td>'+
@@ -638,22 +638,24 @@
     var refadjTot = round2(Number(pl.total_payments||0)+Number(pl.total_adjustments||0));
     // reconciliation bridge: register fines -> GL fine income -> + fees -> total
     var br = d.bridge || {};
-    function brRow(cls, label, amt, note, delta){
-      return '<tr class="'+cls+'"><td'+(delta?' class="d"':'')+'>'+esc(label)+(note?(' <span class="brn">'+note+'</span>'):'')+'</td><td class="num">'+rand(amt)+'</td></tr>';
+    function brRow(cls, label, amt, note, delta, drill){
+      var da = drill? (' data-dctxn="'+drill+'"') : '';
+      var cc = drill? (cls?cls+' clk':'clk') : cls;
+      return '<tr class="'+cc+'"'+da+'><td'+(delta?' class="d"':'')+'>'+esc(label)+(note?(' <span class="brn">'+note+'</span>'):'')+'</td><td class="num">'+rand(amt)+'</td></tr>';
     }
     var bridgeCard = "";
     if(br.reg_issued_amt!=null){
       var brBody =
         brRow('sub','Fines issued (disciplinary register)', br.reg_issued_amt, num(br.reg_issued_n)+' fines', false)+
-        brRow('', 'less: issued but awaiting invoicing in Sage', -Number(br.awaiting_amt||0), num(br.awaiting_n)+' fines', true)+
+        brRow('', 'less: issued but awaiting invoicing in Sage', -Number(br.awaiting_amt||0), num(br.awaiting_n)+' fines', true, 'kind|awaiting')+
         brRow('', 'less: timing &amp; amount differences on matched fines', -Number(br.amount_diff||0), '', true)+
-        brRow('sub','DC-ruling fines invoiced to the GL', br.matched_gl_amt, 'matched to Sage invoices', false)+
-        brRow('', 'add: fines finance raised directly, no DC hearing', br.direct_amt, num(br.direct_n)+' invoices &middot; match '+rand(br.direct_match_amt)+', admin '+rand(br.direct_admin_amt), true)+
+        brRow('sub','DC-ruling fines invoiced to the GL', br.matched_gl_amt, 'matched to Sage invoices', false, 'kind|matched')+
+        brRow('', 'add: fines finance raised directly, no DC hearing', br.direct_amt, num(br.direct_n)+' invoices &middot; match '+rand(br.direct_match_amt)+', admin '+rand(br.direct_admin_amt), true, 'kind|direct')+
         brRow('sub','Fine invoices raised (gross)', br.gross_fine_amt, '', false)+
-        brRow('', 'less: credit notes &amp; reversals', br.credit_notes_amt, '', true)+
-        brRow('sub','Net fine income (Sage fine accounts)', br.net_fine_amt, 'match &amp; conduct + administrative &amp; compliance', false)+
-        brRow('', 'add: protest &amp; appeal fees (refundable, net of refunds)', br.fees_amt, 'DC-driven income, not fines', true)+
-        brRow('tot','Total DC income (year to date)', br.total, '', false);
+        brRow('', 'less: credit notes &amp; reversals', br.credit_notes_amt, '', true, 'kind|credit')+
+        brRow('sub','Net fine income (Sage fine accounts)', br.net_fine_amt, 'match &amp; conduct + administrative &amp; compliance', false, 'kind|fines')+
+        brRow('', 'add: protest &amp; appeal fees (refundable, net of refunds)', br.fees_amt, 'DC-driven income, not fines', true, 'kind|fees')+
+        brRow('tot','Total DC income (year to date)', br.total, '', false, 'kind|all');
       bridgeCard =
         '<div class="card" style="box-shadow:none;border:1px solid var(--line);margin-top:10px">'+
           '<div class="dsc-sec" style="margin-bottom:2px">From fines issued to total DC income</div>'+
@@ -668,23 +670,134 @@
         '<tfoot><tr><th>Total DC income</th><th class="num">'+rand(pl.total_invoiced)+'</th><th class="num">'+rand(pl.total_receipts)+'</th><th class="num">'+rand(refadjTot)+'</th><th class="num">'+rand(pl.total)+'</th></tr></tfoot>'+
       '</table></div>';
     root.innerHTML =
-      '<div class="dsc-bh"><span class="dsc-sec">YTD DC income by source</span>'+acts("YTD DC income by source", expCols, expRows)+'</div>'+
+      '<div class="dsc-bh"><span class="dsc-sec">YTD DC income by source</span><span class="dsc-acts"><button class="dsc-x" id="dcSecPDF">PDF</button><button class="dsc-x" id="dcSecCSV">CSV</button></span></div>'+
       '<div class="dsc-prov"><span>Financial year <b>'+dt(pl.fy_start)+'</b> to <b>'+dt(pl.as_at)+'</b></span>'+
         '<span>Source: <b>Sage Accounting</b> (live GL) &middot; management-prepared, unaudited</span>'+
         (d.fetched_at?('<span>Synced: <b>'+dtime(d.fetched_at)+'</b></span>'):'')+'</div>'+
       '<div class="dsc-kpis" style="margin-top:10px">'+
-        '<div class="dsc-kpi dc-total"><div class="k">Total DC income (YTD)</div><div class="v">'+rand(total)+'</div><div class="s">'+num(nAcc)+' income accounts, '+num(fams.length)+' sources</div></div>'+
+        '<div class="dsc-kpi dc-total dsc-kpiclk" data-dctxn="kind|all" role="button" tabindex="0" title="Click for every DC income transaction"><div class="k">Total DC income (YTD)</div><div class="v">'+rand(total)+'</div><div class="s">'+num(nAcc)+' income accounts, '+num(fams.length)+' sources</div></div>'+
         famTiles+
       '</div>'+
-      '<p class="hint" style="margin:10px 0 8px">How it is sourced: <b>fines</b> (match &amp; conduct, and administrative &amp; compliance) are invoiced to clubs and collected as debtors; <b>protest and appeal fees</b> are received up front and are <b>refundable</b> if the DC upholds the club, so their net is after any refund. Figures are each account&rsquo;s financial-year movement in Sage, net of credit notes, refunds and the SAFA cost order. Fines invoiced here tie to the administrative rulings above; outstanding collection is in the fines reconciliation.</p>'+
+      '<p class="hint" style="margin:10px 0 8px">How it is sourced: <b>fines</b> (match &amp; conduct, and administrative &amp; compliance) are invoiced to clubs and collected as debtors; <b>protest and appeal fees</b> are received up front and are <b>refundable</b> if the DC upholds the club, so their net is after any refund. Figures are each account&rsquo;s financial-year movement in Sage, net of credit notes, refunds and the SAFA cost order. Fines invoiced here tie to the administrative rulings above; outstanding collection is in the fines reconciliation. <b>Click any figure</b> &mdash; a tile, a bridge line or an account row &mdash; for the underlying Sage transactions, no export needed.</p>'+
       bridgeCard+
       '<div class="dsc-grid" style="margin-top:6px"><div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Income by source family</div>'+famBars+'</div>'+
         '<div class="card" style="box-shadow:none;border:1px solid var(--line);overflow:hidden">'+table+'</div></div>';
-    // wire the export buttons in this section
-    Array.prototype.forEach.call(root.querySelectorAll("[data-pdf]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-pdf")]; if(e) expPDF(e.title,_subtitle,e.columns,e.rows); }; });
-    Array.prototype.forEach.call(root.querySelectorAll("[data-csv]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-csv")]; if(e) expCSV(e.title,e.columns,e.rows); }; });
+    // section PDF (rich, branded) + CSV (flat detail)
+    var _pp=root.querySelector("#dcSecPDF"); if(_pp) _pp.onclick=function(){ expDcIncomePDF(pl, br); };
+    var _cc=root.querySelector("#dcSecCSV"); if(_cc) _cc.onclick=function(){ expCSV("YTD DC income by source", expCols, expRows); };
+    // drill any figure -> underlying Sage transactions
+    Array.prototype.forEach.call(root.querySelectorAll("[data-dctxn]"),function(b){
+      var go=function(){ var p=(b.getAttribute("data-dctxn")||"").split("|"); dcTxnDrill(p[0],p[1]); };
+      b.onclick=function(ev){ ev.stopPropagation(); go(); };
+      b.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } };
+    });
   }
   function round2(n){ return Math.round((Number(n)||0)*100)/100; }
+
+  // Drill a DC income figure to its underlying Sage transactions (no Sage export needed).
+  function dcTxnDrill(scope, key){
+    ensureDrawer();
+    var dw=NS.$("dscDrawer"); if(dw) dw.style.width="880px";
+    NS.$("dscScrim").classList.add("on"); NS.$("dscDrawer").classList.add("on");
+    NS.$("dscDT").textContent="Transactions"; NS.$("dscDS").textContent="Loading…";
+    NS.$("dscDB").innerHTML='<p class="hint">Loading transactions from Sage…</p>';
+    NS.sb.rpc("dash_dc_income_txns",{p_scope:scope,p_key:key}).then(function(r){
+      if(r.error) throw r.error;
+      var d=r.data||{}, rows=d.rows||[];
+      var cols=["Date","Type","Account","Reference","Party","Description","Amount"];
+      NS.$("dscDT").textContent=d.title||"Transactions";
+      NS.$("dscDS").textContent=num(rows.length)+" transaction"+(rows.length===1?"":"s")+" · net "+rand(d.total)+" · Sage (live)";
+      var head=cols.map(function(c){ return '<th'+(/amount/i.test(c)?' class="num"':'')+'>'+esc(c)+'</th>'; }).join("");
+      var bdy=rows.map(function(t){
+        return '<tr><td>'+esc(dt(t.txn_date))+'</td><td>'+esc(t.txn_type||'')+'</td><td>'+esc(t.account||'–')+'</td><td>'+esc(t.reference||'–')+'</td><td class="wrap">'+esc(t.party||'–')+'</td><td class="wrap">'+esc(t.memo||'')+'</td><td class="num">'+rand(t.amount)+'</td></tr>';
+      }).join("");
+      var exprows=rows.map(function(t){ return [t.txn_date||"", t.txn_type||"", t.account||"", t.reference||"", t.party||"", t.memo||"", Number(t.amount||0).toFixed(2)]; });
+      NS.$("dscDB").innerHTML=
+        '<div class="dsc-bh"><span class="dsc-sec">'+esc(d.title||"Transactions")+'</span><span class="dsc-acts"><button class="dsc-x" id="dcTxPDF">PDF</button><button class="dsc-x" id="dcTxCSV">CSV</button></span></div>'+
+        '<p class="hint" style="margin:0 0 8px">Live from Sage &middot; '+num(rows.length)+' transactions &middot; net '+rand(d.total)+'. Management-prepared, unaudited.</p>'+
+        '<div class="dsc-tblwrap" style="max-height:calc(100vh - 190px)"><table class="dsc-tbl"><thead><tr>'+head+'</tr></thead><tbody>'+
+          (bdy||'<tr><td colspan="7" class="hint">No transactions.</td></tr>')+'</tbody>'+
+          '<tfoot><tr><th colspan="6">Net total</th><th class="num">'+rand(d.total)+'</th></tr></tfoot></table></div>';
+      var sub="DC income transactions · Sage (live) · "+new Date().toLocaleDateString("en-ZA");
+      NS.$("dcTxPDF").onclick=function(){ expPDF(d.title||"DC income transactions", sub, cols, exprows); };
+      NS.$("dcTxCSV").onclick=function(){ expCSV(d.title||"DC income transactions", cols, exprows); };
+    }).catch(function(e){ NS.$("dscDB").innerHTML='<p class="hint">Could not load: '+esc(e.message||e)+'</p>'; });
+  }
+
+  // Rich, branded PDF for the YTD DC income section (bridge + income by source).
+  function expDcIncomePDF(pl, br){
+    if(!window.jspdf){ alert("PDF library still loading, try again."); return; }
+    var doc=new window.jspdf.jsPDF({unit:"pt",format:"a4"});
+    var W=doc.internal.pageSize.getWidth(), H=doc.internal.pageSize.getHeight();
+    var NAVY=[7,26,74], MUT=[90,101,119], LINE=[211,219,222], SUBF=[239,244,247], TOTF=[236,241,249], TXT=[20,30,50];
+    function m(n){ return rand(n); }
+    function foot(){ doc.setFont("helvetica","normal"); doc.setFontSize(8); doc.setTextColor(140,150,165);
+      doc.text("Sage Accounting (live GL) · management-prepared, unaudited · generated "+new Date().toLocaleString("en-ZA"), 40, H-20);
+      doc.text("Page "+doc.internal.getCurrentPageInfo().pageNumber, W-64, H-20); }
+    doc.setFont("helvetica","bold"); doc.setFontSize(15); doc.setTextColor.apply(doc,NAVY);
+    doc.text("CTTLFA — YTD DC income by source", 40, 46);
+    doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor.apply(doc,MUT);
+    doc.text("Financial year "+dt(pl.fy_start)+" to "+dt(pl.as_at)+"   ·   Source: Sage Accounting (live GL)   ·   management-prepared, unaudited", 40, 62);
+    doc.setFont("helvetica","bold"); doc.setFontSize(12); doc.setTextColor.apply(doc,NAVY);
+    doc.text("Total DC income (year to date): "+m(pl.total), 40, 82);
+    var y=100;
+    function cell(t,o){ o=o||{}; return {content:t, styles:o}; }
+    if(br && br.reg_issued_amt!=null){
+      doc.setFontSize(11); doc.setFont("helvetica","bold"); doc.setTextColor.apply(doc,NAVY);
+      doc.text("From fines issued to total DC income", 40, y);
+      function brow(label, amt, kind, note){
+        var bold=(kind==="sub"||kind==="tot"), fill=(kind==="tot"?TOTF:(kind==="sub"?SUBF:[255,255,255]));
+        var lbl=(note? label+"   ("+note+")": label);
+        return [ cell(lbl,{fontStyle:bold?"bold":"normal",fillColor:fill,textColor:bold?NAVY:TXT,cellPadding:{left:(kind==="d"?20:6),top:3,bottom:3,right:6}}),
+                 cell(m(amt),{halign:"right",fontStyle:bold?"bold":"normal",fillColor:fill,textColor:bold?NAVY:TXT,cellPadding:{top:3,bottom:3,right:8,left:6}}) ];
+      }
+      var bb=[
+        brow("Fines issued (disciplinary register)", br.reg_issued_amt, "sub", num(br.reg_issued_n)+" fines"),
+        brow("less: issued but awaiting invoicing in Sage", -Number(br.awaiting_amt||0), "d", num(br.awaiting_n)+" fines"),
+        brow("less: timing & amount differences on matched fines", -Number(br.amount_diff||0), "d"),
+        brow("DC-ruling fines invoiced to the GL", br.matched_gl_amt, "sub", "matched to Sage invoices"),
+        brow("add: fines finance raised directly, no DC hearing", br.direct_amt, "d", num(br.direct_n)+" invoices"),
+        brow("Fine invoices raised (gross)", br.gross_fine_amt, "sub"),
+        brow("less: credit notes & reversals", br.credit_notes_amt, "d"),
+        brow("Net fine income (Sage fine accounts)", br.net_fine_amt, "sub"),
+        brow("add: protest & appeal fees (refundable, net of refunds)", br.fees_amt, "d"),
+        brow("Total DC income (year to date)", br.total, "tot")
+      ];
+      doc.autoTable({ startY:y+8, body:bb, theme:"grid",
+        styles:{fontSize:9,lineColor:LINE,lineWidth:0.4},
+        columnStyles:{0:{cellWidth:W-80-120},1:{cellWidth:120,halign:"right"}},
+        margin:{left:40,right:40}, didDrawPage:foot });
+      y=doc.lastAutoTable.finalY+22;
+    }
+    var fams=pl.families||[]; var bod=[];
+    fams.forEach(function(f){
+      bod.push([ cell(f.label,{fontStyle:"bold",fillColor:SUBF,textColor:NAVY}),
+        cell(m(f.invoiced),{halign:"right",fontStyle:"bold",fillColor:SUBF,textColor:NAVY}),
+        cell(m(f.receipts),{halign:"right",fontStyle:"bold",fillColor:SUBF,textColor:NAVY}),
+        cell(m(round2(Number(f.payments||0)+Number(f.adjustments||0))),{halign:"right",fontStyle:"bold",fillColor:SUBF,textColor:NAVY}),
+        cell(m(f.net),{halign:"right",fontStyle:"bold",fillColor:SUBF,textColor:NAVY}) ]);
+      (f.accounts||[]).forEach(function(a){
+        bod.push([ cell(a.code+"   "+a.label,{cellPadding:{left:18,top:2.5,bottom:2.5,right:6},textColor:TXT}),
+          cell(m(a.invoiced),{halign:"right"}), cell(m(a.receipts),{halign:"right"}),
+          cell(m(round2(Number(a.payments||0)+Number(a.adjustments||0))),{halign:"right"}),
+          cell(m(a.net),{halign:"right"}) ]);
+      });
+    });
+    bod.push([ cell("Total DC income",{fontStyle:"bold",fillColor:TOTF,textColor:NAVY}),
+      cell(m(pl.total_invoiced),{halign:"right",fontStyle:"bold",fillColor:TOTF,textColor:NAVY}),
+      cell(m(pl.total_receipts),{halign:"right",fontStyle:"bold",fillColor:TOTF,textColor:NAVY}),
+      cell(m(round2(Number(pl.total_payments||0)+Number(pl.total_adjustments||0))),{halign:"right",fontStyle:"bold",fillColor:TOTF,textColor:NAVY}),
+      cell(m(pl.total),{halign:"right",fontStyle:"bold",fillColor:TOTF,textColor:NAVY}) ]);
+    if(y>H-140){ doc.addPage(); y=50; }
+    doc.setFontSize(11); doc.setFont("helvetica","bold"); doc.setTextColor.apply(doc,NAVY);
+    doc.text("Income by source and account", 40, y);
+    doc.autoTable({ startY:y+8, head:[["Source / account","Fines invoiced","Fees received","Refunds & adj","Net YTD"]], body:bod,
+      styles:{fontSize:8.5,cellPadding:3,lineColor:LINE,lineWidth:0.4,textColor:TXT},
+      headStyles:{fillColor:NAVY,textColor:255,fontStyle:"bold"},
+      columnStyles:{1:{halign:"right"},2:{halign:"right"},3:{halign:"right"},4:{halign:"right"}},
+      margin:{left:40,right:40}, didDrawPage:foot });
+    doc.save("cttlfa-ytd-dc-income-by-source.pdf");
+  }
 
   function drawDiscipline(root, d){
     _exp={}; _expN=0;
