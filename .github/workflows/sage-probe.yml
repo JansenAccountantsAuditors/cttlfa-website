@@ -32,6 +32,6 @@ jobs:
           python-version: "3.12"
       - name: Install dependencies
         run: pip install httpx
-      - name: Probe CustomerAdjustment shape (read-only)
-        if: env.SAGE_API_KEY != ''
-        run: python cttlfa_api_fetch.py --probe-adj
+      - name: Backfill YTD DC income (writes to Supabase)
+        if: env.SAGE_API_KEY != '' && env.SUPABASE_INGEST_TOKEN != ''
+        run: python cttlfa_api_fetch.py --dc-push

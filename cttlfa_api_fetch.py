@@ -451,18 +451,36 @@ def build_dc_income(push=False):
                                                 "p_replace_doc_ids": refetch_ids if first else []})
             first = False
         call_rpc("dc_income_prune", {"p_token": CFG["ingest_token"], "p_doc_ids": keep_doc_ids})
-    # fees / refunds / adjustments posted directly to a DC account
+    # fees / refunds / adjustments posted directly to a DC account.
+    # AccountReceipt/AccountPayment carry AccountId; adjustments carry an Account
+    # object (customer) or an AccountName string (supplier) instead.
+    def _acc_code_of(r):
+        code = dc_id2code.get(r.get("AccountId"))
+        if code:
+            return code
+        aobj = r.get("Account") or {}
+        code = dc_id2code.get(aobj.get("ID"))
+        if code:
+            return code
+        nm = r.get("AccountName") or aobj.get("Name") or ""
+        mm = re.match(r"\s*(1040/\d{3})", nm)
+        return mm.group(1) if mm else None
     def acc_sum(rows, sign):
         agg = collections.defaultdict(float); cnt = collections.defaultdict(int)
         for r in rows:
-            code = dc_id2code.get(r.get("AccountId"))
+            code = _acc_code_of(r)
             if not code or (r.get("Date") or "")[:10] < FY_START:
                 continue
             agg[code] += sign * float(r.get("Total") or r.get("Amount") or 0); cnt[code] += 1
         return agg, cnt
     rcp_a, rcp_n = acc_sum(allrows("/AccountReceipt/Get"), 1.0)
     pay_a, pay_n = acc_sum(allrows("/AccountPayment/Get"), -1.0)
-    adj_a, adj_n = acc_sum(allrows("/CustomerAdjustment/Get"), 1.0)
+    cadj_a, cadj_n = acc_sum(allrows("/CustomerAdjustment/Get"), 1.0)
+    sadj_a, sadj_n = acc_sum(allrows("/SupplierAdjustment/Get"), 1.0)
+    adj_a = collections.defaultdict(float); adj_n = collections.defaultdict(int)
+    for src_a, src_n in ((cadj_a, cadj_n), (sadj_a, sadj_n)):
+        for k, v in src_a.items(): adj_a[k] += v
+        for k, v in src_n.items(): adj_n[k] += v
     # invoiced fines from the cached lines (read back the full cache on push)
     lines_all = fresh
     if push:
