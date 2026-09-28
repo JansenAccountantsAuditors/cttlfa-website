@@ -474,6 +474,41 @@ def main(argv):
             print("  %-52s n=%-4d net=%10.2f" % (nm[:52], a["n"], net))
         print("GRAND TOTAL YTD DC income (all 1040/ accounts): %.2f" % grand)
         return 0
+    if "--probe-gl5" in argv:   # read-only: FY invoice volume + validate line->account parse + fee receipts/payments
+        import time as _t
+        fy_inv = allrows("/TaxInvoice/Get", "Date ge datetime'%sT00:00:00'" % FY_START)
+        print("FY invoices (headers):", len(fy_inv))
+        t0 = _t.time(); dc_by_code = {}; dc_lines = 0; sampled = 0
+        for inv in fy_inv[:80]:
+            iid = inv.get("ID")
+            r = _cli.get(BASE + "/TaxInvoice/Get/%s" % iid, params={"apikey": KEY, "CompanyId": CID})
+            sampled += 1
+            if r.status_code != 200: continue
+            for ln in (r.json().get("Lines") or []):
+                desc = ln.get("Description") or ""
+                m = re.search(r"1040\s*/?\s*0*(\d{2,3})", desc) or re.search(r":\s*1040(\d{3})", desc)
+                if "dc fine" in desc.lower() or m:
+                    code = ("1040/%03d" % int(m.group(1))) if m else "1040/?"
+                    amt = float(ln.get("UnitPriceExclusive") or 0) * float(ln.get("Quantity") or 1)
+                    dc_by_code[code] = dc_by_code.get(code, 0.0) + amt; dc_lines += 1
+        dt = _t.time() - t0
+        print("sampled %d invoices in %.1fs (%.3fs each); DC lines found %d" % (sampled, dt, dt / max(sampled, 1), dc_lines))
+        for c in sorted(dc_by_code): print("   ", c, "=", round(dc_by_code[c], 2))
+        print("sample line:", json.dumps((_cli.get(BASE + "/TaxInvoice/Get/%s" % fy_inv[0]["ID"], params={"apikey": KEY, "CompanyId": CID}).json().get("Lines") or [{}])[0])[:500])
+        # fee receipts & payments by account (FY)
+        DCIDS = {16536140: "1040/001 appeal", 16536141: "1040/002 protest"}
+        rcp = allrows("/AccountReceipt/Get")
+        pay = allrows("/AccountPayment/Get")
+        def sumacc(rows, ids):
+            agg = {}
+            for r in rows:
+                aid = r.get("AccountId")
+                if aid in ids and (r.get("Date") or "")[:10] >= FY_START:
+                    a = agg.setdefault(aid, {"t": 0.0, "n": 0}); a["t"] += float(r.get("Total") or 0); a["n"] += 1
+            return agg
+        print("AccountReceipt FY by DC acct:", {DCIDS.get(k, k): v for k, v in sumacc(rcp, DCIDS).items()}, "of", len(rcp))
+        print("AccountPayment FY by DC acct:", {DCIDS.get(k, k): v for k, v in sumacc(pay, DCIDS).items()}, "of", len(pay))
+        return 0
     snap, lmeta, led_clubs, coa_rows, contacts, open_rows, st = build()
     print("clubs %d | owing %d | owed R%.2f | net R%.2f | estimated-ageing %d"
           % (st["n_clubs"], st["n_owing"], st["owed"], st["net"], st["est"]))
