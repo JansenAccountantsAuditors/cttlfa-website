@@ -393,6 +393,48 @@ def main(argv):
         _show("AccountPayment+Lines", "/AccountPayment/Get", top=1, expand="Lines")
         _show("CustomerReturn+Lines", "/CustomerReturn/Get", top=1, expand="Lines")
         return 0
+    if "--probe-gl2" in argv:   # read-only: find how invoice/credit-note lines attribute to a GL account
+        def get(path, **prm):
+            prm = dict({"apikey": KEY, "CompanyId": CID}, **prm)
+            try:
+                r = _cli.get(BASE + path, params=prm)
+                return r
+            except Exception as e:
+                print("ERR", path, prm, str(e)[:160]); return None
+        # A) a known DC fine invoice by document number -> its ID, then detail variants (lines?)
+        r = get("/TaxInvoice/Get", **{"$filter": "DocumentNumber eq 'INA20259'", "$top": 1})
+        inv = {}
+        if r is not None and r.status_code == 200:
+            d = r.json(); rows = d.get("Results", d) if isinstance(d, dict) else d
+            inv = rows[0] if rows else {}
+        iid = inv.get("ID"); print("INA20259 lookup -> ID", iid)
+        for path in ["/TaxInvoice/Get/%s" % iid, "/TaxInvoice/Detail", "/TaxInvoiceLine/Get", "/TaxInvoiceDetail/Get"]:
+            if not iid: break
+            if path == "/TaxInvoice/Detail":
+                rr = get(path, ID=iid)
+            elif path == "/TaxInvoiceLine/Get":
+                rr = get(path, **{"$filter": "DocumentId eq %s" % iid, "$top": 20})
+            elif path == "/TaxInvoiceDetail/Get":
+                rr = get(path, **{"$filter": "TaxInvoiceId eq %s" % iid, "$top": 20})
+            else:
+                rr = get(path)
+            if rr is not None:
+                print("== %s -> HTTP %s" % (path, rr.status_code)); print("   ", rr.text[:1200])
+        # B) account-transaction / journal endpoints for the protest fee account 16536141
+        for path in ["/Account/GetTransactions", "/Account/Transactions", "/AccountTransaction/Get",
+                     "/Journal/Get", "/JournalEntry/Get", "/Account/GetAccountTransactions"]:
+            hit = False
+            for prm in [{"AccountId": 16536141, "$top": 3}, {"ID": 16536141, "$top": 3},
+                        {"AccountId": 16536141, "fromDate": FY_START, "toDate": str(AS)}, {"$top": 3}]:
+                rr = get(path, **prm)
+                if rr is None: continue
+                print("== %s %s -> HTTP %s" % (path, {k: v for k, v in prm.items() if k != "$top"}, rr.status_code))
+                if rr.status_code == 200:
+                    print("   ", rr.text[:900]); hit = True; break
+                else:
+                    print("   ", rr.text[:150])
+            if hit: break
+        return 0
     snap, lmeta, led_clubs, coa_rows, contacts, open_rows, st = build()
     print("clubs %d | owing %d | owed R%.2f | net R%.2f | estimated-ageing %d"
           % (st["n_clubs"], st["n_owing"], st["owed"], st["net"], st["est"]))
