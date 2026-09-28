@@ -473,10 +473,12 @@ def build_dc_income(push=False):
                 continue
             agg[code] += sign * float(r.get("Total") or r.get("Amount") or 0); cnt[code] += 1
         return agg, cnt
-    rcp_a, rcp_n = acc_sum(allrows("/AccountReceipt/Get"), 1.0)
-    pay_a, pay_n = acc_sum(allrows("/AccountPayment/Get"), -1.0)
-    cadj_a, cadj_n = acc_sum(allrows("/CustomerAdjustment/Get"), 1.0)
-    sadj_a, sadj_n = acc_sum(allrows("/SupplierAdjustment/Get"), -1.0)   # supplier side posts inversely to income
+    rcp_rows = allrows("/AccountReceipt/Get"); pay_rows = allrows("/AccountPayment/Get")
+    cadj_rows = allrows("/CustomerAdjustment/Get"); sadj_rows = allrows("/SupplierAdjustment/Get")
+    rcp_a, rcp_n = acc_sum(rcp_rows, 1.0)
+    pay_a, pay_n = acc_sum(pay_rows, -1.0)
+    cadj_a, cadj_n = acc_sum(cadj_rows, 1.0)
+    sadj_a, sadj_n = acc_sum(sadj_rows, -1.0)   # supplier side posts inversely to income
     adj_a = collections.defaultdict(float); adj_n = collections.defaultdict(int)
     for src_a, src_n in ((cadj_a, cadj_n), (sadj_a, sadj_n)):
         for k, v in src_a.items(): adj_a[k] += v
@@ -523,6 +525,39 @@ def build_dc_income(push=False):
                    total_adjustments=round(sum(p["adjustments"] for p in per), 2),
                    families=list(fam_tot.values()),
                    source="Sage Accounting API (live) — GL income accounts 1040/xxx: invoice & credit-note lines, direct receipts, refunds and the SAFA cost order")
+
+    # transaction-level detail behind every figure (invoice/credit-note fine lines +
+    # direct receipts/payments/adjustments on the DC accounts), for the drill-down.
+    def _fam(code): return DC_FAMILY.get(code, ("other", code))[0]
+    txns = []
+    for l in lines_all:
+        if (l.get("doc_date") or "")[:10] and (l.get("doc_date") or "")[:10] < FY_START:
+            continue
+        c = l.get("account_code")
+        txns.append(dict(txn_id=str(l.get("line_id")), txn_type=(l.get("doc_type") or "invoice"),
+                         doc_number=l.get("doc_number"), reference=l.get("doc_number"),
+                         txn_date=(l.get("doc_date") or None), party=l.get("club_name"),
+                         account_code=c, account_name=DC_FAMILY.get(c, ("other", c))[1],
+                         family=_fam(c), amount=round(float(l.get("amount") or 0), 2), memo=l.get("dc_ref")))
+    def _txn_from(rows, ttype, sign, pfx):
+        for r in rows:
+            c = _acc_code_of(r)
+            if not c or (r.get("Date") or "")[:10] < FY_START:
+                continue
+            txns.append(dict(txn_id=pfx + ":" + str(r.get("ID")), txn_type=ttype,
+                             doc_number=r.get("Reference"), reference=r.get("Reference"),
+                             txn_date=(r.get("Date") or "")[:10] or None, party=(r.get("Description") or ""),
+                             account_code=c, account_name=DC_FAMILY.get(c, ("other", c))[1], family=_fam(c),
+                             amount=round(sign * float(r.get("Total") or r.get("Amount") or 0), 2),
+                             memo=(r.get("Comments") or "")))
+    _txn_from(rcp_rows, "receipt", 1.0, "rcp")
+    _txn_from(pay_rows, "payment", -1.0, "pay")
+    _txn_from(cadj_rows, "cust_adj", 1.0, "cadj")
+    _txn_from(sadj_rows, "supp_adj", -1.0, "sadj")
+    if push:
+        s, t = call_rpc("dc_income_txn_load", {"p_token": CFG["ingest_token"], "p_rows": txns})
+        _log("info", "DC income: pushed %d transactions -> %s" % (len(txns), s))
+    payload["n_txns"] = len(txns)
     return payload
 
 
