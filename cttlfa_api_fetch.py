@@ -351,6 +351,48 @@ def main(argv):
                     print("   %s = %r" % (k, c.get(k)))
             print("---")
         return 0
+    if "--probe-gl" in argv:   # read-only: discover the DC income GL accounts and posting shapes
+        def _show(label, path, top=2, flt=None, expand=None):
+            prm = {"apikey": KEY, "CompanyId": CID, "$top": top}
+            if flt: prm["$filter"] = flt
+            if expand: prm["$expand"] = expand
+            try:
+                r = _cli.get(BASE + path, params=prm)
+                print("== %s  %s  -> HTTP %s" % (label, path, r.status_code))
+                if r.status_code == 200:
+                    d = r.json(); rows = d.get("Results", d) if isinstance(d, dict) else d
+                    if isinstance(d, dict) and "TotalResults" in d: print("   TotalResults:", d.get("TotalResults"))
+                    if isinstance(rows, list) and rows:
+                        print("   keys:", sorted(rows[0].keys()))
+                        print("   sample:", json.dumps(rows[0])[:1400])
+                    elif isinstance(rows, list):
+                        print("   (empty list)")
+                else:
+                    print("   body:", r.text[:240])
+            except Exception as e:
+                print("== %s  %s  -> ERR %s" % (label, path, str(e)[:200]))
+        # 1) chart of accounts / categories — find the DC income accounts and their IDs
+        for acc_path in ("/Account/Get", "/Category/Get"):
+            try:
+                accs = allrows(acc_path)
+            except Exception as e:
+                print("ACCTS %s ERR %s" % (acc_path, str(e)[:160])); continue
+            print("ACCTS %s total %d" % (acc_path, len(accs)))
+            if accs: print("   ACC keys:", sorted(accs[0].keys())); print("   ACC sample:", json.dumps(accs[0])[:600])
+            for a in accs:
+                nm = (a.get("Name") or a.get("Description") or "") 
+                low = nm.lower()
+                if ("1040" in json.dumps(a)) or ("dc fine" in low) or ("protest" in low) or ("appeal" in low) or ("fine" in low):
+                    print("   DC ACC:", json.dumps(a)[:400])
+        # 2) posting shapes — invoices, account receipts/payments, credit notes (with lines)
+        _show("TaxInvoice", "/TaxInvoice/Get", top=1)
+        _show("TaxInvoice+Lines", "/TaxInvoice/Get", top=1, expand="Lines")
+        _show("AccountReceipt", "/AccountReceipt/Get", top=2)
+        _show("AccountReceipt+Lines", "/AccountReceipt/Get", top=1, expand="Lines")
+        _show("AccountPayment", "/AccountPayment/Get", top=2)
+        _show("AccountPayment+Lines", "/AccountPayment/Get", top=1, expand="Lines")
+        _show("CustomerReturn+Lines", "/CustomerReturn/Get", top=1, expand="Lines")
+        return 0
     snap, lmeta, led_clubs, coa_rows, contacts, open_rows, st = build()
     print("clubs %d | owing %d | owed R%.2f | net R%.2f | estimated-ageing %d"
           % (st["n_clubs"], st["n_owing"], st["owed"], st["net"], st["est"]))

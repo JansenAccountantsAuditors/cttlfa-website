@@ -1,0 +1,34 @@
+name: Sage GL probe (read-only)
+
+# Manual, read-only discovery run: prints the DC income GL accounts and the
+# posting shapes (invoices, account receipts/payments, credit notes) from the
+# Sage Accounting API to the workflow log. Writes nothing. Used once to design
+# the DC income fetch, then can be removed.
+
+on:
+  workflow_dispatch: {}
+
+concurrency:
+  group: sage-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    env:
+      SAGE_API_KEY: ${{ secrets.SAGE_API_KEY }}
+      SAGE_USER: ${{ secrets.SAGE_USER }}
+      SAGE_PASS: ${{ secrets.SAGE_PASS }}
+      SAGE_COMPANY_ID: "364261"
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install httpx
+      - name: Probe the Sage GL income accounts (read-only)
+        if: env.SAGE_API_KEY != ''
+        run: python cttlfa_api_fetch.py --probe-gl
