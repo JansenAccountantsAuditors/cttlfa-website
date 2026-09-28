@@ -120,6 +120,7 @@
       ".dsc-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.dsc-tbl th{background:var(--navy);color:#fff;text-align:left;padding:7px 9px;font-size:11px;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:1}.dsc-tbl th.num,.dsc-tbl td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.dsc-tbl td{padding:6px 9px;border-bottom:1px solid var(--line2);vertical-align:top}.dsc-tbl tbody tr.clk{cursor:pointer}.dsc-tbl tbody tr.clk:hover td{background:#F5F8FD}.dsc-tbl td.wrap{white-space:normal;word-break:break-word;max-width:0;width:100%}.dsc-tbl tfoot th{position:static;background:#EEF3FA;color:var(--navy);border-top:2px solid var(--navy);border-bottom:none;font-size:12px}"+
       ".dc-tbl tbody tr.dcfam td{background:#EFF4F7;font-weight:700;color:var(--navy);border-top:1px solid var(--line)}.dc-tbl td.dcacc{padding-left:18px}.dc-tbl .dccode{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700;margin-right:7px;font-size:11px}.dsc-kpi.dc-total{background:#F5F8FD}.dsc-kpi.dc-total .v{color:var(--navy)}"+
       ".dcb-tbl td{padding:5px 9px;border-bottom:1px solid var(--line2)}.dcb-tbl td.d{padding-left:24px;color:var(--muted)}.dcb-tbl .brn{color:var(--muted);font-weight:400;font-size:11px}.dcb-tbl tr.sub td{background:#EFF4F7;font-weight:700;color:var(--navy);border-top:1px solid var(--line)}.dcb-tbl tr.tot td{background:#EEF3FA;font-weight:800;color:var(--navy);border-top:2px solid var(--navy);border-bottom:none}"+
+      ".ref-divtbl td.covcell{white-space:nowrap}.ref-cov{display:inline-flex;align-items:center;gap:8px}.dsc-covbar{display:inline-block;width:96px;height:8px;background:var(--line2);border-radius:5px;overflow:hidden}.dsc-covbar i{display:block;height:100%;background:var(--blue);border-radius:5px}.ref-divtbl .covpct{font-variant-numeric:tabular-nums;font-weight:700;color:var(--navy);min-width:38px;text-align:right}"+
       ".dsc-thr{table-layout:fixed;max-width:440px}.dsc-thr td.tc{font-weight:700;color:var(--navy)}"+
       ".dsc-atrisk{table-layout:fixed;min-width:860px}.dsc-atrisk td{vertical-align:middle}.dsc-atrisk td.stnd,.dsc-atrisk td.nxt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsc-atrisk td.stnd .dsc-pill{margin-right:6px}"+
       ".rr-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}.rr-filters input,.rr-filters select{padding:8px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;background:#fff;color:var(--ink)}.rr-filters input{flex:1;min-width:220px}.rr-chip{font-size:12px;font-weight:700;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 13px;cursor:pointer}.rr-chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}.dsc-openhint{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:11.5px;color:var(--gold-d,#9a7213);margin-top:8px}"+
@@ -547,13 +548,94 @@
         '<div class="dsc-kpi"><div class="k">SAFA linked</div><div class="v">'+num(refs.with_safa)+'</div><div class="s">carded referees</div></div>'+
         '<div class="dsc-kpi"><div class="k">On referee register</div><div class="v">'+num(refs.cttlfa_registered)+'</div><div class="s">CTTLFA referee register</div></div>'+
       '</div>';
+    // workload tiles (filled from dash_referee_extras)
+    var volRow = '<div class="dsc-kpis" id="refVolTiles" style="margin-top:12px">'+
+      refTile("Games refereed","…","appointments this season")+
+      refTile("Avg games / referee","…","across appointed referees")+
+      refTile("Games with a full trio","…","assistant referees appointed")+
+      refTile("Divisions officiated","…","with an appointed referee")+'</div>';
+    var divCard = '<div class="card" id="refDivRoot" style="margin-top:16px"><div class="dsc-sec">Referees assigned by division</div><p class="hint">Loading division coverage from LeagueRepublic…</p></div>';
+    var grid2 = '<div class="dsc-grid" style="margin-top:16px">'+
+      '<div class="card" id="refMonthRoot"><div class="dsc-sec">Appointments by month</div><p class="hint">Loading…</p></div>'+
+      '<div class="card" id="refBusyRoot"><div class="dsc-sec">Busiest referees</div><p class="hint">Loading…</p></div></div>';
     var refBlock = refereesBlock(refs);
-    root.innerHTML = head + kpi + '<div style="margin-top:16px">'+refBlock+'</div>';
+    root.innerHTML = head + kpi + volRow + divCard + grid2 + '<div style="margin-top:16px">'+refBlock+'</div>';
     wireToolbar(root, renderReferees);
     Array.prototype.forEach.call(root.querySelectorAll("[data-pdf]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-pdf")]; if(e) expPDF(e.title,_subtitle,e.columns,e.rows); }; });
     Array.prototype.forEach.call(root.querySelectorAll("[data-csv]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-csv")]; if(e) expCSV(e.title,e.columns,e.rows); }; });
     Array.prototype.forEach.call(root.querySelectorAll("[data-drill]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); var p=b.getAttribute("data-drill").split("|"); openDrill(p[0],p[1]||"",_subtitle); }; });
     var _rdb=root.querySelector("#refDbCard"); if(_rdb){ _rdb.onclick=openRefRegister; _rdb.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openRefRegister(); } }; }
+    refExtrasLoad(refs);
+  }
+  function refTile(k,v,s){ return '<div class="dsc-kpi"><div class="k">'+esc(k)+'</div><div class="v">'+v+'</div><div class="s">'+esc(s)+'</div></div>'; }
+  function divCode(s){ var m=/^\s*([A-Za-z]+\d+)/.exec(String(s||"")); return m?m[1].toUpperCase():null; }
+  function _wireExp(scope){
+    Array.prototype.forEach.call(scope.querySelectorAll("[data-pdf]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-pdf")]; if(e) expPDF(e.title,_subtitle,e.columns,e.rows); }; });
+    Array.prototype.forEach.call(scope.querySelectorAll("[data-csv]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-csv")]; if(e) expCSV(e.title,e.columns,e.rows); }; });
+  }
+  function refExtrasLoad(refs){
+    Promise.all([ NS.sb.rpc("dash_referee_extras"), lrGet() ]).then(function(res){
+      var ex=(res[0]&&res[0].data)||{}, lr=res[1]||[];
+      try{ drawRefExtras(refs, ex, lr); }catch(e){ /* leave placeholders */ }
+    }).catch(function(){});
+  }
+  function drawRefExtras(refs, ex, lr){
+    var games=Number(ex.appointments_total)||0, appd=Number(refs.appointed)||0;
+    var avg = appd? (games/appd):0, withAr=Number(ex.with_ar)||0, byDiv=ex.by_division||[];
+    var vt=NS.$("refVolTiles");
+    if(vt){ vt.innerHTML =
+      refTile("Games refereed", num(games), "appointments this season")+
+      refTile("Avg games / referee", (Math.round(avg*10)/10).toFixed(1), num(appd)+" appointed referees")+
+      refTile("Games with a full trio", num(withAr), (games?Math.round(withAr/games*100):0)+"% have assistant referees")+
+      refTile("Divisions officiated", num(byDiv.length), "with an appointed referee"); }
+    // LeagueRepublic games per division (matched by division code, e.g. A1, then by name)
+    var today=Date.now(), byCode={}, byNorm={};
+    (lr||[]).forEach(function(f){
+      if(lrBye(f.homeTeamName)||lrBye(f.roadTeamName)) return;
+      var raw=f.fixtureGroupDesc||"", code=divCode(raw), nk=nrm(raw), nk2=nrm(lrClean(raw));
+      var dd=lrDate(f.fixtureDate), td=(dd&&dd.t<=today)?1:0;
+      function add(map,key){ if(!key) return; var e=map[key]||(map[key]={toDate:0,played:0,total:0}); e.total++; if(f.result) e.played++; e.toDate+=td; }
+      add(byCode,code); add(byNorm,nk); if(nk2!==nk) add(byNorm,nk2);
+    });
+    function lrFor(division){ var c=divCode(division); if(c&&byCode[c]) return byCode[c];
+      var n1=nrm(division); if(byNorm[n1]) return byNorm[n1]; var n2=nrm(lrClean(division)); if(byNorm[n2]) return byNorm[n2]; return null; }
+    var maxG=1; byDiv.forEach(function(x){ maxG=Math.max(maxG,x.games||0); });
+    var unmatched=0;
+    var rows=byDiv.map(function(x){
+      var lrd=lrFor(x.division), denom=lrd?(lrd.toDate||lrd.total):0, cov=(denom>0)?(x.games/denom):null;
+      if(!lrd) unmatched++;
+      return {division:x.division, games:x.games, refs:x.refs, denom:denom, cov:cov};
+    });
+    var body=rows.map(function(r){
+      var barw=Math.round((r.games||0)/maxG*100);
+      var cov;
+      if(r.cov==null){ cov='<span class="dsc-pill mut">no LR match</span>'; }
+      else { var pct=Math.round(r.cov*100), w=Math.min(100,pct), fl=(r.cov<0.5?' <span class="dsc-pill warn">low</span>':'');
+        cov='<span class="ref-cov"><span class="dsc-covbar"><i style="width:'+w+'%"></i></span><span class="covpct">'+pct+'%</span>'+fl+'</span>'; }
+      return '<tr><td>'+esc(r.division)+'</td><td class="num">'+num(r.games)+'</td><td class="num">'+num(r.refs)+'</td><td class="num">'+num(r.denom||0)+'</td><td class="covcell">'+cov+'</td></tr>';
+    }).join("");
+    var expr=rows.map(function(r){ return [r.division, r.games, r.refs, r.denom||0, r.cov==null?"–":(Math.round(r.cov*100)+"%")]; });
+    var dcard=NS.$("refDivRoot");
+    if(dcard){ dcard.innerHTML =
+      '<div class="dsc-bh"><span class="dsc-sec">Referees assigned by division</span>'+acts("Referees assigned by division",["Division","Games refereed","Referees","Games played (LR)","Coverage %"],expr)+'</div>'+
+      '<p class="hint" style="margin:0 0 8px">Games with an appointed referee per division, and coverage against the division&rsquo;s games played to date on LeagueRepublic. Coverage below 100% means games went ahead without a referee recorded on the dash'+(unmatched?('; '+num(unmatched)+' division(s) could not be matched to LeagueRepublic'):'')+'.</p>'+
+      '<div class="dsc-tblwrap" style="max-height:480px"><table class="dsc-tbl ref-divtbl"><thead><tr><th>Division</th><th class="num">Games refereed</th><th class="num">Referees</th><th class="num">Played (LR)</th><th>Coverage</th></tr></thead><tbody>'+(body||'<tr><td colspan="5" class="hint">No divisions.</td></tr>')+'</tbody></table></div>';
+      _wireExp(dcard);
+    }
+    var mcard=NS.$("refMonthRoot");
+    if(mcard){ var bm=ex.by_month||[], maxm=1; bm.forEach(function(x){ maxm=Math.max(maxm,x.n||0); });
+      var chart=bm.length? '<div class="dsc-chart">'+bm.map(function(x){
+        return '<div class="dsc-col" title="'+esc(ym(x.ym))+': '+num(x.n)+' appointments"><span class="cv">'+num(x.n)+'</span><div class="bar" style="height:'+Math.round((x.n||0)/maxm*100)+'%"></div><span class="cl">'+esc(ym(x.ym))+'</span></div>'; }).join("")+'</div>':'<p class="hint">No dated appointments.</p>';
+      mcard.innerHTML=bhead("Appointments by month","Referee appointments by month",["Month","Appointments"],bm.map(function(x){return [ym(x.ym),x.n];}))+chart;
+      _wireExp(mcard);
+    }
+    var bcard=NS.$("refBusyRoot");
+    if(bcard){ var ros=(refs.roster||[]).slice().sort(function(a,b){return (b.appts||0)-(a.appts||0);}).slice(0,12);
+      bcard.innerHTML=bhead("Busiest referees","Busiest referees",["Referee","Appointments"],ros.map(function(x){return [x.referee,x.appts];}))+
+        bars(ros.map(function(x){return {referee:x.referee,appts:x.appts};}),"referee","appts",null)+
+        '<p class="hint" style="margin:6px 0 0">Top 12 by appointments. The full roster is in the referees &amp; accreditation card below.</p>';
+      _wireExp(bcard);
+    }
   }
 
   // The referees & accreditation card (KPI tiles, register summary, roster).
