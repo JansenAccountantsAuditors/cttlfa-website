@@ -475,18 +475,111 @@
       var note=NS.$("rulingsReconNote"); if(note) note.innerHTML='Showing the last stored fine figures — the live Sage reconciliation could not load. Use Refresh.'; });
   }
 
+  /* ==================== DISCIPLINE / REFEREES (shared) ==================== */
+  // Shared page header + toolbar. The Discipline and Referees pages are two tiles
+  // over the same dash_discipline_dashboard RPC; the toolbar is wired by class so a
+  // single "Fetch now" (which refreshes the whole dash) works from either page.
+  function dscHead(title, meta){
+    return '<div class="card">'+
+        '<h2 style="font-family:var(--head);color:var(--navy);margin:0 0 2px">'+title+'</h2>'+
+        '<div class="dsc-prov"><span>Source: <b>dash.cttlfa.com</b> mirror</span>'+
+          '<span>Last sync: <b>'+dtime(meta.last_pull)+'</b></span></div>'+
+        '<div class="dsc-toolbar">'+
+          '<button class="btn gold sm dsc-fetchbtn" title="Pull the latest data from dash.cttlfa.com now">Fetch now</button>'+
+          '<button class="btn ghost sm dsc-reloadbtn" title="Reload the latest saved figures — no new fetch">Refresh</button>'+
+          '<a class="dsc-link" href="https://dash.cttlfa.com" target="_blank" rel="noopener">Open dash.cttlfa.com ↗</a>'+
+          '<span class="sp"></span>'+
+          '<span class="dsc-fstat"></span>'+
+        '</div>'+
+      '</div>';
+  }
+  function setFetchDisabled(v){ Array.prototype.forEach.call(document.querySelectorAll('.dsc-fetchbtn'),function(b){ b.disabled=!!v; }); }
+  function reloadDiscPages(){
+    var dr=NS.$("disciplineRoot"); if(dr && dr.dataset.loaded) renderDiscipline();
+    var rr=NS.$("refereesRoot");   if(rr && rr.dataset.loaded) renderReferees();
+  }
+
   /* ==================== DISCIPLINE DASHBOARD ==================== */
   function renderDiscipline(){
     ensureStyle();
     var root = NS.$("disciplineRoot"); if(!root) return;
-    if(!root.dataset.loaded) root.innerHTML = '<div class="card"><p class="hint">Loading Discipline, Referees &amp; Cards…</p></div>';
+    if(!root.dataset.loaded) root.innerHTML = '<div class="card"><p class="hint">Loading Discipline &amp; Cards…</p></div>';
     NS.sb.rpc("dash_discipline_dashboard").then(function(r){
       if(r.error) throw r.error;
       root.dataset.loaded="1";
       drawDiscipline(root, r.data || {});
     }).catch(function(e){
-      root.innerHTML = '<div class="card"><h3>Discipline, Referees &amp; Cards</h3><p class="hint">Could not load: '+esc(e.message||e)+'</p></div>';
+      root.innerHTML = '<div class="card"><h3>Discipline &amp; Cards</h3><p class="hint">Could not load: '+esc(e.message||e)+'</p></div>';
     });
+  }
+
+  /* ==================== REFEREES ==================== */
+  function renderReferees(){
+    ensureStyle();
+    var root = NS.$("refereesRoot"); if(!root) return;
+    if(!root.dataset.loaded) root.innerHTML = '<div class="card"><p class="hint">Loading Referees…</p></div>';
+    NS.sb.rpc("dash_discipline_dashboard").then(function(r){
+      if(r.error) throw r.error;
+      root.dataset.loaded="1";
+      drawReferees(root, r.data || {});
+    }).catch(function(e){
+      root.innerHTML = '<div class="card"><h3>Referees</h3><p class="hint">Could not load: '+esc(e.message||e)+'</p></div>';
+    });
+  }
+
+  function drawReferees(root, d){
+    _exp={}; _expN=0;
+    var meta=d.meta||{}, refs=d.referees||{}; _dscData=d;
+    _subtitle = "dash.cttlfa.com mirror · last sync "+dtime(meta.last_pull)+" · operational";
+    var head = dscHead('Referees', meta);
+    if(!meta.present){
+      root.innerHTML = head +
+        '<div class="dsc-empty" style="margin-top:16px"><h3 style="color:var(--navy);margin:0 0 6px">Awaiting the first dash sync</h3>'+
+        '<p style="max-width:60ch;margin:0 auto">The referee data model is live but the mirror is empty. Press <b>Fetch now</b> (or wait for the nightly 02h00 sync) and this page fills automatically.</p></div>';
+      wireToolbar(root, renderReferees); return;
+    }
+    var kpi =
+      '<div class="dsc-kpis">'+
+        '<div class="dsc-kpi"><div class="k">Referees active</div><div class="v">'+num(refs.active)+'</div><div class="s">of '+num(refs.total)+' on record</div></div>'+
+        '<div class="dsc-kpi"><div class="k">Appointed this season</div><div class="v">'+num(refs.appointed)+'</div><div class="s">to CTTLFA matches</div></div>'+
+        '<div class="dsc-kpi"><div class="k">SAFA linked</div><div class="v">'+num(refs.with_safa)+'</div><div class="s">carded referees</div></div>'+
+        '<div class="dsc-kpi"><div class="k">On referee register</div><div class="v">'+num(refs.cttlfa_registered)+'</div><div class="s">CTTLFA referee register</div></div>'+
+      '</div>';
+    var refBlock = refereesBlock(refs);
+    root.innerHTML = head + kpi + '<div style="margin-top:16px">'+refBlock+'</div>';
+    wireToolbar(root, renderReferees);
+    Array.prototype.forEach.call(root.querySelectorAll("[data-pdf]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-pdf")]; if(e) expPDF(e.title,_subtitle,e.columns,e.rows); }; });
+    Array.prototype.forEach.call(root.querySelectorAll("[data-csv]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-csv")]; if(e) expCSV(e.title,e.columns,e.rows); }; });
+    Array.prototype.forEach.call(root.querySelectorAll("[data-drill]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); var p=b.getAttribute("data-drill").split("|"); openDrill(p[0],p[1]||"",_subtitle); }; });
+    var _rdb=root.querySelector("#refDbCard"); if(_rdb){ _rdb.onclick=openRefRegister; _rdb.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openRefRegister(); } }; }
+  }
+
+  // The referees & accreditation card (KPI tiles, register summary, roster).
+  function refereesBlock(refs){
+    var rfRoster=refs.roster||[];
+    var refNoSafa=rfRoster.filter(function(x){ return !(x.safa&&String(x.safa).trim()); });
+    var raRows=rfRoster.map(function(x){return [x.referee,x.safa||"–",regTxt(x.registered),x.level||"no level",x.appts];});
+    var raBody=rfRoster.map(function(x){
+      var dk = x.safa ? ('rsafa|'+esc(x.safa)) : ('referee|'+esc(x.referee));
+      var lvl = x.level ? esc(x.level) : '<span class="dsc-pill warn">No level</span>';
+      return '<tr class="clk" data-drill="'+dk+'"><td>'+esc(x.referee)+'</td><td>'+esc(x.safa||"–")+'</td><td>'+regPill(x.registered)+'</td><td>'+lvl+'</td><td class="num">'+num(x.appts)+'</td></tr>'; }).join("");
+    return '<div class="card">'+
+        '<div class="dsc-bh"><span class="dsc-sec">Referees &amp; accreditation</span>'+acts("Referee roster",["Referee","SAFA","Registered","Level","Appointments"],raRows)+'</div>'+
+        '<div class="dsc-refkpi">'+
+          stat("Appointed this season",num(refs.appointed),"","ref:appointed")+
+          stat("With a level",num(refs.with_level),"","ref:level")+
+          stat("No level",num(refs.no_level),Number(refs.no_level)>0?"warn":"","ref:nolevel")+
+          stat("SAFA linked",num(refs.with_safa),"","ref:safa")+
+          stat("No SAFA number",num(refNoSafa.length),refNoSafa.length>0?"warn":"","ref:nosafa")+
+          stat("On the referee register",num(refs.cttlfa_registered),"","ref:reg")+
+        '</div>'+
+        '<p class="hint" style="margin:8px 0 0">These tiles count referees <b>appointed to matches this season</b> ('+num(refs.appointed)+' so far). Every appointed referee should be SAFA-carded — <b>No SAFA number</b> lists the '+num(refNoSafa.length)+' whose dash record has no SAFA number captured; click it to review and download the list to chase with the referee department. The full referee database is summarised below right.</p>'+
+        '<div class="dsc-grid" style="margin-top:12px">'+
+          '<div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Appointed referees by accreditation level</div>'+bars(refs.by_level,"level","n",null)+'</div>'+
+          '<div class="card dsc-stclk" id="refDbCard" role="button" tabindex="0" title="Open the full referee database — searchable, filterable and downloadable" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Referee database (all records)</div><div class="dsc-kv"><span>Referees in the database</span><b>'+num(refs.total)+'</b><span>Marked active</span><b>'+num(refs.active)+'</b><span>Accreditation records</span><b>'+num(refs.accreditations)+'</b></div><p class="hint" style="margin-top:6px">The whole referee database on dash.cttlfa.com &mdash; every referee ever registered, not just this season. Of these, <b>'+num(refs.appointed)+'</b> were appointed to CTTLFA matches this season (the tiles above) and <b>'+num(refs.active)+'</b> are marked active. <b>Accreditation records</b> counts accreditations, not referees: a referee can hold more than one over time (re-accreditations or extra codes), so records (<b>'+num(refs.accreditations)+'</b>) exceed referees (<b>'+num(refs.total)+'</b>).</p><span class="dsc-openhint">Open the full register &mdash; search, filter, download <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>'+
+        '</div>'+
+        '<div class="dsc-bh" style="margin-top:12px"><span class="dsc-sec" style="font-size:12px;color:var(--muted)">Appointed referee roster</span></div>'+
+        '<div class="dsc-tblwrap" style="max-height:360px"><table class="dsc-tbl"><thead><tr><th>Referee</th><th>SAFA</th><th>Reg</th><th>Level</th><th class="num">Appts</th></tr></thead><tbody>'+(raBody||'<tr><td colspan="5" class="hint">None.</td></tr>')+'</tbody></table></div></div>';
   }
 
   function drawDiscipline(root, d){
@@ -496,25 +589,13 @@
     var susMin=susRules.length?susRules[0].card_count:4;
     _subtitle = "dash.cttlfa.com mirror · last sync "+dtime(meta.last_pull)+" · operational";
 
-    var head =
-      '<div class="card">'+
-        '<h2 style="font-family:var(--head);color:var(--navy);margin:0 0 2px">Discipline, Referees &amp; Cards</h2>'+
-        '<div class="dsc-prov"><span>Source: <b>dash.cttlfa.com</b> mirror</span>'+
-          '<span>Last sync: <b>'+dtime(meta.last_pull)+'</b></span></div>'+
-        '<div class="dsc-toolbar">'+
-          '<button class="btn gold sm" id="dscFetch" title="Pull the latest data from dash.cttlfa.com now">Fetch now</button>'+
-          '<button class="btn ghost sm" id="dscReload" title="Reload the latest saved figures — no new fetch">Refresh</button>'+
-          '<a class="dsc-link" href="https://dash.cttlfa.com" target="_blank" rel="noopener">Open dash.cttlfa.com ↗</a>'+
-          '<span class="sp"></span>'+
-          '<span class="dsc-fstat" id="dscFetchStatus"></span>'+
-        '</div>'+
-      '</div>';
+    var head = dscHead('Discipline &amp; Cards', meta);
 
     if(!meta.present){
       root.innerHTML = head +
         '<div class="dsc-empty" style="margin-top:16px"><h3 style="color:var(--navy);margin:0 0 6px">Awaiting the first dash sync</h3>'+
         '<p style="max-width:60ch;margin:0 auto">The disciplinary data model is live but the mirror is empty. Press <b>Fetch now</b> (or wait for the nightly 02h00 sync) and this dashboard fills automatically.</p></div>';
-      wireToolbar(); return;
+      wireToolbar(root, renderDiscipline); return;
     }
 
     var kpi =
@@ -522,7 +603,7 @@
         '<div class="dsc-kpi dsc-kpiclk" data-kpi="cards" role="button" tabindex="0" title="Click to list the most-carded players"><div class="k">Yellow cards (cautions)</div><div class="v">'+num(cards.total)+'</div><div class="s">across '+num((cards.by_division||[]).length)+' divisions this season</div></div>'+
         '<div class="dsc-kpi dsc-kpiclk" data-kpi="risk" role="button" tabindex="0" title="Click to list the players at suspension risk"><div class="k">Players at suspension risk</div><div class="v">'+num((sus.at_risk||[]).length)+'</div><div class="s">reached the '+num(susMin)+'-card threshold (Art 17.3)</div></div>'+
         '<div class="dsc-kpi dsc-kpiclk" id="kpiFines" data-kpi="fines" role="button" tabindex="0" title="Click to list the outstanding fines"><div class="k">Fines outstanding</div><div class="v">'+rand(ru.outstanding_amount)+'</div><div class="s">reconciling to Sage…</div></div>'+
-        '<div class="dsc-kpi"><div class="k">Referees active</div><div class="v">'+num(refs.active)+'</div><div class="s">of '+num(refs.total)+' on record</div></div>'+
+        '<div class="dsc-kpi"><div class="k">Rulings on record</div><div class="v">'+num(ru.total)+'</div><div class="s">'+num(ru.issued_n)+' carried a fine this season</div></div>'+
       '</div>';
 
     // Row 1: by division | most-carded players (both tall, balanced)
@@ -583,32 +664,7 @@
         '<tbody>'+(upBody||'<tr><td colspan="9" class="hint">No unpaid fines recorded.</td></tr>')+'</tbody></table></div>'+
         '<p class="hint" style="margin-top:6px">SAFA numbers are confirmed against the registration master (Reg = found). Invoice numbers tie fines to Sage. Click a row for that player&rsquo;s full disciplinary record.</p></div>';
 
-    // Referees | suspensions
-    var rfRoster=refs.roster||[];
-    var refNoSafa=rfRoster.filter(function(x){ return !(x.safa&&String(x.safa).trim()); });
-    var raRows=rfRoster.map(function(x){return [x.referee,x.safa||"–",regTxt(x.registered),x.level||"no level",x.appts];});
-    var raBody=rfRoster.map(function(x){
-      var dk = x.safa ? ('rsafa|'+esc(x.safa)) : ('referee|'+esc(x.referee));
-      var lvl = x.level ? esc(x.level) : '<span class="dsc-pill warn">No level</span>';
-      return '<tr class="clk" data-drill="'+dk+'"><td>'+esc(x.referee)+'</td><td>'+esc(x.safa||"–")+'</td><td>'+regPill(x.registered)+'</td><td>'+lvl+'</td><td class="num">'+num(x.appts)+'</td></tr>'; }).join("");
-    var refBlock=
-      '<div class="card">'+
-        '<div class="dsc-bh"><span class="dsc-sec">Referees &amp; accreditation</span>'+acts("Referee roster",["Referee","SAFA","Registered","Level","Appointments"],raRows)+'</div>'+
-        '<div class="dsc-refkpi">'+
-          stat("Appointed this season",num(refs.appointed),"","ref:appointed")+
-          stat("With a level",num(refs.with_level),"","ref:level")+
-          stat("No level",num(refs.no_level),Number(refs.no_level)>0?"warn":"","ref:nolevel")+
-          stat("SAFA linked",num(refs.with_safa),"","ref:safa")+
-          stat("No SAFA number",num(refNoSafa.length),refNoSafa.length>0?"warn":"","ref:nosafa")+
-          stat("On the referee register",num(refs.cttlfa_registered),"","ref:reg")+
-        '</div>'+
-        '<p class="hint" style="margin:8px 0 0">These tiles count referees <b>appointed to matches this season</b> ('+num(refs.appointed)+' so far). Every appointed referee should be SAFA-carded — <b>No SAFA number</b> lists the '+num(refNoSafa.length)+' whose dash record has no SAFA number captured; click it to review and download the list to chase with the referee department. The full referee database is summarised below right.</p>'+
-        '<div class="dsc-grid" style="margin-top:12px">'+
-          '<div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Appointed referees by accreditation level</div>'+bars(refs.by_level,"level","n",null)+'</div>'+
-          '<div class="card dsc-stclk" id="refDbCard" role="button" tabindex="0" title="Open the full referee database — searchable, filterable and downloadable" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Referee database (all records)</div><div class="dsc-kv"><span>Referees in the database</span><b>'+num(refs.total)+'</b><span>Marked active</span><b>'+num(refs.active)+'</b><span>Accreditation records</span><b>'+num(refs.accreditations)+'</b></div><p class="hint" style="margin-top:6px">The whole referee database on dash.cttlfa.com &mdash; every referee ever registered, not just this season. Of these, <b>'+num(refs.appointed)+'</b> were appointed to CTTLFA matches this season (the tiles above) and <b>'+num(refs.active)+'</b> are marked active. <b>Accreditation records</b> counts accreditations, not referees: a referee can hold more than one over time (re-accreditations or extra codes), so records (<b>'+num(refs.accreditations)+'</b>) exceed referees (<b>'+num(refs.total)+'</b>).</p><span class="dsc-openhint">Open the full register &mdash; search, filter, download <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span></div>'+
-        '</div>'+
-        '<div class="dsc-bh" style="margin-top:12px"><span class="dsc-sec" style="font-size:12px;color:var(--muted)">Appointed referee roster</span></div>'+
-        '<div class="dsc-tblwrap" style="max-height:360px"><table class="dsc-tbl"><thead><tr><th>Referee</th><th>SAFA</th><th>Reg</th><th>Level</th><th class="num">Appts</th></tr></thead><tbody>'+(raBody||'<tr><td colspan="5" class="hint">None.</td></tr>')+'</tbody></table></div></div>';
+    // Suspensions
     var ruleRows=susRules.map(function(x){return [x.card_count,x.suspension_matches];});
     var atRows=(sus.at_risk||[]).map(function(x){return [x.player,x.safa||"–",regTxt(x.registered),x.club||"–",x.cards,susReach(x.cards,susRules),susNext(x.cards,susRules)];});
     var atBody=(sus.at_risk||[]).map(function(x){
@@ -638,10 +694,9 @@
       '<div class="dsc-grid" style="margin-top:16px">'+monthCard+clubCard+'</div>'+
       '<div style="margin-top:16px">'+rulingsBlock+'</div>'+
       '<div style="margin-top:16px"><div class="card" id="fineReconRoot"><p class="hint">Loading fines invoicing &amp; payment reconciliation (Sage)…</p></div></div>'+
-      '<div style="margin-top:16px">'+refBlock+'</div>'+
       '<div style="margin-top:16px">'+susBlock+'</div>';
 
-    wireToolbar();
+    wireToolbar(root, renderDiscipline);
     // wire exports
     Array.prototype.forEach.call(root.querySelectorAll("[data-pdf]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-pdf")]; if(e) expPDF(e.title,_subtitle,e.columns,e.rows); }; });
     Array.prototype.forEach.call(root.querySelectorAll("[data-csv]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-csv")]; if(e) expCSV(e.title,e.columns,e.rows); }; });
@@ -649,29 +704,29 @@
     Array.prototype.forEach.call(root.querySelectorAll("[data-drill]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); var p=b.getAttribute("data-drill").split("|"); openDrill(p[0],p[1]||"",_subtitle); }; });
     // wire KPI tiles (client-side drill from the loaded dashboard data)
     Array.prototype.forEach.call(root.querySelectorAll("[data-kpi]"),function(b){ var go=function(){ dscKpiDrill(b.getAttribute("data-kpi")); }; b.onclick=function(ev){ ev.stopPropagation(); go(); }; b.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); go(); } }; });
-    // wire the referee-database card (full, filterable register)
-    var _rdb=root.querySelector("#refDbCard"); if(_rdb){ _rdb.onclick=openRefRegister; _rdb.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openRefRegister(); } }; }
     // load the fines invoicing & payment reconciliation (second RPC, marries fines to the Sage ledger)
     fineRecLoad();
   }
 
   /* ---------- Fetch now (dispatches the GitHub Actions dash fetch) ---------- */
   var _dscPoll=null;
-  function dscFStat(txt,tone){ var el=NS.$("dscFetchStatus"); if(!el) return; el.textContent=txt||""; el.style.color=(tone==="bad")?"#9A3130":(tone==="ok")?"#1c5136":"var(--muted)"; }
-  function wireToolbar(){
-    var f=NS.$("dscFetch"); if(f) f.onclick=dscFetchNow;
-    var rl=NS.$("dscReload"); if(rl) rl.onclick=function(){ renderDiscipline(); };
+  function dscFStat(txt,tone){ var col=(tone==="bad")?"#9A3130":(tone==="ok")?"#1c5136":"var(--muted)";
+    Array.prototype.forEach.call(document.querySelectorAll('.dsc-fstat'),function(el){ el.textContent=txt||""; el.style.color=col; }); }
+  function wireToolbar(root, reloadFn){
+    root=root||document;
+    Array.prototype.forEach.call(root.querySelectorAll('.dsc-fetchbtn'),function(f){ f.onclick=dscFetchNow; });
+    Array.prototype.forEach.call(root.querySelectorAll('.dsc-reloadbtn'),function(rl){ rl.onclick=function(){ (reloadFn||renderDiscipline)(); }; });
   }
   function dscFetchNow(){
-    var b=NS.$("dscFetch"); if(b) b.disabled=true; dscFStat("Starting the fetch on GitHub...","");
+    setFetchDisabled(true); dscFStat("Starting the fetch on GitHub...","");
     NS.sb.functions.invoke("dash-refresh",{body:{}}).then(function(r){
       var d=(r&&r.data)||{};
       if((r&&r.error)||d.configured===false||d.ok===false){
         dscFStat((d&&(d.hint||d.detail))||(r&&r.error&&r.error.message)||"Could not start the fetch.","bad");
-        if(b) b.disabled=false; return;
+        setFetchDisabled(false); return;
       }
       dscStartPoll();
-    }).catch(function(e){ dscFStat(e.message||String(e),"bad"); if(b) b.disabled=false; });
+    }).catch(function(e){ dscFStat(e.message||String(e),"bad"); setFetchDisabled(false); });
   }
   function dscStateText(d){
     var st=d.status||"idle";
@@ -685,10 +740,10 @@
     if(_dscPoll) clearInterval(_dscPoll); var tries=0;
     _dscPoll=setInterval(function(){ tries++;
       NS.sb.rpc("dash_refresh_state").then(function(r){ if(r.error||!r.data) return; var d=r.data, t=dscStateText(d); dscFStat(t[0],t[1]);
-        if(d.status==="done"){ clearInterval(_dscPoll); _dscPoll=null; var b=NS.$("dscFetch"); if(b) b.disabled=false; renderDiscipline(); }
-        else if(d.status==="error"){ clearInterval(_dscPoll); _dscPoll=null; var b=NS.$("dscFetch"); if(b) b.disabled=false; }
+        if(d.status==="done"){ clearInterval(_dscPoll); _dscPoll=null; setFetchDisabled(false); reloadDiscPages(); }
+        else if(d.status==="error"){ clearInterval(_dscPoll); _dscPoll=null; setFetchDisabled(false); }
       });
-      if(tries>150){ clearInterval(_dscPoll); _dscPoll=null; var b=NS.$("dscFetch"); if(b) b.disabled=false; }
+      if(tries>150){ clearInterval(_dscPoll); _dscPoll=null; setFetchDisabled(false); }
     }, 4000);
   }
 
@@ -1134,5 +1189,6 @@
   }
 
   NS.renderDiscipline = renderDiscipline;
+  NS.renderReferees = renderReferees;
   NS.renderClubProfile = renderClubProfile;
 })(window.AC);
