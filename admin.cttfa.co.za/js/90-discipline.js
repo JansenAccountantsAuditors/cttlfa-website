@@ -119,6 +119,7 @@
       ".dsc-bar .lab{flex:0 0 44%;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsc-bar .tr{flex:1;height:9px;background:var(--line2);border-radius:5px;overflow:hidden}.dsc-bar .tr i{display:block;height:100%;background:var(--blue);border-radius:5px}.dsc-bar .vv{flex:0 0 auto;font-variant-numeric:tabular-nums;font-weight:700;color:var(--navy);min-width:38px;text-align:right}"+
       ".dsc-tbl{width:100%;border-collapse:collapse;font-size:12.5px}.dsc-tbl th{background:var(--navy);color:#fff;text-align:left;padding:7px 9px;font-size:11px;font-weight:700;white-space:nowrap;position:sticky;top:0;z-index:1}.dsc-tbl th.num,.dsc-tbl td.num{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}.dsc-tbl td{padding:6px 9px;border-bottom:1px solid var(--line2);vertical-align:top}.dsc-tbl tbody tr.clk{cursor:pointer}.dsc-tbl tbody tr.clk:hover td{background:#F5F8FD}.dsc-tbl td.wrap{white-space:normal;word-break:break-word;max-width:0;width:100%}.dsc-tbl tfoot th{position:static;background:#EEF3FA;color:var(--navy);border-top:2px solid var(--navy);border-bottom:none;font-size:12px}"+
       ".dc-tbl tbody tr.dcfam td{background:#EFF4F7;font-weight:700;color:var(--navy);border-top:1px solid var(--line)}.dc-tbl td.dcacc{padding-left:18px}.dc-tbl .dccode{font-variant-numeric:tabular-nums;color:var(--muted);font-weight:700;margin-right:7px;font-size:11px}.dsc-kpi.dc-total{background:#F5F8FD}.dsc-kpi.dc-total .v{color:var(--navy)}"+
+      ".dcb-tbl td{padding:5px 9px;border-bottom:1px solid var(--line2)}.dcb-tbl td.d{padding-left:24px;color:var(--muted)}.dcb-tbl .brn{color:var(--muted);font-weight:400;font-size:11px}.dcb-tbl tr.sub td{background:#EFF4F7;font-weight:700;color:var(--navy);border-top:1px solid var(--line)}.dcb-tbl tr.tot td{background:#EEF3FA;font-weight:800;color:var(--navy);border-top:2px solid var(--navy);border-bottom:none}"+
       ".dsc-thr{table-layout:fixed;max-width:440px}.dsc-thr td.tc{font-weight:700;color:var(--navy)}"+
       ".dsc-atrisk{table-layout:fixed;min-width:860px}.dsc-atrisk td{vertical-align:middle}.dsc-atrisk td.stnd,.dsc-atrisk td.nxt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dsc-atrisk td.stnd .dsc-pill{margin-right:6px}"+
       ".rr-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:8px 0}.rr-filters input,.rr-filters select{padding:8px 11px;border:1px solid var(--line);border-radius:9px;font-size:13px;background:#fff;color:var(--ink)}.rr-filters input{flex:1;min-width:220px}.rr-chip{font-size:12px;font-weight:700;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:20px;padding:7px 13px;cursor:pointer}.rr-chip.on{background:var(--navy);color:#fff;border-color:var(--navy)}.dsc-openhint{display:inline-flex;align-items:center;gap:5px;font-weight:800;font-size:11.5px;color:var(--gold-d,#9a7213);margin-top:8px}"+
@@ -635,6 +636,31 @@
     });
     var expCols = ["Source family","Account","Description","Fines invoiced","Fees received","Refunds & adjustments","Net YTD"];
     var refadjTot = round2(Number(pl.total_payments||0)+Number(pl.total_adjustments||0));
+    // reconciliation bridge: register fines -> GL fine income -> + fees -> total
+    var br = d.bridge || {};
+    function brRow(cls, label, amt, note, delta){
+      return '<tr class="'+cls+'"><td'+(delta?' class="d"':'')+'>'+esc(label)+(note?(' <span class="brn">'+note+'</span>'):'')+'</td><td class="num">'+rand(amt)+'</td></tr>';
+    }
+    var bridgeCard = "";
+    if(br.reg_issued_amt!=null){
+      var brBody =
+        brRow('sub','Fines issued (disciplinary register)', br.reg_issued_amt, num(br.reg_issued_n)+' fines', false)+
+        brRow('', 'less: issued but awaiting invoicing in Sage', -Number(br.awaiting_amt||0), num(br.awaiting_n)+' fines', true)+
+        brRow('', 'less: timing &amp; amount differences on matched fines', -Number(br.amount_diff||0), '', true)+
+        brRow('sub','DC-ruling fines invoiced to the GL', br.matched_gl_amt, 'matched to Sage invoices', false)+
+        brRow('', 'add: fines finance raised directly, no DC hearing', br.direct_amt, num(br.direct_n)+' invoices &middot; match '+rand(br.direct_match_amt)+', admin '+rand(br.direct_admin_amt), true)+
+        brRow('sub','Fine invoices raised (gross)', br.gross_fine_amt, '', false)+
+        brRow('', 'less: credit notes &amp; reversals', br.credit_notes_amt, '', true)+
+        brRow('sub','Net fine income (Sage fine accounts)', br.net_fine_amt, 'match &amp; conduct + administrative &amp; compliance', false)+
+        brRow('', 'add: protest &amp; appeal fees (refundable, net of refunds)', br.fees_amt, 'DC-driven income, not fines', true)+
+        brRow('tot','Total DC income (year to date)', br.total, '', false);
+      bridgeCard =
+        '<div class="card" style="box-shadow:none;border:1px solid var(--line);margin-top:10px">'+
+          '<div class="dsc-sec" style="margin-bottom:2px">From fines issued to total DC income</div>'+
+          '<p class="hint" style="margin:0 0 8px">What the DC issued, how it lands in the general ledger, and the other DC-driven income &mdash; each line ties to the next. Fines are invoiced to clubs (and collected as debtors); administrative fines are raised by finance directly; protest and appeal fees are received up front and refundable if the DC upholds the club.</p>'+
+          '<div class="dsc-tblwrap" style="border:none;max-height:none"><table class="dsc-tbl dcb-tbl"><tbody>'+brBody+'</tbody></table></div>'+
+        '</div>';
+    }
     var table =
       '<div class="dsc-tblwrap" style="max-height:520px"><table class="dsc-tbl dc-tbl"><thead><tr>'+
         '<th>Source / account</th><th class="num">Fines invoiced</th><th class="num">Fees received</th><th class="num">Refunds &amp; adj</th><th class="num">Net YTD</th></tr></thead>'+
@@ -651,6 +677,7 @@
         famTiles+
       '</div>'+
       '<p class="hint" style="margin:10px 0 8px">How it is sourced: <b>fines</b> (match &amp; conduct, and administrative &amp; compliance) are invoiced to clubs and collected as debtors; <b>protest and appeal fees</b> are received up front and are <b>refundable</b> if the DC upholds the club, so their net is after any refund. Figures are each account&rsquo;s financial-year movement in Sage, net of credit notes, refunds and the SAFA cost order. Fines invoiced here tie to the administrative rulings above; outstanding collection is in the fines reconciliation.</p>'+
+      bridgeCard+
       '<div class="dsc-grid" style="margin-top:6px"><div class="card" style="box-shadow:none;border:1px solid var(--line)"><div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Income by source family</div>'+famBars+'</div>'+
         '<div class="card" style="box-shadow:none;border:1px solid var(--line);overflow:hidden">'+table+'</div></div>';
     // wire the export buttons in this section
