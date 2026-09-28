@@ -448,6 +448,32 @@ def main(argv):
             print("ACC %-32s n=%-4d credit=%9.2f debit=%9.2f net=%9.2f  (report %s)"
                   % (label, len(rows), cr, db, cr - db, expect))
         return 0
+    if "--probe-gl4" in argv:   # read-only: pull the whole journal, aggregate DC income FY movement client-side
+        accs = allrows("/Account/Get")
+        dcmap = {}   # account id -> name  (the 1040/xxx DC Fines family)
+        for a in accs:
+            nm = a.get("Name") or ""
+            if nm.strip().startswith("1040/"):
+                dcmap[a.get("ID")] = nm
+        print("DC accounts:", len(dcmap))
+        je = allrows("/JournalEntry/Get")
+        print("journal rows total:", len(je))
+        agg = {}
+        for r in je:
+            aid = r.get("AccountId")
+            if aid not in dcmap: continue
+            dt = (r.get("Date") or "")[:10]
+            if dt < FY_START: continue
+            a = agg.setdefault(aid, {"cr": 0.0, "db": 0.0, "n": 0})
+            a["cr"] += float(r.get("Credit") or 0); a["db"] += float(r.get("Debit") or 0); a["n"] += 1
+        grand = 0.0
+        for aid, nm in sorted(dcmap.items(), key=lambda kv: kv[1]):
+            a = agg.get(aid)
+            if not a: continue
+            net = a["cr"] - a["db"]; grand += net
+            print("  %-52s n=%-4d net=%10.2f" % (nm[:52], a["n"], net))
+        print("GRAND TOTAL YTD DC income (all 1040/ accounts): %.2f" % grand)
+        return 0
     snap, lmeta, led_clubs, coa_rows, contacts, open_rows, st = build()
     print("clubs %d | owing %d | owed R%.2f | net R%.2f | estimated-ageing %d"
           % (st["n_clubs"], st["n_owing"], st["owed"], st["net"], st["est"]))
