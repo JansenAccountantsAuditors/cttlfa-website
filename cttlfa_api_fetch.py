@@ -476,7 +476,7 @@ def build_dc_income(push=False):
     rcp_a, rcp_n = acc_sum(allrows("/AccountReceipt/Get"), 1.0)
     pay_a, pay_n = acc_sum(allrows("/AccountPayment/Get"), -1.0)
     cadj_a, cadj_n = acc_sum(allrows("/CustomerAdjustment/Get"), 1.0)
-    sadj_a, sadj_n = acc_sum(allrows("/SupplierAdjustment/Get"), 1.0)
+    sadj_a, sadj_n = acc_sum(allrows("/SupplierAdjustment/Get"), -1.0)   # supplier side posts inversely to income
     adj_a = collections.defaultdict(float); adj_n = collections.defaultdict(int)
     for src_a, src_n in ((cadj_a, cadj_n), (sadj_a, sadj_n)):
         for k, v in src_a.items(): adj_a[k] += v
