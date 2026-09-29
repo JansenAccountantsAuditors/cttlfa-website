@@ -550,16 +550,17 @@
       '</div>';
     // workload tiles (filled from dash_referee_extras)
     var volRow = '<div class="dsc-kpis" id="refVolTiles" style="margin-top:12px">'+
-      refTile("Games refereed","…","appointments this season")+
-      refTile("Avg games / referee","…","across appointed referees")+
-      refTile("Games with a full trio","…","assistant referees appointed")+
-      refTile("Divisions officiated","…","with an appointed referee")+'</div>';
+      refTile("Centre appointments","…","referee in the middle")+
+      refTile("Assistant appointments","…","assistant referee slots")+
+      refTile("Games with assistants","…","at least one assistant")+
+      refTile("Active officials","…","named, this season")+'</div>';
+    var splitNote = '<p class="hint" id="refSplitNote" style="margin:8px 2px 0"></p>';
     var divCard = '<div class="card" id="refDivRoot" style="margin-top:16px"><div class="dsc-sec">Referees assigned by division</div><p class="hint">Loading division coverage from LeagueRepublic…</p></div>';
     var grid2 = '<div class="dsc-grid" style="margin-top:16px">'+
       '<div class="card" id="refMonthRoot"><div class="dsc-sec">Appointments by month</div><p class="hint">Loading…</p></div>'+
       '<div class="card" id="refBusyRoot"><div class="dsc-sec">Busiest referees</div><p class="hint">Loading…</p></div></div>';
     var refBlock = refereesBlock(refs);
-    root.innerHTML = head + kpi + volRow + divCard + grid2 + '<div style="margin-top:16px">'+refBlock+'</div>';
+    root.innerHTML = head + kpi + volRow + splitNote + divCard + grid2 + '<div style="margin-top:16px">'+refBlock+'</div>';
     wireToolbar(root, renderReferees);
     Array.prototype.forEach.call(root.querySelectorAll("[data-pdf]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-pdf")]; if(e) expPDF(e.title,_subtitle,e.columns,e.rows); }; });
     Array.prototype.forEach.call(root.querySelectorAll("[data-csv]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-csv")]; if(e) expCSV(e.title,e.columns,e.rows); }; });
@@ -580,14 +581,22 @@
     }).catch(function(){});
   }
   function drawRefExtras(refs, ex, lr){
-    var games=Number(ex.appointments_total)||0, appd=Number(refs.appointed)||0;
-    var avg = appd? (games/appd):0, withAr=Number(ex.with_ar)||0, byDiv=ex.by_division||[];
+    var centre=Number(ex.centre_appts)||0, centreClub=Number(ex.centre_clubref)||0;
+    var arAppts=Number(ex.ar_appts)||0, arClub=Number(ex.ar_clubref)||0;
+    var withAr=Number(ex.with_ar)||0, byDiv=ex.by_division||[];
+    var games=Number(ex.appointments_total)||centre;
+    var centreNamed=centre-centreClub, arNamed=arAppts-arClub;
+    var pctTrio=games?Math.round(withAr/games*100):0;
+    var pctArClub=arAppts?Math.round(arClub/arAppts*100):0;
     var vt=NS.$("refVolTiles");
     if(vt){ vt.innerHTML =
-      refTile("Games refereed", num(games), "appointments this season")+
-      refTile("Avg games / referee", (Math.round(avg*10)/10).toFixed(1), num(appd)+" appointed referees")+
-      refTile("Games with a full trio", num(withAr), (games?Math.round(withAr/games*100):0)+"% have assistant referees")+
-      refTile("Divisions officiated", num(byDiv.length), "with an appointed referee"); }
+      refTile("Centre appointments", num(centre), num(centreNamed)+" appointed · "+num(centreClub)+" club")+
+      refTile("Assistant appointments", num(arAppts), num(arNamed)+" appointed · "+num(arClub)+" club-supplied")+
+      refTile("Games with assistants", num(withAr), pctTrio+"% of "+num(games)+" games")+
+      refTile("Active officials", num(ex.distinct_named||0), num(ex.distinct_centre||0)+" centre · "+num(ex.distinct_ar||0)+" assistant"); }
+    var noteEl=NS.$("refSplitNote");
+    if(noteEl){ noteEl.innerHTML =
+      "A centre referee is appointed to virtually every game ("+num(centreNamed)+" of "+num(games)+" by named officials). Assistant refereeing is a separate role and largely <b>club-supplied</b>: of "+num(arAppts)+" assistant slots filled, "+num(arClub)+" ("+pctArClub+"%) were run by club-provided assistants and only "+num(arNamed)+" by appointed officials. Assistant counts below exclude the club-supplied placeholder, so they show association appointments only."; }
     // LeagueRepublic games per division (matched by division code, e.g. A1, then by name)
     var today=Date.now(), byCode={}, byNorm={};
     (lr||[]).forEach(function(f){
@@ -604,22 +613,22 @@
     var rows=byDiv.map(function(x){
       var lrd=lrFor(x.division), denom=lrd?(lrd.toDate||lrd.total):0, cov=(denom>0)?(x.games/denom):null;
       if(!lrd) unmatched++;
-      return {division:x.division, games:x.games, refs:x.refs, denom:denom, cov:cov};
+      return {division:x.division, games:x.games, refs:x.refs, arGames:Number(x.ar_games)||0, denom:denom, cov:cov};
     });
     var body=rows.map(function(r){
-      var barw=Math.round((r.games||0)/maxG*100);
       var cov;
       if(r.cov==null){ cov='<span class="dsc-pill mut">no LR match</span>'; }
       else { var pct=Math.round(r.cov*100), w=Math.min(100,pct), fl=(r.cov<0.5?' <span class="dsc-pill warn">low</span>':'');
         cov='<span class="ref-cov"><span class="dsc-covbar"><i style="width:'+w+'%"></i></span><span class="covpct">'+pct+'%</span>'+fl+'</span>'; }
-      return '<tr><td>'+esc(r.division)+'</td><td class="num">'+num(r.games)+'</td><td class="num">'+num(r.refs)+'</td><td class="num">'+num(r.denom||0)+'</td><td class="covcell">'+cov+'</td></tr>';
+      var arTxt=r.arGames?(num(r.arGames)+' <span class="mut" style="color:var(--muted)">('+Math.round(r.arGames/(r.games||1)*100)+'%)</span>'):'<span class="mut" style="color:var(--muted)">–</span>';
+      return '<tr><td>'+esc(r.division)+'</td><td class="num">'+num(r.games)+'</td><td class="num">'+num(r.refs)+'</td><td class="num">'+arTxt+'</td><td class="num">'+num(r.denom||0)+'</td><td class="covcell">'+cov+'</td></tr>';
     }).join("");
-    var expr=rows.map(function(r){ return [r.division, r.games, r.refs, r.denom||0, r.cov==null?"–":(Math.round(r.cov*100)+"%")]; });
+    var expr=rows.map(function(r){ return [r.division, r.games, r.refs, r.arGames, r.denom||0, r.cov==null?"–":(Math.round(r.cov*100)+"%")]; });
     var dcard=NS.$("refDivRoot");
     if(dcard){ dcard.innerHTML =
-      '<div class="dsc-bh"><span class="dsc-sec">Referees assigned by division</span>'+acts("Referees assigned by division",["Division","Games refereed","Referees","Games played (LR)","Coverage %"],expr)+'</div>'+
-      '<p class="hint" style="margin:0 0 8px">Games with an appointed referee per division, and coverage against the division&rsquo;s games played to date on LeagueRepublic. Coverage below 100% means games went ahead without a referee recorded on the dash'+(unmatched?('; '+num(unmatched)+' division(s) could not be matched to LeagueRepublic'):'')+'.</p>'+
-      '<div class="dsc-tblwrap" style="max-height:480px"><table class="dsc-tbl ref-divtbl"><thead><tr><th>Division</th><th class="num">Games refereed</th><th class="num">Referees</th><th class="num">Played (LR)</th><th>Coverage</th></tr></thead><tbody>'+(body||'<tr><td colspan="5" class="hint">No divisions.</td></tr>')+'</tbody></table></div>';
+      '<div class="dsc-bh"><span class="dsc-sec">Referees assigned by division</span>'+acts("Referees assigned by division",["Division","Games refereed","Referees","Games with assistants","Games played (LR)","Coverage %"],expr)+'</div>'+
+      '<p class="hint" style="margin:0 0 8px">Games with an appointed centre referee per division, the distinct referees used, and how many games ran with assistant referees (club-supplied or appointed). Coverage is against the division&rsquo;s games played to date on LeagueRepublic; below 100% means games went ahead without a referee recorded on the dash'+(unmatched?('; '+num(unmatched)+' division(s) could not be matched to LeagueRepublic'):'')+'.</p>'+
+      '<div class="dsc-tblwrap" style="max-height:480px"><table class="dsc-tbl ref-divtbl"><thead><tr><th>Division</th><th class="num">Games refereed</th><th class="num">Referees</th><th class="num">With assistants</th><th class="num">Played (LR)</th><th>Coverage</th></tr></thead><tbody>'+(body||'<tr><td colspan="6" class="hint">No divisions.</td></tr>')+'</tbody></table></div>';
       _wireExp(dcard);
     }
     var mcard=NS.$("refMonthRoot");
@@ -630,10 +639,16 @@
       _wireExp(mcard);
     }
     var bcard=NS.$("refBusyRoot");
-    if(bcard){ var ros=(refs.roster||[]).slice().sort(function(a,b){return (b.appts||0)-(a.appts||0);}).slice(0,12);
-      bcard.innerHTML=bhead("Busiest referees","Busiest referees",["Referee","Appointments"],ros.map(function(x){return [x.referee,x.appts];}))+
-        bars(ros.map(function(x){return {referee:x.referee,appts:x.appts};}),"referee","appts",null)+
-        '<p class="hint" style="margin:6px 0 0">Top 12 by appointments. The full roster is in the referees &amp; accreditation card below.</p>';
+    if(bcard){
+      var top=(ex.top_officials||[]).slice(0,12);
+      if(!top.length){ top=(refs.roster||[]).slice().sort(function(a,b){return (b.appts||0)-(a.appts||0);}).slice(0,12)
+        .map(function(x){return {name:x.referee, centre:x.appts||0, ar:0, total:x.appts||0};}); }
+      var brows=top.map(function(x){ return [x.name, x.centre, x.ar, x.total]; });
+      var bbody=top.map(function(x){
+        return '<tr><td>'+esc(x.name)+'</td><td class="num">'+num(x.centre)+'</td><td class="num">'+num(x.ar)+'</td><td class="num"><b>'+num(x.total)+'</b></td></tr>'; }).join("");
+      bcard.innerHTML=bhead("Busiest officials","Busiest officials",["Official","Centre","Assistant","Total"],brows)+
+        '<div class="dsc-tblwrap" style="max-height:460px"><table class="dsc-tbl"><thead><tr><th>Official</th><th class="num">Centre</th><th class="num">Assistant</th><th class="num">Total</th></tr></thead><tbody>'+(bbody||'<tr><td colspan="4" class="hint">No appointments.</td></tr>')+'</tbody></table></div>'+
+        '<p class="hint" style="margin:6px 0 0">Top 12 by total appointments (centre plus assistant), named officials only. The club-supplied assistant placeholder is excluded. The full roster is in the referees &amp; accreditation card below.</p>';
       _wireExp(bcard);
     }
   }
