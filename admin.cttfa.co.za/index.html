@@ -1231,12 +1231,30 @@
       if(authMode==="signup"){
         if(pw.length<8){msg($("authMsg"),"Password must be at least 8 characters.","err");$("authBtn").disabled=false;return;}
         var r=await sb.auth.signUp({email:email,password:pw});
-        if(r.error) throw r.error;
+        if(r.error){
+          if(/already|registered|exists/i.test(r.error.message||"")){
+            msg($("authMsg"),"You already have a password set for this email. Switch to Sign in, or use “Forgot your password?” if you have forgotten it.","err");
+          } else { msg($("authMsg"), r.error.message||"Could not set your password.","err"); }
+          $("authBtn").disabled=false; return;
+        }
         if(r.data && r.data.session){ await afterLogin(); }
         else { msg($("authMsg"),"Account created. If email confirmation is on, confirm via the email, then sign in.","ok"); }
       } else {
         var s=await sb.auth.signInWithPassword({email:email,password:pw});
-        if(s.error) throw s.error;
+        if(s.error){
+          /* Supabase returns the same "invalid credentials" for a wrong password
+             and for an email with no login yet, so ask the allow-list which case
+             this is and guide the person to the right action. */
+          var hint=null; try{ var h=await sb.rpc("signin_hint",{p_email:email}); if(!h.error) hint=h.data; }catch(_e){}
+          if(hint && hint.on_list===false){
+            msg($("authMsg"),"This email is not on the Mancom allow-list. Contact an administrator to be added.","err");
+          } else if(hint && hint.on_list && !hint.has_login){
+            msg($("authMsg"),"It looks like this is your first sign-in. Switch to “First time, set password” above to create your password.","err");
+          } else {
+            msg($("authMsg"),"Incorrect password. If you have forgotten it, use “Forgot your password?” below to reset it.","err");
+          }
+          $("authBtn").disabled=false; return;
+        }
         await afterLogin();
       }
     }catch(e){ msg($("authMsg"), e.message||"Could not sign in.","err"); }
@@ -1282,12 +1300,26 @@
   async function afterLogin(){
     var u=(await sb.auth.getUser()).data.user;
     if(!u) return;
-    var r=await sb.from("admin_users").select("full_name,email,role,active,modules").eq("auth_id",u.id).maybeSingle();
-    if(r.error||!r.data||!r.data.active){
-      msg($("authMsg"),"This email is not on the Mancom allow-list, or is not active. Contact an administrator.","err");
+    /* Link this login to the allow-list row and read it back. admin_link_self
+       also links by email when the person was added to the allow-list AFTER
+       they set their password (the auth trigger only fires at sign-up, so that
+       ordering leaves auth_id null). Fall back to a direct read if the RPC is
+       unavailable. */
+    var data=null;
+    try{ var lk=await sb.rpc("admin_link_self"); if(!lk.error) data=lk.data; }catch(e){}
+    if(!data){
+      var r=await sb.from("admin_users").select("full_name,email,role,active,modules").eq("auth_id",u.id).maybeSingle();
+      if(!r.error) data=r.data;
+    }
+    if(!data){
+      msg($("authMsg"),"This email is not on the Mancom allow-list. Contact an administrator to be added.","err");
       await sb.auth.signOut(); return;
     }
-    me=r.data; meRole=r.data.role;
+    if(!data.active){
+      msg($("authMsg"),"Your access has been deactivated. Contact an administrator to restore it.","err");
+      await sb.auth.signOut(); return;
+    }
+    me=data; meRole=data.role;
     $("whoName").textContent=me.full_name; $("whoEmail").textContent=me.email;
     $("whoRole").textContent=meRole;
     $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden");
