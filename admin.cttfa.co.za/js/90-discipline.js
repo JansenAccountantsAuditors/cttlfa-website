@@ -581,22 +581,22 @@
     }).catch(function(){});
   }
   function drawRefExtras(refs, ex, lr){
-    var centre=Number(ex.centre_appts)||0, centreClub=Number(ex.centre_clubref)||0;
-    var arAppts=Number(ex.ar_appts)||0, arClub=Number(ex.ar_clubref)||0;
-    var withAr=Number(ex.with_ar)||0, byDiv=ex.by_division||[];
-    var games=Number(ex.appointments_total)||centre;
-    var centreNamed=centre-centreClub, arNamed=arAppts-arClub;
-    var pctTrio=games?Math.round(withAr/games*100):0;
-    var pctArClub=arAppts?Math.round(arClub/arAppts*100):0;
+    // All primary figures are TRACKED appointments — the club-supplied "Club Ref"
+    // placeholder is excluded server-side so it never inflates the officials we track.
+    var centreTracked=Number(ex.centre_appts)||0, centreClub=Number(ex.centre_clubref)||0;
+    var arTracked=Number(ex.ar_appts)||0, arClub=Number(ex.ar_clubref)||0;
+    var withNamedAr=Number(ex.with_ar)||0, byDiv=ex.by_division||[];
+    var games=Number(ex.games_total)||Number(ex.appointments_total)||(centreTracked+centreClub);
+    var pctNamedAr=games?Math.round(withNamedAr/games*100):0;
     var vt=NS.$("refVolTiles");
     if(vt){ vt.innerHTML =
-      refTile("Centre appointments", num(centre), num(centreNamed)+" appointed · "+num(centreClub)+" club")+
-      refTile("Assistant appointments", num(arAppts), num(arNamed)+" appointed · "+num(arClub)+" club-supplied")+
-      refTile("Games with assistants", num(withAr), pctTrio+"% of "+num(games)+" games")+
+      refTile("Centre appointments", num(centreTracked), "of "+num(games)+" games officiated")+
+      refTile("Assistant appointments", num(arTracked), "recorded to a named official")+
+      refTile("Games with assistants", num(withNamedAr), pctNamedAr+"% of games, named assistant")+
       refTile("Active officials", num(ex.distinct_named||0), num(ex.distinct_centre||0)+" centre · "+num(ex.distinct_ar||0)+" assistant"); }
     var noteEl=NS.$("refSplitNote");
     if(noteEl){ noteEl.innerHTML =
-      "A centre referee is appointed to virtually every game ("+num(centreNamed)+" of "+num(games)+" by named officials). Assistant refereeing is a separate role and largely <b>club-supplied</b>: of "+num(arAppts)+" assistant slots filled, "+num(arClub)+" ("+pctArClub+"%) were run by club-provided assistants and only "+num(arNamed)+" by appointed officials. Assistant counts below exclude the club-supplied placeholder, so they show association appointments only."; }
+      "Every game must have a referee and two assistants. The association appoints and tracks the <b>centre referee</b> for almost every game ("+num(centreTracked)+" of "+num(games)+"). <b>Assistant referees are largely supplied by the clubs and are not individually tracked</b>, so only "+num(arTracked)+" assistant appointments are recorded to a named official. Club-supplied slots are held against a &ldquo;Club Ref&rdquo; placeholder ("+num(centreClub)+" centre, "+num(arClub)+" assistant) and are excluded from every figure on this page, so they do not inflate the officials we track."; }
     // LeagueRepublic games per division (matched by division code, e.g. A1, then by name)
     var today=Date.now(), byCode={}, byNorm={};
     (lr||[]).forEach(function(f){
@@ -627,7 +627,7 @@
     var dcard=NS.$("refDivRoot");
     if(dcard){ dcard.innerHTML =
       '<div class="dsc-bh"><span class="dsc-sec">Referees assigned by division</span>'+acts("Referees assigned by division",["Division","Games refereed","Referees","Games with assistants","Games played (LR)","Coverage %"],expr)+'</div>'+
-      '<p class="hint" style="margin:0 0 8px">Games with an appointed centre referee per division, the distinct referees used, and how many games ran with assistant referees (club-supplied or appointed). Coverage is against the division&rsquo;s games played to date on LeagueRepublic; below 100% means games went ahead without a referee recorded on the dash'+(unmatched?('; '+num(unmatched)+' division(s) could not be matched to LeagueRepublic'):'')+'.</p>'+
+      '<p class="hint" style="margin:0 0 8px">Games with an <b>appointed (tracked) centre referee</b> per division, the distinct referees used, and how many ran with a named assistant. Club-supplied placeholder officials are excluded, so coverage below 100% means the association did not appoint a tracked referee — the game may still have been run by a club-supplied official. Coverage is against the division&rsquo;s games played to date on LeagueRepublic'+(unmatched?('; '+num(unmatched)+' division(s) could not be matched to LeagueRepublic'):'')+'.</p>'+
       '<div class="dsc-tblwrap" style="max-height:480px"><table class="dsc-tbl ref-divtbl"><thead><tr><th>Division</th><th class="num">Games refereed</th><th class="num">Referees</th><th class="num">With assistants</th><th class="num">Played (LR)</th><th>Coverage</th></tr></thead><tbody>'+(body||'<tr><td colspan="6" class="hint">No divisions.</td></tr>')+'</tbody></table></div>';
       _wireExp(dcard);
     }
