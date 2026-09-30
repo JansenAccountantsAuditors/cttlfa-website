@@ -2,7 +2,7 @@
    gives basic offline access to the last-viewed pages. Deliberately NETWORK-FIRST
    for everything, so an online visitor always gets the current site and fresh
    match data; the cache is only a fallback when the device is offline. */
-const CACHE = 'cttlfa-v1';
+const CACHE = 'cttlfa-v2';
 const SHELL = ['/', '/index.html', '/assets/crest.png', '/icon-192.png', '/icon-512.png', '/apple-touch-icon.png'];
 
 self.addEventListener('install', function (e) {
