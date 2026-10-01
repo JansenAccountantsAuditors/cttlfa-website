@@ -1089,7 +1089,7 @@
   var logData = null, logState = "idle";          // idle | loading | ready | error
   var LOG_GROUPS = ["Senior Divisions", "Reserves", "Veterans", "Women", "Under-18", "Under-16", "Under-14", "Under-12"];
   var WIN_ORDER = ["Under-18", "Under-16", "Under-14", "Under-12", "Senior", "Veterans", "Women"];
-  var LOG_COLS = ["#", "Club", "P", "W", "D", "L", "GF", "GA", "GD", "Pts", "Form"];
+  var LOG_COLS = ["#", "Club", "P", "W", "D", "L", "GF", "GA", "GD", "Pts"];
 
   function isJunGroup(g) { return /^Under-/.test(g || ""); }
   function gd(r) { return (+r[5] || 0) - (+r[6] || 0); }
@@ -1167,14 +1167,14 @@
     return '<img class="lg-crest" src="' + base + "/" + id + '/115.jpg" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
   }
   function logTableHtml(rows) {
-    var h = '<table class="lg-tbl"><thead><tr><th>#</th><th class="l">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th class="lg-fh">Form</th></tr></thead><tbody>';
+    var h = '<table class="lg-tbl"><thead><tr><th>#</th><th class="l">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr></thead><tbody>';
     rows.forEach(function (r, i) {
       var g = gd(r);
       h += '<tr><td class="lg-pos">' + (i + 1) + '</td>' +
         '<td class="l"><span class="lg-club">' + crestImg(r[0]) + NS.esc(r[0]) + '</span></td>' +
         '<td>' + (r[1] || 0) + '</td><td>' + (r[2] || 0) + '</td><td>' + (r[3] || 0) + '</td><td>' + (r[4] || 0) + '</td>' +
         '<td>' + (r[5] || 0) + '</td><td>' + (r[6] || 0) + '</td><td>' + gdTxt(g) + '</td>' +
-        '<td class="lg-pts">' + (r[7] || 0) + '</td><td class="lg-form">' + logFormPills(r[8]) + '</td></tr>';
+        '<td class="lg-pts">' + (r[7] || 0) + '</td></tr>';
     });
     return h + '</tbody></table>';
   }
@@ -1319,15 +1319,16 @@
   }
   function divBody(rows) {
     return rows.map(function (r, i) {
-      return [i + 1, r[0], r[1] || 0, r[2] || 0, r[3] || 0, r[4] || 0, r[5] || 0, r[6] || 0, gdTxt(gd(r)), r[7] || 0, formTxt(r[8])];
+      return [i + 1, r[0], r[1] || 0, r[2] || 0, r[3] || 0, r[4] || 0, r[5] || 0, r[6] || 0, gdTxt(gd(r)), r[7] || 0];
     });
   }
   var LOG_AT = {
-    styles: { fontSize: 8, cellPadding: 3, overflow: "linebreak", lineColor: [211, 219, 222], lineWidth: 0.5 },
+    styles: { fontSize: 9, cellPadding: 4, overflow: "linebreak", lineColor: [211, 219, 222], lineWidth: 0.5 },
     headStyles: { fillColor: [24, 64, 80], textColor: 255, fontStyle: "bold" },
     alternateRowStyles: { fillColor: [239, 244, 247] },
-    columnStyles: { 0: { cellWidth: 24, halign: "center" }, 1: { cellWidth: 150 }, 2: { cellWidth: 26, halign: "center" }, 3: { cellWidth: 26, halign: "center" }, 4: { cellWidth: 26, halign: "center" }, 5: { cellWidth: 26, halign: "center" }, 6: { cellWidth: 30, halign: "center" }, 7: { cellWidth: 30, halign: "center" }, 8: { cellWidth: 34, halign: "center" }, 9: { cellWidth: 34, halign: "center", fontStyle: "bold" }, 10: { cellWidth: 70, halign: "center" } },
-    margin: { top: 70, left: 40, right: 40, bottom: 34 }
+    columnStyles: { 0: { cellWidth: 32, halign: "center" }, 1: { cellWidth: 300 }, 2: { cellWidth: 42, halign: "center" }, 3: { cellWidth: 42, halign: "center" }, 4: { cellWidth: 42, halign: "center" }, 5: { cellWidth: 42, halign: "center" }, 6: { cellWidth: 48, halign: "center" }, 7: { cellWidth: 48, halign: "center" }, 8: { cellWidth: 54, halign: "center" }, 9: { cellWidth: 54, halign: "center", fontStyle: "bold" } },
+    margin: { top: 70, left: 40, right: 40, bottom: 34 },
+    pageBreak: "avoid"   // keep each division's log whole — never split a log across a page
   };
   function atOpts(title, extra) {
     var o = JSON.parse(JSON.stringify(LOG_AT));
@@ -1340,7 +1341,7 @@
   function exportDivisionPDF(key) {
     if (!ensurePdf() || !logData) return;
     var v = logData.leagues[key]; if (!v || !(v.table || []).length) { alert("No standings for this division."); return; }
-    var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" }); doc_ref = doc;
+    var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4", orientation: "landscape" }); doc_ref = doc;
     var title = v.name || key;
     doc.autoTable(atOpts(title, { startY: 78, head: [LOG_COLS], body: divBody(v.table) }));
     stampPages(doc);
@@ -1352,19 +1353,22 @@
     var divs = logDivisions(scope);
     if (!divs.length) { alert("No divisions in this selection."); return; }
     var scopeTitle = scope === "senior" ? "Senior league logs" : scope === "junior" ? "Junior league logs" : "League logs — all divisions";
-    var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" }); doc_ref = doc;
-    var y = 78, lastG = null, first = true;
+    var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4", orientation: "landscape" }); doc_ref = doc;
+    var TOP = 78, ROWH = 19;
+    var y = TOP, lastG = null, first = true;
     divs.forEach(function (d) {
-      var H = doc.internal.pageSize.getHeight();
-      if (d.group !== lastG) {
+      var H = doc.internal.pageSize.getHeight(), bottom = H - 34;
+      var groupChange = d.group !== lastG;
+      // height this whole block needs: optional group heading + division name + header row + data rows
+      var need = (groupChange ? 30 : 0) + 16 + ROWH + d.rows.length * ROWH + 8;
+      // start a fresh page if the log would not fit whole below the current y
+      if (!first && y + need > bottom) { doc.addPage(); y = TOP; }
+      if (groupChange) {
         lastG = d.group;
-        if (!first && y > H - 140) { doc.addPage(); y = 78; }
-        else if (!first) y += 6;
         doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(7, 26, 74);
         doc.text(d.group, 40, y); y += 6;
         doc.setDrawColor(208, 152, 47); doc.setLineWidth(1.2); doc.line(40, y, 170, y); y += 12;
       }
-      if (y > H - 120) { doc.addPage(); y = 78; }
       doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(24, 64, 80);
       doc.text(d.name + "  ·  " + d.rows.length + " teams", 40, y); y += 8;
       doc.autoTable(atOpts(scopeTitle, { startY: y, head: [LOG_COLS], body: divBody(d.rows) }));
@@ -1378,15 +1382,15 @@
     if (!ensurePdf() || !logData) return;
     var w = logWinners();
     if (!w.length) { alert("No knock-out finals have been decided yet."); return; }
-    var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" }); doc_ref = doc;
+    var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4", orientation: "landscape" }); doc_ref = doc;
     var title = "Knock-out cup winners";
     var body = w.map(function (x) { return [x.group, x.comp, x.champ, x.runner, x.score, x.date || ""]; });
     doc.autoTable({
       startY: 78, head: [["Age group / stream", "Competition", "Champion", "Runner-up", "Final", "Date"]], body: body,
-      styles: { fontSize: 8.5, cellPadding: 4, overflow: "linebreak", lineColor: [211, 219, 222], lineWidth: 0.5 },
+      styles: { fontSize: 9, cellPadding: 4.5, overflow: "linebreak", lineColor: [211, 219, 222], lineWidth: 0.5 },
       headStyles: { fillColor: [24, 64, 80], textColor: 255, fontStyle: "bold" },
       alternateRowStyles: { fillColor: [239, 244, 247] },
-      columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 134 }, 2: { cellWidth: 112, fontStyle: "bold" }, 3: { cellWidth: 100 }, 4: { cellWidth: 36, halign: "center" }, 5: { cellWidth: 50, halign: "center" } },
+      columnStyles: { 0: { cellWidth: 120 }, 1: { cellWidth: 210 }, 2: { cellWidth: 180, fontStyle: "bold" }, 3: { cellWidth: 170 }, 4: { cellWidth: 48, halign: "center" }, 5: { cellWidth: 64, halign: "center" } },
       margin: { top: 70, left: 40, right: 40, bottom: 34 },
       didDrawPage: function () { logBar(doc, title); }
     });
