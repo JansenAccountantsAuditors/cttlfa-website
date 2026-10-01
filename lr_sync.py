@@ -140,7 +140,10 @@ def build(season):
         hs, as_ = f.get("homeScore"), f.get("roadScore"); ms = f.get("fixtureDateInMilliseconds") or 0
         if f.get("result") and isnum(hs) and isnum(as_):
             L["results"].append([home, away, str(int(float(hs))), str(int(float(as_))), d, ms])
-        elif not f.get("result"):
+        elif not f.get("result") and "abandon" not in str(f.get("fixtureStatusDesc") or "").lower():
+            # Abandoned fixtures have no result but the log is concluded; they are
+            # closed, not still to play. Keep them out of the outstanding list so the
+            # /junior and /senior "still to play" counts reconcile with the Match Centre.
             L["fixtures"].append([home, away, d, t, f.get("venueAndSubVenueDesc") or "", ms])
     for k, L in leagues.items():
         L["results"].sort(key=lambda r: r[5], reverse=True)
