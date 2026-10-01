@@ -100,7 +100,7 @@
       else if (s.indexOf("abandon") >= 0) o.abandoned++;
       else if (s.indexOf("postpon") >= 0) o.postponed++;
       else o.normal++;
-      if (f.result) o.played++; else if (!bye) o.unplayed++;
+      if (f.result) o.played++; else if (!bye && s.indexOf("abandon") < 0) o.unplayed++;
       [["homeTeam", "homeTeamName"], ["roadTeam", "roadTeamName"]].forEach(function (p) {
         var nm = f[p[1]]; if (!nm || isBye(nm)) return;
         var id = f[p[0]]; if (id != null) o.teams[id] = clean(nm);
@@ -140,7 +140,7 @@
     function nonBye(f) { return !isBye(f.homeTeamName) && !isBye(f.roadTeamName); }
     if (key === "total") return { title: "All fixtures", fx: fx };
     if (key === "played") return { title: "Played fixtures", fx: fx.filter(function (f) { return f.result; }) };
-    if (key === "unplayed") return { title: "Fixtures still to play", fx: fx.filter(function (f) { return !f.result && nonBye(f); }) };
+    if (key === "unplayed") return { title: "Fixtures still to play", fx: fx.filter(function (f) { return !f.result && nonBye(f) && !/abandon/i.test(f.fixtureStatusDesc || ""); }) };
     if (key === "league") return { title: "League fixtures", fx: fx.filter(function (f) { return f.fixtureTypeID === 1; }) };
     if (key === "cups") return { title: "Cup fixtures", fx: fx.filter(function (f) { return f.fixtureTypeID === 2; }) };
     if (key === "byes") return { title: "Byes", fx: fx.filter(function (f) { return isBye(f.homeTeamName) || isBye(f.roadTeamName); }) };
@@ -214,7 +214,7 @@
     var h = '<div class="fa-tiles">';
     h += tile(o.total.toLocaleString(), "Total fixtures", o.league.toLocaleString() + " league · " + o.cups + " cup", "total");
     h += tile(o.played.toLocaleString(), "Played", ((o.total ? Math.round(o.played / o.total * 100) : 0)) + "% of the programme", "played");
-    h += tile(o.unplayed.toLocaleString(), "Still to play", "excludes byes", "unplayed");
+    h += tile(o.unplayed.toLocaleString(), "Still to play", "excludes byes and abandoned", "unplayed");
     h += tile(o.divs, "Divisions", o.comps + " knockout cups", "");
     h += tile(o.nTeams.toLocaleString(), "Team entrants", "distinct teams entered", "");
     h += tile(o.nClubs, "Clubs", (o.nClubs ? (o.nTeams / o.nClubs).toFixed(1) : 0) + " teams per club", "");
