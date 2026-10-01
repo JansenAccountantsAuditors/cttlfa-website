@@ -2987,6 +2987,31 @@
       el.innerHTML=debTxTableHtml(rows)+'<p class="hint" style="font-size:11px;margin:6px 0 0">'+rows.length+' entries'+((opts&&opts.label)?' · '+opts.label:'')+'. From the Sage ledger; receipts shaded. Invoice descriptions come from Sage and populate on the next fetch.</p>';
     }catch(e){ el.innerHTML='<p class="hint" style="font-size:12px">Could not load transactions: '+esc(e.message||e)+'</p>'; }
   }
+  // Balance-aware statement covering text. The statement run goes to the whole list, so the body
+  // must read correctly whether the account is outstanding, settled, or in credit. One source of
+  // truth for both the single "Email statement" action and the batch statement run.
+  function debStatementEmailText(c, opts){
+    var guest=(c.club_type==='guest'||c.is_guest);
+    var who=guest?'team':'club', ref=c.code||c.name, bal=Number(c.bal)||0;
+    var period=(opts&&opts.label)?(' ('+opts.label+')'):'';
+    var org='Cape Town Tygerberg Local Football Association';
+    var open='Dear '+c.name+' Committee,\n\n';
+    var close='\n\nWith thanks,\nTreasurer, '+org;
+    var body;
+    if(bal>0.01){
+      body='Please find attached the '+who+'’s statement of account'+period+', reflecting an amount of '+dR(bal)+' outstanding. '
+        +'We would be grateful if this could be settled at your earliest convenience. Please use '+(guest?'code ':'club code ')+ref+' as the payment reference; banking details are on the statement.\n\n'
+        +'Should payment already have been made, kindly disregard this and accept our thanks.';
+    } else if(bal<-0.01){
+      body='Please find attached the '+who+'’s statement of account'+period+'. '
+        +'The account is in credit of '+dR(Math.abs(bal))+', so no payment is due. The credit is carried forward against future amounts raised. '
+        +'The statement is provided for the '+who+'’s records.';
+    } else {
+      body='Please find attached the '+who+'’s statement of account'+period+'. '
+        +'The account is fully settled and no amount is outstanding — the statement is provided for the '+who+'’s records so that you have confirmation the account is in order.';
+    }
+    return open+body+close;
+  }
   async function debEmailStatement(c, opts){
     var st; try{ st=await debSendSetup(); }catch(e){ alert('Could not load email settings: '+(e.message||e)); return; }
     var S=st.settings||{}, cfg=st.config||{}, test=(cfg.test_mode!==false);
@@ -2995,7 +3020,7 @@
     var b64=null,pname=null;
     try{ var doc=await debStatementPDF(c, Object.assign({doc:true,silent:true}, opts||{})); if(doc){ b64=doc.output('datauristring').split(',')[1]; pname='CTTLFA Statement - '+String(c.name).replace(/[^A-Za-z0-9 ]/g,'').trim()+'.pdf'; } }catch(e){ alert('Could not build the statement: '+(e.message||e)); return; }
     if(!b64){ alert('Could not build the statement PDF.'); return; }
-    var text='Dear '+c.name+' Committee,\n\nPlease find attached the club’s statement of account'+((opts&&opts.label)?' ('+opts.label+')':'')+', reflecting a balance of '+dR(c.bal)+'. Please use club code '+(c.code||c.name)+' as the payment reference; banking details are on the statement.\n\nWith thanks,\nTreasurer, Cape Town Tygerberg LFA';
+    var text=debStatementEmailText(c, opts);
     var _pay=(Number(c.bal)>0)? await debPayLink(c, c.bal, 'statement') : null;
     var html=debEmailHtml(text, S, {attached:true, pay_url:(_pay&&_pay.url)||null, pay_amount:c.bal});
     try{ var r=await sb.functions.invoke('deb-send',{ body:{ club_key:c.club_key, name:c.name, code:c.code, trigger:'statement', subject:'Statement of account — '+c.name+(c.code?' ('+c.code+')':''), html:html, text:text, pdf_base64:b64, pdf_name:pname } });
@@ -3044,6 +3069,7 @@
   };
   function debLetterBody(c, tier){
     var bal=debAmtR(c.bal), over=debAmtR(c.over60!=null?c.over60:c.over), ref=c.code||c.name;
+    var credit=debAmtR(Math.abs(Number(c.bal)||0));
     var d90=debAmtR(Number(c.b90)+Number(c.b120));
     var guest=(c.club_type==='guest'||c.is_guest);
     if(guest){
@@ -3055,20 +3081,22 @@
         'This is a payment reminder that the account reflects '+bal+' outstanding, of which '+over+' is past the 30-day terms.',
         'Your team takes part as a guest team and is not a member of the Association, so the constitutional compliance process does not apply; we ask only that the account is settled on the same terms as all participating teams. Banking details appear on the statement and code '+ref+' should be used as the payment reference.',
         'Should the amount already have been paid, kindly disregard this reminder and accept our thanks.'];
-      return c.bal>0.01
-        ? ['Please find enclosed your team’s current statement of account with the Association, reflecting a balance of '+bal+'.',
+      if(c.bal>0.01) return ['Please find enclosed your team’s current statement of account with the Association, reflecting a balance of '+bal+'.',
            'We would be grateful if the outstanding amount could be settled at your earliest convenience. Banking details appear on the statement, and code '+ref+' should be used as the payment reference.',
-           'Should payment already have been made, kindly disregard this letter and accept our thanks.']
-        : ['Please find enclosed your team’s current statement of account with the Association.',
-           'The account is settled and no payment is due. The statement is provided for your team’s records.'];
+           'Should payment already have been made, kindly disregard this letter and accept our thanks.'];
+      if(c.bal<-0.01) return ['Please find enclosed your team’s current statement of account with the Association.',
+           'The account is in credit of '+credit+', so no payment is due. The credit is carried forward against future amounts raised. The statement is provided for your team’s records.'];
+      return ['Please find enclosed your team’s current statement of account with the Association.',
+           'The account is settled and no amount is outstanding. The statement is provided for your team’s records so that you have confirmation the account is in order.'];
     }
     if(tier==='statement'){
-      return c.bal>0.01
-        ? ['Please find enclosed the club’s current statement of account with the Association, reflecting a balance of '+bal+'.',
+      if(c.bal>0.01) return ['Please find enclosed the club’s current statement of account with the Association, reflecting a balance of '+bal+'.',
            'We would be grateful if the outstanding amount could be settled at your earliest convenience. Banking details appear on the statement, and the club code '+ref+' should be used as the payment reference.',
-           'Should payment already have been made, kindly disregard this letter and accept our thanks.']
-        : ['Please find enclosed the club’s current statement of account with the Association.',
-           'The account is settled and no payment is due. The statement is provided for the club’s records.'];
+           'Should payment already have been made, kindly disregard this letter and accept our thanks.'];
+      if(c.bal<-0.01) return ['Please find enclosed the club’s current statement of account with the Association.',
+           'The account is in credit of '+credit+', so no payment is due. The credit is carried forward against future amounts raised. The statement is provided for the club’s records.'];
+      return ['Please find enclosed the club’s current statement of account with the Association.',
+           'The account is settled and no amount is outstanding. The statement is provided for the club’s records so that you have confirmation the account is in order.'];
     }
     if(tier==='reminder'){
       return ['This is a payment reminder that the club account reflects '+bal+' outstanding, of which '+over+' has aged to 60 days and older in the ageing under Rule 10.2.',
@@ -3182,7 +3210,10 @@
   // ---- correspondence drawer ----
   function debCorrScope(tierKey){
     var clubs=((_deb&&_deb.clubs)||[]);
-    if(tierKey==='statement') return clubs.filter(function(c){return c.bal>0.01;});
+    // Statement run goes to the whole list, not only clubs with balances: every club active in Sage,
+    // every guest team, and anyone carrying a balance (owing or in credit) even if flagged inactive.
+    // A nil-balance club still receives a statement confirming it is in order; the wording adapts.
+    if(tierKey==='statement') return clubs.filter(function(c){return c.active || c.is_guest || c.club_type==='guest' || Math.abs(Number(c.bal)||0)>0.005;});
     if(tierKey==='reminder') return clubs.filter(function(c){return c.stage==='reminder';});
     if(tierKey==='final') return clubs.filter(function(c){return c.stage==='final';});
     if(tierKey==='ooc') return clubs.filter(function(c){return c.stage==='ooc';});
@@ -3207,7 +3238,7 @@
     h+='<div class="deb-sec">Run type</div><div class="deb-runtypes">';
     ['statement','reminder','final','ooc'].forEach(function(k){ h+='<button class="deb-rt'+(k===_corrTier?' on':'')+'" data-rt="'+k+'">'+DEB_TIERS[k].label+'</button>'; });
     h+='</div>';
-    var expl={statement:'A covering letter and the full statement of account for every club with a balance.',
+    var expl={statement:'A full statement of account for every club active in Sage and every guest team — including those owing nothing and those in credit. The wording on each adapts to whether the account is outstanding, settled or in credit.',
       reminder:'A payment reminder for clubs materially overdue, citing the 30-day terms (Rule 10.2).',
       final:'A final payment reminder with a 7-day grace, for clubs approaching Out of Compliance.',
       ooc:'An Out of Compliance notice for clubs past the final-reminder stage (Rules 10.2.3 / 10.8; consequences under Rule 16.4.2.6).'};
@@ -3265,7 +3296,7 @@
   }
 
   /* ========= Automated monthly correspondence run (trigger engine) ========= */
-  var _corrMode='monthly';        // 'monthly' (engine) | 'manual' (by stage)
+  var _corrMode='manual';         // 'monthly' (engine) | 'manual' (by stage) — manual is the default while statement runs are issued by hand twice a month
   var _corrRunData=null;          // cached deb_corr_latest payload
   var _corrBusy=false;
   function debOrdinal(n){ var s=['th','st','nd','rd'], v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
@@ -3898,7 +3929,9 @@
     var _tk=trigger; if((c.club_type==='guest'||c.is_guest)&&st.tplMap[trigger+'_guest'])_tk=trigger+'_guest';
     var tpl=st.tplMap[_tk]||{};
     var subject=debFill(tpl.subject||'Statement of account — {club} ({code})', c, S);
-    var text=debFill(tpl.body||'Please find your statement attached.', c, S);
+    // The statement run reaches every club, including nil-balance and credit accounts, so its body is
+    // generated per balance state rather than from a single static template. Other tiers keep templates.
+    var text=(trigger==='statement')? debStatementEmailText(c) : debFill(tpl.body||'Please find your statement attached.', c, S);
     var _withLetter=(_tk==='ooc' || _tk==='ooc_guest' || trigger==='ooc');
     var _pay=(Number(c.bal)>0)? await debPayLink(c, c.bal, 'statement') : null;
     var html=debEmailHtml(text, S, {docs:(_withLetter?'both':undefined), pay_url:(_pay&&_pay.url)||null, pay_amount:c.bal});
