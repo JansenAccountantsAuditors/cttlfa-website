@@ -2678,7 +2678,7 @@
       +'</div>'
       +'<div class="deb-toolbar">'
         +'<button class="btn gold sm" id="debFetch" title="Pull the latest balances from Sage">Fetch from Sage</button>'
-        +((meRole==='administrator'||meRole==='staff')?'<button class="btn ghost sm" id="debQueue" title="Follow-ups due">Action Queue'+debAQBadge()+'</button><button class="btn ghost sm" id="debDesk" title="Collections working list">Collections Desk</button><button class="btn ghost sm" id="debCorr" title="Statements and notices">Correspondence</button><button class="btn ghost sm" id="debCash" title="Clubs holding unallocated cash to allocate in Sage (housekeeping)">Cash on account'+debCashBadge()+'</button><button class="btn ghost sm" id="debConstit" title="Constitutional debtor-management position">Constitutional</button>':'')
+        +((meRole==='administrator'||meRole==='staff')?'<button class="btn ghost sm" id="debQueue" title="Follow-ups due">Action Queue'+debAQBadge()+'</button><button class="btn ghost sm" id="debDesk" title="Collections working list">Collections Desk</button><button class="btn ghost sm" id="debCorr" title="Statements and notices">Correspondence</button><button class="btn ghost sm" id="debEmailLog" title="Audit trail of statements and notices sent from here">Email log</button><button class="btn ghost sm" id="debCash" title="Clubs holding unallocated cash to allocate in Sage (housekeeping)">Cash on account'+debCashBadge()+'</button><button class="btn ghost sm" id="debConstit" title="Constitutional debtor-management position">Constitutional</button>':'')
         +'<span class="deb-toolbar-sp"></span>'
         +'<button class="btn ghost sm" id="debGuide" title="How the debtor process works and how it aligns to the Constitution">Process guide</button>'
         +'<button class="btn ghost sm" id="debRefresh" title="Reload the latest saved figures — no new Sage fetch">Refresh</button>'
@@ -2728,6 +2728,7 @@
     var _dq=$("debQueue"); if(_dq) _dq.onclick=function(){ debOpenQueue(); };
     var _dk=$("debDesk"); if(_dk) _dk.onclick=function(){ debOpenDesk(); };
     var _dc=$("debCorr"); if(_dc) _dc.onclick=function(){ debOpenCorr(); };
+    var _del=$("debEmailLog"); if(_del) _del.onclick=function(){ debOpenEmailLog(); };
     var _dca=$("debCash"); if(_dca) _dca.onclick=function(){ debOpenCash(); };
     var _dct=$("debConstit"); if(_dct) _dct.onclick=function(){ debOpenConstit(); };
     Array.prototype.forEach.call(document.querySelectorAll('.deb-ageband'),function(tr){ var go=function(){ debOpenAgeBand(tr.getAttribute('data-band'), tr.getAttribute('data-label')); }; tr.onclick=go; tr.onkeydown=function(e){ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); go(); } }; });
@@ -4409,6 +4410,143 @@
   function dPillLite(status){ var m=(typeof DEB_ST!=='undefined'&&DEB_ST[status])||[status]; return '<span class="deb-hpill">'+esc(m[0])+'</span>'; }
   function dStageLite(stage){ var m=(typeof DEB_STG!=='undefined'&&DEB_STG[stage])||['—','#EEF2F8','#33415c','#8A97AE']; return '<span class="deb-hpill" title="'+esc((typeof DEB_STG_GUIDE!=='undefined'&&DEB_STG_GUIDE[stage])||'')+'"><i style="background:'+m[3]+'"></i>'+esc(m[0])+'</span>'; }
   function debSCpillLite(sc){ var m=DEB_SC[sc]||DEB_SC.unmarked; return '<span class="deb-hpill" style="background:rgba(255,255,255,.14)"><i style="background:'+m[1]+'"></i>'+esc(m[0])+'</span>'; }
+  /* ========= Email audit trail — record of every statement/notice sent from here ========= */
+  var _emlData=null, _emlClubName='';
+  var _emlFilters={from:'',to:'',club:'',trigger:'',status:'',mode:'',q:''};
+  var DEB_TRIG={statement:'Statement',reminder:'Reminder',final:'Final reminder',formal:'Formal notice',ooc:'Out of Compliance',suspension:'Suspension',plan:'Payment plan',custom:'Custom'};
+  function debEmlTrigLabel(t){ return DEB_TRIG[t]||(t?(String(t).charAt(0).toUpperCase()+String(t).slice(1)):'—'); }
+  function debEmlDT(iso){ try{ var d=new Date(iso); return d.toLocaleString('en-ZA',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}); }catch(e){ return String(iso||''); } }
+  function debEmlStatusPill(s){
+    var m={sent:['#E7F5EC','#1c5136','Sent'],error:['#FBECEA','#8a3c17','Failed'],no_email:['#FCF3D8','#7a5312','No email'],no_key:['#FBECEA','#8a3c17','No key']}[s]||['#EEF2F8','#5A667C',esc(s||'')];
+    return '<span style="font-size:11px;font-weight:700;background:'+m[0]+';color:'+m[1]+';border-radius:20px;padding:2px 8px;white-space:nowrap">'+m[2]+'</span>';
+  }
+  async function debOpenEmailLog(preClubKey, preClubName){
+    if(!(meRole==='administrator'||meRole==='staff'||canSee('debtors'))) return;
+    if(preClubKey!==undefined){ _emlFilters={from:'',to:'',club:preClubKey||'',trigger:'',status:'',mode:'',q:''}; _emlClubName=preClubName||''; }
+    var m=debModal();
+    m.innerHTML='<div class="deb-mhead"><div><h3>Email audit trail</h3><div class="dsub">Every statement and notice sent from here — when, what, to whom</div></div><button class="dx" id="emlX" aria-label="Close">×</button></div><div class="deb-mbody"><p class="hint">Loading…</p></div>';
+    document.getElementById('emlX').onclick=debModalClose;
+    await debEmlLoad();
+  }
+  async function debEmlLoad(){
+    var m=document.getElementById('debModal'); if(!m) return;
+    var f=_emlFilters;
+    var args={ p_from: f.from?new Date(f.from+'T00:00:00').toISOString():null,
+      p_to: f.to?new Date(f.to+'T23:59:59').toISOString():null,
+      p_club: f.club||null, p_trigger: f.trigger||null, p_status: f.status||null,
+      p_mode: f.mode||null, p_q: f.q||null, p_limit:500, p_offset:0 };
+    try{ var r=await sb.rpc('deb_sends_log', args); if(r.error) throw r.error; _emlData=r.data||{}; }
+    catch(e){ var b=m.querySelector('.deb-mbody'); if(b) b.innerHTML='<p class="hint">Could not load the email log: '+esc(e.message||e)+'</p>'; return; }
+    debEmlDraw();
+  }
+  function debEmlDraw(){
+    var m=document.getElementById('debModal'); if(!m||!_emlData) return;
+    var d=_emlData, rows=d.rows||[], f=_emlFilters;
+    var h='<div class="deb-mhead"><div><h3>Email audit trail'+(f.club&&_emlClubName?(' — '+esc(_emlClubName)):'')+'</h3><div class="dsub">'+d.total+' record'+(d.total===1?'':'s')+' · '+d.sent+' sent · '+d.failed+' failed · '+d.live+' live / '+d.test+' test</div></div><button class="dx" id="emlX" aria-label="Close">×</button></div>';
+    h+='<div class="deb-mtools" style="gap:8px;flex-wrap:wrap">';
+    h+='<input type="date" id="emlFrom" value="'+esc(f.from)+'" title="From date" style="padding:7px 9px">';
+    h+='<input type="date" id="emlTo" value="'+esc(f.to)+'" title="To date" style="padding:7px 9px">';
+    h+='<select id="emlTrig" style="padding:7px 9px"><option value="">All types</option>'+Object.keys(DEB_TRIG).map(function(k){return '<option value="'+k+'"'+(f.trigger===k?' selected':'')+'>'+DEB_TRIG[k]+'</option>';}).join('')+'</select>';
+    h+='<select id="emlStatus" style="padding:7px 9px"><option value="">All outcomes</option><option value="sent"'+(f.status==='sent'?' selected':'')+'>Sent</option><option value="failed"'+(f.status==='failed'?' selected':'')+'>Failed</option></select>';
+    h+='<select id="emlMode" style="padding:7px 9px"><option value="">Test + live</option><option value="live"'+(f.mode==='live'?' selected':'')+'>Live only</option><option value="test"'+(f.mode==='test'?' selected':'')+'>Test only</option></select>';
+    h+='<input type="search" id="emlQ" placeholder="Search club, subject, email…" value="'+esc(f.q)+'" style="padding:7px 9px;min-width:200px">';
+    if(f.club) h+='<button class="btn ghost sm" id="emlClear">All clubs</button>';
+    h+='<span style="flex:1"></span><button class="btn ghost sm" id="emlCsv">CSV</button><button class="btn ghost sm" id="emlPdf">PDF register</button>';
+    h+='</div>';
+    h+='<div class="deb-mbody">';
+    if(!rows.length){ h+='<p class="hint">No emails match these filters.</p>'; }
+    else{
+      h+='<table class="deb-desk"><thead><tr><th>Date &amp; time</th><th>Club</th><th>To</th><th>Type</th><th>Subject</th><th>Mode</th><th>Outcome</th><th>By</th></tr></thead><tbody>';
+      rows.forEach(function(x){
+        h+='<tr class="eml-row" data-id="'+x.id+'" style="cursor:pointer">'
+          +'<td style="white-space:nowrap">'+esc(debEmlDT(x.sent_at))+'</td>'
+          +'<td><b>'+esc(x.club||x.club_key||'')+'</b></td>'
+          +'<td style="font-size:11.5px">'+esc(x.to_email||'—')+'</td>'
+          +'<td>'+esc(debEmlTrigLabel(x.trigger))+'</td>'
+          +'<td style="max-width:280px">'+esc(x.subject||'')+(x.attachments?'<div class="hint" style="font-size:10.5px">'+esc(x.attachments)+'</div>':'')+'</td>'
+          +'<td>'+(x.test_mode?'<span style="font-size:11px;color:#9f6621">Test</span>':'<span style="font-size:11px;color:#296944;font-weight:600">Live</span>')+'</td>'
+          +'<td>'+debEmlStatusPill(x.status)+'</td>'
+          +'<td style="font-size:11px">'+esc(x.sent_by||'—')+'</td>'
+          +'</tr>';
+      });
+      h+='</tbody></table>';
+      h+='<p class="hint" style="font-size:11px;margin:8px 0 0">Click any row to see the exact email — recipients, the message and attachments — as it was sent. '+(d.total>rows.length?('Showing the most recent '+rows.length+' of '+d.total+'; narrow with the filters above. '):'')+'An audit copy of every send is retained on the finance mailbox by BCC.</p>';
+    }
+    h+='</div>';
+    m.innerHTML=h;
+    document.getElementById('emlX').onclick=debModalClose;
+    var ef=document.getElementById('emlFrom'); if(ef) ef.onchange=function(){ _emlFilters.from=this.value; debEmlLoad(); };
+    var et=document.getElementById('emlTo'); if(et) et.onchange=function(){ _emlFilters.to=this.value; debEmlLoad(); };
+    var eg=document.getElementById('emlTrig'); if(eg) eg.onchange=function(){ _emlFilters.trigger=this.value; debEmlLoad(); };
+    var es=document.getElementById('emlStatus'); if(es) es.onchange=function(){ _emlFilters.status=this.value; debEmlLoad(); };
+    var emo=document.getElementById('emlMode'); if(emo) emo.onchange=function(){ _emlFilters.mode=this.value; debEmlLoad(); };
+    var eq=document.getElementById('emlQ'); if(eq){ var tmr=null; eq.oninput=function(){ var v=this.value; clearTimeout(tmr); tmr=setTimeout(function(){ _emlFilters.q=v; debEmlLoad(); },350); }; }
+    var ecl=document.getElementById('emlClear'); if(ecl) ecl.onclick=function(){ _emlFilters.club=''; _emlClubName=''; debEmlLoad(); };
+    var ecsv=document.getElementById('emlCsv'); if(ecsv) ecsv.onclick=debEmlCsv;
+    var epdf=document.getElementById('emlPdf'); if(epdf) epdf.onclick=debEmlPdf;
+    Array.prototype.forEach.call(m.querySelectorAll('.eml-row'),function(tr){ tr.onclick=function(){ debEmlDetail(Number(tr.dataset.id)); }; });
+  }
+  async function debEmlDetail(id){
+    var m=document.getElementById('debModal'); if(!m) return;
+    var row=(_emlData&&(_emlData.rows||[]).filter(function(x){return x.id===id;})[0])||{};
+    var mb=m.querySelector('.deb-mbody'); if(mb) mb.innerHTML='<p class="hint">Loading…</p>';
+    var x=row;
+    try{ var r=await sb.rpc('deb_send_detail',{p_id:id}); if(!r.error&&r.data) x=r.data; }catch(e){}
+    var h='<div class="deb-mhead"><div><h3>'+esc(x.subject||'Email')+'</h3><div class="dsub">'+esc(x.club||x.club_key||'')+' · '+esc(debEmlDT(x.sent_at))+' · '+(x.test_mode?'TEST':'LIVE')+'</div></div><button class="dx" id="emlX" aria-label="Close">×</button></div>';
+    h+='<div class="deb-mbody">';
+    h+='<button class="btn ghost sm" id="emlBack">‹ Back to the log</button>';
+    h+='<table style="width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0">';
+    function kv(k,v){ return '<tr><td style="padding:4px 10px 4px 0;color:var(--muted);white-space:nowrap;vertical-align:top">'+k+'</td><td style="padding:4px 0">'+(v||'—')+'</td></tr>'; }
+    h+=kv('Club', esc(x.club||x.club_key||''));
+    h+=kv('To', esc(x.to_email||'—'));
+    if(x.cc_email) h+=kv('Cc', esc(x.cc_email));
+    if(x.bcc) h+=kv('Bcc (audit copy)', esc(x.bcc));
+    h+=kv('Type', esc(debEmlTrigLabel(x.trigger)));
+    h+=kv('Subject', esc(x.subject||''));
+    h+=kv('Attachments', x.attachments?esc(x.attachments):'—');
+    h+=kv('Outcome', debEmlStatusPill(x.status)+(x.error?(' <span class="hint" style="font-size:11px">'+esc(x.error)+'</span>'):''));
+    h+=kv('Sending mode', x.test_mode?'Test — delivered to the Treasurer only':'Live — delivered to the club');
+    h+=kv('Resend message id', x.resend_id?('<code style="font-size:11px">'+esc(x.resend_id)+'</code>'):'—');
+    h+=kv('Sent by', esc(x.sent_by||'—'));
+    h+=kv('Sent at', esc(debEmlDT(x.sent_at)));
+    h+='</table>';
+    h+='<div class="deb-sec">Message as sent</div>';
+    if(x.body_html){ h+='<iframe id="emlBody" sandbox="" style="width:100%;height:440px;border:1px solid var(--line);border-radius:8px;background:#fff"></iframe>'; }
+    else if(x.body_text){ h+='<pre style="white-space:pre-wrap;font-family:inherit;font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:12px;background:#fff">'+esc(x.body_text)+'</pre>'; }
+    else { h+='<p class="hint">No stored copy of the message body for this record.</p>'; }
+    h+='</div>';
+    m.innerHTML=h;
+    document.getElementById('emlX').onclick=debModalClose;
+    document.getElementById('emlBack').onclick=function(){ debEmlDraw(); };
+    if(x.body_html){ var fr=document.getElementById('emlBody'); if(fr){ try{ fr.srcdoc=x.body_html; }catch(e){} } }
+  }
+  function debEmlCsv(){
+    var rows=(_emlData&&_emlData.rows)||[]; if(!rows.length){ alert('Nothing to export.'); return; }
+    var q=function(v){ v=String(v==null?'':v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; };
+    var head=['Sent at','Club','Club key','To','Cc','Bcc','Type','Subject','Attachments','Mode','Outcome','Error','Resend id','Sent by'];
+    var lines=[head.join(',')].concat(rows.map(function(x){ return [new Date(x.sent_at).toISOString(), x.club, x.club_key, x.to_email, x.cc_email, x.bcc, debEmlTrigLabel(x.trigger), x.subject, x.attachments, x.test_mode?'Test':'Live', x.status, x.error, x.resend_id, x.sent_by].map(q).join(','); }));
+    var meta='CTTLFA Debtors — email audit trail,,Exported,'+new Date().toLocaleString('en-ZA')+'\n\n';
+    var blob=new Blob([meta+lines.join('\n')],{type:'text/csv;charset=utf-8;'});
+    var a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='CTTLFA email audit trail.csv'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); },200);
+  }
+  async function debEmlPdf(){
+    var rows=(_emlData&&_emlData.rows)||[]; if(!rows.length){ alert('Nothing to export.'); return; }
+    var S=await debGetSettings(); var JSc=window.jspdf&&window.jspdf.jsPDF; if(!JSc){ alert('PDF engine not loaded.'); return; }
+    var doc=new JSc({unit:'pt',format:'a4',orientation:'landscape',compress:true});
+    var M=40; var ry=debLetterhead(doc,S,'EMAIL AUDIT TRAIL');
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor.apply(doc,DEB_MUTED);
+    var f=_emlFilters; var scope=[]; if(f.club&&_emlClubName)scope.push(_emlClubName); if(f.from)scope.push('from '+f.from); if(f.to)scope.push('to '+f.to); if(f.trigger)scope.push(DEB_TRIG[f.trigger]); if(f.status)scope.push(f.status); if(f.mode)scope.push(f.mode);
+    doc.text('Statements and debtor correspondence issued from the portal'+(scope.length?(' · '+scope.join(' · ')):'')+'  ·  '+_emlData.total+' records  ·  Generated '+new Date().toLocaleString('en-ZA'), M, ry+16);
+    var body=rows.map(function(x){ return [debEmlDT(x.sent_at), x.club||x.club_key, x.to_email||'', debEmlTrigLabel(x.trigger), x.subject||'', x.test_mode?'Test':'Live', (x.status==='sent'?'Sent':(x.status==='no_email'?'No email':'Failed')), x.sent_by||'']; });
+    doc.autoTable({ startY:ry+26, margin:{left:M,right:M},
+      head:[['Date & time','Club','To','Type','Subject','Mode','Outcome','By']], body:body, theme:'striped',
+      headStyles:{fillColor:DEB_NAVY,textColor:[255,255,255],fontSize:8.5,fontStyle:'bold'},
+      bodyStyles:{fontSize:7.5,textColor:DEB_INK,cellPadding:{top:2.5,bottom:2.5,left:4,right:4}}, alternateRowStyles:{fillColor:[247,249,252]},
+      columnStyles:{0:{cellWidth:96},1:{cellWidth:120},2:{cellWidth:140},3:{cellWidth:68},4:{cellWidth:'auto'},5:{cellWidth:40},6:{cellWidth:54},7:{cellWidth:86}} });
+    debFooters(doc,S);
+    doc.save('CTTLFA Email Audit Trail.pdf');
+  }
+
   function debClose(){ var d=document.getElementById('debDrawer'),s=document.getElementById('debScrim'); if(d)d.classList.remove('on'); if(s)s.classList.remove('on'); }
   async function debAct(c,action,btn){
     if(action==='marked_ooc' && !confirm('Mark '+c.name+' out of compliance? This is a governed decision recorded against the club.')) return;
