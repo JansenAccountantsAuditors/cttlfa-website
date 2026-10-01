@@ -1078,6 +1078,325 @@
     doc.save("CTTLFA " + safeName(title) + ".pdf");
   }
 
+  /* ===================================================================
+     LOGS — final league standings and knock-out winners, read from the
+     SAME public feed the live Match Centre uses (season.json), so what
+     prints here is exactly what clubs see on cttfa.co.za. Branded PDF
+     export: per division, all senior, all junior, everything in one, and
+     the knock-out cup winners. Central place to download and share logs.
+     =================================================================== */
+  var SEASON_URL = "https://www.cttfa.co.za/season.json";
+  var logData = null, logState = "idle";          // idle | loading | ready | error
+  var LOG_GROUPS = ["Senior Divisions", "Reserves", "Veterans", "Women", "Under-18", "Under-16", "Under-14", "Under-12"];
+  var WIN_ORDER = ["Under-18", "Under-16", "Under-14", "Under-12", "Senior", "Veterans", "Women"];
+  var LOG_COLS = ["#", "Club", "P", "W", "D", "L", "GF", "GA", "GD", "Pts", "Form"];
+
+  function isJunGroup(g) { return /^Under-/.test(g || ""); }
+  function gd(r) { return (+r[5] || 0) - (+r[6] || 0); }
+  function gdTxt(n) { return (n > 0 ? "+" : "") + n; }
+  function formTxt(s) { s = s || ""; return s ? s.split("").slice(-5).join("") : "-"; }
+  function logUpdated() {
+    if (!logData || !logData.updated) return "";
+    try {
+      var d = new Date(logData.updated), M = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      return d.getDate() + " " + M[d.getMonth()] + " " + d.getFullYear();
+    } catch (e) { return logData.updated; }
+  }
+  function logSeasonNo() { return logData && logData.season ? logData.season : ""; }
+
+  function loadLogs() {
+    if (logState === "loading") return;
+    logState = "loading";
+    fetch(SEASON_URL, { cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+      .then(function (j) { logData = j; logState = "ready"; if (subView === "logs") paintLogs(); })
+      .catch(function () { logState = "error"; if (subView === "logs") paintLogs(); });
+  }
+
+  /* ordered list of real divisions (excludes the *3G combined A&B placeholders
+     and any division with no standings), filtered to a scope: all|senior|junior */
+  function logDivisions(scope) {
+    if (!logData || !logData.leagues) return [];
+    var L = logData.leagues, out = [];
+    Object.keys(L).forEach(function (k) {
+      if (/3G$/.test(k)) return;                       // combined A&B log, shown on the public combined-logs page, not a division
+      var v = L[k], t = v.table || [];
+      if (!t.length) return;
+      var jun = isJunGroup(v.group);
+      if (scope === "senior" && jun) return;
+      if (scope === "junior" && !jun) return;
+      out.push({ key: k, name: v.name || k, group: v.group || "", rows: t });
+    });
+    out.sort(function (a, b) {
+      var ga = LOG_GROUPS.indexOf(a.group), gb = LOG_GROUPS.indexOf(b.group);
+      if (ga !== gb) return (ga < 0 ? 99 : ga) - (gb < 0 ? 99 : gb);
+      return a.key < b.key ? -1 : (a.key > b.key ? 1 : 0);   // key order gives Premier -> lower divisions
+    });
+    return out;
+  }
+
+  /* decided knock-out winners, taken from each cup's final (same brackets the
+     live site renders). Only a played, decided final counts as a winner. */
+  function logWinners() {
+    if (!logData || !logData.cups) return [];
+    var out = [];
+    logData.cups.forEach(function (c) {
+      var br = c.bracket || {}, cols = br.cols || [], rounds = br.rounds || [];
+      if (!cols.length) return;
+      var last = cols[cols.length - 1], lastRound = rounds.length ? rounds[rounds.length - 1] : "";
+      if (String(lastRound).toLowerCase() !== "final" || last.length !== 1) return;  // must be the single final tie
+      var t = last[0], a = t.a || {}, b = t.b || {};
+      var sa = parseInt(a.s, 10), sb = parseInt(b.s, 10);
+      if (isNaN(sa) || isNaN(sb) || sa === sb) return;        // final not played / not decided on the scoreline
+      var champ = sa > sb ? a : b, run = sa > sb ? b : a;
+      out.push({ group: c.group || "", comp: c.name || "", champ: champ.n, runner: run.n,
+                 score: Math.max(sa, sb) + "–" + Math.min(sa, sb), date: t.d || "", venue: t.v || "" });
+    });
+    out.sort(function (x, y) {
+      var gx = WIN_ORDER.indexOf(x.group), gy = WIN_ORDER.indexOf(y.group);
+      if (gx !== gy) return (gx < 0 ? 99 : gx) - (gy < 0 ? 99 : gy);
+      return x.comp < y.comp ? -1 : (x.comp > y.comp ? 1 : 0);
+    });
+    return out;
+  }
+
+  /* ---------- on-screen render ---------- */
+  function crestImg(name) {
+    var cr = logData && logData.crests ? logData.crests : {}, base = (logData && logData.crestBase) || "";
+    var id = cr[name]; if (!id || !base) return "";
+    return '<img class="lg-crest" src="' + base + "/" + id + '/115.jpg" alt="" loading="lazy" onerror="this.style.display=\'none\'">';
+  }
+  function logTableHtml(rows) {
+    var h = '<table class="lg-tbl"><thead><tr><th>#</th><th class="l">Club</th><th>P</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th><th class="lg-fh">Form</th></tr></thead><tbody>';
+    rows.forEach(function (r, i) {
+      var g = gd(r);
+      h += '<tr><td class="lg-pos">' + (i + 1) + '</td>' +
+        '<td class="l"><span class="lg-club">' + crestImg(r[0]) + NS.esc(r[0]) + '</span></td>' +
+        '<td>' + (r[1] || 0) + '</td><td>' + (r[2] || 0) + '</td><td>' + (r[3] || 0) + '</td><td>' + (r[4] || 0) + '</td>' +
+        '<td>' + (r[5] || 0) + '</td><td>' + (r[6] || 0) + '</td><td>' + gdTxt(g) + '</td>' +
+        '<td class="lg-pts">' + (r[7] || 0) + '</td><td class="lg-form">' + logFormPills(r[8]) + '</td></tr>';
+    });
+    return h + '</tbody></table>';
+  }
+  function logFormPills(s) {
+    s = s || ""; if (!s) return '<span class="lg-na">–</span>';
+    return s.split("").slice(-5).map(function (c) {
+      var k = c.toUpperCase(), t = k === "W" ? "Win" : k === "D" ? "Draw" : k === "L" ? "Loss" : "";
+      return '<i class="lg-f lg-f-' + k.toLowerCase() + '" title="' + t + '">' + k + '</i>';
+    }).join("");
+  }
+  function winnersTableHtml(w) {
+    if (!w.length) return '<p class="hint">No knock-out finals have been decided yet. Winners appear here automatically once each cup final is played.</p>';
+    var h = '<table class="lg-tbl lg-win"><thead><tr><th class="l">Competition</th><th class="l">Champion</th><th class="l">Runner-up</th><th>Final</th><th>Date</th></tr></thead><tbody>';
+    var lastG = null;
+    w.forEach(function (x) {
+      if (x.group !== lastG) { lastG = x.group; h += '<tr class="lg-grp"><td colspan="5">' + NS.esc(x.group) + '</td></tr>'; }
+      h += '<tr><td class="l">' + NS.esc(x.comp) + '</td>' +
+        '<td class="l"><span class="lg-club">' + crestImg(x.champ) + '<b>' + NS.esc(x.champ) + '</b></span></td>' +
+        '<td class="l">' + NS.esc(x.runner) + '</td><td>' + NS.esc(x.score) + '</td><td>' + NS.esc(x.date || "–") + '</td></tr>';
+    });
+    return h + '</tbody></table>';
+  }
+
+  function renderLogs() {
+    var divs = logDivisions(segment === "senior" ? "senior" : segment === "junior" ? "junior" : "all");
+    var winners = logWinners();
+    var scopeWord = segment === "senior" ? "senior" : segment === "junior" ? "junior" : "all";
+    var h = '<div class="card" style="margin-bottom:12px"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap">';
+    h += '<div><h3 style="margin:0 0 4px">League logs &amp; knock-out winners</h3>' +
+      '<p class="hint" style="margin:0 0 6px;max-width:82ch">The standings for every division, exactly as published on the <b>Match Centre</b> (cttfa.co.za), plus the decided knock-out cup winners. Download branded PDFs to share with clubs, SAFA and partners. The All / Senior / Junior filter above sets what is shown and what the bundle buttons export.</p>' +
+      '<p class="hint" style="margin:0">Season ' + NS.esc(String(logSeasonNo())) + ' · Standings as at ' + NS.esc(logUpdated()) + '.</p></div>';
+    h += '</div>';
+    h += '<div class="fa-mbtns" style="margin-top:12px;flex-wrap:wrap;gap:8px">' +
+      '<button class="btn gold sm" id="lgPdfAll">All division logs (PDF)</button>' +
+      '<button class="btn ghost sm" id="lgPdfSen">Senior logs (PDF)</button>' +
+      '<button class="btn ghost sm" id="lgPdfJun">Junior logs (PDF)</button>' +
+      '<button class="btn gold sm" id="lgPdfWin">Knock-out winners (PDF)</button>' +
+      '</div></div>';
+
+    // knock-out winners first (short, high-value for sharing)
+    h += '<div class="card" style="margin-bottom:12px"><div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">' +
+      '<h3 style="margin:0">Knock-out cup winners <span class="hint" style="font-weight:400">(' + winners.length + ' decided)</span></h3>' +
+      '<button class="btn ghost sm" id="lgPdfWin2">Download (PDF)</button></div>' +
+      '<div class="lg-scroll" style="margin-top:8px">' + winnersTableHtml(winners) + '</div></div>';
+
+    // division logs, grouped
+    if (!divs.length) {
+      h += '<div class="card"><p class="hint">No standings are available for this selection.</p></div>';
+    } else {
+      var lastG = null;
+      divs.forEach(function (d) {
+        if (d.group !== lastG) {
+          lastG = d.group;
+          h += '<h3 class="lg-grph">' + NS.esc(d.group) + '</h3>';
+        }
+        h += '<div class="card lg-divcard">' +
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">' +
+          '<h4 style="margin:0">' + NS.esc(d.name) + ' <span class="hint" style="font-weight:400">· ' + d.rows.length + ' teams</span></h4>' +
+          '<button class="btn ghost sm lg-divpdf" data-div="' + NS.esc(d.key) + '">PDF</button></div>' +
+          '<div class="lg-scroll" style="margin-top:8px">' + logTableHtml(d.rows) + '</div></div>';
+      });
+    }
+    return h;
+  }
+
+  var logCssDone = false;
+  function injectLogCSS() {
+    if (logCssDone) return; logCssDone = true;
+    var css = [
+      ".lg-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}",
+      ".lg-tbl{width:100%;border-collapse:collapse;font-size:13px}",
+      ".lg-tbl th{white-space:nowrap}",
+      ".lg-tbl td{font-variant-numeric:tabular-nums lining-nums;text-align:center}",
+      ".lg-tbl td.l,.lg-tbl th.l{text-align:left}",
+      ".lg-tbl .lg-pos{color:var(--muted);font-weight:600;width:28px}",
+      ".lg-tbl .lg-pts{font-weight:800;color:var(--navy)}",
+      ".lg-club{display:inline-flex;align-items:center;gap:8px}",
+      ".lg-crest{width:22px;height:22px;object-fit:contain;border-radius:4px;flex:0 0 auto}",
+      ".lg-form{white-space:nowrap}",
+      ".lg-f{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:4px;font-size:10px;font-weight:800;color:#fff;margin:0 1px;font-family:var(--cond,inherit)}",
+      ".lg-f-w{background:#1E7A46}.lg-f-d{background:#9a7213}.lg-f-l{background:#9A3130}.lg-f-a,.lg-f-{background:#8792a6}",
+      ".lg-na{color:var(--muted)}",
+      ".lg-grph{font-family:var(--head,inherit);color:var(--navy);margin:18px 0 8px;font-size:17px;border-left:4px solid var(--gold);padding-left:10px}",
+      ".lg-divcard{padding:16px}",
+      ".lg-win .lg-grp td{background:var(--navy);color:#fff;font-family:var(--cond,inherit);font-weight:700;text-transform:uppercase;letter-spacing:.04em;font-size:11.5px;padding:7px 12px}",
+      ".lg-win tbody td{vertical-align:middle}"
+    ].join("");
+    var s = document.createElement("style"); s.id = "lgCss"; s.textContent = css; document.head.appendChild(s);
+  }
+
+  function paintLogs() {
+    injectLogCSS();
+    var body = NS.$("faBody"); if (!body) return;
+    if (logState === "error") {
+      body.innerHTML = '<div class="card"><p class="hint">Could not load the published logs (season.json) just now. <button class="btn ghost sm" id="lgRetry">Try again</button></p></div>';
+      var rt = NS.$("lgRetry"); if (rt) rt.addEventListener("click", function () { logState = "idle"; paintLogs(); });
+      return;
+    }
+    if (logState !== "ready" || !logData) {
+      body.innerHTML = '<div class="card"><p class="hint">Loading final logs from the Match Centre feed…</p></div>';
+      if (logState === "idle") loadLogs();
+      return;
+    }
+    body.innerHTML = renderLogs();
+    bindLogButtons();
+  }
+
+  function bindLogButtons() {
+    var map = { lgPdfAll: function () { exportBundlePDF("all"); }, lgPdfSen: function () { exportBundlePDF("senior"); },
+      lgPdfJun: function () { exportBundlePDF("junior"); }, lgPdfWin: exportWinnersPDF, lgPdfWin2: exportWinnersPDF };
+    Object.keys(map).forEach(function (id) { var el = NS.$(id); if (el) el.addEventListener("click", map[id]); });
+    Array.prototype.forEach.call(document.querySelectorAll("#fixturesRoot .lg-divpdf"), function (b) {
+      b.addEventListener("click", function () { exportDivisionPDF(b.getAttribute("data-div")); });
+    });
+  }
+
+  /* ---------- branded PDF export ---------- */
+  function ensurePdf() { if (!window.jspdf) { alert("PDF library still loading, try again in a moment."); return false; } return true; }
+  function logFileName(t) { return ("CTTLFA " + logSeasonNo() + " " + t).replace(/[^A-Za-z0-9 ]+/g, "").replace(/\s+/g, " ").trim(); }
+  // slim branded bar drawn on every page; height 58pt
+  function logoFormat() {
+    // window.LOGO_URI is a data URI; read its real type so jsPDF renders it (the crest is a PNG).
+    var m = /^data:image\/(png|jpe?g)/i.exec(window.LOGO_URI || "");
+    return m ? (/png/i.test(m[1]) ? "PNG" : "JPEG") : "PNG";
+  }
+  function logBar(doc, title) {
+    var W = doc.internal.pageSize.getWidth();
+    doc.setFillColor(7, 26, 74); doc.rect(0, 0, W, 58, "F");
+    doc.setDrawColor(208, 152, 47); doc.setLineWidth(2); doc.line(0, 58, W, 58); doc.setLineWidth(1);
+    try {
+      if (window.LOGO_URI) { var lw = 38, lh = 38, lx = W - 36 - lw, ly = 10; doc.setFillColor(255, 255, 255); doc.roundedRect(lx - 4, ly - 2, lw + 8, lh + 5, 4, 4, "F"); doc.addImage(window.LOGO_URI, logoFormat(), lx, ly, lw, lh); }
+    } catch (e) { }
+    doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(13); doc.text("CTTLFA · " + title, 36, 24);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(200, 210, 235);
+    doc.text("Season " + logSeasonNo() + "  ·  Standings as at " + logUpdated(), 36, 42);
+  }
+  function stampPages(doc) {
+    var n = doc.internal.getNumberOfPages();
+    if (n <= 1) return;   // single-page logs need no page number
+    var W = doc.internal.pageSize.getWidth(), H = doc.internal.pageSize.getHeight();
+    for (var i = 1; i <= n; i++) { doc.setPage(i); doc.setFontSize(7.5); doc.setTextColor(120, 130, 150); doc.setFont("helvetica", "normal"); doc.text("Page " + i + " of " + n, W - 40, H - 20, { align: "right" }); }
+  }
+  function divBody(rows) {
+    return rows.map(function (r, i) {
+      return [i + 1, r[0], r[1] || 0, r[2] || 0, r[3] || 0, r[4] || 0, r[5] || 0, r[6] || 0, gdTxt(gd(r)), r[7] || 0, formTxt(r[8])];
+    });
+  }
+  var LOG_AT = {
+    styles: { fontSize: 8, cellPadding: 3, overflow: "linebreak", lineColor: [211, 219, 222], lineWidth: 0.5 },
+    headStyles: { fillColor: [24, 64, 80], textColor: 255, fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [239, 244, 247] },
+    columnStyles: { 0: { cellWidth: 24, halign: "center" }, 1: { cellWidth: 150 }, 2: { cellWidth: 26, halign: "center" }, 3: { cellWidth: 26, halign: "center" }, 4: { cellWidth: 26, halign: "center" }, 5: { cellWidth: 26, halign: "center" }, 6: { cellWidth: 30, halign: "center" }, 7: { cellWidth: 30, halign: "center" }, 8: { cellWidth: 34, halign: "center" }, 9: { cellWidth: 34, halign: "center", fontStyle: "bold" }, 10: { cellWidth: 70, halign: "center" } },
+    margin: { top: 70, left: 40, right: 40, bottom: 34 }
+  };
+  function atOpts(title, extra) {
+    var o = JSON.parse(JSON.stringify(LOG_AT));
+    o.didDrawPage = function () { logBar(doc_ref, title); };
+    if (extra) Object.keys(extra).forEach(function (k) { o[k] = extra[k]; });
+    return o;
+  }
+  var doc_ref = null;   // current doc for didDrawPage callbacks
+
+  function exportDivisionPDF(key) {
+    if (!ensurePdf() || !logData) return;
+    var v = logData.leagues[key]; if (!v || !(v.table || []).length) { alert("No standings for this division."); return; }
+    var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" }); doc_ref = doc;
+    var title = v.name || key;
+    doc.autoTable(atOpts(title, { startY: 78, head: [LOG_COLS], body: divBody(v.table) }));
+    stampPages(doc);
+    doc.save(logFileName(title + " log") + ".pdf");
+  }
+
+  function exportBundlePDF(scope) {
+    if (!ensurePdf() || !logData) return;
+    var divs = logDivisions(scope);
+    if (!divs.length) { alert("No divisions in this selection."); return; }
+    var scopeTitle = scope === "senior" ? "Senior league logs" : scope === "junior" ? "Junior league logs" : "League logs — all divisions";
+    var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" }); doc_ref = doc;
+    var y = 78, lastG = null, first = true;
+    divs.forEach(function (d) {
+      var H = doc.internal.pageSize.getHeight();
+      if (d.group !== lastG) {
+        lastG = d.group;
+        if (!first && y > H - 140) { doc.addPage(); y = 78; }
+        else if (!first) y += 6;
+        doc.setFont("helvetica", "bold"); doc.setFontSize(12); doc.setTextColor(7, 26, 74);
+        doc.text(d.group, 40, y); y += 6;
+        doc.setDrawColor(208, 152, 47); doc.setLineWidth(1.2); doc.line(40, y, 170, y); y += 12;
+      }
+      if (y > H - 120) { doc.addPage(); y = 78; }
+      doc.setFont("helvetica", "bold"); doc.setFontSize(10); doc.setTextColor(24, 64, 80);
+      doc.text(d.name + "  ·  " + d.rows.length + " teams", 40, y); y += 8;
+      doc.autoTable(atOpts(scopeTitle, { startY: y, head: [LOG_COLS], body: divBody(d.rows) }));
+      y = doc.lastAutoTable.finalY + 18; first = false;
+    });
+    stampPages(doc);
+    doc.save(logFileName(scopeTitle) + ".pdf");
+  }
+
+  function exportWinnersPDF() {
+    if (!ensurePdf() || !logData) return;
+    var w = logWinners();
+    if (!w.length) { alert("No knock-out finals have been decided yet."); return; }
+    var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4" }); doc_ref = doc;
+    var title = "Knock-out cup winners";
+    var body = w.map(function (x) { return [x.group, x.comp, x.champ, x.runner, x.score, x.date || ""]; });
+    doc.autoTable({
+      startY: 78, head: [["Age group / stream", "Competition", "Champion", "Runner-up", "Final", "Date"]], body: body,
+      styles: { fontSize: 8.5, cellPadding: 4, overflow: "linebreak", lineColor: [211, 219, 222], lineWidth: 0.5 },
+      headStyles: { fillColor: [24, 64, 80], textColor: 255, fontStyle: "bold" },
+      alternateRowStyles: { fillColor: [239, 244, 247] },
+      columnStyles: { 0: { cellWidth: 80 }, 1: { cellWidth: 134 }, 2: { cellWidth: 112, fontStyle: "bold" }, 3: { cellWidth: 100 }, 4: { cellWidth: 36, halign: "center" }, 5: { cellWidth: 50, halign: "center" } },
+      margin: { top: 70, left: 40, right: 40, bottom: 34 },
+      didDrawPage: function () { logBar(doc, title); }
+    });
+    var fy = doc.lastAutoTable.finalY + 16;
+    doc.setFontSize(8.5); doc.setTextColor(90, 101, 119); doc.setFont("helvetica", "normal");
+    doc.text("Winners are taken from each cup's decided final. Competitions whose final has not yet been played are not listed.", 40, fy);
+    stampPages(doc);
+    doc.save(logFileName(title) + ".pdf");
+  }
+
   /* ---------- paint / wiring ---------- */
   function bindDrills() {
     Array.prototype.forEach.call(document.querySelectorAll("#fixturesRoot [data-drill]"), function (el) {
@@ -1087,6 +1406,7 @@
   }
   function paint(id) {
     var body = NS.$("faBody"); if (!body) return;
+    if (subView === "logs") { paintLogs(); return; }
     var fx = filtered(); var o = analyze(fx, (cache[id] || {}).groups || []);
     var html = "";
     if (subView === "overview") html = renderOverview(o);
@@ -1149,19 +1469,21 @@
       '<button class="fa-sub" data-sub="schedule">Schedule</button>' +
       '<button class="fa-sub" data-sub="trends">Trends</button>' +
       '<button class="fa-sub" data-sub="context">Context</button>' +
-      '<button class="fa-sub" data-sub="issues">Issues</button></div>';
+      '<button class="fa-sub" data-sub="issues">Issues</button>' +
+      '<button class="fa-sub" data-sub="logs">Logs</button></div>';
     h += '<div id="faBody"></div>';
     root.innerHTML = h;
     Array.prototype.forEach.call(root.querySelectorAll(".fa-season"), function (b) { b.addEventListener("click", function () { selectSeason(+b.getAttribute("data-sid")); }); });
     Array.prototype.forEach.call(root.querySelectorAll(".fa-seg"), function (b) {
-      b.addEventListener("click", function () { segment = b.getAttribute("data-seg"); divFilter = ""; refreshControls(); if (cache[cur]) paint(cur); });
+      b.addEventListener("click", function () { segment = b.getAttribute("data-seg"); divFilter = ""; refreshControls(); if (subView === "logs" || cache[cur]) paint(cur); });
     });
     root.addEventListener("change", function (e) { if (e.target && e.target.id === "faDiv") { divFilter = e.target.value; if (cache[cur]) paint(cur); } });
     Array.prototype.forEach.call(root.querySelectorAll(".fa-sub"), function (b) {
       b.addEventListener("click", function () {
         subView = b.getAttribute("data-sub");
         Array.prototype.forEach.call(root.querySelectorAll(".fa-sub"), function (x) { x.classList.toggle("on", x === b); });
-        if (cache[cur]) paint(cur);
+        // Logs read season.json directly, so they do not depend on the LeagueRepublic analytics cache.
+        if (subView === "logs" || cache[cur]) paint(cur);
       });
     });
     selectSeason(cur);
