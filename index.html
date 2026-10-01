@@ -152,7 +152,9 @@
         var hs = f.homeScore, as = f.roadScore, ms = f.fixtureDateInMilliseconds || 0;
         if (f.result && isNum(hs) && isNum(as)) {
           L.results.push([home, away, String(+hs), String(+as), d[0], ms]);
-        } else if (!f.result) {
+        } else if (!f.result && !/abandon/i.test(f.fixtureStatusDesc || "")) {
+          // Abandoned matches have no result but are closed, not still to play.
+          // Keep them out of the outstanding/upcoming list so counts reconcile.
           L.fixtures.push([home, away, d[0], d[1], f.venueAndSubVenueDesc || "", ms]);
         }
       });
