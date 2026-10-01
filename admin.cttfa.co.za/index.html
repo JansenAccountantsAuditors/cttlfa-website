@@ -4046,14 +4046,15 @@
     }
     var heldNote=held.length?('\n\n'+held.length+' club'+(held.length>1?'s':'')+' held (unallocated cash in Sage or detail out of sync) and will be skipped. Review each from its club profile.'):'';
     if(!(await debConfirm('Send '+sendable.length+' '+((DEB_TIERS[trigger]||{}).label||'email').toLowerCase()+' email'+(sendable.length>1?'s':'')+'?\n\n'+to+'\n\nEach email includes the branded statement PDF.'+heldNote, 'Send '+sendable.length+' now'))) return;
-    var ok=0, fail=0;
+    var ok=0, fail=0, skip=0;
     for(var i=0;i<sendable.length;i++){ var c=sendable[i];
       if(statusEl) statusEl.textContent='Sending '+(i+1)+' of '+sendable.length+': '+c.name+'…';
-      try{ await debSendOne(c, trigger, {bypassGuard:true}); ok++; }catch(e){ fail++; if(statusEl) statusEl.textContent='Error on '+c.name+': '+(e.message||e); }
+      try{ await debSendOne(c, trigger, {bypassGuard:true}); ok++; }
+      catch(e){ if(e&&e.duplicate){ skip++; } else { fail++; if(statusEl) statusEl.textContent='Error on '+c.name+': '+(e.message||e); } }
     }
-    if(statusEl) statusEl.textContent='Sent '+ok+(fail?(' · '+fail+' failed'):'')+(held.length?(' · '+held.length+' held'):'')+(test?' (test mode — delivered to the Treasurer)':'')+'.';
+    if(statusEl) statusEl.textContent='Sent '+ok+(skip?(' · '+skip+' already sent in the last 24h, skipped'):'')+(fail?(' · '+fail+' failed'):'')+(held.length?(' · '+held.length+' held'):'')+(test?' (test mode — delivered to the Treasurer)':'')+'.';
     _deb=null;
-    return {ok:ok,fail:fail,held:held.length};
+    return {ok:ok,fail:fail,skip:skip,held:held.length};
   }
 
   // ---- Email setup modal ----
