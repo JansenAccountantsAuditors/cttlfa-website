@@ -3252,13 +3252,15 @@
       h+='<div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn ghost sm" id="corrAll">Select all</button><button class="btn ghost sm" id="corrNone">Clear</button></div>';
       h+='<div class="deb-scope">'+scope.map(function(c){ return '<label class="deb-scoperow"><input type="checkbox" data-k="'+esc(c.club_key)+'"'+(_corrSel[c.club_key]?' checked':'')+'><span class="nm">'+esc(c.name)+'</span><span class="cd">'+esc(c.code||'')+'</span>'+dStage(c.stage)+'<span class="bl">'+dR(c.bal)+'</span></label>'; }).join('')+'</div>';
     }
+    h+='<div id="corrModeM" class="deb-mode test" style="margin:10px 0 2px"><div>Checking send mode&hellip;</div></div>';
     h+='<div class="deb-corr-actions"><button class="btn gold" id="corrBuild"'+(chosen.length?'':' disabled')+'>Build pack (PDF)</button>'
       +'<button class="btn" id="corrSend"'+(chosen.length?'':' disabled')+'>Send emails…</button>'
       +'<button class="btn ghost" id="corrLog"'+(chosen.length?'':' disabled')+'>Log this run</button>'
       +'<button class="btn ghost" id="corrSetup" title="Email setup">Email setup</button></div>';
     h+='<div id="corrStatus" class="hint" style="font-size:12px;margin-top:8px"></div>';
-    h+='<p class="hint" style="font-size:11px;margin-top:14px">Packs are produced here for review, and emails issue via Resend from the CTTLFA finance address. Logging records the run against each club, with your name and the date, for the audit file and the constitutional-management panel. Sending is in test mode until Mancom approves go-live &mdash; every email reaches the Treasurer only, with a BCC copy retained, and nothing goes to clubs.</p></div>';
+    h+='<p class="hint" style="font-size:11px;margin-top:14px">Packs are produced here for review, and emails issue via Resend from the CTTLFA finance address. Logging records the run against each club, with your name and the date, for the audit file and the constitutional-management panel. A BCC copy of every email is retained for the audit file. The banner above shows whether sending is in test mode or live.</p></div>';
     dr.innerHTML=h;
+    debSendSetup().then(function(st){ var cfg=(st&&st.config)||{}; var test=(cfg.test_mode!==false); var n=document.getElementById('corrModeM'); if(!n) return; n.className='deb-mode '+(test?'test':'live'); n.innerHTML='<div>'+(test?('<b>TEST mode</b> &mdash; every email is delivered to the Treasurer ('+esc(cfg.test_email||'')+'), never to a club. A BCC copy is retained for the audit file.'):('<b>LIVE</b> &mdash; emails go to each club&rsquo;s address on file, with the treasurer and ops mailboxes on BCC for the audit file.'))+'</div>'; }).catch(function(){ var n=document.getElementById('corrModeM'); if(n) n.innerHTML='<div>Could not confirm the send mode &mdash; check Email setup before sending.</div>'; });
     document.getElementById('debCX').onclick=debClose;
     Array.prototype.forEach.call(dr.querySelectorAll('[data-mode]'),function(b){ b.onclick=function(){ _corrMode=b.dataset.mode; _corrSel={}; debCorrDraw(dr); }; });
     Array.prototype.forEach.call(dr.querySelectorAll('[data-rt]'),function(b){ b.onclick=function(){ _corrTier=b.dataset.rt; _corrSel={}; debCorrDraw(dr); }; });
