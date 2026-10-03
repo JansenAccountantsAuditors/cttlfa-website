@@ -5757,6 +5757,18 @@ iframe{max-width:100%}
   .btn{font-size:14px;padding:11px 14px}
   .deb-tiles{gap:8px}
 }
+@media(max-width:440px){
+  /* Phone widths (390px-class devices): reclaim side space and keep every
+     element inside the viewport so the page never scrolls sideways. */
+  .main .wrap,.wrap{padding:12px 10px}
+  .card{padding:12px 10px}
+  img,canvas,svg,video,iframe{max-width:100%;height:auto}
+  .fa-select,select,input[type=search]{max-width:100%}
+  .fa-bl,.fa-bv{font-size:12px}
+  .fa-hours{gap:2px}
+  .fa-hbar{max-width:16px}
+  .deb-kv2{grid-template-columns:1fr}
+}
 /* ---- Fixture Analytics (fa-*) ---- */
 .fa-seasons{display:flex;gap:6px;flex-wrap:wrap}
 .fa-season{padding:7px 14px;border:1px solid var(--line,#d9dfea);background:#fff;color:var(--navy,#071A4A);border-radius:8px;font-weight:600;cursor:pointer;font-size:14px}
