@@ -31,6 +31,7 @@
   function isJunior(desc) { return /\bunder\b|\bu-?1[2-8]\b/i.test(desc || ""); }
   function clubOf(n) { return clean(n).replace(/\s+[A-Z]$/, "").replace(/\s+\d+$/, "").trim(); }
   function pad(x) { return ("0" + x).slice(-2); }
+  function grp(n){ if(n==null||n==='') return n; var num=Number(n); if(isNaN(num)) return n; var neg=num<0; var parts=Math.abs(num).toString().split('.'); parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '); return (neg?'-':'')+parts.join('.'); }
   function isNum(v) { return v != null && /^-?\d+$/.test(String(v)); }
   function dParts(s) { // "20260912 15:00" -> {y,m,d,hh,mm,dow,iso}
     if (!s || s.length < 8) return null;
@@ -207,43 +208,48 @@
   function bar(label, val, max, cls, drill) {
     var pct = max ? Math.round(val / max * 100) : 0;
     var dr = drill ? ' data-drill="' + drill + '"' : '';
-    return '<div class="fa-bar' + (drill ? ' fa-click' : '') + '"' + dr + '><span class="fa-bl">' + label + '</span><span class="fa-bt"><span class="fa-bf ' + (cls || '') + '" style="width:' + pct + '%"></span></span><span class="fa-bv">' + val + '</span></div>';
+    return '<div class="fa-bar' + (drill ? ' fa-click' : '') + '"' + dr + '><span class="fa-bl">' + label + '</span><span class="fa-bt"><span class="fa-bf ' + (cls || '') + '" style="width:' + pct + '%"></span></span><span class="fa-bv">' + grp(val) + '</span></div>';
   }
 
   function renderOverview(o) {
     var h = '<div class="fa-tiles">';
-    h += tile(o.total.toLocaleString(), "Total fixtures", o.league.toLocaleString() + " league · " + o.cups + " cup", "total");
-    h += tile(o.played.toLocaleString(), "Played", ((o.total ? Math.round(o.played / o.total * 100) : 0)) + "% of the programme", "played");
-    h += tile(o.unplayed.toLocaleString(), "Still to play", "excludes byes and abandoned", "unplayed");
+    h += tile(grp(o.total), "Total fixtures", grp(o.league) + " league · " + o.cups + " cup", "total");
+    h += tile(grp(o.played), "Played", ((o.total ? Math.round(o.played / o.total * 100) : 0)) + "% of the programme", "played");
+    h += tile(grp(o.unplayed), "Still to play", "excludes byes and abandoned", "unplayed");
     h += tile(o.divs, "Divisions", o.comps + " knockout cups", "");
-    h += tile(o.nTeams.toLocaleString(), "Team entrants", "distinct teams entered", "");
+    h += tile(grp(o.nTeams), "Team entrants", "distinct teams entered", "");
     h += tile(o.nClubs, "Clubs", (o.nClubs ? (o.nTeams / o.nClubs).toFixed(1) : 0) + " teams per club", "");
     h += '</div>';
 
     var dmax = Math.max.apply(null, DOW.map(function (d) { return o.day[d]; }).concat([1]));
+    var daySum = DOW.reduce(function (s, d) { return s + (o.day[d] || 0); }, 0);
+    var dayExcl = Math.max(0, o.total - daySum);
     h += '<div class="fa-grid2">';
     h += '<div class="card"><h3>Fixtures by day of the week</h3>';
-    ["Saturday", "Sunday", "Friday", "Thursday", "Wednesday", "Tuesday", "Monday"].forEach(function (d) {
-      h += bar(d, o.day[d], dmax, d === "Saturday" ? "gold" : (d === "Sunday" ? "blue" : ""), "dow:" + DOW.indexOf(d));
+    ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"].forEach(function (d) {
+      h += bar(d, o.day[d], dmax, d === "Saturday" ? "gold" : "", "dow:" + DOW.indexOf(d));
     });
-    h += '<p class="hint" style="margin-top:8px">Saturday is the main match day. Click any day to list and export those fixtures.</p></div>';
+    h += '<p class="hint" style="margin-top:8px">Monday to Sunday; Saturday (gold) is the main match day. Click any day to list and export those fixtures.' + (dayExcl ? ' Excludes ' + grp(dayExcl) + ' fixtures with no scheduled date.' : '') + '</p></div>';
     var hmax = Math.max.apply(null, Object.keys(o.byHour).map(function (k) { return o.byHour[k]; }).concat([1]));
+    var koExcl = Math.max(0, o.total - (o.night + o.dayGames));
     h += '<div class="card"><h3>Kick-off times</h3>';
-    h += '<div class="fa-tiles fa-tiles-sm">' + tile(o.night.toLocaleString(), "Night games", "17:00 and later", "night") + tile(o.dayGames.toLocaleString(), "Daytime games", "before 17:00", "day") + '</div>';
+    h += '<div class="fa-tiles fa-tiles-sm">' + tile(grp(o.night), "Night games", "17:00 and later", "night") + tile(grp(o.dayGames), "Daytime games", "before 17:00", "day") + '</div>';
     var hrs = Object.keys(o.byHour).map(Number).sort(function (a, b) { return a - b; });
-    h += '<div class="fa-hours">';
-    hrs.forEach(function (hr) { var pct = Math.round(o.byHour[hr] / hmax * 100); h += '<div class="fa-hcol" title="' + pad(hr) + ':00 — ' + o.byHour[hr] + ' fixtures"><span class="fa-hbar ' + (hr >= 17 ? 'night' : '') + '" style="height:' + Math.max(4, pct) + '%"></span><span class="fa-hl">' + pad(hr) + '</span></div>'; });
-    h += '</div><p class="hint">Bars are kick-off hours; amber bars are 17:00+ (night games).</p></div>';
+    var hsum = hrs.map(function (hr) { return pad(hr) + ':00 ' + grp(o.byHour[hr]); }).join(', ');
+    h += '<div class="fa-hours" role="img" aria-label="Fixtures by kick-off hour: ' + hsum + '. Night games, kick-off 17:00 and later, are shown in amber.">';
+    hrs.forEach(function (hr) { var pct = Math.round(o.byHour[hr] / hmax * 100); var night = hr >= 17; h += '<div class="fa-hcol" title="' + pad(hr) + ':00 · ' + grp(o.byHour[hr]) + ' fixtures"><span class="fa-hv">' + grp(o.byHour[hr]) + '</span><span class="fa-hbar ' + (night ? 'night' : '') + '" style="height:' + Math.max(4, pct) + '%"></span><span class="fa-hl">' + pad(hr) + '</span></div>'; });
+    h += '</div><p class="hint">Each bar is a kick-off hour, labelled with its fixture count. Daytime kick-offs are before 17:00; night games (amber) kick off 17:00 and later.' + (koExcl ? ' Excludes ' + grp(koExcl) + ' fixtures with no kick-off time.' : '') + '</p></div>';
     h += '</div>';
 
     // goals summary (where scores exist)
     if (o.scored) {
       h += '<div class="fa-tiles">';
-      h += tile(o.goals.toLocaleString(), "Goals scored", "across " + o.scored.toLocaleString() + " completed games", "");
+      h += tile(grp(o.goals), "Goals scored", "across " + grp(o.scored) + " completed games", "");
       h += tile((o.goals / o.scored).toFixed(2), "Goals per game", "average", "");
-      h += tile(o.cleanSheets.toLocaleString(), "Clean sheets", "one side kept out", "");
+      h += tile(grp(o.cleanSheets), "Clean sheets", "one side kept out", "");
       if (o.biggestWin) { var bw = o.biggestWin; h += tile(bw.hs + "-" + bw.rs, "Biggest margin", clean(bw.f.homeTeamName) + " v " + clean(bw.f.roadTeamName), ""); }
       h += '</div>';
+      h += '<p class="hint" style="margin-top:2px">Completed games are the ' + grp(o.scored) + ' fixtures with a recorded score.' + (o.played > o.scored ? ' The remaining ' + grp(o.played - o.scored) + ' played fixtures are walkovers or results logged without a score, so they count as played but not towards goals.' : '') + '</p>';
     }
 
     var top = Object.keys(o.byDate).map(function (k) { return [k, o.byDate[k]]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 8);
@@ -257,7 +263,7 @@
     var clubs = Object.keys(o.clubs).map(function (c) { return [c, o.clubs[c]]; }).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); });
     var h = '<div class="fa-tiles">';
     h += tile(o.nClubs, "Clubs", "distinct clubs", "");
-    h += tile(o.nTeams.toLocaleString(), "Teams entered", "across all divisions", "");
+    h += tile(grp(o.nTeams), "Teams entered", "across all divisions", "");
     h += tile((o.nClubs ? (o.nTeams / o.nClubs).toFixed(1) : 0), "Avg teams / club", "", "");
     h += tile(clubs.length ? clubs[0][1] : 0, "Most teams", clubs.length ? clubs[0][0] : "", "");
     h += '</div>';
@@ -271,7 +277,7 @@
   function renderIssues(o) {
     var h = '<div class="fa-tiles">';
     h += tile(o.walkovers, "Walkovers", o.walkHome + " home · " + o.walkAway + " away", "walkovers");
-    h += tile(o.byes.toLocaleString(), "Byes", "teams with no opponent", "byes");
+    h += tile(grp(o.byes), "Byes", "teams with no opponent", "byes");
     h += tile(o.postponed, "Postponed", "still marked postponed", "postponed");
     h += tile(o.abandoned, "Abandoned", "matches abandoned", "abandoned");
     h += '</div>';
@@ -427,9 +433,9 @@
 
     var latest = rows[rows.length - 1], first = rows[0];
     var h = '<div class="fa-tiles">';
-    h += tile(latest.teams.toLocaleString(), "Teams (" + latest.y + ")", growthTxt(latest.teams, first.teams) + " since " + first.y, "");
+    h += tile(grp(latest.teams), "Teams (" + latest.y + ")", growthTxt(latest.teams, first.teams) + " since " + first.y, "");
     h += tile(latest.clubs, "Clubs (" + latest.y + ")", growthTxt(latest.clubs, first.clubs) + " since " + first.y, "");
-    h += tile(latest.fx.toLocaleString(), "Fixtures (" + latest.y + ")", growthTxt(latest.fx, first.fx) + " since " + first.y, "");
+    h += tile(grp(latest.fx), "Fixtures (" + latest.y + ")", growthTxt(latest.fx, first.fx) + " since " + first.y, "");
     var ret = retention(rows);
     h += tile(ret.pct + "%", "Club retention", ret.kept + " of " + ret.base + " clubs stayed " + (latest.y - 1) + "→" + latest.y, "");
     h += '</div>';
@@ -438,9 +444,9 @@
     h += '<table><thead><tr><th>Season</th><th style="text-align:right">Teams</th><th></th><th style="text-align:right">Clubs</th><th></th><th style="text-align:right">Fixtures</th><th></th></tr></thead><tbody>';
     rows.forEach(function (r, i) {
       var p = i ? rows[i - 1] : null;
-      h += '<tr><td><b>' + r.y + '</b></td><td style="text-align:right">' + r.teams.toLocaleString() + '</td><td>' + (p ? growth(r.teams, p.teams) : "") + '</td>' +
+      h += '<tr><td><b>' + r.y + '</b></td><td style="text-align:right">' + grp(r.teams) + '</td><td>' + (p ? growth(r.teams, p.teams) : "") + '</td>' +
         '<td style="text-align:right">' + r.clubs + '</td><td>' + (p ? growth(r.clubs, p.clubs) : "") + '</td>' +
-        '<td style="text-align:right">' + r.fx.toLocaleString() + '</td><td>' + (p ? growth(r.fx, p.fx) : "") + '</td></tr>';
+        '<td style="text-align:right">' + grp(r.fx) + '</td><td>' + (p ? growth(r.fx, p.fx) : "") + '</td></tr>';
     });
     h += '</tbody></table></div>';
 
@@ -504,10 +510,10 @@
 
     // headline tiles
     h += '<div class="fa-tiles">';
-    h += tile(rainFx.length.toLocaleString(), "Fixtures on wet days", "5 mm rain or more", "rainfx");
+    h += tile(grp(rainFx.length), "Fixtures on wet days", "5 mm rain or more", "rainfx");
     h += tile(disrupt.length ? (disruptWet.length + " of " + disrupt.length) : "0", "Disruptions on wet days", "postponed or abandoned", "");
-    h += tile(nightHeavyLS.length.toLocaleString(), "Night games in heavy LS", "17:00+ in Stage 3-4 months", "lsnight");
-    h += tile(holFx.length.toLocaleString(), "Fixtures on public holidays", "extra match days", "holfx");
+    h += tile(grp(nightHeavyLS.length), "Night games in heavy LS", "17:00+ in Stage 3-4 months", "lsnight");
+    h += tile(grp(holFx.length), "Fixtures on public holidays", "extra match days", "holfx");
     h += '</div>';
 
     // weather card
@@ -822,7 +828,7 @@
     h += tile(shortfall, "Saturday shortfall", shortfall ? "rounds off Saturday" : "within league Saturdays", "");
     h += '</div>';
     h += '<div class="fa-tiles">';
-    h += tile(totFx.toLocaleString(), "League fixtures", divs.length + " divisions", "");
+    h += tile(grp(totFx), "League fixtures", divs.length + " divisions", "");
     h += tile(playN, "Match rounds scheduled", satN + " on Saturdays" + (sd.overflow.length ? " + " + sd.overflow.length + " overflow" : ""), "");
     h += tile(Math.round(totFx / Math.max(satN, 1)), "Avg fixtures / Saturday", "if spread evenly (2026 peaked ~212)", "");
     h += tile(jr.length + " / " + sr.length, "Junior / senior divisions", "max rounds " + Math.max.apply(null, jr.map(function (d) { return d.matchdays; })) + " / " + Math.max.apply(null, sr.map(function (d) { return d.matchdays; })), "");
@@ -872,7 +878,7 @@
         var r = dayRisk(row.iso), note = [];
         if (PH27[row.iso]) note.push(PH27[row.iso]);
         if (ctxSchoolFwd(row.iso)) note.push("school holiday");
-        h += '<tr' + (row.ko ? ' style="background:#eef7f0"' : '') + '><td>' + fmtDate(row.iso) + " (" + DOW[new Date(row.iso + "T00:00:00").getDay()].slice(0, 3) + ')</td><td><span class="' + (row.ko ? "fa-ok" : (row.type === "Sat" ? "" : "fa-warn")) + '">' + row.type + '</span></td><td>' + (row.ko ? "<b>Knockout — " + row.round + "</b>" : row.round) + '</td><td style="text-align:right">' + (row.ko ? "—" : row.load.toLocaleString()) + '</td><td><span class="fa-risk r' + r + '">' + RISKW[r] + '</span></td><td>' + NS.esc(note.join(" · ")) + '</td></tr>';
+        h += '<tr' + (row.ko ? ' style="background:#eef7f0"' : '') + '><td>' + fmtDate(row.iso) + " (" + DOW[new Date(row.iso + "T00:00:00").getDay()].slice(0, 3) + ')</td><td><span class="' + (row.ko ? "fa-ok" : (row.type === "Sat" ? "" : "fa-warn")) + '">' + row.type + '</span></td><td>' + (row.ko ? "<b>Knockout — " + row.round + "</b>" : row.round) + '</td><td style="text-align:right">' + (row.ko ? "—" : grp(row.load)) + '</td><td><span class="fa-risk r' + r + '">' + RISKW[r] + '</span></td><td>' + NS.esc(note.join(" · ")) + '</td></tr>';
       });
       h += '</tbody></table></div>';
     }
@@ -880,7 +886,7 @@
     // venue & pitch-slot check
     var cr = clashReport();
     h += '<div class="card"><h3>Venue &amp; pitch slots</h3><p class="hint" style="margin-bottom:8px">Each home fixture is seated at the home team’s 2026 ground, treated as one pitch. A match holds the pitch for ' + MATCH_MINS + ' minutes with a ' + REST_MINS + '-minute turnaround, in back-to-back slots from ' + mmToHHMM(DAY_START) + ' to ' + mmToHHMM(DAY_END) + '. A fixture whose division kick-off falls in a slot already taken is pushed to the next free slot (<b>moved</b>); if the pitch has no slot left that day it is <b>unplaced</b> and must move to another pitch or date in LeagueRepublic.</p>';
-    h += '<div class="fa-tiles fa-tiles-sm">' + tile(cr.placed.toLocaleString(), "Fixtures seated", cr.moved.length ? (cr.moved.length + " with kick-off moved") : "all at their division kick-off", cr.conflicts ? "planClash" : "") + tile(cr.unplaced.length.toLocaleString(), "Unplaced", cr.unplaced.length ? "no pitch slot — must move" : "every fixture has a slot", cr.unplaced.length ? "planClash" : "") + '</div>';
+    h += '<div class="fa-tiles fa-tiles-sm">' + tile(grp(cr.placed), "Fixtures seated", cr.moved.length ? (cr.moved.length + " with kick-off moved") : "all at their division kick-off", cr.conflicts ? "planClash" : "") + tile(grp(cr.unplaced.length), "Unplaced", cr.unplaced.length ? "no pitch slot — must move" : "every fixture has a slot", cr.unplaced.length ? "planClash" : "") + '</div>';
     if (cr.conflicts) {
       var sample = cr.unplaced.concat(cr.moved).sort(function (a, b) { return a.date < b.date ? -1 : 1; }).slice(0, 20);
       h += '<table><thead><tr><th>Date</th><th>Venue (pitch)</th><th>Division</th><th>Home</th><th>Away</th><th>Wanted</th><th>Seated</th></tr></thead><tbody>';
@@ -986,7 +992,7 @@
     var scrim = NS.$("faScrim");
     if (!scrim) { scrim = document.createElement("div"); scrim.id = "faScrim"; scrim.className = "fa-scrim"; document.body.appendChild(scrim); }
     var rows = cr.unplaced.concat(cr.moved).sort(function (a, b) { return a.date < b.date ? -1 : (a.date > b.date ? 1 : (a.venue < b.venue ? -1 : 1)); });
-    var head = '<div class="fa-mhead"><div><h3 style="margin:0">Pitch slots — 2027 scenario</h3><p class="hint" style="margin:2px 0 0">' + cr.unplaced.length + ' unplaced, ' + cr.moved.length + ' with kick-off moved, of ' + cr.withVenue.toLocaleString() + ' fixtures at a home ground. Assign another pitch, kick-off or date in LeagueRepublic to clear one.</p></div>' +
+    var head = '<div class="fa-mhead"><div><h3 style="margin:0">Pitch slots — 2027 scenario</h3><p class="hint" style="margin:2px 0 0">' + cr.unplaced.length + ' unplaced, ' + cr.moved.length + ' with kick-off moved, of ' + grp(cr.withVenue) + ' fixtures at a home ground. Assign another pitch, kick-off or date in LeagueRepublic to clear one.</p></div>' +
       '<div class="fa-mbtns"><button class="btn ghost sm" id="faCsv">Download CSV</button><button class="btn ghost sm" id="faClose">Close</button></div></div>';
     var body = '<div class="fa-mbody">';
     if (!rows.length) body += '<p class="hint"><b class="fa-ok">Every fixture seats at its division kick-off in this scenario.</b></p>';
