@@ -265,7 +265,38 @@
 .deb-txtbl td.num,.deb-txtbl th.num{text-align:right;font-variant-numeric:tabular-nums}
 .deb-txtbl td.rf{color:#59666b;max-width:150px;overflow:hidden;text-overflow:ellipsis}
 .deb-txtbl tbody tr:hover td{background:#F7FAFC}
-.deb-oocchip{display:inline-block;font-size:10px;font-weight:700;color:#7a2320;background:#F8E7E5;border:1px solid #E3B0AC;border-radius:5px;padding:1px 7px;margin-left:6px}.help-gloss{width:100%;border-collapse:collapse;font-size:13px}.help-gloss th,.help-gloss td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}.help-gloss thead th{background:#EEF2F8;color:var(--navy);font-size:12px}</style>
+.deb-oocchip{display:inline-block;font-size:10px;font-weight:700;color:#7a2320;background:#F8E7E5;border:1px solid #E3B0AC;border-radius:5px;padding:1px 7px;margin-left:6px}.help-gloss{width:100%;border-collapse:collapse;font-size:13px}.help-gloss th,.help-gloss td{border:1px solid var(--line);padding:7px 9px;text-align:left;vertical-align:top}.help-gloss thead th{background:#EEF2F8;color:var(--navy);font-size:12px}
+/* ===== House-standard global pass: focus / numerics / motion / print (WCAG 2.2 AA) ===== */
+/* G5 visible keyboard focus on every interactive control (SC 2.4.7, 2.4.11) */
+a:focus-visible,button:focus-visible,.btn:focus-visible,.seg button:focus-visible,[role=button]:focus-visible,[tabindex]:focus-visible,summary:focus-visible{outline:3px solid var(--blue5);outline-offset:2px;border-radius:8px}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid var(--blue5);outline-offset:1px}
+.top .tab:focus-visible,.side .snav:focus-visible,.topnav .tab:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+.subnav .subtab:focus-visible{outline:3px solid var(--blue5);outline-offset:-3px}
+/* G4/G8 figures are tabular + lining wherever a cell is marked numeric or right-aligned */
+td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tabular-nums lining-nums}
+/* Reduced motion (SC 2.3.3) */
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+/* print utilities */
+.print-only{display:none}
+/* ===== Print stylesheet: board / Fincom / debtor packs (A4, repeating headers, no split rows) ===== */
+@media print{
+  @page{size:A4;margin:14mm 12mm}
+  html,body{background:#fff!important;color:#000!important}
+  .top,.topnav,.subnav,.side,#helpToggle,.btn,.btnrow,.tb-actions,.seg,.no-print{display:none!important}
+  .shell{display:block!important;min-height:0}
+  .main{display:block!important}
+  .main .wrap{max-width:none!important;width:auto!important;margin:0!important;padding:0!important}
+  .card{box-shadow:none!important;border:1px solid #bbb!important;break-inside:avoid;page-break-inside:avoid;margin:0 0 10px!important}
+  .card h3,.hint{color:#000!important}
+  table{font-size:10.5px}
+  thead{display:table-header-group}
+  tfoot{display:table-footer-group}
+  tr,.qlimb,.comp-row{break-inside:avoid;page-break-inside:avoid}
+  thead th{background:#eee!important;color:#000!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  td,th{white-space:normal!important}
+  .deb-txwrap{max-height:none!important;overflow:visible!important;border:0!important}
+  .print-only{display:block!important}
+}</style>
 
 <!-- LOGIN -->
 <div class="login" id="loginView">
