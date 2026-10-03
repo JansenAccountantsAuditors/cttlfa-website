@@ -2632,7 +2632,7 @@
     if(_debSync && _debSync.n_out>0){ acts.push({p:2,t:_debSync.n_out+' club'+(_debSync.n_out===1?'':'s')+' out of sync with Sage',d:'The itemised detail behind these clubs’ statements lags the live balance. Fetch from Sage to refresh it.',b:'Fetch from Sage',fn:'fetch',tone:'due'}); }
     if(_debCash && _debCash.n_clubs>0){ acts.push({p:3,t:'Allocate '+dR(_debCash.total)+' of unallocated cash',d:_debCash.n_clubs+' club'+(_debCash.n_clubs===1?'':'s')+' paid money not yet matched to invoices in Sage. Allocate it so a club is not chased for money already paid.',b:'Cash on account',fn:'cash',tone:'due'}); }
     if(stOOC.length){ acts.push({p:4,t:stOOC.length+' club'+(stOOC.length===1?'':'s')+' at the Out of Compliance trigger',d:dR(sum60(stOOC))+' overdue 120 days and older. A notice is due for your decision — a club is not Out of Compliance until you place it.',b:'Open correspondence',fn:'corr',tone:'bad'}); }
-    if(stFinal.length){ acts.push({p:5,t:stFinal.length+' final reminder'+(stFinal.length===1?'':'s')+' due',d:dR(sum60(stFinal))+' overdue 90 days and older — the last step before Out of Compliance.',b:'Open correspondence',fn:'corr',tone:'due'}); }
+    if(stFinal.length){ acts.push({p:5,t:stFinal.length+' final reminder'+(stFinal.length===1?'':'s')+' due',d:dR(sum60(stFinal))+' overdue 90 days and older (capped at net balance per club) — the last step before Out of Compliance.',b:'Open correspondence',fn:'corr',tone:'due'}); }
     if(stReminder.length){ acts.push({p:6,t:stReminder.length+' payment reminder'+(stReminder.length===1?'':'s')+' due',d:dR(sum60(stReminder))+' overdue 60 days and older.',b:'Open correspondence',fn:'corr',tone:'due'}); }
     acts.sort(function(a,b){return a.p-b.p;});
     var body;
@@ -2696,7 +2696,7 @@
     h+='<div class="deb-kpis">'
       +debKpi('Owed by clubs in arrears',dR(s.pos_total),owing.length+' owing · '+(s.n_credit||0)+' in credit · '+(s.n_paidup||0)+' paid up','lead')
       +debKpi('Overdue (60 days +)',dR(over),dPc(s.pos_total?over/s.pos_total*100:0)+' of what is owed, net of payments','bad')
-      +debKpi('Net trade debtors',dR(s.net_total),'after '+dR(-s.credit_total)+' in credits','')
+      +debKpi('Net trade debtors',dR(s.net_total),'after '+dR(-s.credit_total)+' in credits · rounded to the Rand','')
       +debKpi('Out of Compliance due',stOOC.length+'',dR(stSum60(stOOC))+' · reached the 120-day trigger, awaiting your decision'+((s.n_placed_ooc||0)?' · '+s.n_placed_ooc+' placed':''),'bad')
       +'</div>';
     // next best actions (priority worklist)
