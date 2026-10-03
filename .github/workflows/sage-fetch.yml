@@ -45,6 +45,10 @@ jobs:
       - name: Fetch from Sage and load the dashboard
         if: env.SAGE_API_KEY != '' && env.SUPABASE_INGEST_TOKEN != ''
         run: python cttlfa_api_fetch.py --push
+      - name: NOR002 reconciliation diagnostic (temporary, read-only)
+        if: env.SAGE_API_KEY != '' && env.SUPABASE_INGEST_TOKEN != ''
+        continue-on-error: true
+        run: python diag_nor002_api.py
       - name: Mark done
         if: success() && env.SAGE_API_KEY != '' && env.SUPABASE_INGEST_TOKEN != ''
         run: |
