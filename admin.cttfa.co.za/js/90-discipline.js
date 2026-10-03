@@ -965,7 +965,7 @@
         '<tbody>'+(dbcBody||'<tr><td colspan="5" class="hint">No data.</td></tr>')+'</tbody>'+
         '<tfoot><tr><th>Total</th><th class="num">'+num(tCards)+'</th><th class="num">'+num(tCases)+'</th><th class="num">'+num(tFinesN)+'</th><th class="num">'+rand(tFinesAmt)+'</th></tr></tfoot>'+
         '</table></div>'+
-        '<p class="hint" style="margin-top:6px">Fines issued is the disciplinary register figure, the total the DC fined. It is higher than the fines reconciliation below, which counts only fines already raised as Sage invoices; the difference is fines issued but not yet invoiced. It is the value fined, not the amount still owing.</p></div>';
+        '<p class="hint" style="margin-top:6px">Fines issued here counts every ruling in the mirror, including any since voided (deleted). The fines reconciliation below excludes voided rulings, so its issued total is lower and is the figure to rely on. It is the value fined, not the amount still owing.</p></div>';
 
     // Rulings & fines
     var ocRows=(ru.by_outcome||[]).map(function(x){return [x.outcome,x.n];});
