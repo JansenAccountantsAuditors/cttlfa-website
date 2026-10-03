@@ -2833,7 +2833,7 @@
         +'<td class="hint">'+esc(c.code||'–')+'</td>'
         +'<td>'+dTypeChip(c.club_type||'unknown')+'</td>'
         +'<td class="num"><b>'+dR(c.bal)+'</b> '+mbar(c)+'</td>'
-        +'<td class="num">'+dR(c.over60)+'</td>'
+        +'<td class="num">'+dR(c.over60)+(Number(c.over60)>0&&Number(c.over60)<500?'<div class="hint" style="font-size:10px;font-weight:400" title="Overdue below the R500 materiality threshold approved by Mancom">Below threshold</div>':'')+'</td>'
         +'<td>'+dStage(c.stage)+'</td>'
         +'<td>'+logged+'</td>'
         +'<td class="num">'+(c.last_receipt?dDateZA(c.last_receipt):(c.last_receipt_days==null||Number(c.last_receipt_days)>=999?'–':c.last_receipt_days+'d'))+'</td></tr>';
