@@ -2565,9 +2565,9 @@
       +(canE?'<div style="display:flex;gap:8px;align-items:center"><button class="btn gold sm" id="ccSavePrimary"'+(noCode?' disabled':'')+'>Save contact</button><span class="hint" id="ccSaveMsg" style="font-size:11.5px"></span></div>':'')
     +'</div>';
     var logins=(c.logins||[]);
-    var chips=logins.length?logins.map(function(l){ var off=!l.active;
-      return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;background:'+(off?'#F1F3F7':'#E7F5EC')+';color:'+(off?'#8892a4':'#1c5136')+';border-radius:16px;padding:3px 4px 3px 10px;margin:2px 3px 2px 0">'
-        +'<span class="cc-tog" data-id="'+esc(l.id)+'" data-active="'+(l.active?'1':'0')+'" style="cursor:pointer'+(off?';text-decoration:line-through':'')+'" title="Click to switch this login '+(off?'on':'off')+'">'+esc(l.email)+'</span>'
+    var chips=logins.length?logins.map(function(l){ var off=!l.active; var multi=/[;,]/.test(l.email||'');
+      return '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;background:'+(multi?'#FBF1DD':(off?'#F1F3F7':'#E7F5EC'))+';color:'+(multi?'#7a5312':(off?'#8892a4':'#1c5136'))+';border-radius:16px;padding:3px 4px 3px 10px;margin:2px 3px 2px 0'+(multi?';border:1px solid #e6d3a3':'')+'">'
+        +'<span class="cc-tog" data-id="'+esc(l.id)+'" data-active="'+(l.active?'1':'0')+'" style="cursor:pointer'+(off?';text-decoration:line-through':'')+'" title="'+(multi?'This login holds more than one address and cannot sign in until it is split into separate logins':('Click to switch this login '+(off?'on':'off')))+'">'+esc(l.email)+'</span>'+(multi?'<span title="This login holds multiple addresses; split into separate logins" style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:#7a2320;background:#F8E7E5;border:1px solid #eec4c0;border-radius:4px;padding:0 4px">split</span>':'')
         +(canE?'<button class="cc-del" data-id="'+esc(l.id)+'" title="Remove this login" style="border:0;background:'+(off?'#e0e4ec':'#cfe8d8')+';border-radius:50%;width:18px;height:18px;cursor:pointer;line-height:1;color:inherit">&times;</button>':'')
       +'</span>'; }).join(''):'<span class="hint" style="font-size:12px">No login yet</span>';
     h+='<div class="card"><div class="deb-sec" style="margin-top:0">Portal sign-in emails</div>'

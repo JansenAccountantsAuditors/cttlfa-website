@@ -197,7 +197,7 @@
   function chk(by,key){ return by[key] || {status:"amber", display:"–", detail:"", n:0, key:key, title:key, drill:false}; }
 
   /* one key/value row; state colours the value */
-  function kv(k,v,state){ return '<div class="ntg-kv"><span class="k">'+esc(k)+'</span><span class="v'+(state?(" "+ST[state].cls):"")+'">'+v+'</span></div>'; }
+  function kv(k,v,state){ return '<div class="ntg-kv"><span class="k">'+esc(k)+'</span><span class="v'+(state?(" "+(ST[state]||ST.amber).cls):"")+'">'+v+'</span></div>'; }
 
   function inputCard(src, title, rag, rows, note){
     var t=ST[rag]||ST.amber;
@@ -341,7 +341,7 @@
       '</div>'+
       '<div class="ntg-sech">Internal mapping</div>'+
       '<p class="ntg-sub">The inputs above are arranged into clubs, players, referees and accounts. These checks confirm the arranging holds: identities are unique, names reconcile, and no records are orphaned. This is internal, not an input.</p>'+
-      '<div class="ntg-map '+(ST[mapRag].cls)+'">'+
+      '<div class="ntg-map '+((ST[mapRag]||ST.amber).cls)+'">'+
         '<div class="ntg-gh" style="margin:0"><span class="ntg-ct" style="flex-direction:row;align-items:center;gap:10px">'+stPill(mapRag)+'<b style="color:var(--navy)">Mapping across the feeds</b></span>'+
           '<span class="ntg-acts noprint"><button class="ntg-x" id="ntgMapPDF">PDF</button><button class="ntg-x" id="ntgMapCSV">CSV</button></span></div>'+
         '<p class="ntg-note" style="margin-top:8px">'+esc(mapLine)+'</p>'+

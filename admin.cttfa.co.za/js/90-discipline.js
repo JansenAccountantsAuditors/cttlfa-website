@@ -745,13 +745,13 @@
       var brBody =
         brRow('sub','Fines issued (disciplinary register)', br.reg_issued_amt, num(br.reg_issued_n)+' fines', false)+
         brRow('', 'less: issued but awaiting invoicing in Sage', -Number(br.awaiting_amt||0), num(br.awaiting_n)+' fines', true, 'kind|awaiting')+
-        brRow('', 'less: timing &amp; amount differences on matched fines', -Number(br.amount_diff||0), '', true)+
+        brRow('', 'less: timing & amount differences on matched fines', -Number(br.amount_diff||0), '', true)+
         brRow('sub','DC-ruling fines invoiced to the GL', br.matched_gl_amt, 'matched to Sage invoices', false, 'kind|matched')+
         brRow('', 'add: fines finance raised directly, no DC hearing', br.direct_amt, num(br.direct_n)+' invoices &middot; match '+rand(br.direct_match_amt)+', admin '+rand(br.direct_admin_amt), true, 'kind|direct')+
         brRow('sub','Fine invoices raised (gross)', br.gross_fine_amt, '', false)+
-        brRow('', 'less: credit notes &amp; reversals', br.credit_notes_amt, '', true, 'kind|credit')+
+        brRow('', 'less: credit notes & reversals', br.credit_notes_amt, '', true, 'kind|credit')+
         brRow('sub','Net fine income (Sage fine accounts)', br.net_fine_amt, 'match &amp; conduct + administrative &amp; compliance', false, 'kind|fines')+
-        brRow('', 'add: protest &amp; appeal fees (refundable, net of refunds)', br.fees_amt, 'DC-driven income, not fines', true, 'kind|fees')+
+        brRow('', 'add: protest & appeal fees (refundable, net of refunds)', br.fees_amt, 'DC-driven income, not fines', true, 'kind|fees')+
         brRow('tot','Total DC income (year to date)', br.total, '', false, 'kind|all');
       bridgeCard =
         '<div class="card" style="box-shadow:none;border:1px solid var(--line);margin-top:10px">'+
@@ -1020,7 +1020,7 @@
         '<div class="dsc-bh"><span class="dsc-sec">Suspensions</span>'+acts("Players at risk",["Player","SAFA","Registered","Club","Yellow cards","Standing","To next ban"],atRows)+'</div>'+
         '<p class="hint" style="margin:0 0 14px">Yellow cards (cautions) <b>accumulate across the season</b>. A player cautioned in that many <b>separate matches</b> is automatically suspended for the matches shown — <b>CTTLFA Disciplinary Code, Article 17(3)</b> (accepted 25 February 2026). These are single yellows in different matches, not two yellows in one match (that is an indirect red card and a one-match ban in its own right).</p>'+
         '<div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Accumulation thresholds — yellow cards to automatic suspension</div>'+
-        '<table class="dsc-tbl dsc-thr"><colgroup><col style="width:58%"><col style="width:42%"></colgroup><thead><tr><th>Yellow cards (separate matches)</th><th>Automatic suspension</th></tr></thead><tbody>'+thBody+'</tbody></table>'+
+        '<table class="dsc-tbl dsc-thr"><colgroup><col style="width:58%"><col style="width:42%"></colgroup><thead><tr><th>Yellow cards (separate matches)</th><th>Automatic suspension</th></tr></thead><tbody>'+(thBody||'<tr><td colspan="2" class="hint">Suspension thresholds not loaded.</td></tr>')+'</tbody></table>'+
         '<p class="hint" style="margin:10px 0 16px">Read it as: reach <b>'+num(susMin)+'</b> yellow cards and a suspension applies; each further block of cautions steps it up, as the table shows.</p>'+
         '<div class="dsc-sec" style="font-size:12px;color:var(--muted);margin-bottom:6px">Players at risk <span class="dsc-pill warn">'+num((sus.at_risk||[]).length)+'</span> <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--muted)">— each has reached at least '+num(susMin)+' yellow cards; the standing shows the ban their count already carries and how far to the next</span></div>'+
         '<div class="dsc-tblwrap" style="max-height:300px"><table class="dsc-tbl dsc-atrisk"><colgroup><col style="width:19%"><col style="width:10%"><col style="width:8%"><col style="width:18%"><col style="width:9%"><col style="width:22%"><col style="width:14%"></colgroup><thead><tr><th>Player</th><th>SAFA</th><th>Reg</th><th>Club</th><th class="num">Yellow cards</th><th>Standing</th><th>To next ban</th></tr></thead><tbody>'+(atBody||'<tr><td colspan="7" class="hint">No player has reached a threshold.</td></tr>')+'</tbody></table></div>'+
