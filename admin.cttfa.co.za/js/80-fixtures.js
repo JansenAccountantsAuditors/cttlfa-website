@@ -216,9 +216,9 @@
     h += tile(grp(o.total), "Total fixtures", grp(o.league) + " league · " + o.cups + " cup", "total");
     h += tile(grp(o.played), "Played", ((o.total ? Math.round(o.played / o.total * 100) : 0)) + "% of the programme", "played");
     h += tile(grp(o.unplayed), "Still to play", "excludes byes and abandoned", "unplayed");
-    h += tile(o.divs, "Divisions", o.comps + " knockout cups", "");
-    h += tile(grp(o.nTeams), "Team entrants", "distinct teams entered", "");
-    h += tile(o.nClubs, "Clubs", (o.nClubs ? (o.nTeams / o.nClubs).toFixed(1) : 0) + " teams per club", "");
+    h += tile(o.divs, "Divisions", o.comps + " knockout cups", "goto:schedule");
+    h += tile(grp(o.nTeams), "Team entrants", "distinct teams entered", "goto:entrants");
+    h += tile(o.nClubs, "Clubs", (o.nClubs ? (o.nTeams / o.nClubs).toFixed(1) : 0) + " teams per club", "goto:entrants");
     h += '</div>';
 
     var dmax = Math.max.apply(null, DOW.map(function (d) { return o.day[d]; }).concat([1]));
@@ -1408,10 +1408,21 @@
   }
 
   /* ---------- paint / wiring ---------- */
+  function gotoSub(name) {
+    var b = document.querySelector('#fixturesRoot .fa-sub[data-sub="' + name + '"]');
+    if (!b) return;
+    b.click();
+    var st = document.querySelector('#fixturesRoot .fa-subtabs');
+    if (st && st.scrollIntoView) st.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  function fireDrill(key) {
+    if (key && key.indexOf("goto:") === 0) gotoSub(key.slice(5));
+    else openDrill(key);
+  }
   function bindDrills() {
     Array.prototype.forEach.call(document.querySelectorAll("#fixturesRoot [data-drill]"), function (el) {
-      el.addEventListener("click", function (e) { e.stopPropagation(); openDrill(el.getAttribute("data-drill")); });
-      el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDrill(el.getAttribute("data-drill")); } });
+      el.addEventListener("click", function (e) { e.stopPropagation(); fireDrill(el.getAttribute("data-drill")); });
+      el.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fireDrill(el.getAttribute("data-drill")); } });
     });
   }
   function paint(id) {
