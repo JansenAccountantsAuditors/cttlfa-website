@@ -2081,11 +2081,11 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     var base='The balance and ageing come from the automated Sage fetch. ';
     var mid;
     if(_debSync && _debSync.in_sync){
-      mid='The itemised transaction detail currently matches the Sage balance for every club, so the statements and notices you send reflect exactly what is in Sage.';
+      mid='Every club’s net Sage balance reconciles to its open invoices and allocated receipts, so the statements and notices you send reflect exactly what is in Sage.';
     } else if(_debSync && _debSync.n_out>0){
-      mid='The itemised transaction detail is a separate export, and '+_debSync.n_out+' club'+(_debSync.n_out===1?' has':'s have')+' changed in Sage since it was last taken; those clubs’ statements catch up on the next fetch. Every other club reconciles to Sage.';
+      mid=_debSync.n_out+' owing club'+(_debSync.n_out===1?'':'s')+' do'+(_debSync.n_out===1?'es':'')+' not reconcile to Sage'+(_debSync.out_total!=null?(' ('+dR(_debSync.out_total)+')'):'')+': Sage shows more owing on the open invoices than the net balance, so a receipt or credit note is sitting unallocated or an invoice is over-allocated in Sage. Correct the allocation in Sage. Every other club reconciles.';
     } else {
-      mid='The itemised transaction detail is a separate export, so it can lag; where it does, each club’s statement reconciles to the fetched Sage balance.';
+      mid='Each club’s net Sage balance reconciles to its open invoices and allocated receipts.';
     }
     return base+mid;
   }
@@ -2663,7 +2663,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     var acts=[];
     var nfetch=dDaysSinceSAST(s.extracted_at);
     if(nfetch!==null && nfetch>4){ acts.push({p:1,t:'Fetch from Sage',d:'The last fetch was '+nfetch+' days ago. Refresh before you rely on these figures.',b:'Fetch from Sage',fn:'fetch',tone:'bad'}); }
-    if(_debSync && _debSync.n_out>0){ acts.push({p:2,t:_debSync.n_out+' club'+(_debSync.n_out===1?'':'s')+' out of sync with Sage',d:'The itemised detail behind these clubs’ statements lags the live balance. Fetch from Sage to refresh it.',b:'Fetch from Sage',fn:'fetch',tone:'due'}); }
+    if(_debSync && _debSync.n_out>0){ acts.push({p:2,t:_debSync.n_out+' owing club'+(_debSync.n_out===1?'':'s')+' not reconciled in Sage'+(_debSync.out_total!=null?(' ('+dR(_debSync.out_total)+')'):''),d:'Sage shows more owing on '+(_debSync.n_out===1?'this club’s':'these clubs’')+' open invoices than the net balance: a receipt or credit note is sitting unallocated, or an invoice is over-allocated. Correct the allocation in Sage; a fetch will not change it.',b:'',fn:'syncinfo',tone:'due'}); }
     if(_debCash && _debCash.n_clubs>0){ acts.push({p:3,t:'Allocate '+dR(_debCash.total)+' of unallocated cash',d:_debCash.n_clubs+' club'+(_debCash.n_clubs===1?'':'s')+' paid money not yet matched to invoices in Sage. Allocate it so a club is not chased for money already paid.',b:'Cash on account',fn:'cash',tone:'due'}); }
     if(stOOC.length){ acts.push({p:4,t:stOOC.length+' club'+(stOOC.length===1?'':'s')+' at the Out of Compliance trigger',d:dR(sum60(stOOC))+' overdue 120 days and older. A notice is due for your decision — a club is not Out of Compliance until you place it.',b:'Open correspondence',fn:'corr',tone:'bad'}); }
     if(stFinal.length){ acts.push({p:5,t:stFinal.length+' final reminder'+(stFinal.length===1?'':'s')+' due',d:dR(sum60(stFinal))+' overdue 90 days and older (capped at net balance per club) — the last step before Out of Compliance.',b:'Open correspondence',fn:'corr',tone:'due'}); }
@@ -2675,7 +2675,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
       body=acts.map(function(a){
         return '<div style="display:flex;gap:12px;align-items:flex-start;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line)">'
           +'<div style="flex:1"><div style="font-weight:700;color:var(--navy);font-size:13.5px">'+esc(a.t)+'</div><div class="hint" style="font-size:12px;margin-top:2px">'+a.d+'</div></div>'
-          +(canEdit('debtors')?'<button class="btn ghost sm deb-na-btn" data-na="'+a.fn+'" style="white-space:nowrap">'+esc(a.b)+'</button>':'')
+          +((a.fn!=='syncinfo' && canEdit('debtors'))?'<button class="btn ghost sm deb-na-btn" data-na="'+a.fn+'" style="white-space:nowrap">'+esc(a.b)+'</button>':'')
           +'</div>'; }).join('');
     }
     return '<div class="card" style="margin-bottom:12px"><div style="display:flex;align-items:center;gap:8px;margin-bottom:2px"><h3 style="margin:0">Next best actions</h3>'+(acts.length?'<span class="deb-tabn">'+acts.length+'</span>':'')+'</div>'
