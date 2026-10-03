@@ -17,9 +17,9 @@
   var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
   /* ---------- formatting ---------- */
-  function grp(s){ return String(s).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
+  function grp(s){ return String(s).replace(/\B(?=(\d{3})+(?!\d))/g, " "); }
   function num(n){ if(n==null||n===""||isNaN(n)) return "–"; var neg=Number(n)<0, v=grp(Math.abs(Math.round(Number(n)))); return neg?"("+v+")":v; }
-  function rand(n){ if(n==null||n===""||isNaN(n)) return "–"; var neg=Number(n)<0, v="R "+grp(Math.abs(Number(n)).toFixed(2)); return neg?"("+v+")":v; }
+  function rand(n){ if(n==null||n===""||isNaN(n)) return "–"; var neg=Number(n)<0, v="R"+grp(Math.abs(Number(n)).toFixed(2)); return neg?"("+v+")":v; }
   function esc(s){ return NS.esc ? NS.esc(s) : String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
   function pad(x){ return (x<10?"0":"")+x; }
   function dtime(s){ if(!s) return "–"; try{ var d=new Date(s); if(isNaN(d)) return esc(String(s));

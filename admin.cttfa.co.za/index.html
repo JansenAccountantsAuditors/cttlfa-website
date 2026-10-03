@@ -1933,7 +1933,7 @@
     'Formal notice':['Formal notice','#FBEBE0','#8a3c17','#C05621'],
     'Suspension review':['Suspension review','#F8E7E5','#7a2320','#9A3130'],
     'Credit':['In credit','#E7F5EC','#1c5136','#1C7C4A']};
-  function dR(n,nil){ n=Math.round(Number(n)||0); if(n===0) return nil===false?'R0':'–'; var neg=n<0,s='R'+String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' '); return neg?'('+s+')':s; }
+  function dR(n,nil){ n=Math.round(Number(n)||0); if(n===0) return nil===false?'R0':'–'; var neg=n<0,s='R'+String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' '); return neg?'('+s+')':s; }
   function dPc(n){ return (Math.round((Number(n)||0)*10)/10).toFixed(1)+'%'; }
   function dPill(status){ var m=DEB_ST[status]||[status,'#EEF2F8','#33415c','#5A667C']; return '<span class="deb-pill" style="background:'+m[1]+';color:'+m[2]+'"><i style="background:'+m[3]+'"></i>'+esc(m[0])+'</span>'; }
   var DEB_STG={
@@ -2871,8 +2871,8 @@
     try{ var r=await sb.rpc('deb_settings_get'); if(!r.error && r.data) _debSettings=r.data; }catch(e){}
     return _debSettings||{};
   }
-  function debAmt(n){ n=Number(n)||0; var neg=n<0; var v=Math.abs(n).toFixed(2); var p=v.split('.'); p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '); var s=p[0]+'.'+p[1]; return neg?'('+s+')':s; }
-  function debAmtR(n){ n=Number(n)||0; return (n<0?'(R ':'R ')+debAmt(n).replace(/^\(|\)$/g,'')+(n<0?')':''); }
+  function debAmt(n){ n=Number(n)||0; var neg=n<0; var v=Math.abs(n).toFixed(2); var p=v.split('.'); p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '); var s=p[0]+'.'+p[1]; return neg?'('+s+')':s; }
+  function debAmtR(n){ n=Number(n)||0; return (n<0?'(R':'R')+debAmt(n).replace(/^\(|\)$/g,'')+(n<0?')':''); }
   var DEB_NAVY=[7,26,74], DEB_GOLD=[224,152,26], DEB_INK=[33,45,51], DEB_MUTED=[90,102,124], DEB_HAIR=[210,216,228];
 
   function debLetterhead(doc, S, rightTitle){

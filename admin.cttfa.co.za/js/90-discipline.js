@@ -19,7 +19,7 @@
     var s=grp(p[0])+(p[1]?"."+p[1]:""); return neg?"("+s+")":s; }
   function rand(n, dp){ dp = dp==null?0:dp; if(n==null||n===""||isNaN(n)) return "–";
     var neg=Number(n)<0, v=Math.abs(Number(n)).toFixed(dp), p=v.split(".");
-    var s="R "+grp(p[0])+(p[1]?"."+p[1]:""); return neg?"("+s+")":s; }
+    var s="R"+grp(p[0])+(p[1]?"."+p[1]:""); return neg?"("+s+")":s; }
   function esc(s){ return NS.esc ? NS.esc(s) : String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];}); }
   function dt(s){ if(!s) return "–"; try{ var d=new Date(s); if(isNaN(d)) return esc(String(s).slice(0,10));
     return d.getDate()+" "+MON[d.getMonth()]+" "+d.getFullYear(); }catch(e){ return esc(String(s).slice(0,10)); } }
