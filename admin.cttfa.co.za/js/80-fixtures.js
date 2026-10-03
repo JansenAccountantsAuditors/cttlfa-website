@@ -30,6 +30,35 @@
   function isBye(n) { return /(^|\s)bye\.?$/i.test(clean(n)); }
   function isJunior(desc) { return /\bunder\b|\bu-?1[2-8]\b/i.test(desc || ""); }
   function clubOf(n) { return clean(n).replace(/\s+[A-Z]$/, "").replace(/\s+\d+$/, "").trim(); }
+  function clubNorm(s){ return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"").replace(/(footballclub|fussballclub|afc|fc)$/,""); }
+  var REG = null;  // voting-register directory: {byNorm:{norm:{name,type}}, keys:[norm...]}
+  function loadRegister(){
+    if (REG) return Promise.resolve(REG);
+    if (!NS.sb) { REG = { byNorm:{}, keys:[] }; return Promise.resolve(REG); }
+    return Promise.all([
+      NS.sb.from("clubs").select("id,name,type"),
+      NS.sb.from("club_alias").select("alias,register_id")
+    ]).then(function (r) {
+      var byNorm = {}, byId = {};
+      ((r[0] && r[0].data) || []).forEach(function (c) { var e = { name: c.name, type: c.type }; byId[c.id] = e; var k = clubNorm(c.name); if (k) byNorm[k] = e; });
+      ((r[1] && r[1].data) || []).forEach(function (a) { var e = byId[a.register_id]; if (!e) return; var k = clubNorm(a.alias); if (k && !byNorm[k]) byNorm[k] = e; });
+      REG = { byNorm: byNorm, keys: Object.keys(byNorm).sort(function (a, b) { return b.length - a.length; }) };
+      return REG;
+    }).catch(function () { REG = { byNorm:{}, keys:[] }; return REG; });
+  }
+  // Map a LeagueRepublic team name to its register club {name,type}. Full and
+  // associate members come from the voting register; anything unmatched (or a
+  // register 'guest') is a guest, so B-teams and age-group sides fold back into
+  // their parent club instead of inflating the club count.
+  function resolveClub(teamName){
+    var base = clubOf(teamName), bnorm = clubNorm(base), tnorm = clubNorm(teamName);
+    if (REG) {
+      if (bnorm && REG.byNorm[bnorm]) return REG.byNorm[bnorm];
+      if (tnorm && REG.byNorm[tnorm]) return REG.byNorm[tnorm];
+      for (var i = 0; i < REG.keys.length; i++) { var k = REG.keys[i]; if (k.length >= 4 && (bnorm.indexOf(k) === 0 || tnorm.indexOf(k) === 0)) return REG.byNorm[k]; }
+    }
+    return { name: base || clean(teamName), type: "guest" };
+  }
   function pad(x) { return ("0" + x).slice(-2); }
   function grp(n){ if(n==null||n==='') return n; var num=Number(n); if(isNaN(num)) return n; var neg=num<0; var parts=Math.abs(num).toString().split('.'); parts[0]=parts[0].replace(/\B(?=(\d{3})+(?!\d))/g,' '); return (neg?'-':'')+parts.join('.'); }
   function isNum(v) { return v != null && /^-?\d+$/.test(String(v)); }
@@ -128,9 +157,20 @@
         if (dp.t > o.lastT) o.lastT = dp.t;
       }
     });
-    Object.keys(o.teams).forEach(function (id) { var c = clubOf(o.teams[id]); (o.clubs[c] = o.clubs[c] || 0); o.clubs[c]++; });
+    o.clubMeta = {};
+    Object.keys(o.teams).forEach(function (id) {
+      var rc = resolveClub(o.teams[id]);
+      var m = o.clubMeta[rc.name] || (o.clubMeta[rc.name] = { name: rc.name, type: rc.type, teams: 0 });
+      m.teams++; o.clubs[rc.name] = (o.clubs[rc.name] || 0) + 1;
+    });
     o.nTeams = Object.keys(o.teams).length;
     o.nClubs = Object.keys(o.clubs).length;
+    o.nFull = 0; o.nAssoc = 0; o.nGuest = 0; o.tFull = 0; o.tAssoc = 0; o.tGuest = 0;
+    Object.keys(o.clubMeta).forEach(function (k) { var m = o.clubMeta[k];
+      if (m.type === "full") { o.nFull++; o.tFull += m.teams; }
+      else if (m.type === "associate") { o.nAssoc++; o.tAssoc += m.teams; }
+      else { o.nGuest++; o.tGuest += m.teams; }
+    });
     o.walkovers = o.walkHome + o.walkAway;
     return o;
   }
@@ -154,7 +194,7 @@
     if (key === "day") return { title: "Daytime games (before 17:00)", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && d.hh != null && d.hh < 17 && nonBye(f); }) };
     if (key.indexOf("dow:") === 0) { var wd = +key.slice(4); return { title: DOW[wd] + " fixtures", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && d.dow === wd && nonBye(f); }) }; }
     if (key.indexOf("date:") === 0) { var iso = key.slice(5); return { title: "Fixtures on " + fmtDate(iso), fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && d.iso === iso && nonBye(f); }) }; }
-    if (key.indexOf("club:") === 0) { var cn = key.slice(5); return { title: cn + " — all fixtures", fx: fx.filter(function (f) { return (clubOf(f.homeTeamName) === cn || clubOf(f.roadTeamName) === cn) && nonBye(f); }) }; }
+    if (key.indexOf("club:") === 0) { var cn = key.slice(5); return { title: cn + " — all fixtures", fx: fx.filter(function (f) { return (resolveClub(f.homeTeamName).name === cn || resolveClub(f.roadTeamName).name === cn) && nonBye(f); }) }; }
     if (key.indexOf("div:") === 0) { var gid = key.slice(4); return { title: (fx.filter(function (f) { return String(f.fixtureGroupIdentifier) === gid; })[0] || {}).fixtureGroupDesc || "Division", fx: fx.filter(function (f) { return String(f.fixtureGroupIdentifier) === gid; }) }; }
     if (key.indexOf("overdue:") === 0) { var g = key.slice(8); var now = Date.now(); return { title: "Overdue fixtures", fx: fx.filter(function (f) { var d = dParts(f.fixtureDate); return d && d.t < now && !f.result && nonBye(f) && !/postpon|abandon/i.test(f.fixtureStatusDesc || "") && (g === "*" || String(f.fixtureGroupIdentifier) === g); }) }; }
     if (key === "teamClash") return { title: "Teams scheduled twice at the same time", fx: teamClashes().fx };
@@ -259,17 +299,27 @@
     return h;
   }
 
+  function clubChip(tp) { var m = { full: ["Full", "fa-st-full"], associate: ["Associate", "fa-st-assoc"], guest: ["Guest", "fa-st-guest"] }; var x = m[tp] || m.guest; return '<span class="fa-stchip ' + x[1] + '">' + x[0] + '</span>'; }
   function renderEntrants(o) {
-    var clubs = Object.keys(o.clubs).map(function (c) { return [c, o.clubs[c]]; }).sort(function (a, b) { return b[1] - a[1] || a[0].localeCompare(b[0]); });
+    var clubs = Object.keys(o.clubMeta).map(function (k) { return o.clubMeta[k]; });
+    var order = { full: 0, associate: 1, guest: 2 };
+    clubs.sort(function (a, b) { return (order[a.type] - order[b.type]) || (b.teams - a.teams) || a.name.localeCompare(b.name); });
+    var most = clubs.slice().sort(function (a, b) { return b.teams - a.teams; })[0];
     var h = '<div class="fa-tiles">';
-    h += tile(o.nClubs, "Clubs", "distinct clubs", "");
+    h += tile(o.nClubs, "Clubs", "reconciled to the register", "");
     h += tile(grp(o.nTeams), "Teams entered", "across all divisions", "");
     h += tile((o.nClubs ? (o.nTeams / o.nClubs).toFixed(1) : 0), "Avg teams / club", "", "");
-    h += tile(clubs.length ? clubs[0][1] : 0, "Most teams", clubs.length ? clubs[0][0] : "", "");
+    h += tile(most ? most.teams : 0, "Most teams", most ? most.name : "", "");
     h += '</div>';
-    h += '<div class="card"><h3>Teams entered per club</h3><p class="hint" style="margin-bottom:8px">How many teams each club fields across every age group and division. Click a club to list its fixtures.</p>';
-    h += '<table><thead><tr><th>#</th><th>Club</th><th style="text-align:right">Teams</th></tr></thead><tbody>';
-    clubs.forEach(function (r, i) { h += '<tr class="fa-click" data-drill="club:' + NS.esc(r[0]) + '"><td>' + (i + 1) + '</td><td>' + NS.esc(r[0]) + '</td><td style="text-align:right"><b>' + r[1] + '</b></td></tr>'; });
+    h += '<div class="fa-tiles fa-tiles-sm">';
+    h += tile(o.nFull, "Full members", grp(o.tFull) + " teams", "");
+    h += tile(o.nAssoc, "Associate members", grp(o.tAssoc) + " teams", "");
+    h += tile(o.nGuest, "Guest clubs", grp(o.tGuest) + " teams", "");
+    h += '</div>';
+    setTable("Teams entered per club", ["#", "Club", "Status", "Teams"], clubs.map(function (c, i) { return [i + 1, c.name, c.type.charAt(0).toUpperCase() + c.type.slice(1), c.teams]; }));
+    h += '<div class="card">' + exportBar() + '<h3>Teams entered per club</h3><p class="hint" style="margin-bottom:8px">How many teams each club fields across every age group and division, with its register status. Full and associate members come from the voting register (43 full, 7 associate); any club not on the register is a guest. Click a club to list its fixtures.</p>';
+    h += '<table><thead><tr><th>#</th><th>Club</th><th>Status</th><th class="num" style="text-align:right">Teams</th></tr></thead><tbody>';
+    clubs.forEach(function (c, i) { h += '<tr class="fa-click" data-drill="club:' + NS.esc(c.name) + '"><td>' + (i + 1) + '</td><td>' + NS.esc(c.name) + '</td><td>' + clubChip(c.type) + '</td><td class="num" style="text-align:right"><b>' + grp(c.teams) + '</b></td></tr>'; });
     h += '</tbody></table></div>';
     return h;
   }
@@ -281,7 +331,8 @@
     h += tile(o.postponed, "Postponed", "still marked postponed", "postponed");
     h += tile(o.abandoned, "Abandoned", "matches abandoned", "abandoned");
     h += '</div>';
-    h += '<div class="card"><h3>Result &amp; status breakdown</h3>';
+    setTable("Result and status breakdown", ["Status", "Fixtures"], [["Normal (no issue)", o.normal], ["Home walkovers", o.walkHome], ["Away walkovers", o.walkAway], ["Byes", o.byes], ["Abandoned", o.abandoned], ["Postponed", o.postponed]]);
+    h += '<div class="card">' + exportBar() + '<h3>Result &amp; status breakdown</h3>';
     var max = Math.max(o.normal, o.walkovers, o.byes, o.abandoned, o.postponed, 1);
     h += bar("Normal (no issue)", o.normal, max, "green");
     h += bar("Home walkovers", o.walkHome, max, "gold", "walkHome");
@@ -292,7 +343,7 @@
     h += '<p class="hint" style="margin-top:8px">Walkovers, abandonments and postponements are the fixture-integrity items to watch. Byes are scheduled gaps, not problems. Click any to export.</p></div>';
     // walkover hotspots by club
     var wo = filtered().filter(function (f) { return /walkover/i.test(f.fixtureStatusDesc || ""); });
-    var hot = {}; wo.forEach(function (f) { var loser = /home walkover/i.test(f.fixtureStatusDesc) ? f.roadTeamName : f.homeTeamName; var c = clubOf(loser); if (c) hot[c] = (hot[c] || 0) + 1; });
+    var hot = {}; wo.forEach(function (f) { var loser = /home walkover/i.test(f.fixtureStatusDesc) ? f.roadTeamName : f.homeTeamName; var c = resolveClub(loser).name; if (c) hot[c] = (hot[c] || 0) + 1; });
     var hotArr = Object.keys(hot).map(function (k) { return [k, hot[k]]; }).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 12);
     if (hotArr.length) {
       h += '<div class="card"><h3>Walkover hotspots by club</h3><p class="hint" style="margin-bottom:8px">Clubs conceding the most walkovers (the side that did not fulfil the fixture). A discipline and reliability signal.</p><table><thead><tr><th>Club</th><th style="text-align:right">Walkovers conceded</th></tr></thead><tbody>';
@@ -377,7 +428,8 @@
     h += tile(vl.length ? vl[0].n : 0, "Busiest venue-day", vl.length ? (vl[0].venue.split(" ").slice(0, 2).join(" ")) : "", "");
     h += '</div>';
 
-    h += '<div class="card"><h3>Completion by competition</h3><p class="hint" style="margin-bottom:8px">Played versus scheduled. "Overdue" is a fixture whose date has passed with no result yet captured; walkovers, postponements and abandonments are excluded, as those are already resolved. Sorted by overdue, then by lowest completion. Click a row to list its fixtures.</p>';
+    setTable("Completion by competition", ["Competition", "Played", "Total", "Completion %", "Overdue"], arr.map(function (D) { return [D.name, D.played, D.total, D.pct + "%", D.overdue]; }));
+    h += '<div class="card">' + exportBar() + '<h3>Completion by competition</h3><p class="hint" style="margin-bottom:8px">Played versus scheduled. "Overdue" is a fixture whose date has passed with no result yet captured; walkovers, postponements and abandonments are excluded, as those are already resolved. Sorted by overdue, then by lowest completion. Click a row to list its fixtures.</p>';
     h += '<table><thead><tr><th>Competition</th><th style="text-align:right">Played</th><th style="text-align:right">Total</th><th>Progress</th><th style="text-align:right">Overdue</th></tr></thead><tbody>';
     arr.forEach(function (D) {
       var barc = D.overdue > 0 ? "red" : (D.pct >= 100 ? "green" : "");
@@ -426,7 +478,7 @@
     var rows = SEASONS.slice().sort(function (a, b) { return a.y - b.y; }).map(function (s) {
       var fx = cache[s.id].fixtures.filter(function (f) { return segment === "junior" ? isJunior(f.fixtureGroupDesc) : segment === "senior" ? !isJunior(f.fixtureGroupDesc) : true; });
       var o = analyze(fx, cache[s.id].groups);
-      var clubset = {}; Object.keys(o.teams).forEach(function (id) { clubset[clubOf(o.teams[id])] = 1; });
+      var clubset = {}; Object.keys(o.clubs).forEach(function (c) { clubset[c] = 1; });
       return { y: s.y, fx: o.total, teams: o.nTeams, clubs: o.nClubs, goals: o.goals, clubset: clubset };
     });
     function growth(cur, prev) { if (prev == null || !prev) return ""; var d = cur - prev; return d === 0 ? '<span class="fa-flat">±0</span>' : (d > 0 ? '<span class="fa-up">▲ ' + d + '</span>' : '<span class="fa-down">▼ ' + Math.abs(d) + '</span>'); }
@@ -440,7 +492,8 @@
     h += tile(ret.pct + "%", "Club retention", ret.kept + " of " + ret.base + " clubs stayed " + (latest.y - 1) + "→" + latest.y, "");
     h += '</div>';
 
-    h += '<div class="card"><h3>Year-on-year growth — ' + segLabel() + '</h3><p class="hint" style="margin-bottom:8px">Team entrants, clubs and fixtures per season, with the change on the previous year. Straight into the Treasurer\'s report and AGM.</p>';
+    setTable("Year-on-year growth", ["Season", "Teams", "Clubs", "Fixtures"], rows.map(function (r) { return [r.y, r.teams, r.clubs, r.fx]; }));
+    h += '<div class="card">' + exportBar() + '<h3>Year-on-year growth — ' + segLabel() + '</h3><p class="hint" style="margin-bottom:8px">Team entrants, clubs and fixtures per season, with the change on the previous year. Straight into the Treasurer\'s report and AGM.</p>';
     h += '<table><thead><tr><th>Season</th><th style="text-align:right">Teams</th><th></th><th style="text-align:right">Clubs</th><th></th><th style="text-align:right">Fixtures</th><th></th></tr></thead><tbody>';
     rows.forEach(function (r, i) {
       var p = i ? rows[i - 1] : null;
@@ -506,7 +559,8 @@
     var nightShare = fx.length ? Math.round(night.length / fx.length * 100) : 0;
     var ramNightShare = ramFx.length ? Math.round(ramNight.length / ramFx.length * 100) : 0;
 
-    var h = '<div class="card" style="margin-bottom:12px"><p class="hint" style="margin:0">External context overlaid on ' + yr + " " + segLabel().toLowerCase() + ' fixtures: weather, load shedding, public and religious holidays, and school terms. Every figure opens the underlying fixtures with export. These are signals, not proof of cause.</p></div>';
+    setTable("Season context — " + yr, ["Context factor", "Fixtures"], [["Wet days (5mm or more)", rainFx.length], ["Disruptions on wet days", disruptWet.length], ["Night games in heavy load-shedding", nightHeavyLS.length], ["Public-holiday fixtures", holFx.length], ["School-holiday fixtures", schFx.length], ["Ramadan fixtures", ramFx.length]]);
+    var h = '<div class="card" style="margin-bottom:12px">' + exportBar() + '<p class="hint" style="margin:0">External context overlaid on ' + yr + " " + segLabel().toLowerCase() + ' fixtures: weather, load shedding, public and religious holidays, and school terms. Every figure opens the underlying fixtures with export. These are signals, not proof of cause.</p></div>';
 
     // headline tiles
     h += '<div class="fa-tiles">';
@@ -1091,6 +1145,29 @@
      export: per division, all senior, all junior, everything in one, and
      the knock-out cup winners. Central place to download and share logs.
      =================================================================== */
+  var curTable = null;  // {title, cols, rows} for the active subtab's primary table
+  function setTable(title, cols, rows) { curTable = { title: title, cols: cols, rows: rows }; }
+  function exportBar() { return '<div class="fa-xbar"><button type="button" class="btn ghost sm" id="faXcsv">Download CSV</button><button type="button" class="btn gold sm" id="faXpdf">Download PDF</button></div>'; }
+  function exportTableCSV() {
+    if (!curTable) return; var t = curTable;
+    var esc = function (v) { v = String(v == null ? "" : v); return /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v; };
+    var lines = [t.cols.join(",")].concat(t.rows.map(function (r) { return r.map(esc).join(","); }));
+    var meta = "CTTLFA Fixture Analytics," + t.title + "\nSeason," + seasonYear(cur) + ",Segment," + segLabel() + "\nSource,LeagueRepublic API,Extracted," + new Date().toLocaleString("en-ZA") + "\n\n";
+    var blob = new Blob([meta + lines.join("\n")], { type: "text/csv;charset=utf-8;" });
+    var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "CTTLFA " + safeName(t.title) + ".csv";
+    document.body.appendChild(a); a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 200);
+  }
+  function exportTablePDF() {
+    if (!curTable) return; var t = curTable;
+    if (!window.jspdf) { alert("PDF library still loading, try again."); return; }
+    var doc = new window.jspdf.jsPDF({ unit: "pt", format: "a4", orientation: "landscape" });
+    faPdfHead(doc, t.title);
+    doc.autoTable({ startY: 122, head: [t.cols], body: t.rows, styles: { fontSize: 8, cellPadding: 4, overflow: "linebreak" }, headStyles: { fillColor: [24, 64, 80], textColor: 255 }, alternateRowStyles: { fillColor: [244, 246, 251] }, margin: { left: 40, right: 40 } });
+    var y = doc.lastAutoTable.finalY + 16; if (y > 520) { doc.addPage(); y = 40; }
+    doc.setFontSize(9); doc.setTextColor(90, 101, 119); doc.setFont("helvetica", "normal");
+    doc.text(t.rows.length + " rows. Prepared by the Treasurer's office from the CTTLFA LeagueRepublic feed. Read-only analytics.", 40, y);
+    doc.save("CTTLFA " + safeName(t.title) + ".pdf");
+  }
   var SEASON_URL = "https://www.cttfa.co.za/season.json";
   var logData = null, logState = "idle";          // idle | loading | ready | error
   var LOG_GROUPS = ["Senior Divisions", "Reserves", "Veterans", "Women", "Under-18", "Under-16", "Under-14", "Under-12"];
@@ -1427,6 +1504,7 @@
   }
   function paint(id) {
     var body = NS.$("faBody"); if (!body) return;
+    curTable = null;
     if (subView === "logs") { paintLogs(); return; }
     var fx = filtered(); var o = analyze(fx, (cache[id] || {}).groups || []);
     var html = "";
@@ -1440,6 +1518,8 @@
     if (subView === "trends" && SEASONS.some(function (s) { return !cache[s.id]; })) return; // loader in flight
     body.innerHTML = html;
     bindDrills();
+    var _xc = NS.$("faXcsv"); if (_xc) _xc.onclick = exportTableCSV;
+    var _xp = NS.$("faXpdf"); if (_xp) _xp.onclick = exportTablePDF;
     Array.prototype.forEach.call(document.querySelectorAll("#fixturesRoot .fa-ov"), function (b) {
       b.addEventListener("click", function () { var k = b.getAttribute("data-ov"); overlays[k] = !overlays[k]; paint(cur); });
     });
@@ -1508,6 +1588,7 @@
       });
     });
     selectSeason(cur);
+    loadRegister().then(function () { if (cache[cur]) paint(cur); });
   }
 
   NS.renderFixtures = render;
