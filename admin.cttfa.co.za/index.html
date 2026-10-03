@@ -296,6 +296,10 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
   td,th{white-space:normal!important}
   .deb-txwrap{max-height:none!important;overflow:visible!important;border:0!important}
   .print-only{display:block!important}
+  .print-letterhead{display:flex!important;align-items:center;gap:12px;border-bottom:2px solid var(--navy);padding:0 0 8px 0;margin:0 0 12px 0}
+  .print-letterhead img{width:44px;height:44px;object-fit:contain;background:#fff}
+  .print-letterhead .plh-org{font-family:var(--head);font-weight:800;color:#000;font-size:15px;line-height:1.15}
+  .print-letterhead .plh-sub{font-size:10px;color:#333;letter-spacing:.06em;text-transform:uppercase;margin-top:2px}
 }</style>
 
 <!-- LOGIN -->
@@ -346,6 +350,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     </div>
   </header>
   <div class="shell">
+    <div class="print-only print-letterhead"><img src="cttlfa-logo.jpg" alt="CTTLFA crest"><div class="plh-txt"><div class="plh-org">Cape Town Tygerberg Local Football Association</div><div class="plh-sub">Administration Centre · Confidential · internal</div></div></div>
     <aside class="side" id="sideNav">
       <div class="side-lbl">Admin Centre</div>
       <button class="snav on" data-tab="home" title="The Admin Centre home and your action queue."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>Home</button>
