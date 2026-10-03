@@ -147,6 +147,48 @@ def build():
             m = CODE.search(x.get("Name", "") or ""); cd = m.group(1) if m else None
         return cd
 
+    # ---- anchor openings + FY posting movements -> reconstruct the balance from the
+    #      itemised ledger rather than read the API 'Balance' field (which can drift from
+    #      the ledger). The anchor holds each club's true FY-start balance taken from the
+    #      Sage Customer Transactions report; prior years are audited and closed, so these
+    #      openings are stable. Close = anchor opening + current-FY movements. ----
+    anchor_open = {}
+    try:
+        _ast, _an = post_rpc("deb_ledger_anchors", {"p_token": CFG["ingest_token"]})
+        if _ast < 300 and _an:
+            _ad = json.loads(_an)
+            _op = (_ad.get("openings") if isinstance(_ad, dict) else None) or {}
+            anchor_open = {str(k).upper(): round(float(v or 0), 2) for k, v in _op.items()}
+        else:
+            _log("warn", "anchor read HTTP %s; using derived openings" % _ast)
+    except Exception as e:
+        _log("warn", "anchor read failed, using derived openings: %s" % e)
+
+    docs = collections.defaultdict(list)
+    coa = collections.defaultdict(lambda: {"amount": 0., "net": 0., "n": 0, "detail": []})
+    for svc, ttype, mode in _LEDGER_FEEDS:
+        for r in _fy_docs(svc):
+            cd = cc(r)
+            if not cd: continue
+            date = (r.get("Date") or "")[:10]
+            tot = float(r.get("Total") or 0)
+            if mode == "debit": deb, cred = tot, 0.0
+            elif mode == "credit": deb, cred = 0.0, tot
+            else: deb, cred = (tot, 0.0) if tot > 0 else (0.0, -tot)
+            ref = r.get("DocumentNumber") or r.get("Reference") or ""
+            desc = (r.get("Description") or r.get("Reference") or "").strip()
+            docs[cd].append((date, ref, ttype, desc, round(deb, 2), round(cred, 2)))
+            if svc == "CustomerReceipt":
+                ua = float(r.get("TotalUnallocated") or 0)
+                if ua > 0.005:
+                    s = coa[cd]; s["amount"] = round(s["amount"] + ua, 2); s["net"] = round(s["net"] + ua, 2); s["n"] += 1
+                    s["detail"].append({"date": date, "ref": ref, "amount": round(ua, 2)})
+    movement_by_code = {cd: round(sum(deb - cred for (_, _, _, _, deb, cred) in rws), 2) for cd, rws in docs.items()}
+    def recon_bal(code, api_bal):
+        if code and code.upper() in anchor_open:
+            return round(anchor_open[code.upper()] + movement_by_code.get(code, 0.0), 2)
+        return api_bal
+
     # ---- ageing buckets from open invoices netted with unallocated receipts ----
     B = collections.defaultdict(lambda: dict(cur=0., d30=0., d60=0., d90=0., d120=0.))
     for r in inv_open:
@@ -160,7 +202,8 @@ def build():
     clubs = []; est = 0
     for c in cust:
         nm = c.get("Name", "") or ""; m = CODE.search(nm); code = m.group(1) if m else None
-        bal = round(float(c.get("Balance") or 0), 2); active = (c.get("Active") is not False)
+        api_bal = round(float(c.get("Balance") or 0), 2); bal = recon_bal(code, api_bal); active = (c.get("Active") is not False)
+        if code and abs(bal - api_bal) > 0.01: _log("info", "balance reconstructed from ledger: %s api=%.2f ledger=%.2f" % (code, api_bal, bal))
         # drop dormant accounts with nothing owing: no-code zero-balance customers,
         # and inactive zero-balance customers (e.g. a retired duplicate marked
         # inactive in Sage). An inactive account that still owes is kept and chased.
@@ -260,33 +303,15 @@ def build():
                     "Live from the Sage Accounting API; %d club(s) hold unallocated credit shown as current." % est),
         clubs=sorted(clubs, key=lambda c: -c["bal"]))
 
-    # ---- itemised ledger: FY posting docs, derived opening so close == live balance ----
+    # ---- itemised ledger: reuse the posting docs fetched above; seed each club's opening
+    #      from the anchor (true FY-start) where present, else derive it. Close = opening +
+    #      movements, which now equals the reconstructed balance in code_bal. ----
     names = {c["code"]: c["name"] for c in clubs if c["code"]}
-    docs = collections.defaultdict(list)
-    coa = collections.defaultdict(lambda: {"amount": 0., "net": 0., "n": 0, "detail": []})
-    for svc, ttype, mode in _LEDGER_FEEDS:
-        for r in _fy_docs(svc):
-            cd = cc(r)
-            if not cd: continue
-            date = (r.get("Date") or "")[:10]
-            tot = float(r.get("Total") or 0)
-            if mode == "debit": deb, cred = tot, 0.0
-            elif mode == "credit": deb, cred = 0.0, tot
-            else: deb, cred = (tot, 0.0) if tot > 0 else (0.0, -tot)
-            ref = r.get("DocumentNumber") or r.get("Reference") or ""
-            desc = (r.get("Description") or r.get("Reference") or "").strip()
-            docs[cd].append((date, ref, ttype, desc, round(deb, 2), round(cred, 2)))
-            if svc == "CustomerReceipt":
-                ua = float(r.get("TotalUnallocated") or 0)
-                if ua > 0.005:
-                    s = coa[cd]; s["amount"] = round(s["amount"] + ua, 2); s["net"] = round(s["net"] + ua, 2); s["n"] += 1
-                    s["detail"].append({"date": date, "ref": ref, "amount": round(ua, 2)})
-
     led_clubs = []; tie_off = 0
     for code, bal in code_bal.items():
         rows = sorted(docs.get(code, []), key=lambda x: (x[0], x[2], x[1]))
-        movement = round(sum(deb - cred for (_, _, _, _, deb, cred) in rows), 2)
-        opening = round(bal - movement, 2)      # derived => close always ties to the live balance
+        movement = movement_by_code.get(code, round(sum(deb - cred for (_, _, _, _, deb, cred) in rows), 2))
+        opening = anchor_open.get(code.upper(), round(bal - movement, 2))  # true FY-start where anchored
         out = [dict(tx_date=OPENING_DT, reference="", tx_type="Opening Balance",
                     description="Balance brought forward", debit=None, credit=None,
                     balance=opening, is_opening=True)]
