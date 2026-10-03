@@ -1993,26 +1993,29 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
   function dDaysSinceSAST(iso){ if(!iso) return null; var a=String(iso).slice(0,10); var d1=new Date(a+'T00:00:00Z'), d0=new Date(debTodayISO()+'T00:00:00Z'); if(isNaN(d1.getTime())) return null; return Math.round((d0-d1)/86400000); }
   function debFreshTag(iso){ var n=dDaysSinceSAST(iso); if(n===null) return ''; var lbl=(n<=0?'today':(n===1?'yesterday':n+' days ago')); if(n>3){ return ' <span style="color:#9f6621;font-weight:600" title="The most recent Sage movement is '+n+' days old. A fetch today does not add movements Sage has not yet captured.">('+lbl+' &mdash; Sage may be behind)</span>'; } return ' <span class="hint" style="font-weight:400">('+lbl+')</span>'; }
 
-  // Sage-sync indicator: is the itemised transaction detail the same information Sage
-  // currently shows? deb_sync_status compares each club's ledger close to the live ageing.
+  // Sage-sync indicator: does each club's net Sage balance reconcile to its open invoices
+  // and allocated receipts? deb_sync_status flags clubs where Sage still shows more owing on
+  // the open invoices than the net balance (recon_diff > 0): a receipt or credit note left
+  // unallocated, or an over-allocated invoice, which must be corrected in Sage.
   var _debSync=null;
   function debSyncPill(){
     var y=_debSync;
     if(!y){ return '<span class="deb-sync na" title="Sync status could not be read. Reload to try again."><span class="dot"></span>Sync status unavailable</span>'; }
     if(y.in_sync){
-      var t='Every club’s itemised transaction detail matches the live Sage balance'
-        +(y.n_clubs?(' ('+y.n_clubs+' clubs)'):'')+'. The statements and notices you send reflect exactly what is in Sage.'
-        +(y.ledger_extracted_at?(' Transaction detail as at '+dSastStamp(y.ledger_extracted_at)+'.'):'');
-      return '<span class="deb-sync ok" title="'+esc(t)+'"><span class="dot"></span>In sync with Sage</span>';
+      var t='Every club’s net Sage balance reconciles to its open invoices and allocated receipts. Nothing is sitting unallocated or over-allocated in Sage'
+        +(y.n_clubs?(' ('+y.n_clubs+' clubs checked)'):'')+'.'
+        +(y.ageing_extracted_at?(' Balances as at '+dSastStamp(y.ageing_extracted_at)+'.'):'');
+      return '<span class="deb-sync ok" title="'+esc(t)+'"><span class="dot"></span>Reconciled to Sage</span>';
     }
     var w=y.worst, wtxt='';
-    if(w){ wtxt=' Largest difference: '+esc(w.name)+' — Sage shows '+dR(w.ageing)+', the transaction detail shows '+dR(w.ledger_close)+'.';
+    if(w){ wtxt=' Largest: '+esc(w.name)+', where '+dR(w.diff)+' of its open invoices is not matched to its net Sage balance. Correct the allocation in Sage (a receipt or credit note left unallocated, or an over-allocated invoice).';
       var wc=debCashByKey(w.club_key);
-      if(wc){ wtxt+=' This club is holding '+dR(wc.amount)+' of unallocated cash in Sage — allocating it (Account Allocation) should bring it back in sync.'; }
+      if(wc){ wtxt+=' This club is also holding '+dR(wc.amount)+' of unallocated cash in Sage.'; }
     }
-    var t2=y.n_out+' club'+(y.n_out===1?'':'s')+' changed in Sage since the transaction detail was last exported.'+wtxt
-      +' The live balances and ageing are current; only the itemised detail behind these clubs’ statements lags. Fetch from Sage to refresh the detail before relying on those statements.';
-    return '<span class="deb-sync warn" title="'+esc(t2)+'"><span class="dot"></span>'+y.n_out+' club'+(y.n_out===1?'':'s')+' out of sync</span>';
+    var amt=(y.out_total!=null?(' ('+dR(y.out_total)+')'):'');
+    var t2=y.n_out+' club'+(y.n_out===1?'':'s')+' not reconciled to Sage'+amt+'. Sage shows more owing on these clubs’ open invoices than their net balance, so money is sitting unallocated or an invoice is over-allocated in Sage.'+wtxt
+      +' The net balances shown are correct; the allocation needs fixing in Sage so the statements age correctly.';
+    return '<span class="deb-sync warn" title="'+esc(t2)+'"><span class="dot"></span>'+y.n_out+' to reconcile in Sage'+amt+'</span>';
   }
   var _debCash=null;
   async function debLoadSync(){
@@ -2043,7 +2046,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     }
     if(_debSync && _debSync.out_keys && _debSync.out_keys.indexOf(c.club_key)>=0){
       out.outOfSync=true; out.block=true;
-      out.reasons.push('This club’s itemised transaction detail is out of sync with the live Sage balance. Fetch from Sage first so the statement and notice reflect exactly what Sage shows.');
+      out.reasons.push('This club is not reconciled in Sage: its open invoices do not match its net balance (money sitting unallocated, or an over-allocated invoice), so it may already have paid. Fix the allocation in Sage before chasing it.');
     }
     return out;
   }

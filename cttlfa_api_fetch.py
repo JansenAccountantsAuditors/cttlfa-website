@@ -182,7 +182,8 @@ def build():
         ky = code.lower() if code else re.sub(r"[^a-z0-9]", "", clean_name(nm).lower())[:28]
         clubs.append(dict(club_key=ky, code=code, name=clean_name(nm), suburb=None, active=active,
             bal=bal, cur=bk["cur"], b30=bk["d30"], b60=bk["d60"], b90=bk["d90"], b120=bk["d120"], over=over,
-            status=st, last_receipt_days=None, tx_last_balance=None, recon_diff=0))
+            status=st, last_receipt_days=None, tx_last_balance=None,
+            recon_diff=(round(comp - bal, 2) if code else 0)))
 
     # Collapse any customers that share one club code (e.g. two Sage customers both
     # coded CTTxxx) into a single club row, so the snapshot primary key
@@ -213,6 +214,7 @@ def build():
             _c["bal"] = _bal; _c["cur"] = _bk["cur"]; _c["b30"] = _bk["d30"]; _c["b60"] = _bk["d60"]
             _c["b90"] = _bk["d90"]; _c["b120"] = _bk["d120"]
             _c["over"] = round(_bk["d30"] + _bk["d60"] + _bk["d90"] + _bk["d120"], 2)
+            _c["recon_diff"] = round(sum(_ib.values()) - _bal, 2)
             _c["status"] = ("Credit" if _bal < -0.01 else "Paid up" if abs(_bal) <= 0.01 else "Below threshold" if _bal <= 500
                 else "Suspension review" if (_bk["d120"] > 0 or _bk["d90"] > 0) else "Formal notice" if _bk["d60"] > 0
                 else "Reminder" if _bk["d30"] > 0 else "Current")
