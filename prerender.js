@@ -47,6 +47,12 @@ for (const key of Object.keys(PAGES)) {
   out = replaceOnce(out, /(<meta name="twitter:title" id="tw-title" content=")[\s\S]*?(">)/, '$1' + t + '$2', 'twitter:title');
   out = replaceOnce(out, /(<meta name="twitter:description" id="tw-desc" content=")[\s\S]*?(">)/, '$1' + d + '$2', 'twitter:description');
   fs.writeFileSync('p/' + key + '.html', out);
+  // /downloads is also a real folder (weekly bulletins, fixture spreadsheets),
+  // so Apache can't serve /p/downloads.html at the clean route. Drop the same
+  // prerendered page into the folder as its index: /downloads/ then opens the
+  // Downloads page directly (app routes on the "downloads" path segment), and
+  // the actual files in the folder keep downloading normally.
+  if (key === 'downloads') fs.writeFileSync('downloads/index.html', out);
   made.push(key);
 }
 console.log('prerender: wrote ' + made.length + ' route pages');

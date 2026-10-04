@@ -34,11 +34,6 @@ RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 RewriteCond %{HTTP_HOST} !^www\. [NC]
 RewriteRule ^ https://www.%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
-# ---- 1b2. /downloads is also a real folder name; serve the app's prerendered
-#           downloads page for the clean route so the direct link works instead
-#           of Apache redirecting to the (forbidden) /downloads/ folder. ----
-RewriteRule ^downloads/?$ /p/downloads.html [L]
-
 # ---- 1b3. Per-page share previews for link crawlers only (WhatsApp, Facebook, etc.).
 #           Humans and search engines get the real app; only known preview-bot UAs get a static OG stub. ----
 RewriteCond %{HTTP_USER_AGENT} (facebookexternalhit|Facebot|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|redditbot|SkypeUriPreview|vkShare) [NC]

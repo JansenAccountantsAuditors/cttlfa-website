@@ -1,6 +1,0 @@
-# The /downloads route is also this real folder (holds the weekly bulletins and
-# fixture spreadsheets). When the app route /downloads/ is opened, serve the
-# prerendered downloads page instead of a forbidden directory listing. The
-# actual files in this folder (…/downloads/<file>) are still served normally.
-RewriteEngine On
-RewriteRule ^$ /p/downloads.html [L]
