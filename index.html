@@ -1922,7 +1922,7 @@ body .card-f{background:#FBF7F0}
       <div class="stat"><div class="n" data-stat="clubs" data-count="50">0</div><div class="l">Clubs</div></div>
       <div class="stat"><div class="n" data-stat="teams" data-count="623">0</div><div class="l">Teams</div></div>
       <div class="stat"><div class="n" data-stat="divisions" data-count="58">0</div><div class="l">Leagues &amp; divisions</div></div>
-      <div class="stat"><div class="n" data-stat="referees" data-count="423">0</div><div class="l">Registered referees</div></div>
+      <div class="stat"><div class="n" data-stat="referees" data-count="71">0</div><div class="l">Registered referees</div></div>
       <div class="stat"><div class="n" data-count="1993">0</div><div class="l">Established</div></div>
     </div>
     <div class="wrap"><p class="statnote" id="statnote" style="text-align:center;font-size:12px;line-height:1.4;color:#5b6b73;margin:12px 0 0">Drawn live from the Association&rsquo;s registration and competition records.</p></div>
@@ -1965,12 +1965,12 @@ body .card-f{background:#FBF7F0}
   <!-- participation / registration -->
   <section class="sec alt">
     <div class="wrap">
-      <div class="sec-head"><div><span class="eyebrow">A grassroots game</span><h2>Who plays our football</h2><p>Registered-player figures for the current 2024–2026 SAFA card cycle, from the CTTLFA registration database as at 3 September 2026. Close to two out of every three registered players are children.</p></div></div>
+      <div class="sec-head"><div><span class="eyebrow">A grassroots game</span><h2>Who plays our football</h2><p>Registered-player figures for the current 2024–2026 SAFA card cycle, from the CTTLFA registration database as at <span id="whoAsAt">October 2026</span>. Close to two out of every three registered players are children.</p></div></div>
       <div class="statband sb4">
-        <div class="sb"><div class="sbn">23 434</div><div class="sbl">Registered players<br>2024–2026 SAFA card cycle</div></div>
-        <div class="sb"><div class="sbn">15 047</div><div class="sbl">Juniors<br>64% of registered players</div></div>
-        <div class="sb"><div class="sbn">7 819</div><div class="sbl">Seniors<br>33% of registered players</div></div>
-        <div class="sb"><div class="sbn">54</div><div class="sbl">Registered referees</div></div>
+        <div class="sb"><div class="sbn" data-fig="players">23 486</div><div class="sbl">Registered players<br>2024–2026 SAFA card cycle</div></div>
+        <div class="sb"><div class="sbn" data-fig="juniors">15 508</div><div class="sbl">Juniors<br><span data-figpct="juniors">66</span>% of registered players</div></div>
+        <div class="sb"><div class="sbn" data-fig="seniors">7 920</div><div class="sbl">Seniors<br><span data-figpct="seniors">34</span>% of registered players</div></div>
+        <div class="sb"><div class="sbn" data-fig="referees">71</div><div class="sbl">Registered referees</div></div>
       </div>
       <div class="feat" style="margin-top:30px;align-items:center">
         <div>
@@ -3773,7 +3773,7 @@ body .card-f{background:#FBF7F0}
   <section class="sec" style="padding-top:36px">
     <div class="wrap">
       <div class="statband sb4">
-        <div class="sb"><div class="sbn">2 796</div><div class="sbl">Registered players tracked</div></div>
+        <div class="sb"><div class="sbn">2 796</div><div class="sbl">Players with disciplinary records</div></div>
         <div class="sb"><div class="sbn">1 765</div><div class="sbl">Yellow cards logged</div></div>
         <div class="sb"><div class="sbn">200+</div><div class="sbl">Disciplinary rulings published</div></div>
         <div class="sb"><div class="sbn">Live</div><div class="sbl">Updated through the season</div></div>
@@ -5826,19 +5826,31 @@ window.addEventListener('scroll',()=>{const y=window.scrollY;hdr.classList.toggl
 totop.onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
 
 /* counters */
+var MONL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+/* South African convention: space thousands separator (not a comma). */
+function grpn(n){var neg=(+n<0),p=Math.abs(+n).toString().split('.');p[0]=p[0].replace(/\B(?=(\d{3})+(?!\d))/g,' ');return (neg?'-':'')+p.join('.');}
 function animate(el){const t=+el.dataset.count;let plus=el.querySelector('.plus');let c=0;const step=Math.max(1,Math.round(t/60));
-  const iv=setInterval(()=>{c+=step;if(c>=t){c=t;clearInterval(iv);}el.childNodes[0].nodeValue=(t===1993?c:c.toLocaleString());if(plus&&c>=t)plus.textContent='+';},22);}
+  const iv=setInterval(()=>{c+=step;if(c>=t){c=t;clearInterval(iv);}el.childNodes[0].nodeValue=(t===1993?c:grpn(c));if(plus&&c>=t)plus.textContent='+';},22);}
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){animate(e.target);io.unobserve(e.target);}}),{threshold:.4});
-/* Live homepage figures: overwrite the baked-in fallbacks with the current counts from
-   the association's own registration and competition records (web_home_stats) before the
-   counters run, so the public band always matches the admin registrations and club pages.
-   If the fetch fails, the baked-in fallbacks (kept current) animate instead. */
+/* Live site figures: overwrite the baked-in fallbacks with the current counts from the
+   association's own registration and competition records (web_home_stats) so every band —
+   the home counters and the "Who plays our football" participation band — shows one agreed
+   figure per metric, matching the admin registrations and club pages. If the fetch fails,
+   the baked-in fallbacks (kept current) are shown instead. */
 function applyLiveStats(d){ if(!d) return;
+  /* home counters (animated) */
   document.querySelectorAll('.stat .n[data-stat]').forEach(function(n){ var k=n.getAttribute('data-stat'); var v=d[k];
-    if(v!=null && !isNaN(+v)){ n.dataset.count=+v; var tn=n.childNodes[0]; if(tn && tn.nodeValue && tn.nodeValue!=='0'){ tn.nodeValue=(+v).toLocaleString(); } } });
-  var note=document.getElementById('statnote');
-  if(note && d.as_at){ var dt=new Date(d.as_at+'T00:00:00'); var MONL=['January','February','March','April','May','June','July','August','September','October','November','December'];
-    if(!isNaN(dt.getTime())){ note.textContent='As at '+dt.getDate()+' '+MONL[dt.getMonth()]+' '+dt.getFullYear()+' · drawn live from the Association’s registration and competition records.'; } } }
+    if(v!=null && !isNaN(+v)){ n.dataset.count=+v; var tn=n.childNodes[0]; if(tn && tn.nodeValue && tn.nodeValue!=='0'){ tn.nodeValue=grpn(+v); } } });
+  /* participation band and any other static figures */
+  document.querySelectorAll('[data-fig]').forEach(function(n){ var k=n.getAttribute('data-fig'); var v=d[k];
+    if(v!=null && !isNaN(+v)){ n.textContent=grpn(+v); } });
+  if(d.juniors!=null && d.seniors!=null){ var tot=(+d.juniors)+(+d.seniors);
+    if(tot>0){ var jp=Math.round(100*d.juniors/tot), sp=Math.round(100*d.seniors/tot);
+      var je=document.querySelector('[data-figpct="juniors"]'); if(je) je.textContent=jp;
+      var se=document.querySelector('[data-figpct="seniors"]'); if(se) se.textContent=sp; } }
+  var my=''; if(d.as_at){ var dt=new Date(d.as_at+'T00:00:00'); if(!isNaN(dt.getTime())) my=MONL[dt.getMonth()]+' '+dt.getFullYear();
+    var note=document.getElementById('statnote'); if(note) note.textContent='As at '+dt.getDate()+' '+MONL[dt.getMonth()]+' '+dt.getFullYear()+' · drawn live from the Association’s registration and competition records.';
+    var wa=document.getElementById('whoAsAt'); if(wa && my) wa.textContent=my; } }
 (window.__statsP||Promise.resolve(null)).then(function(d){ applyLiveStats(d); }).catch(function(){}).then(function(){ document.querySelectorAll('.stat .n').forEach(function(n){io.observe(n);}); });
 
 /* Contact is handled by direct pre-composed mailto links (see Contact page & footer) — no form backend required. */
