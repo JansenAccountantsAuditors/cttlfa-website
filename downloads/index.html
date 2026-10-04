@@ -7,7 +7,8 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <link rel="preconnect" href="https://www.websiteadmin.cttfa.co.za" crossorigin>
-<script>/* start the match-data fetch immediately so it isn't queued behind other requests */window.__seasonP=null;try{window.__apptP=fetch('appointments.json').then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}catch(e){}</script>
+<script>/* start the match-data fetch immediately so it isn't queued behind other requests */window.__seasonP=null;try{window.__apptP=fetch('appointments.json').then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}catch(e){}
+/* start the live homepage figures fetch early (association registration + competition records) */try{var SBK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiYmJzdmtzaGFqb2xsZHVhcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODYyODgsImV4cCI6MjEwMzY2MjI4OH0.8heeqe-03Mji2NgHt17ZOCoctijRhF78cHvSQkrUUi0';window.__statsP=fetch('https://fbbbsvkshajollduapaw.supabase.co/rest/v1/rpc/web_home_stats',{method:'POST',headers:{apikey:SBK,Authorization:'Bearer '+SBK,'Content-Type':'application/json'},body:'{}',cache:'no-store'}).then(function(r){return r.ok?r.json():null;}).catch(function(){return null;});}catch(e){window.__statsP=null;}</script>
 <script>/* LeagueRepublic live feed (replaces scraped season.json) */
 /* leaguerepublic-live.js — live LeagueRepublic feed for the CTTFA website.
    Replaces the scraped season.json with direct calls to the LeagueRepublic JSON API.
@@ -1914,16 +1915,17 @@ body .card-f{background:#FBF7F0}
     <div class="ticker-track" id="ticker"></div>
   </div>
 
-  <!-- stats: the association by the numbers (2025) -->
+  <!-- stats: the association by the numbers (live from web_home_stats; baked values are the current fallback) -->
   <div class="stats">
     <div class="wrap">
-      <div class="stat"><div class="n" data-count="23434">0</div><div class="l">Registered players</div></div>
-      <div class="stat"><div class="n" data-count="50">0</div><div class="l">Clubs</div></div>
-      <div class="stat"><div class="n" data-count="880">0</div><div class="l">Teams</div></div>
-      <div class="stat"><div class="n" data-count="54">0</div><div class="l">Leagues &amp; divisions</div></div>
-      <div class="stat"><div class="n" data-count="54">0</div><div class="l">Registered referees</div></div>
+      <div class="stat"><div class="n" data-stat="players" data-count="23486">0</div><div class="l">Registered players</div></div>
+      <div class="stat"><div class="n" data-stat="clubs" data-count="50">0</div><div class="l">Clubs</div></div>
+      <div class="stat"><div class="n" data-stat="teams" data-count="623">0</div><div class="l">Teams</div></div>
+      <div class="stat"><div class="n" data-stat="divisions" data-count="58">0</div><div class="l">Leagues &amp; divisions</div></div>
+      <div class="stat"><div class="n" data-stat="referees" data-count="423">0</div><div class="l">Registered referees</div></div>
       <div class="stat"><div class="n" data-count="1993">0</div><div class="l">Established</div></div>
     </div>
+    <div class="wrap"><p class="statnote" id="statnote" style="text-align:center;font-size:12px;line-height:1.4;color:#5b6b73;margin:12px 0 0">Drawn live from the Association&rsquo;s registration and competition records.</p></div>
   </div>
 
   <!-- president's welcome -->
@@ -5827,7 +5829,17 @@ totop.onclick=()=>window.scrollTo({top:0,behavior:'smooth'});
 function animate(el){const t=+el.dataset.count;let plus=el.querySelector('.plus');let c=0;const step=Math.max(1,Math.round(t/60));
   const iv=setInterval(()=>{c+=step;if(c>=t){c=t;clearInterval(iv);}el.childNodes[0].nodeValue=(t===1993?c:c.toLocaleString());if(plus&&c>=t)plus.textContent='+';},22);}
 const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){animate(e.target);io.unobserve(e.target);}}),{threshold:.4});
-document.querySelectorAll('.stat .n').forEach(n=>{io.observe(n);});
+/* Live homepage figures: overwrite the baked-in fallbacks with the current counts from
+   the association's own registration and competition records (web_home_stats) before the
+   counters run, so the public band always matches the admin registrations and club pages.
+   If the fetch fails, the baked-in fallbacks (kept current) animate instead. */
+function applyLiveStats(d){ if(!d) return;
+  document.querySelectorAll('.stat .n[data-stat]').forEach(function(n){ var k=n.getAttribute('data-stat'); var v=d[k];
+    if(v!=null && !isNaN(+v)){ n.dataset.count=+v; var tn=n.childNodes[0]; if(tn && tn.nodeValue && tn.nodeValue!=='0'){ tn.nodeValue=(+v).toLocaleString(); } } });
+  var note=document.getElementById('statnote');
+  if(note && d.as_at){ var dt=new Date(d.as_at+'T00:00:00'); var MONL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    if(!isNaN(dt.getTime())){ note.textContent='As at '+dt.getDate()+' '+MONL[dt.getMonth()]+' '+dt.getFullYear()+' · drawn live from the Association’s registration and competition records.'; } } }
+(window.__statsP||Promise.resolve(null)).then(function(d){ applyLiveStats(d); }).catch(function(){}).then(function(){ document.querySelectorAll('.stat .n').forEach(function(n){io.observe(n);}); });
 
 /* Contact is handled by direct pre-composed mailto links (see Contact page & footer) — no form backend required. */
 
