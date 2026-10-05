@@ -121,7 +121,7 @@
       jget("/getFixtureGroupsForSeason/" + seasonID),
       jgetNotes(fileKey)
     ]).then(function (res) {
-      var fixtures = res[0], groups = res[1], lnotes = res[2] || [];
+      var fixtures = res[0], groups = res[1], lnotes = res[2] || []; var _tIds={};(fixtures||[]).forEach(function(_f){if(!_f)return;if(_f.homeTeam!=null&&!/^bye\b/i.test(String(_f.homeTeamName||'')))_tIds[_f.homeTeam]=1;if(_f.roadTeam!=null&&!/^bye\b/i.test(String(_f.roadTeamName||'')))_tIds[_f.roadTeam]=1;});var _teamsEntered=Object.keys(_tIds).length;
       var nrById = {}, adjByLeague = {}, notesByLeague = {};
       Object.keys(BAKED.noResult || {}).forEach(function (id) { nrById[id] = 1; });
       lnotes.forEach(function (n) {
@@ -242,7 +242,7 @@
       return {
         season: BAKED.seasonNo[fileKey], label: BAKED.labels[fileKey],
         crestBase: BAKED.crestBase, crests: BAKED.crests,
-        updated: new Date().toISOString(), leagues: leagues, cups: cups
+        updated: new Date().toISOString(), teamsEntered: _teamsEntered, leagues: leagues, cups: cups
       };
     });
   }
@@ -1926,7 +1926,7 @@ body .card-f{background:#FBF7F0}
     <div class="wrap">
       <div class="stat"><div class="n" data-stat="players" data-count="23486">0</div><div class="l">Registered players</div></div>
       <div class="stat"><div class="n" data-stat="clubs" data-count="50">0</div><div class="l">Clubs</div></div>
-      <div class="stat"><div class="n" data-stat="teams" data-count="623">0</div><div class="l">Teams</div></div>
+      <div class="stat"><div class="n" data-stat="teams" data-count="645">0</div><div class="l">Teams</div></div>
       <div class="stat"><div class="n" data-stat="divisions" data-count="58">0</div><div class="l">Leagues &amp; divisions</div></div>
       <div class="stat"><div class="n" data-stat="referees" data-count="71">0</div><div class="l">Registered referees</div></div>
       <div class="stat"><div class="n" data-count="1993">0</div><div class="l">Established</div></div>
@@ -5845,7 +5845,7 @@ const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){animat
    the baked-in fallbacks (kept current) are shown instead. */
 function applyLiveStats(d){ if(!d) return;
   /* home counters (animated) */
-  document.querySelectorAll('.stat .n[data-stat]').forEach(function(n){ var k=n.getAttribute('data-stat'); var v=d[k];
+  document.querySelectorAll('.stat .n[data-stat]').forEach(function(n){ var k=n.getAttribute('data-stat'); if(k==='teams')return; var v=d[k];
     if(v!=null && !isNaN(+v)){ n.dataset.count=+v; var tn=n.childNodes[0]; if(tn && tn.nodeValue && tn.nodeValue!=='0'){ tn.nodeValue=grpn(+v); } } });
   /* participation band and any other static figures */
   document.querySelectorAll('[data-fig]').forEach(function(n){ var k=n.getAttribute('data-fig'); var v=d[k];
@@ -6211,7 +6211,7 @@ function renderMedia(){const el=document.getElementById('prList');if(!el)return;
    the whole site — every competition, real crests, both seasons — goes live with
    no code change. Locally it 404s and the baked snapshot is used. */
 function applySeason(j){
-  if(!j||!j.leagues)return false;
+  if(!j||!j.leagues)return false; if(j.teamsEntered){try{var _tv=+j.teamsEntered;document.querySelectorAll('[data-stat="teams"]').forEach(function(_n){_n.dataset.count=_tv;var _c=_n.childNodes&&_n.childNodes[0];var _t=(typeof grpn==='function'?grpn(_tv):String(_tv));if(_c&&_c.nodeValue&&_c.nodeValue!=='0')_c.nodeValue=_t;});}catch(e){}}
   LRLIVE=j.leagues; TEAMCRESTS=j.crests||{}; if(j.crestBase)CRESTBASE=j.crestBase; if(j.season)CURSEASON=j.season;
   const A1=LRLIVE.A1||LRLIVE[Object.keys(LRLIVE)[0]];
   if(A1&&A1.table){
