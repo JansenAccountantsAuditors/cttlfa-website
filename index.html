@@ -5229,14 +5229,14 @@ let GAL_BASE=[
 let GAL_ADMIN=[];                 /* filled by the admin sync with any NEW albums */
 let GALBUMS=[];
 function galBaseSlugs(){var s={};GAL_BASE.forEach(function(a){s[a.slug]=1;});return s;}
-function galBuild(){
+function galSortKey(al){var d=String(al.cap||'').trim();if(d){var t=Date.parse(d);if(!isNaN(t))return t;var mm=d.match(/^(\d{1,2})\s+([A-Za-z]+)\s+(20\d\d)$/);if(mm){var t2=Date.parse(mm[2]+' '+mm[1]+', '+mm[3]);if(!isNaN(t2))return t2;}}var y=(String(al.cap||'').match(/(20\d\d)/)||String(al.year||'').match(/(20\d\d)/));return y?Date.parse(y[1]+'-06-01'):0;} function galBuild(){
   GALBUMS=[];
   GAL_BASE.forEach(function(a){var ph=[];for(var i=1;i<=a.count;i++){var fn=a.slug+'-'+String(i).padStart(3,'0')+'.jpg';
     ph.push({t:PBASE+'thumbs/'+fn,f:PBASE+'full/'+fn,p:'thumbs/'+fn,pf:'full/'+fn});}
     GALBUMS.push({name:a.name,year:a.year||'',cap:a.cap||'',photos:ph});});
   GAL_ADMIN.forEach(function(a){if(!a||!Array.isArray(a.photos)||!a.photos.length)return;
-    GALBUMS.push({name:a.name,year:a.year||'',cap:a.cap||'',photos:a.photos.map(function(u){return {t:galThumbFromFull(u),f:u,p:'',pf:''};})});});
-  if(GALBUMS.length>8)GALBUMS=GALBUMS.slice(0,8);
+    GALBUMS.push({name:a.name,year:a.year||'',cap:a.cap||'',photos:a.photos.map(function(u){return {t:u,f:u,p:'',pf:''};})});});
+  GALBUMS.sort(function(x,y){return galSortKey(y)-galSortKey(x);}); if(GALBUMS.length>8)GALBUMS=GALBUMS.slice(0,8);
 }
 function galCardHTML(al,idx){
   var prev='';for(var i=0;i<4;i++){var p=al.photos[i];
