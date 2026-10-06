@@ -5218,7 +5218,7 @@ function galLoad(root){root=root||document;var ims=root.querySelectorAll('img[da
 /* Event-album gallery. Base albums are baked (repo-served, fast). Admin-uploaded
    albums are appended later by the admin sync (thumbs derived by inserting /thumbs/).
    Each card shows a 2x2 preview + count; clicking opens the album; clicking a photo
-   opens the lightbox. Capped at 8 albums on the page. */
+   opens the lightbox. Capped at 12 albums on the page. */
 let GAL_BASE=[
   {name:'2025 Knockouts',slug:'cttlfa-knockout-2025',count:77,year:'2025',cap:'Senior and junior knockout finals across the season.'},
   {name:'2023 Junior Finals',slug:'2023-junior-finals',count:60,year:'2023',cap:'Our youngest sides on the big stage.'},
@@ -5236,7 +5236,7 @@ function galSortKey(al){var d=String(al.cap||'').trim();if(d){var t=Date.parse(d
     GALBUMS.push({name:a.name,year:a.year||'',cap:a.cap||'',photos:ph});});
   GAL_ADMIN.forEach(function(a){if(!a||!Array.isArray(a.photos)||!a.photos.length)return;
     GALBUMS.push({name:a.name,year:a.year||'',cap:a.cap||'',photos:a.photos.map(function(u){return {t:u,f:u,p:'',pf:''};})});});
-  GALBUMS.sort(function(x,y){return galSortKey(y)-galSortKey(x);}); if(GALBUMS.length>8)GALBUMS=GALBUMS.slice(0,8);
+  GALBUMS.sort(function(x,y){return galSortKey(y)-galSortKey(x);}); if(GALBUMS.length>12)GALBUMS=GALBUMS.slice(0,12);
 }
 function galCardHTML(al,idx){
   var prev='';for(var i=0;i<4;i++){var p=al.photos[i];
