@@ -374,6 +374,8 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
       <div class="side-lbl" style="margin-top:14px">Website</div>
       <button class="snav" data-tab="webadmin" title="Edit the public cttfa.co.za content in-house."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>Website Admin</button>
       <button class="snav" data-tab="webstats" title="Live Google Analytics for the public cttfa.co.za site."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg>Website Analytics</button>
+      <div class="side-lbl" style="margin-top:14px">Events</div>
+      <button class="snav" data-tab="awards" title="Awards Evening RSVPs — who has confirmed, outstanding clubs, totals and CSV export."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 0-3 3"/></svg>Awards RSVPs</button>
       <div class="side-lbl" style="margin-top:14px">System</div>
       <button class="snav" data-tab="integrity" title="Data integrity — the four inputs (Sage, LeagueRepublic, SAFA registrations, dash), the internal mapping that arranges them, and the platform and operations monitors."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v5c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V6z"/><path d="M9 12l2 2 4-4"/></svg>Data Integrity</button>
       <button class="snav" data-tab="users" title="The user list — who may sign in, and their access level. Administrators manage this."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users</button>
@@ -550,6 +552,11 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     <!-- WEBSITE ANALYTICS (embedded Looker Studio, live GA4) -->
     <section id="tab-webstats" class="hidden">
       <div id="webstatsRoot"><div class="card"><p class="hint">Loading website analytics&hellip;</p></div></div>
+    </section>
+
+    <!-- AWARDS EVENING RSVP TRACKER -->
+    <section id="tab-awards" class="hidden">
+      <div id="awardsRoot"><div class="card"><p class="hint">Loading Awards RSVPs&hellip;</p></div></div>
     </section>
 
     <!-- SYSTEM HEALTH -->
@@ -1374,19 +1381,19 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
   }
 
   /* ---------- tabs ---------- */
-  var ALL_AREAS=["voting","registrations","webadmin","discipline","fincom","debtors","fixtures","site"];
+  var ALL_AREAS=["voting","registrations","webadmin","discipline","fincom","debtors","fixtures","site","awards"];
   /* Visibility: Fincom users see ONLY the Fincom dashboard; everyone else sees all areas. */
   function canSee(area){ if(!area) return true; if(meRole==="fincom") return area==="fincom"; return true; }
   /* Edit rights: administrators edit everything; staff edit only their ticked areas; viewers and fincom edit nothing. */
   function canEdit(area){ if(!area) return false; if(meRole==="administrator") return true; if(meRole==="staff") return (((me&&me.modules)||[]).indexOf(area)>=0); return false; }
-  function tabArea(name){ if(["meetings","accredit","compliance","motions","live","audit"].indexOf(name)>=0) return "voting"; if(name==="registrations") return "registrations"; if(name==="webadmin") return "webadmin"; if(name==="fincom") return "fincom"; if(name==="webstats") return "webstats"; if(name==="debtors") return "debtors"; if(name==="clubportal") return "debtors"; if(name==="clubdb") return "debtors"; if(name==="clubcontacts") return "debtors"; if(name==="discipline") return "debtors"; if(name==="referees") return "debtors"; if(name==="clubprofile") return "debtors"; if(name==="lognotes") return "fixtures"; return null; }
+  function tabArea(name){ if(["meetings","accredit","compliance","motions","live","audit"].indexOf(name)>=0) return "voting"; if(name==="registrations") return "registrations"; if(name==="webadmin") return "webadmin"; if(name==="fincom") return "fincom"; if(name==="webstats") return "webstats"; if(name==="debtors") return "debtors"; if(name==="clubportal") return "debtors"; if(name==="clubdb") return "debtors"; if(name==="clubcontacts") return "debtors"; if(name==="discipline") return "debtors"; if(name==="referees") return "debtors"; if(name==="clubprofile") return "debtors"; if(name==="lognotes") return "fixtures"; if(name==="awards") return "awards"; return null; }
   function goTab(name){
     if(meRole==="fincom") name="fincom";
     var _a=tabArea(name); if(_a && !canSee(_a)) name="home";
     var votingSubs=["meetings","accredit","compliance","motions","live","audit"];
-    var sideActive = votingSubs.indexOf(name)>=0 ? "meetings" : (["home","registrations","clubdb","clubprofile","clubcontacts","clubportal","debtors","discipline","referees","fincom","fixtures","lognotes","planner27","webadmin","webstats","syshealth","integrity","guides","users","help"].indexOf(name)>=0 ? name : "home");
+    var sideActive = votingSubs.indexOf(name)>=0 ? "meetings" : (["home","registrations","clubdb","clubprofile","clubcontacts","clubportal","debtors","discipline","referees","fincom","fixtures","lognotes","planner27","webadmin","webstats","awards","syshealth","integrity","guides","users","help"].indexOf(name)>=0 ? name : "home");
     Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav"),function(x){x.classList.toggle("on",x.dataset.tab===sideActive);});
-    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom","fixtures","lognotes","planner27","webstats","syshealth","integrity","guides","debtors","clubportal","clubdb","clubcontacts","discipline","referees","clubprofile"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
+    ["home","meetings","accredit","compliance","motions","live","registrations","audit","users","help","webadmin","fincom","fixtures","lognotes","planner27","webstats","awards","syshealth","integrity","guides","debtors","clubportal","clubdb","clubcontacts","discipline","referees","clubprofile"].forEach(function(n){ var el=$("tab-"+n); if(el) el.classList.toggle("hidden", n!==name); });
     var sub=$("votingSubnav"); if(sub){ var inV=votingSubs.indexOf(name)>=0; sub.style.display=inV?"":"none"; Array.prototype.forEach.call(sub.querySelectorAll(".subtab"),function(x){x.classList.toggle("on",x.dataset.tab===name);}); }
     var _mp=$("meetingPick"); if(_mp) _mp.style.display=(["meetings","accredit","compliance","motions","live"].indexOf(name)>=0)?"":"none";
     if(name!=="accredit") stopCiTimer();
@@ -1402,6 +1409,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     if(name==="webadmin" && typeof renderWebadmin==="function") renderWebadmin();
     if(name==="fincom" && typeof renderFincom==="function") renderFincom();
     if(name==="webstats" && window.AC.renderWebstats) window.AC.renderWebstats();
+    if(name==="awards" && window.AC.renderAwards) window.AC.renderAwards();
     if(name==="syshealth" && window.AC && window.AC.renderSysHealth) window.AC.renderSysHealth();
     if(name==="debtors" && typeof renderDebtors==="function") renderDebtors();
     if(name==="clubportal" && typeof renderClubPortal==="function") renderClubPortal();
@@ -1441,6 +1449,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
       items.push(tab("Voting & Meetings","meetings"));
       items.push(tab("Registrations & Clubs","registrations"));
       items.push(tab("Website Analytics","webstats"));
+      items.push(tab("Awards RSVPs","awards"));
       items.push(tab("Website Admin","webadmin"));
       items.push(tab("Fincom Dashboard","fincom"));
       items.push(tab("Data Integrity","integrity"));
@@ -5887,6 +5896,7 @@ tr.fa-click:hover{background:#f2f6ff}
 </style>
 <script src="js/50-system.js?v=6"></script>
 <script src="js/70-webstats.js?v=1"></script>
+<script src="js/85-awards.js?v=1"></script>
 <script src="js/81-fixtures-context.js?v=1"></script>
 <script src="js/80-fixtures.js?v=14"></script>
 <script src="js/82-lognotes.js?v=1"></script>

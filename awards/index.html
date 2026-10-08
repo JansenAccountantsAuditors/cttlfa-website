@@ -25,87 +25,91 @@
     --ivory:#f3ece0;--ivory-dim:#cdbfa8;
     --surface:#f7f4ee;--surface-raised:#fffdf8;--border:#d8cfbd;
     --text:#223038;--text-muted:#5b6771;--field:#ffffff;--field-border:#b9ac95;
-    --ok:#296944;--warn:#9f6621;--full:#9a3130;--focus:#1f6f8b;--radius:14px;--maxw:720px;
+    --ok:#296944;--warn:#9f6621;--full:#9a3130;--focus:#1f6f8b;--radius:12px;--maxw:680px;--formw:470px;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
-  body{margin:0;background:var(--navy-deep);color:var(--text);font-family:"Source Sans 3","Calibri","Segoe UI",sans-serif;font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased}
-  .page{max-width:var(--maxw);margin:0 auto;background:var(--surface);box-shadow:0 30px 80px rgba(0,0,0,.45);min-height:100vh}
+  body{margin:0;background:var(--navy-deep);color:var(--text);font-family:"Source Sans 3","Calibri","Segoe UI",sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .page{max-width:var(--maxw);margin:0 auto;background:var(--surface);box-shadow:0 24px 64px rgba(0,0,0,.4)}
 
-  .invite{position:relative;background:radial-gradient(120% 90% at 50% 0%, var(--navy-2) 0%, var(--navy) 46%, var(--navy-deep) 100%);color:var(--ivory);text-align:center;padding:46px 24px 52px;overflow:hidden}
-  .invite::before{content:"";position:absolute;inset:14px;border:1px solid rgba(201,162,75,.38);pointer-events:none}
-  .invite::after{content:"";position:absolute;inset:19px;border:1px solid rgba(201,162,75,.16);pointer-events:none}
+  .invite{position:relative;background:radial-gradient(120% 90% at 50% 0%, var(--navy-2) 0%, var(--navy) 46%, var(--navy-deep) 100%);color:var(--ivory);text-align:center;padding:30px 20px 34px;overflow:hidden}
+  .invite::before{content:"";position:absolute;inset:12px;border:1px solid rgba(201,162,75,.38);pointer-events:none}
+  .invite::after{content:"";position:absolute;inset:16px;border:1px solid rgba(201,162,75,.16);pointer-events:none}
   .inner{position:relative;z-index:1}
-  .host{font-size:.74rem;letter-spacing:.32em;text-transform:uppercase;color:var(--gold-soft);margin:0 0 20px;font-weight:600}
-  .crest{width:148px;height:auto;margin:0 auto 18px;display:block;filter:drop-shadow(0 6px 16px rgba(0,0,0,.4))}
-  .invited{font-size:.78rem;letter-spacing:.26em;text-transform:uppercase;color:var(--ivory-dim);margin:6px 0 10px}
-  .title{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;line-height:.98;font-size:clamp(2.7rem,9vw,4.3rem);margin:4px 0 2px;color:#fff;text-wrap:balance}
-  .title .yr{display:block;color:var(--gold);font-size:.42em;letter-spacing:.3em;font-weight:500;margin-top:14px;text-transform:uppercase}
-  .subtitle{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:clamp(1.15rem,3.4vw,1.5rem);color:var(--ivory);margin:14px auto 0;max-width:34ch;opacity:.92}
-  .rule{display:flex;align-items:center;justify-content:center;gap:14px;margin:26px auto 24px;max-width:280px}
+  .host{font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-soft);margin:0 0 12px;font-weight:600}
+  .crest{width:104px;height:auto;margin:0 auto 12px;display:block;filter:drop-shadow(0 6px 16px rgba(0,0,0,.4))}
+  .invited{font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;color:var(--ivory-dim);margin:4px 0 8px}
+  .title{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;line-height:1;font-size:clamp(2.1rem,7vw,3.1rem);margin:2px 0;color:#fff;text-wrap:balance}
+  .title .yr{display:block;color:var(--gold);font-size:.42em;letter-spacing:.3em;font-weight:500;margin-top:8px;text-transform:uppercase}
+  .subtitle{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:clamp(1rem,2.8vw,1.22rem);color:var(--ivory);margin:10px auto 0;max-width:36ch;opacity:.92}
+  .rule{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px auto;max-width:240px}
   .rule span{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);flex:1}
-  .rule b{color:var(--gold);font-size:1.1rem;line-height:1}
-  .details{display:grid;grid-template-columns:repeat(3,1fr);max-width:520px;margin:0 auto;border:1px solid rgba(201,162,75,.28)}
-  .det{padding:16px 10px;border-right:1px solid rgba(201,162,75,.2)}
+  .rule b{color:var(--gold);font-size:1rem;line-height:1}
+  .details{display:grid;grid-template-columns:repeat(3,1fr);max-width:460px;margin:0 auto;border:1px solid rgba(201,162,75,.28)}
+  .det{padding:11px 8px;border-right:1px solid rgba(201,162,75,.2)}
   .det:last-child{border-right:0}
-  .det .k{font-size:.64rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold-soft);margin:0 0 6px}
-  .det .v{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.28rem;color:#fff;line-height:1.1}
-  .det .v small{display:block;font-family:"Source Sans 3",sans-serif;font-size:.72rem;color:var(--ivory-dim);margin-top:4px;letter-spacing:.02em}
-  .venue{margin:26px auto 0;max-width:46ch;color:var(--ivory);font-size:1rem;line-height:1.5}
-  .venue .vn{color:var(--gold-soft);font-weight:600;letter-spacing:.02em;font-size:1.08rem}
+  .det .k{font-size:.6rem;letter-spacing:.18em;text-transform:uppercase;color:var(--gold-soft);margin:0 0 4px}
+  .det .v{font-family:"Cormorant Garamond",Georgia,serif;font-size:1.1rem;color:#fff;line-height:1.1}
+  .det .v small{display:block;font-family:"Source Sans 3",sans-serif;font-size:.68rem;color:var(--ivory-dim);margin-top:3px;letter-spacing:.02em}
+  .venue{margin:18px auto 0;max-width:46ch;color:var(--ivory);font-size:.92rem;line-height:1.5}
+  .venue .vn{color:var(--gold-soft);font-weight:600;letter-spacing:.02em;font-size:1rem}
+  .maplink{display:inline-block;margin-top:9px;color:var(--gold-soft);font-size:.82rem;font-weight:600;text-decoration:none;border:1px solid rgba(201,162,75,.45);border-radius:999px;padding:5px 14px}
+  .maplink:hover{background:rgba(201,162,75,.12)}
   @media (max-width:520px){.details{grid-template-columns:1fr}.det{border-right:0;border-bottom:1px solid rgba(201,162,75,.2)}.det:last-child{border-bottom:0}}
 
-  .rsvp{background:var(--surface);padding:34px 22px 10px}
-  .rsvp h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:2rem;color:var(--navy);margin:0 0 4px;text-align:center}
-  .rsvp .lead{text-align:center;color:var(--text-muted);margin:0 auto 10px;max-width:46ch;font-size:.97rem}
-  .deadline{text-align:center;margin:0 auto 24px;font-size:.9rem;color:var(--warn);font-weight:600}
-  .closed{display:none;background:#f6e4e2;border:1px solid #e3b9b4;color:#7a1f1c;border-radius:var(--radius);padding:16px;text-align:center;margin:0 0 20px;font-weight:600}
+  .rsvp{background:var(--surface);padding:26px 20px 12px}
+  .rsvp h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:1.65rem;color:var(--navy);margin:0 0 6px;text-align:center}
+  .rsvp .lead{text-align:center;color:var(--text-muted);margin:0 auto 10px;max-width:50ch;font-size:.95rem}
+  .deadline{text-align:center;margin:0 auto 22px;font-size:.88rem;color:var(--warn);font-weight:600}
+  .closed{display:none;background:#f6e4e2;border:1px solid #e3b9b4;color:#7a1f1c;border-radius:var(--radius);padding:14px;text-align:center;margin:0 auto 18px;max-width:var(--formw);font-weight:600}
   body[data-closed="1"] form{display:none}
   body[data-closed="1"] .closed{display:block}
   body[data-closed="1"] .deadline{display:none}
 
   form{display:block}
-  fieldset{border:0;margin:0 0 20px;padding:0}
-  legend{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep);font-weight:700;padding:0 0 8px;margin:0 0 12px;display:flex;align-items:center;gap:8px;width:100%;border-bottom:1px solid var(--border)}
-  legend .n{width:22px;height:22px;border-radius:50%;background:var(--navy);color:var(--gold-soft);display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex:none}
-  label{display:block;font-size:.84rem;font-weight:600;color:var(--text);margin:0 0 6px}
+  #rsvpForm{max-width:var(--formw);margin:0 auto}
+  fieldset{border:0;margin:0 0 16px;padding:0}
+  legend{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep);font-weight:700;padding:0 0 7px;margin:0 0 11px;display:flex;align-items:center;gap:8px;width:100%;border-bottom:1px solid var(--border)}
+  legend .n{width:21px;height:21px;border-radius:50%;background:var(--navy);color:var(--gold-soft);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex:none}
+  label{display:block;font-size:.82rem;font-weight:600;color:var(--text);margin:0 0 5px}
   .req{color:var(--full)}
-  .hint{font-weight:400;color:var(--text-muted);font-size:.8rem}
-  input,select,textarea{width:100%;font:inherit;font-size:1rem;color:var(--text);background:var(--field);border:1px solid var(--field-border);border-radius:10px;padding:11px 12px;margin:0 0 15px}
+  .hint{font-weight:400;color:var(--text-muted);font-size:.78rem}
+  input,select,textarea{width:100%;font:inherit;font-size:1rem;color:var(--text);background:var(--field);border:1px solid var(--field-border);border-radius:9px;padding:10px 12px;margin:0 0 13px}
   input[aria-invalid="true"],select[aria-invalid="true"]{border-color:var(--full);box-shadow:0 0 0 1px var(--full)}
-  textarea{min-height:72px;resize:vertical}
+  textarea{min-height:66px;resize:vertical}
   select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235b6771' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:38px}
   input:focus,select:focus,textarea:focus,button:focus-visible,.seg button:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-color:var(--focus)}
-  .two{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
   @media (max-width:480px){.two{grid-template-columns:1fr}}
-  .seg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 16px}
-  .seg button{font:inherit;text-align:left;cursor:pointer;background:var(--field);border:1px solid var(--field-border);border-radius:12px;padding:13px 14px;color:var(--text)}
-  .seg button .t{display:block;font-weight:700;font-size:.95rem}
-  .seg button .d{display:block;font-size:.78rem;color:var(--text-muted);margin-top:3px}
+  .seg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px}
+  .seg button{font:inherit;text-align:left;cursor:pointer;background:var(--field);border:1px solid var(--field-border);border-radius:11px;padding:12px 13px;color:var(--text)}
+  .seg button .t{display:block;font-weight:700;font-size:.92rem}
+  .seg button .d{display:block;font-size:.76rem;color:var(--text-muted);margin-top:3px}
   .seg button[aria-pressed="true"]{border-color:var(--navy);background:#eef3f2;box-shadow:inset 0 0 0 1px var(--navy)}
   @media (max-width:480px){.seg{grid-template-columns:1fr}}
-  .stepper{display:flex;align-items:center;max-width:170px}
-  .stepper button{width:42px;height:44px;flex:none;font-size:1.3rem;line-height:1;cursor:pointer;background:var(--navy);color:#fff;border:0;border-radius:10px}
+  .stepper{display:flex;align-items:center;max-width:170px;margin:2px auto 0}
+  .stepper button{width:42px;height:44px;flex:none;font-size:1.3rem;line-height:1;cursor:pointer;background:var(--navy);color:#fff;border:0;border-radius:9px}
   .stepper input{text-align:center;margin:0 8px;width:60px;font-variant-numeric:tabular-nums;font-weight:700}
-  .steplab{font-size:.84rem;color:var(--text-muted);margin:8px 0 0}
+  .num-q .lb{text-align:center}
+  .steplab{font-size:.82rem;color:var(--text-muted);margin:8px 0 0;text-align:center}
   .mancom-only,.club-only{display:none}
   body[data-mode="club"] .club-only{display:block}
   body[data-mode="mancom"] .mancom-only{display:block}
   .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-  .errbox{display:none;background:#f6e4e2;border:1px solid #e3b9b4;color:#7a1f1c;border-radius:10px;padding:11px 14px;margin:0 0 14px;font-size:.9rem;font-weight:600}
+  .errbox{display:none;background:#f6e4e2;border:1px solid #e3b9b4;color:#7a1f1c;border-radius:9px;padding:10px 14px;margin:0 0 13px;font-size:.88rem;font-weight:600}
   .errbox.show{display:block}
-  .privacy{font-size:.76rem;color:var(--text-muted);text-align:center;margin:12px auto 2px;max-width:48ch}
-  .submit{width:100%;font:inherit;font-weight:700;font-size:1.05rem;cursor:pointer;background:var(--navy);color:var(--gold-soft);border:1px solid var(--gold-deep);border-radius:12px;padding:15px;margin:6px 0 4px;letter-spacing:.02em;transition:background .15s ease}
+  .privacy{font-size:.75rem;color:var(--text-muted);text-align:center;margin:12px auto 2px;max-width:46ch}
+  .submit{width:100%;font:inherit;font-weight:700;font-size:1.02rem;cursor:pointer;background:var(--navy);color:var(--gold-soft);border:1px solid var(--gold-deep);border-radius:11px;padding:14px;margin:6px 0 4px;letter-spacing:.02em;transition:background .15s ease}
   .submit:hover{background:var(--navy-2)}
   .submit[disabled]{opacity:.6;cursor:wait}
-  .done{display:none;text-align:center;padding:20px 8px 8px}
+  .done{display:none;text-align:center;padding:16px 8px 8px;max-width:var(--formw);margin:0 auto}
   body[data-done="1"] form{display:none}
   body[data-done="1"] .done{display:block}
-  .done .tick{width:60px;height:60px;border-radius:50%;background:var(--ok);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:2rem;margin:0 0 12px}
-  .done h3{font-family:"Cormorant Garamond",serif;font-size:1.8rem;color:var(--navy);margin:0 0 6px}
+  .done .tick{width:56px;height:56px;border-radius:50%;background:var(--ok);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.9rem;margin:0 0 10px}
+  .done h3{font-family:"Cormorant Garamond",serif;font-size:1.6rem;color:var(--navy);margin:0 0 6px}
   .done p{color:var(--text-muted);max-width:44ch;margin:0 auto 6px}
-  .done .again{margin-top:14px;background:none;border:1px solid var(--field-border);border-radius:10px;padding:10px 16px;font:inherit;font-weight:600;color:var(--navy);cursor:pointer}
-  .foot{background:var(--navy-deep);color:var(--ivory-dim);text-align:center;padding:24px 20px;font-size:.82rem}
+  .done .again{margin-top:12px;background:none;border:1px solid var(--field-border);border-radius:9px;padding:9px 16px;font:inherit;font-weight:600;color:var(--navy);cursor:pointer}
+  .foot{background:var(--navy-deep);color:var(--ivory-dim);text-align:center;padding:20px;font-size:.8rem;line-height:1.7}
   .foot b{color:var(--gold-soft);font-weight:600}
   .foot a{color:var(--gold-soft)}
   @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -117,10 +121,10 @@
   <header class="invite">
     <div class="inner">
       <p class="host">Cape Town Tygerberg Local Football Association</p>
-      <img class="crest" src="/assets/crest.png" alt="CTTLFA crest" width="148" height="155">
+      <img class="crest" src="/assets/crest.png" alt="CTTLFA crest" width="104" height="109">
       <p class="invited">cordially invites you to the</p>
       <h1 class="title">Annual Awards Evening<span class="yr">2026 Season</span></h1>
-      <p class="subtitle">An evening celebrating the clubs, players, referees and volunteers of our football community.</p>
+      <p class="subtitle">Celebrating the clubs, players, referees and volunteers of our football community.</p>
       <div class="rule"><span></span><b>&#9733;</b><span></span></div>
       <div class="details">
         <div class="det"><p class="k">Date</p><p class="v">Saturday<small>21 November 2026</small></p></div>
@@ -130,15 +134,15 @@
       <p class="venue">
         <span class="vn">The Terrace Rooftop</span><br>
         12 Kremer Road, Salt River, Cape Town<br>
-        <span style="color:var(--ivory-dim);font-size:.9rem">Rooftop terrace &middot; Table Mountain and harbour views</span>
+        <a class="maplink" href="https://www.google.com/maps/search/?api=1&amp;query=The%20Terrace%20Rooftop%2C%2012%20Kremer%20Road%2C%20Salt%20River%2C%20Cape%20Town" target="_blank" rel="noopener">View on map &rarr;</a>
       </p>
     </div>
   </header>
 
   <section class="rsvp">
     <h2>Confirm your attendance</h2>
-    <p class="lead">All member clubs are invited. Please confirm whether your club will attend and how many will join us.</p>
-    <p class="deadline" id="deadline">Please reply by Friday, 14 November 2026</p>
+    <p class="lead">Our member clubs and the Management Committee&rsquo;s special guests are all invited. Please let us know whether you will join us, and how many will attend.</p>
+    <p class="deadline" id="deadline">Please reply by Friday, 6 November 2026</p>
 
     <div class="closed">RSVPs for this event are now closed. Please contact the CTTLFA office if you still need to reply.</div>
 
@@ -179,10 +183,9 @@
         <input id="email" name="email" type="email" maxlength="160" autocomplete="email" placeholder="name@example.co.za">
       </fieldset>
 
-      <fieldset>
+      <fieldset class="num-q">
         <legend><span class="n">4</span> How many will attend?</legend>
-        <label for="guests" class="club-only">Number attending from your club <span class="req" aria-hidden="true">*</span></label>
-        <label for="guests" class="mancom-only">Number attending <span class="req" aria-hidden="true">*</span></label>
+        <label class="lb" for="guests" id="guestsLabelClub"><span class="club-only">Number attending from your club</span><span class="mancom-only">Number attending</span> <span class="req" aria-hidden="true">*</span></label>
         <div class="stepper" role="group" aria-label="Number attending">
           <button type="button" data-dir="-1" aria-label="Fewer">&minus;</button>
           <input id="guests" name="guests" type="text" inputmode="numeric" value="1" readonly aria-live="polite">
@@ -214,7 +217,8 @@
 
   <footer class="foot">
     Hosted by the <b>Cape Town Tygerberg Local Football Association</b><br>
-    Enquiries: the CTTLFA office &middot; <a href="https://www.cttfa.co.za">www.cttfa.co.za</a>
+    Enquiries: Barry at the CTTLFA office &middot; <a href="mailto:ops@cttlfa.co.za">ops@cttlfa.co.za</a><br>
+    <a href="https://www.cttfa.co.za">www.cttfa.co.za</a>
   </footer>
 
 </div>
@@ -229,8 +233,6 @@
     return fetch(SB+'/rpc/'+fn,{method:'POST',headers:{apikey:SBK,Authorization:'Bearer '+SBK,'Content-Type':'application/json'},body:JSON.stringify(body||{})})
       .then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t);}catch(e){}return {ok:r.ok,status:r.status,data:j};});});
   }
-
-  // Member clubs only (full + associate). Also loaded live from the register as a fallback.
   var CLUBS={
     "Full members":["Avendale Athletico","Barmsley Spurs","Bellville City","Bothasig","Brooklyn Superstars","C.R Vasco da Gama","Camps Bay","Chelsea Bridgetown","Clyde Pinelands","De Beers","Durbanville","Edgemead G/W","FC Kapstadt","FN Rangers","Fish Hoek","Garden Village","Garlandale","Goodwood United","Green Point","Hanover Park","Hellenic","Holy Cross","JMI","Kensington","Kuilsriver","Lansdowne","Meadowridge","Mutual","Northpine United","Norway Parks","Queens Park","Ruyterwacht","Rygersdal","Saxon Rovers","Shosholoza","Stephanian Ottery","Sunningdale City","Table View","Tramway","West End United","Wynberg St Johns","Young Bafana","YSD Macassar"],
     "Associate members":["Badgers FC","Cape Town Spurs","Emeris","Grass Boots","Magic Ladies","University of Cape Town","YMO FC"]
@@ -255,7 +257,6 @@
   function clearErr(){errbox.classList.remove('show');errbox.textContent='';['club','name','mobile'].forEach(function(id){var e=document.getElementById(id);if(e)e.removeAttribute('aria-invalid');});}
   function showErr(msg,focusId){errbox.textContent=msg;errbox.classList.add('show');if(focusId){var e=document.getElementById(focusId);if(e){e.setAttribute('aria-invalid','true');e.focus();}}errbox.scrollIntoView({block:'center',behavior:'smooth'});}
 
-  // Load live event status (deadline / open). Resilient: on any failure, keep baked defaults.
   function fmtDate(d){try{var p=d.split('-');var dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));return dt.toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch(e){return null;}}
   rpc('awards_event_public',{p_event:EVENT}).then(function(r){
     var e=r.data; if(!e) return;
@@ -268,37 +269,31 @@
     e.preventDefault();
     if(submitting) return;
     clearErr();
-    // Honeypot: silently succeed without posting.
-    if(document.getElementById('website').value){finish('club','Thank you &ndash; your reply has been received.');return;}
-
+    if(document.getElementById('website').value){finish('Thank you &ndash; your reply has been received.');return;}
     var mode=body.getAttribute('data-mode');
     var name=document.getElementById('name').value.trim();
     var mobile=document.getElementById('mobile').value.trim();
     var email=document.getElementById('email').value.trim();
     var num=parseInt(inp.value,10)||0;
-
     if(mode==='club' && !sel.value){showErr('Please select your club from the list.','club');return;}
     if(!name){showErr('Please enter the contact person’s full name.','name');return;}
     if(!mobile){showErr('Please enter a contact mobile number.','mobile');return;}
-
     var payload={event_key:EVENT,reply_type:mode,contact_name:name,contact_mobile:mobile,contact_email:email,num_attending:num,
       attendee_names:document.getElementById('names').value.trim(),dietary:document.getElementById('diet').value.trim()};
     if(mode==='club'){payload.club_name=sel.value;payload.club_role=document.getElementById('role').value.trim();}
     else{payload.guest_capacity=document.getElementById('org').value.trim();}
-
     submitting=true;
     var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='Sending…';
     rpc('awards_rsvp_submit',{p:payload}).then(function(r){
       submitting=false;btn.disabled=false;btn.textContent='Confirm attendance';
       if(r.data && r.data.ok){
-        var club=r.data.club_name||'';
-        var n=r.data.num_attending||0;
+        var club=r.data.club_name||''; var n=r.data.num_attending||0;
         if(mode==='club'){
-          finish('club', n===0
+          finish(n===0
             ? 'We have noted that '+esc(club)+' will not be attending this year. Thank you for letting us know.'
             : 'We have recorded '+n+' '+(n===1?'person':'people')+' attending for '+esc(club)+'.');
         }else{
-          finish('mancom','We have recorded '+n+' '+(n===1?'guest':'guests')+'. We look forward to seeing you.');
+          finish('We have recorded '+n+' '+(n===1?'guest':'guests')+'. We look forward to seeing you.');
         }
       }else if(r.data && r.data.error){
         showErr(r.data.error, r.data.error.indexOf('club')>-1?'club':null);
@@ -312,9 +307,8 @@
   });
 
   function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-  function finish(mode,msgHtml){
+  function finish(msgHtml){
     document.getElementById('doneMsg').innerHTML=msgHtml;
-    document.getElementById('doneSub').textContent='Your reply has been recorded with the CTTLFA office.';
     body.setAttribute('data-done','1');
     window.scrollTo({top:0,behavior:'smooth'});
   }
