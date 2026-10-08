@@ -1377,7 +1377,8 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     await loadClubs(); await loadMeetings(); if(window.AC && window.AC.loadUsers){ try{ await window.AC.loadUsers(); }catch(e){} }
     renderHome(); homeWire(); var _mp0=$("meetingPick"); if(_mp0) _mp0.style.display="none";
     ensureQuickNav();
-    if(meRole==="fincom") goTab("fincom");
+    if(meRole==="fincom"){ goTab("fincom"); }
+    else if((location.hash||"").toLowerCase()==="#awards"){ try{ goTab("awards"); }catch(e){} }
   }
 
   /* ---------- tabs ---------- */
