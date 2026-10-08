@@ -175,7 +175,7 @@
           <div><label for="name">Full name <span class="req" aria-hidden="true">*</span></label><input id="name" name="name" type="text" maxlength="120" autocomplete="name"></div>
           <div><label for="mobile">Mobile <span class="req" aria-hidden="true">*</span></label><input id="mobile" name="mobile" type="tel" inputmode="tel" maxlength="40" autocomplete="tel" placeholder="0XX XXX XXXX"></div>
         </div>
-        <label for="email">Email <span class="hint">(for your confirmation)</span></label>
+        <label for="email">Email <span class="hint">(optional, in case we need to reach you)</span></label>
         <input id="email" name="email" type="email" maxlength="160" autocomplete="email" placeholder="name@example.co.za">
       </fieldset>
 
@@ -207,7 +207,7 @@
       <div class="tick" aria-hidden="true">&#10003;</div>
       <h3 id="doneTitle">Thank you &ndash; attendance confirmed</h3>
       <p id="doneMsg">We have recorded your reply.</p>
-      <p class="hint" id="doneSub">If you gave an email address, a confirmation will follow.</p>
+      <p class="hint" id="doneSub">Your reply has been recorded with the CTTLFA office.</p>
       <button type="button" class="again" id="again">Make another reply</button>
     </div>
   </section>
@@ -314,8 +314,7 @@
   function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
   function finish(mode,msgHtml){
     document.getElementById('doneMsg').innerHTML=msgHtml;
-    var hasEmail=document.getElementById('email').value.trim();
-    document.getElementById('doneSub').textContent=hasEmail?'A confirmation will follow to the email address you provided.':'';
+    document.getElementById('doneSub').textContent='Your reply has been recorded with the CTTLFA office.';
     body.setAttribute('data-done','1');
     window.scrollTo({top:0,behavior:'smooth'});
   }
