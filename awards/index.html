@@ -201,10 +201,9 @@
           <button type="button" data-dir="1" aria-label="More">+</button>
         </div>
         <p class="steplab club-only">Enter 0 if your club is unable to attend this year.</p>
-        <p class="ticketnote club-only">Your club&rsquo;s first 2 tickets are included. Additional tickets are R600 each, subject to availability (first come, first served).</p>
+        <p class="ticketnote club-only">Your club&rsquo;s first 2 tickets are included. Additional tickets are subject to availability (first come, first served) and confirmed after the closing date.</p>
         <div class="feepanel" id="feePanel" style="display:none">
-          <p class="feeline">You have selected <b><span id="feeExtra">0</span></b> additional ticket(s) at <b>R600</b> each &mdash; <b>R<span id="feeTotal">0</span></b>.</p>
-          <label class="feecheck"><input type="checkbox" id="feeok"> I confirm these additional tickets and accept that R600 per extra ticket will be charged to our club. I understand the additional tickets are subject to availability (first come, first served) and will be confirmed after RSVPs close.</label>
+          <p class="feeline">You have selected <b><span id="feeExtra">0</span></b> additional ticket(s), over and above your 2 included. Additional tickets are subject to availability (first come, first served) and will be confirmed after RSVPs close.</p>
         </div>
       </fieldset>
 
@@ -243,7 +242,7 @@
   var FN='https://fbbbsvkshajollduapaw.supabase.co/functions/v1';
   var SBK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiYmJzdmtzaGFqb2xsZHVhcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODYyODgsImV4cCI6MjEwMzY2MjI4OH0.8heeqe-03Mji2NgHt17ZOCoctijRhF78cHvSQkrUUi0';
   var EVENT='2026';
-  var INCLUDED=2, FEE=600;
+  var INCLUDED=2;
   function rpc(fn,body){
     return fetch(SB+'/rpc/'+fn,{method:'POST',headers:{apikey:SBK,Authorization:'Bearer '+SBK,'Content-Type':'application/json'},body:JSON.stringify(body||{})})
       .then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t);}catch(e){}return {ok:r.ok,status:r.status,data:j};});});
@@ -268,16 +267,13 @@
   function clampG(){var v=parseInt(inp.value,10);if(isNaN(v))v=0;v=Math.max(0,Math.min(30,v));inp.value=v;refreshFee();}
   document.querySelectorAll('[data-dir]').forEach(function(btn){btn.addEventListener('click',function(){var d=parseInt(btn.getAttribute('data-dir'),10);inp.value=(parseInt(inp.value,10)||0)+d;clampG();});});
 
-  var feePanel=document.getElementById('feePanel'), feeok=document.getElementById('feeok'),
-      feeExtra=document.getElementById('feeExtra'), feeTotal=document.getElementById('feeTotal'),
+  var feePanel=document.getElementById('feePanel'), feeExtra=document.getElementById('feeExtra'),
       dupNotice=document.getElementById('dupNotice'), submitBtn=document.getElementById('submitBtn');
-  function grp(x){return String(x).replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
   function curExtra(){return Math.max(0,(parseInt(inp.value,10)||0)-INCLUDED);}
   function refreshFee(){
     var ex=curExtra();
-    if(body.getAttribute('data-mode')==='club' && ex>0){
-      feeExtra.textContent=ex; feeTotal.textContent=grp(ex*FEE); feePanel.style.display='block';
-    }else{ feePanel.style.display='none'; if(feeok) feeok.checked=false; }
+    if(body.getAttribute('data-mode')==='club' && ex>0){ feeExtra.textContent=ex; feePanel.style.display='block'; }
+    else{ feePanel.style.display='none'; }
   }
   function resetDup(){ if(dupNotice){dupNotice.classList.remove('show');dupNotice.textContent='';} if(submitBtn) submitBtn.disabled=false; }
   function checkTaken(){
@@ -300,7 +296,6 @@
   rpc('awards_event_public',{p_event:EVENT}).then(function(r){
     var e=r.data; if(!e) return;
     if(typeof e.included_tickets==='number') INCLUDED=e.included_tickets;
-    if(typeof e.extra_fee==='number') FEE=e.extra_fee;
     if(e.rsvp_open===false){body.setAttribute('data-closed','1');}
     if(e.deadline){var f=fmtDate(e.deadline);if(f)document.getElementById('deadline').textContent='Please reply by '+f;}
     refreshFee();
@@ -320,10 +315,9 @@
     if(mode==='club' && !sel.value){showErr('Please select your club from the list.','club');return;}
     if(!name){showErr('Please enter the contact person’s full name.','name');return;}
     if(!mobile){showErr('Please enter a contact mobile number.','mobile');return;}
-    if(mode==='club' && curExtra()>0 && feeok && !feeok.checked){showErr('Please tick the box to confirm and accept the fee for the additional tickets.');return;}
     var payload={event_key:EVENT,reply_type:mode,contact_name:name,contact_mobile:mobile,contact_email:email,num_attending:num,
       attendee_names:document.getElementById('names').value.trim(),dietary:document.getElementById('diet').value.trim()};
-    if(mode==='club'){payload.club_name=sel.value;payload.club_role=document.getElementById('role').value.trim();payload.fee_accepted=!!(feeok&&feeok.checked);}
+    if(mode==='club'){payload.club_name=sel.value;payload.club_role=document.getElementById('role').value.trim();}
     else{payload.guest_capacity=document.getElementById('org').value.trim();}
     submitting=true;
     var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='Sending…';

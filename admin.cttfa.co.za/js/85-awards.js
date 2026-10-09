@@ -78,7 +78,7 @@
     var e=DATA.event||{}, sm=DATA.summary||{}, out=DATA.outstanding||[], total=DATA.clubs_total||0;
     var open = e.rsvp_open !== false;
     var w = canWrite();
-    var fee = Number(e.extra_fee)||600, incl = Number(e.included_tickets)||2;
+    var incl = Number(e.included_tickets)||2;
 
     var exReq=0, exConf=0;
     (DATA.replies||[]).forEach(function(r){ if(r.reply_type==="club"){ exReq+=Number(r.extra_requested)||0; if(r.extra_confirmed!=null) exConf+=Number(r.extra_confirmed)||0; } });
@@ -90,7 +90,7 @@
       '<span><b>'+esc(e.title||("Awards Evening "+EVENT))+'</b></span>'+
       '<span>Event: <b>'+fmtDay(e.event_date)+'</b></span>'+
       '<span>Deadline: <b>'+fmtDay(e.deadline)+'</b></span>'+
-      '<span>Tickets: <b>'+incl+' included, R'+grp(fee)+' each extra</b></span>'+
+      '<span>Tickets: <b>'+incl+' included per club</b></span>'+
       '<span class="aw-pill '+(open?"open":"closed")+'">'+(open?"● RSVPs open":"● RSVPs closed")+'</span>'+
       '</div>';
 
@@ -130,14 +130,14 @@
     h += '</div>';
     root.innerHTML = h;
 
-    NS.$("awSearch").addEventListener("input", function(){ FILTER=this.value; rows(w,fee); });
+    NS.$("awSearch").addEventListener("input", function(){ FILTER=this.value; rows(w); });
     NS.$("awRefresh").addEventListener("click", renderAwards);
     NS.$("awCsv").addEventListener("click", exportCsv);
     if(w){ NS.$("awToggle").addEventListener("click", function(){ toggleOpen(open); }); }
-    rows(w,fee);
+    rows(w);
   }
 
-  function rows(w,fee){
+  function rows(w){
     var tb=NS.$("awRows"); if(!tb) return;
     var ncols = w?13:12;
     var reps=(DATA.replies||[]).slice();
@@ -152,8 +152,7 @@
       var capv = r.reply_type==="mancom" ? esc(r.guest_capacity||"") : esc(r.club_role||"");
       // Extra requested cell
       var exReq = Number(r.extra_requested)||0;
-      var extraCell = (r.reply_type!=="club" || exReq===0) ? "—"
-        : (exReq + (r.fee_accepted ? ' <span class="aw-feeok" title="Fee accepted">&#10003;</span>' : ''));
+      var extraCell = (r.reply_type!=="club" || exReq===0) ? "—" : String(exReq);
       // Confirm cell
       var confCell = "—";
       if(r.reply_type==="club" && exReq>0){
@@ -220,8 +219,8 @@
   }
   function exportCsv(){
     var reps=(DATA&&DATA.replies)||[];
-    var cols=["reply_type","club_name","club_role","guest_capacity","contact_name","contact_mobile","contact_email","num_attending","extra_requested","fee_accepted","extra_confirmed","attendee_names","dietary","created_at"];
-    var head=["Type","Club","Role","Capacity","Contact name","Mobile","Email","Attending","Extra requested","Fee accepted","Extra confirmed","Attendee names","Dietary","Submitted"];
+    var cols=["reply_type","club_name","club_role","guest_capacity","contact_name","contact_mobile","contact_email","num_attending","extra_requested","extra_confirmed","attendee_names","dietary","created_at"];
+    var head=["Type","Club","Role","Capacity","Contact name","Mobile","Email","Attending","Extra requested","Extra confirmed","Attendee names","Dietary","Submitted"];
     function q(v){ v=(v==null?"":String(v)).replace(/"/g,'""'); return '"'+v+'"'; }
     var lines=[head.map(q).join(",")];
     reps.forEach(function(r){ lines.push(cols.map(function(c){ return q(r[c]); }).join(",")); });
