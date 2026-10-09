@@ -92,6 +92,14 @@
   .stepper input{text-align:center;margin:0 8px;width:60px;font-variant-numeric:tabular-nums;font-weight:700}
   .num-q .lb{text-align:center}
   .steplab{font-size:.82rem;color:var(--text-muted);margin:8px 0 0;text-align:center}
+  .ticketnote{font-size:.8rem;color:var(--text-muted);text-align:center;margin:10px auto 0;max-width:48ch}
+  .feepanel{margin:14px auto 0;max-width:var(--formw);background:#fbf4df;border:1px solid #e7d6a6;border-radius:12px;padding:13px 15px}
+  .feeline{margin:0 0 10px;font-size:.92rem;color:#6b5418;text-align:center}
+  .feeline b{color:#7a4e10}
+  .feecheck{display:flex;gap:10px;align-items:flex-start;font-size:.82rem;font-weight:500;color:var(--text);line-height:1.45;cursor:pointer;text-align:left}
+  .feecheck input{width:20px;height:20px;flex:none;margin:1px 0 0}
+  .dupnotice{display:none;background:#f6e4e2;border:1px solid #e3b9b4;color:#7a1f1c;border-radius:10px;padding:11px 14px;margin:0 0 13px;font-size:.88rem;font-weight:600}
+  .dupnotice.show{display:block}
   .mancom-only,.club-only{display:none}
   body[data-mode="club"] .club-only{display:block}
   body[data-mode="mancom"] .mancom-only{display:block}
@@ -142,7 +150,7 @@
   <section class="rsvp">
     <h2>Confirm your attendance</h2>
     <p class="lead">Our member clubs and the Management Committee&rsquo;s special guests are all invited. Please let us know whether you will join us, and how many will attend.</p>
-    <p class="deadline" id="deadline">Please reply by Friday, 6 November 2026</p>
+    <p class="deadline" id="deadline">Please reply by Friday, 30 October 2026</p>
 
     <div class="closed">RSVPs for this event are now closed. Please contact the CTTLFA office if you still need to reply.</div>
 
@@ -163,6 +171,7 @@
         <legend><span class="n">2</span> Your club</legend>
         <label for="club">Club name <span class="req" aria-hidden="true">*</span></label>
         <select id="club" name="club"><option value="" selected disabled>Select your club&hellip;</option></select>
+        <div class="dupnotice" id="dupNotice" role="alert" aria-live="assertive"></div>
         <label for="role">Your role at the club <span class="hint">(e.g. Chairperson, Secretary, Manager)</span></label>
         <input id="role" name="role" type="text" maxlength="80">
       </fieldset>
@@ -188,10 +197,15 @@
         <label class="lb" for="guests" id="guestsLabelClub"><span class="club-only">Number attending from your club</span><span class="mancom-only">Number attending</span> <span class="req" aria-hidden="true">*</span></label>
         <div class="stepper" role="group" aria-label="Number attending">
           <button type="button" data-dir="-1" aria-label="Fewer">&minus;</button>
-          <input id="guests" name="guests" type="text" inputmode="numeric" value="1" readonly aria-live="polite">
+          <input id="guests" name="guests" type="text" inputmode="numeric" value="2" readonly aria-live="polite">
           <button type="button" data-dir="1" aria-label="More">+</button>
         </div>
         <p class="steplab club-only">Enter 0 if your club is unable to attend this year.</p>
+        <p class="ticketnote club-only">Your club&rsquo;s first 2 tickets are included. Additional tickets are R600 each, subject to availability (first come, first served).</p>
+        <div class="feepanel" id="feePanel" style="display:none">
+          <p class="feeline">You have selected <b><span id="feeExtra">0</span></b> additional ticket(s) at <b>R600</b> each &mdash; <b>R<span id="feeTotal">0</span></b>.</p>
+          <label class="feecheck"><input type="checkbox" id="feeok"> I confirm these additional tickets and accept that R600 per extra ticket will be charged to our club. I understand the additional tickets are subject to availability (first come, first served) and will be confirmed after RSVPs close.</label>
+        </div>
       </fieldset>
 
       <fieldset>
@@ -229,6 +243,7 @@
   var FN='https://fbbbsvkshajollduapaw.supabase.co/functions/v1';
   var SBK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiYmJzdmtzaGFqb2xsZHVhcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODYyODgsImV4cCI6MjEwMzY2MjI4OH0.8heeqe-03Mji2NgHt17ZOCoctijRhF78cHvSQkrUUi0';
   var EVENT='2026';
+  var INCLUDED=2, FEE=600;
   function rpc(fn,body){
     return fetch(SB+'/rpc/'+fn,{method:'POST',headers:{apikey:SBK,Authorization:'Bearer '+SBK,'Content-Type':'application/json'},body:JSON.stringify(body||{})})
       .then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t);}catch(e){}return {ok:r.ok,status:r.status,data:j};});});
@@ -245,13 +260,37 @@
   });
 
   var body=document.body, errbox=document.getElementById('errbox');
-  function setMode(m){body.setAttribute('data-mode',m);document.getElementById('btnClub').setAttribute('aria-pressed',m==='club');document.getElementById('btnMancom').setAttribute('aria-pressed',m==='mancom');clearErr();}
+  function setMode(m){body.setAttribute('data-mode',m);document.getElementById('btnClub').setAttribute('aria-pressed',m==='club');document.getElementById('btnMancom').setAttribute('aria-pressed',m==='mancom');clearErr();refreshFee();resetDup();}
   document.getElementById('btnClub').addEventListener('click',function(){setMode('club');});
   document.getElementById('btnMancom').addEventListener('click',function(){setMode('mancom');});
 
   var inp=document.getElementById('guests');
-  function clampG(){var v=parseInt(inp.value,10);if(isNaN(v))v=0;v=Math.max(0,Math.min(30,v));inp.value=v;}
+  function clampG(){var v=parseInt(inp.value,10);if(isNaN(v))v=0;v=Math.max(0,Math.min(30,v));inp.value=v;refreshFee();}
   document.querySelectorAll('[data-dir]').forEach(function(btn){btn.addEventListener('click',function(){var d=parseInt(btn.getAttribute('data-dir'),10);inp.value=(parseInt(inp.value,10)||0)+d;clampG();});});
+
+  var feePanel=document.getElementById('feePanel'), feeok=document.getElementById('feeok'),
+      feeExtra=document.getElementById('feeExtra'), feeTotal=document.getElementById('feeTotal'),
+      dupNotice=document.getElementById('dupNotice'), submitBtn=document.getElementById('submitBtn');
+  function grp(x){return String(x).replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+  function curExtra(){return Math.max(0,(parseInt(inp.value,10)||0)-INCLUDED);}
+  function refreshFee(){
+    var ex=curExtra();
+    if(body.getAttribute('data-mode')==='club' && ex>0){
+      feeExtra.textContent=ex; feeTotal.textContent=grp(ex*FEE); feePanel.style.display='block';
+    }else{ feePanel.style.display='none'; if(feeok) feeok.checked=false; }
+  }
+  function resetDup(){ if(dupNotice){dupNotice.classList.remove('show');dupNotice.textContent='';} if(submitBtn) submitBtn.disabled=false; }
+  function checkTaken(){
+    if(body.getAttribute('data-mode')!=='club' || !sel.value){ resetDup(); return; }
+    var club=sel.value;
+    rpc('awards_club_taken',{p_event:EVENT,p_club:club}).then(function(r){
+      if(r.data && r.data.taken){
+        dupNotice.textContent=club+' has already confirmed its attendance. If you need to change the reply, please contact the office on ops@cttlfa.com.';
+        dupNotice.classList.add('show'); if(submitBtn) submitBtn.disabled=true;
+      }else{ resetDup(); }
+    }).catch(function(){ resetDup(); });
+  }
+  sel.addEventListener('change', function(){ resetDup(); checkTaken(); });
   clampG();
 
   function clearErr(){errbox.classList.remove('show');errbox.textContent='';['club','name','mobile'].forEach(function(id){var e=document.getElementById(id);if(e)e.removeAttribute('aria-invalid');});}
@@ -260,8 +299,11 @@
   function fmtDate(d){try{var p=d.split('-');var dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));return dt.toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch(e){return null;}}
   rpc('awards_event_public',{p_event:EVENT}).then(function(r){
     var e=r.data; if(!e) return;
+    if(typeof e.included_tickets==='number') INCLUDED=e.included_tickets;
+    if(typeof e.extra_fee==='number') FEE=e.extra_fee;
     if(e.rsvp_open===false){body.setAttribute('data-closed','1');}
     if(e.deadline){var f=fmtDate(e.deadline);if(f)document.getElementById('deadline').textContent='Please reply by '+f;}
+    refreshFee();
   }).catch(function(){});
 
   var submitting=false;
@@ -278,9 +320,10 @@
     if(mode==='club' && !sel.value){showErr('Please select your club from the list.','club');return;}
     if(!name){showErr('Please enter the contact person’s full name.','name');return;}
     if(!mobile){showErr('Please enter a contact mobile number.','mobile');return;}
+    if(mode==='club' && curExtra()>0 && feeok && !feeok.checked){showErr('Please tick the box to confirm and accept the fee for the additional tickets.');return;}
     var payload={event_key:EVENT,reply_type:mode,contact_name:name,contact_mobile:mobile,contact_email:email,num_attending:num,
       attendee_names:document.getElementById('names').value.trim(),dietary:document.getElementById('diet').value.trim()};
-    if(mode==='club'){payload.club_name=sel.value;payload.club_role=document.getElementById('role').value.trim();}
+    if(mode==='club'){payload.club_name=sel.value;payload.club_role=document.getElementById('role').value.trim();payload.fee_accepted=!!(feeok&&feeok.checked);}
     else{payload.guest_capacity=document.getElementById('org').value.trim();}
     submitting=true;
     var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='Sending…';
@@ -316,7 +359,7 @@
   document.getElementById('again').addEventListener('click',function(){
     body.setAttribute('data-done','0');clearErr();
     document.getElementById('rsvpForm').reset();
-    sel.selectedIndex=0;inp.value='1';setMode('club');
+    sel.selectedIndex=0;inp.value='2';setMode('club');
     window.scrollTo({top:document.querySelector('.rsvp').offsetTop-10,behavior:'smooth'});
   });
 })();
