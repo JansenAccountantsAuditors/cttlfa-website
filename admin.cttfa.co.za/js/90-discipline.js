@@ -560,13 +560,14 @@
       '<div class="card" id="refMonthRoot"><div class="dsc-sec">Appointments by month</div><p class="hint">Loading…</p></div>'+
       '<div class="card" id="refBusyRoot"><div class="dsc-sec">Busiest referees</div><p class="hint">Loading…</p></div></div>';
     var refBlock = refereesBlock(refs);
-    root.innerHTML = head + kpi + volRow + splitNote + divCard + grid2 + '<div style="margin-top:16px">'+refBlock+'</div>';
+    root.innerHTML = head + kpi + volRow + splitNote + divCard + grid2 + '<div class="card" id="refCardsRoot" style="margin-top:16px"><div class="dsc-sec">Cards issued per referee</div><p class="hint">Loading yellow-card data&hellip;</p></div>' + '<div style="margin-top:16px">'+refBlock+'</div>';
     wireToolbar(root, renderReferees);
     Array.prototype.forEach.call(root.querySelectorAll("[data-pdf]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-pdf")]; if(e) expPDF(e.title,_subtitle,e.columns,e.rows); }; });
     Array.prototype.forEach.call(root.querySelectorAll("[data-csv]"),function(b){ b.onclick=function(){ var e=_exp[b.getAttribute("data-csv")]; if(e) expCSV(e.title,e.columns,e.rows); }; });
     Array.prototype.forEach.call(root.querySelectorAll("[data-drill]"),function(b){ b.onclick=function(ev){ ev.stopPropagation(); var p=b.getAttribute("data-drill").split("|"); openDrill(p[0],p[1]||"",_subtitle); }; });
     var _rdb=root.querySelector("#refDbCard"); if(_rdb){ _rdb.onclick=openRefRegister; _rdb.onkeydown=function(e){ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openRefRegister(); } }; }
     refExtrasLoad(refs);
+    refCardsLoad();
   }
   function refTile(k,v,s){ return '<div class="dsc-kpi"><div class="k">'+esc(k)+'</div><div class="v">'+v+'</div><div class="s">'+esc(s)+'</div></div>'; }
   function divCode(s){ var m=/^\s*([A-Za-z]+\d+)/.exec(String(s||"")); return m?m[1].toUpperCase():null; }
@@ -1532,6 +1533,128 @@
   }
 
   NS.renderDiscipline = renderDiscipline;
+  /* ==================== CARDS ISSUED PER REFEREE (dynamic) ====================
+     Yellow cards from dash_yellow_cards, grouped by the issuing referee. Loaded
+     once via dash_ref_cards(); all slicing (month range, division, search, sort)
+     is done client-side. Click a referee to drill to each card (dash_ref_card_list). */
+  var _rc=null, _rcF={from:0,to:0,div:"",q:"",sort:"cards"}, _rcExport=null, _rcRows=[], _rcCtx=null;
+  function rcEnsureStyle(){
+    if(document.getElementById("rc-style")) return;
+    var css=""+
+      "#refCardsRoot .rr-filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 8px}"+
+      "#refCardsRoot .rr-filters select,#refCardsRoot .rr-filters input{font:inherit;font-size:13px;padding:6px 9px;border:1px solid var(--line);border-radius:8px;color:var(--ink)}"+
+      ".rc-spark{display:inline-flex;align-items:flex-end;gap:2px;height:26px}"+
+      ".rc-spark i{width:6px;background:#184050;border-radius:1px;min-height:1px;display:inline-block;opacity:.85}"+
+      ".rc-rowclk{cursor:pointer}.rc-rowclk:hover{background:#eef4f6}";
+    var s=document.createElement("style"); s.id="rc-style"; s.textContent=css; document.head.appendChild(s);
+  }
+  function rcMonthsList(a,b){ if(!a||!b) return []; var out=[],y=+a.slice(0,4),m=+a.slice(5,7),ey=+b.slice(0,4),em=+b.slice(5,7),g=0; while((y<ey||(y===ey&&m<=em))&&g<240){ out.push(y+"-"+(m<10?"0"+m:m)); m++; if(m>12){m=1;y++;} g++; } return out; }
+  function rcDate(s){ if(!s) return "–"; var p=String(s).split("-"); return p[2]+" "+MON[(+p[1])-1]+" "+p[0]; }
+  function rcDivs(){ var s={}; _rc.cards.forEach(function(c){ if(c.dv) s[c.dv]=1; }); return Object.keys(s).sort(); }
+  function refCardsLoad(){
+    var root=NS.$("refCardsRoot"); if(!root) return;
+    NS.sb.rpc("dash_ref_cards").then(function(r){
+      if(r.error) throw r.error;
+      var d=r.data||{}, months=rcMonthsList(d.date_min,d.date_max), rm={};
+      (d.refs||[]).forEach(function(x){ rm[x.id]=x; });
+      _rc={ cards:d.cards||[], refs:d.refs||[], refMap:rm, months:months, date_min:d.date_min, date_max:d.date_max, total:d.total||0 };
+      _rcF={ from:0, to:Math.max(0,months.length-1), div:"", q:"", sort:"cards" };
+      rcEnsureStyle(); rcDrawShell(); rcRender();
+    }).catch(function(e){
+      root.innerHTML='<div class="dsc-sec">Cards issued per referee</div><p class="hint">Could not load card data: '+esc(e.message||e)+'</p>';
+    });
+  }
+  function rcDrawShell(){
+    var root=NS.$("refCardsRoot"); if(!root||!_rc) return;
+    var months=_rc.months;
+    var mOpt=function(sel){ return months.map(function(m,i){ return '<option value="'+i+'"'+(i===sel?' selected':'')+'>'+esc(ym(m))+'</option>'; }).join(""); };
+    var dOpt='<option value="">All divisions</option>'+rcDivs().map(function(dv){ return '<option value="'+esc(dv)+'"'+(dv===_rcF.div?' selected':'')+'>'+esc(dv)+'</option>'; }).join("");
+    root.innerHTML=
+      '<div class="dsc-bh"><span class="dsc-sec">Cards issued per referee</span><span class="dsc-acts"><button class="dsc-x" id="rcPDF">PDF</button><button class="dsc-x" id="rcCSV">CSV</button></span></div>'+
+      '<p class="hint" style="margin:0 0 8px">Yellow cards by the referee who issued them, mirrored from dash.cttlfa.com. Filter by month range and division; click a referee for every card they issued (date, player, club, opponent). '+num(_rc.total)+' cards from '+esc(rcDate(_rc.date_min))+' to '+esc(rcDate(_rc.date_max))+'.</p>'+
+      '<div class="rr-filters">'+
+        '<label class="hint" style="align-self:center;margin:0">From</label><select id="rcFrom">'+mOpt(_rcF.from)+'</select>'+
+        '<label class="hint" style="align-self:center;margin:0">to</label><select id="rcTo">'+mOpt(_rcF.to)+'</select>'+
+        '<select id="rcDiv">'+dOpt+'</select>'+
+        '<input id="rcSearch" placeholder="Search referee…" value="'+esc(_rcF.q)+'">'+
+        '<select id="rcSort"><option value="cards"'+(_rcF.sort==="cards"?" selected":"")+'>Most cards</option><option value="name"'+(_rcF.sort==="name"?" selected":"")+'>Referee A–Z</option></select>'+
+      '</div>'+
+      '<div class="dsc-kpis" id="rcKpis" style="margin:10px 0"></div>'+
+      '<div id="rcChart" style="margin:4px 0 10px"></div>'+
+      '<div id="rcCount" class="hint" style="margin:8px 0 4px"></div>'+
+      '<div class="dsc-tblwrap" style="max-height:540px"><table class="dsc-tbl"><thead><tr><th>Referee</th><th>Level</th><th class="num">Cards</th><th class="num">Share</th><th>By month</th></tr></thead><tbody id="rcTbody"></tbody></table></div>';
+    var set=function(id,ev,fn){ var el=NS.$(id); if(el) el[ev]=fn; };
+    set("rcFrom","onchange",function(){ _rcF.from=+this.value; rcRender(); });
+    set("rcTo","onchange",function(){ _rcF.to=+this.value; rcRender(); });
+    set("rcDiv","onchange",function(){ _rcF.div=this.value; rcRender(); });
+    set("rcSort","onchange",function(){ _rcF.sort=this.value; rcRenderTable(); });
+    set("rcSearch","oninput",function(){ _rcF.q=this.value; rcRenderTable(); });
+    set("rcPDF","onclick",function(){ if(_rcExport) expPDF(_rcExport.title,_subtitle,_rcExport.columns,_rcExport.rows); });
+    set("rcCSV","onclick",function(){ if(_rcExport) expCSV(_rcExport.title,_rcExport.columns,_rcExport.rows); });
+  }
+  function rcRender(){
+    if(!_rc) return;
+    var months=_rc.months, fI=Math.min(_rcF.from,_rcF.to), tI=Math.max(_rcF.from,_rcF.to);
+    var fromYm=months[fI]||months[0], toYm=months[tI]||months[months.length-1];
+    var rangeMonths=months.slice(fI,tI+1), div=_rcF.div;
+    var perRef={}, byMonth={}, totalF=0;
+    rangeMonths.forEach(function(m){ byMonth[m]=0; });
+    _rc.cards.forEach(function(c){
+      var cm=c.d.slice(0,7); if(cm<fromYm||cm>toYm) return; if(div && c.dv!==div) return;
+      totalF++; var e=perRef[c.r]||(perRef[c.r]={n:0,m:{}}); e.n++; e.m[cm]=(e.m[cm]||0)+1; byMonth[cm]=(byMonth[cm]||0)+1;
+    });
+    _rcRows=Object.keys(perRef).map(function(rid){ var rf=_rc.refMap[rid]||{}; return { id:rid, name:rf.name||"Unknown referee", level:rf.level||"", n:perRef[rid].n, m:perRef[rid].m }; });
+    var gmax=1; _rcRows.forEach(function(x){ rangeMonths.forEach(function(mm){ gmax=Math.max(gmax,x.m[mm]||0); }); });
+    var busiest=_rcRows.slice().sort(function(a,b){ return b.n-a.n; })[0]||{name:"–",n:0};
+    var issuing=_rcRows.length, avg=issuing?Math.round(totalF/issuing):0;
+    var peak=null,peakN=0; rangeMonths.forEach(function(m){ if((byMonth[m]||0)>=peakN){ peakN=byMonth[m]||0; peak=m; } });
+    var rangeLbl=(fI===0&&tI===months.length-1)?"full season":(ym(fromYm)+" – "+ym(toYm));
+    _rcCtx={ rangeMonths:rangeMonths, totalF:totalF, gmax:gmax };
+    var kp=NS.$("rcKpis"); if(kp){ kp.innerHTML=
+      refTile("Yellow cards", num(totalF), rangeLbl)+
+      refTile("Referees issuing", num(issuing), "distinct, in range")+
+      refTile("Busiest referee", num(busiest.n), busiest.name)+
+      refTile("Avg per referee", num(avg), "cards per issuing referee")+
+      refTile("Peak month", num(peakN), peak?ym(peak):"–"); }
+    var ch=NS.$("rcChart");
+    if(ch){ var maxm=1; rangeMonths.forEach(function(m){ maxm=Math.max(maxm,byMonth[m]||0); });
+      ch.innerHTML = rangeMonths.length ? ('<div class="dsc-chart">'+rangeMonths.map(function(m){ var n=byMonth[m]||0; return '<div class="dsc-col" title="'+esc(ym(m))+': '+num(n)+' cards"><span class="cv">'+num(n)+'</span><div class="bar" style="height:'+Math.round(n/maxm*100)+'%"></div><span class="cl">'+esc(ym(m))+'</span></div>'; }).join("")+'</div>') : '<p class="hint">No cards in this range.</p>';
+    }
+    rcRenderTable();
+  }
+  function rcSpark(m){ var rm=_rcCtx.rangeMonths, g=_rcCtx.gmax||1;
+    return '<span class="rc-spark" role="img" aria-label="cards per month">'+rm.map(function(mm){ var v=m[mm]||0, h=g?Math.round(v/g*100):0; return '<i title="'+esc(ym(mm))+': '+v+'" style="height:'+(v>0?Math.max(8,h):0)+'%"></i>'; }).join("")+'</span>'; }
+  function rcRenderTable(){
+    if(!_rcCtx) return;
+    var q=(_rcF.q||"").toLowerCase(), totalF=_rcCtx.totalF, rm=_rcCtx.rangeMonths;
+    var rows=_rcRows.filter(function(x){ return !q || x.name.toLowerCase().indexOf(q)>=0; });
+    if(_rcF.sort==="name") rows.sort(function(a,b){ return a.name.toLowerCase()<b.name.toLowerCase()?-1:1; });
+    else rows.sort(function(a,b){ return b.n-a.n || (a.name.toLowerCase()<b.name.toLowerCase()?-1:1); });
+    _rcExport={ title:"Cards issued per referee", columns:["Referee","Level","Cards","Share %"].concat(rm.map(ym)),
+      rows: rows.map(function(x){ var sh=totalF?Math.round(x.n/totalF*100):0; return [x.name,x.level||"",x.n,sh].concat(rm.map(function(mm){ return x.m[mm]||0; })); }) };
+    var body=rows.map(function(x){ var sh=totalF?Math.round(x.n/totalF*100):0;
+      return '<tr class="rc-rowclk" data-ref="'+esc(x.id)+'" data-name="'+esc(x.name)+'"><td>'+esc(x.name)+'</td><td>'+esc(x.level||"–")+'</td><td class="num"><b>'+num(x.n)+'</b></td><td class="num">'+sh+'%</td><td>'+rcSpark(x.m)+'</td></tr>'; }).join("");
+    var tb=NS.$("rcTbody"); if(tb) tb.innerHTML=body||'<tr><td colspan="5" class="hint">No referees match.</td></tr>';
+    var cn=NS.$("rcCount"); if(cn) cn.innerHTML='Showing <b>'+num(rows.length)+'</b> referee(s) · '+num(totalF)+' cards in range';
+    if(tb) Array.prototype.forEach.call(tb.querySelectorAll(".rc-rowclk"),function(tr){ tr.onclick=function(){ rcDrill(tr.getAttribute("data-ref"), tr.getAttribute("data-name")); }; });
+  }
+  function rcDrill(rid,name){
+    ensureDrawer();
+    NS.$("dscDT").textContent="Cards issued — "+name;
+    NS.$("dscDS").textContent=_subtitle||"";
+    NS.$("dscDB").innerHTML='<p class="hint">Loading cards…</p>';
+    NS.$("dscScrim").classList.add("on"); NS.$("dscDrawer").classList.add("on");
+    NS.sb.rpc("dash_ref_card_list",{p_ref:rid}).then(function(r){
+      if(r.error) throw r.error;
+      var list=r.data||[];
+      var body=list.map(function(c){ return '<tr><td>'+esc(rcDate(c.d))+'</td><td>'+esc(c.division||"–")+'</td><td>'+esc(c.player||"–")+'</td><td>'+esc(c.club||"–")+'</td><td>'+esc(c.opponent||"–")+'</td></tr>'; }).join("");
+      NS.$("dscDB").innerHTML='<div class="dsc-bh"><span class="dsc-sec">'+esc(name)+'</span>'+acts("Cards issued - "+name,["Date","Division","Player","Club","Opponent"],list.map(function(c){ return [rcDate(c.d),c.division||"",c.player||"",c.club||"",c.opponent||""]; }))+'</div>'+
+        '<p class="hint" style="margin:0 0 8px">'+num(list.length)+' yellow card(s), most recent first.</p>'+
+        '<div class="dsc-tblwrap"><table class="dsc-tbl"><thead><tr><th>Date</th><th>Division</th><th>Player</th><th>Club</th><th>Opponent</th></tr></thead><tbody>'+(body||'<tr><td colspan="5" class="hint">No cards.</td></tr>')+'</tbody></table></div>';
+      _wireExp(NS.$("dscDB"));
+    }).catch(function(e){ NS.$("dscDB").innerHTML='<p class="hint">Could not load: '+esc(e.message||e)+'</p>'; });
+  }
+
   NS.renderReferees = renderReferees;
   NS.renderClubProfile = renderClubProfile;
 })(window.AC);
