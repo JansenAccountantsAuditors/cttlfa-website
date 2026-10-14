@@ -1640,12 +1640,8 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     searchTimer=setTimeout(function(){ doPersonSearch(q); },220);
   });
   async function doPersonSearch(q){
-    var box=$("acResults"), isNum=/\d/.test(q), cid=$("acClub").value;
-    var query=sb.from("people").select("id,first_name,surname,category,club_id,safa_reg_no");
-    if(cid){ query=query.eq("club_id",cid); }
-    if(isNum){ query=query.ilike("safa_reg_no",q+"%").order("safa_reg_no").limit(30); }
-    else { query=query.ilike("surname",q+"%").order("surname").limit(30); }
-    var r=await query;
+    var box=$("acResults"), cid=$("acClub").value;
+    var r=await sb.rpc("reg_roll_search",{p_q:q,p_club:cid||null});
     if(r.error){ box.innerHTML='<div>'+esc(r.error.message)+'</div>'; box.classList.remove("hidden"); return; }
     var ppl=r.data||[];
     if(!ppl.length){ box.innerHTML='<div class="sub">No match. Type the name above to add manually.</div>'; box.classList.remove("hidden"); return; }
@@ -5369,10 +5365,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     var box=$("regRollResults"); if(!box) return;
     q=(q||'').trim(); if(q.length<2){ box.classList.add('hidden'); box.innerHTML=''; return; }
     var qs=q.replace(/[(),*%]/g,'').trim(); if(!qs){ box.classList.add('hidden'); return; }
-    var isNum=/^\d/.test(qs), query=sb.from("people").select("id,first_name,surname,category,club_id,safa_reg_no");
-    if(isNum) query=query.ilike("safa_reg_no",qs+"%").order("safa_reg_no").limit(40);
-    else query=query.or("surname.ilike."+qs+"%,first_name.ilike."+qs+"%").order("surname").limit(40);
-    var r=await query;
+    var r=await sb.rpc("reg_roll_search",{p_q:qs,p_club:null});
     if(r.error){ box.innerHTML='<div class="sub">'+esc(r.error.message||r.error)+'</div>'; box.classList.remove('hidden'); return; }
     var ppl=r.data||[];
     if(!ppl.length){ box.innerHTML='<div class="sub">No match on the registered roll.</div>'; box.classList.remove('hidden'); return; }
