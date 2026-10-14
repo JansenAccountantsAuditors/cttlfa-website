@@ -1571,7 +1571,7 @@
     var dOpt='<option value="">All divisions</option>'+rcDivs().map(function(dv){ return '<option value="'+esc(dv)+'"'+(dv===_rcF.div?' selected':'')+'>'+esc(dv)+'</option>'; }).join("");
     root.innerHTML=
       '<div class="dsc-bh"><span class="dsc-sec">Cards issued per referee</span><span class="dsc-acts"><button class="dsc-x" id="rcPDF">PDF</button><button class="dsc-x" id="rcCSV">CSV</button></span></div>'+
-      '<p class="hint" style="margin:0 0 8px">Yellow cards by the referee who issued them, mirrored from dash.cttlfa.com. Filter by month range and division; click a referee for every card they issued (date, player, club, opponent). '+num(_rc.total)+' cards from '+esc(rcDate(_rc.date_min))+' to '+esc(rcDate(_rc.date_max))+'.</p>'+
+      '<p class="hint" style="margin:0 0 8px">Yellow cards by the referee who issued them, mirrored from dash.cttlfa.com; the club-supplied &ldquo;Club Ref&rdquo; placeholder is excluded, so these are named officials only. Filter by month range and division; click a referee for every card they issued (date, player, club, opponent). '+num(_rc.total)+' cards from '+esc(rcDate(_rc.date_min))+' to '+esc(rcDate(_rc.date_max))+'.</p>'+
       '<div class="rr-filters">'+
         '<label class="hint" style="align-self:center;margin:0">From</label><select id="rcFrom">'+mOpt(_rcF.from)+'</select>'+
         '<label class="hint" style="align-self:center;margin:0">to</label><select id="rcTo">'+mOpt(_rcF.to)+'</select>'+
