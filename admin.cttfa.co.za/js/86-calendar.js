@@ -29,8 +29,8 @@
   var EVENTS = [
     // ---- 2026 (remaining) ----
     { d: "2026-10-30", t: "Awards Evening — RSVP deadline", cat: "func", status: "confirmed", note: "Confirmation of attendance closes." },
-    { d: "2026-11-07", t: "Annual General Meeting (AGM)", cat: "gov", status: "proposed", note: "Constitution 6.2.1 — AGM held during November, date fixed by Mancom. 14 days written notice (6.2.4); Treasurer's report to 30 September (6.2.7.11)." },
     { d: "2026-11-21", t: "Annual Awards Evening", cat: "func", status: "confirmed", note: "The Terrace Rooftop, 12 Kremer Road, Salt River. Smart casual." },
+    { d: "2026-11-25", t: "Elective AGM & Mancom elections", cat: "gov", status: "confirmed", note: "Wednesday 19h00, Saxon Rovers FC. Elective AGM for the 2026–2028 Management Committee term (Circular 080/2026). Constitution 6.2.1." },
     { d: "2026-12-11", t: "Year-end function", cat: "func", status: "proposed", note: "Committee and office year-end. Date to be confirmed." },
     { d: "2026-12-18", e: "2027-01-11", t: "Office festive closure", cat: "ops", status: "proposed", note: "Proposed close Friday 18 December 2026, reopen Monday 11 January 2027." },
 
@@ -56,23 +56,18 @@
     { d: "2027-06-16", t: "General club meeting", cat: "gov", status: "proposed", flag: "16 June is Youth Day (public holiday) — consider moving.", note: "3rd Wednesday, 7 days notice (Constitution 6.3)." },
     { d: "2027-09-15", t: "General club meeting", cat: "gov", status: "proposed", note: "3rd Wednesday, 7 days notice (Constitution 6.3)." },
 
-    { d: "2027-11-06", t: "Annual General Meeting (AGM)", cat: "gov", status: "proposed", note: "Constitution 6.2.1 — AGM held during November, date fixed by Mancom." },
+    { d: "2027-11-24", t: "Annual General Meeting (AGM)", cat: "gov", status: "proposed", note: "Proposed 4th Wednesday of November, mirroring the 2026 AGM (Wed 25 Nov). Non-elective year. Constitution 6.2.1; 14 days written notice (6.2.4)." },
 
-    // ---- 2027 courses ----
-    { d: "2027-02-20", t: "Referee re-accreditation course", cat: "course", status: "tbc", note: "Pre-season — date to be confirmed." },
-    { d: "2027-03-06", t: "Coaching clinic", cat: "course", status: "tbc", note: "Pre-season — date to be confirmed." },
+    // ---- 2027 football / season (finals confirmed per SAFA CT notice; rounds from the 2027 Season Planner) ----
+    { d: "2027-04-03", t: "Season kick-off (first fixtures)", cat: "ball", status: "proposed", note: "2027 season start (2027 Season Planner scenario). League rounds run on Saturdays April–October. LeagueRepublic is the system of record." },
+    { d: "2027-09-24", e: "2027-09-25", t: "Junior Knockout Finals", cat: "ball", status: "confirmed", note: "Per SAFA Cape Town 2027 tournament notice. Fri–Sat; 24 Sep is Heritage Day (public holiday)." },
+    { d: "2027-10-02", t: "Senior Knockout Finals", cat: "ball", status: "confirmed", note: "Per SAFA Cape Town 2027 tournament notice (Saturday)." },
+    { d: "2027-10-31", t: "Season ends (planner window)", cat: "ball", status: "proposed", note: "2027 Season Planner window closes 31 October. Earlier knockout rounds (round-robin) not yet scheduled; model them in the 2027 Planner." },
 
-    // ---- 2027 football / season (from the 2027 Season Planner, 2026 structure) ----
-    { d: "2027-04-03", t: "Season kick-off (first fixtures)", cat: "ball", status: "proposed", note: "2027 season start. League rounds run on Saturdays April–October. Draft scenario; LeagueRepublic is the system of record." },
-    { d: "2027-05-15", t: "Knockout — Round 1 (weekend 1)", cat: "ball", status: "proposed", note: "Cup knockout weekend, all divisions. Draft scenario." },
-    { d: "2027-05-22", t: "Knockout — Round 1 (weekend 2)", cat: "ball", status: "proposed", note: "Cup knockout weekend, all divisions. Draft scenario." },
-    { d: "2027-07-10", t: "Knockout — Quarter-Finals (weekend 1)", cat: "ball", status: "proposed", note: "Cup knockout weekend, all divisions. Draft scenario." },
-    { d: "2027-07-17", t: "Knockout — Quarter-Finals (weekend 2)", cat: "ball", status: "proposed", note: "Cup knockout weekend, all divisions. Draft scenario." },
-    { d: "2027-08-28", t: "Knockout — Semi-Finals (weekend 1)", cat: "ball", status: "proposed", note: "Cup knockout weekend, all divisions. Draft scenario." },
-    { d: "2027-09-04", t: "Knockout — Semi-Finals (weekend 2)", cat: "ball", status: "proposed", note: "Cup knockout weekend, all divisions. Draft scenario." },
-    { d: "2027-10-23", t: "Knockout Finals — junior & senior (weekend 1)", cat: "ball", status: "proposed", note: "Cup finals. Draft scenario." },
-    { d: "2027-10-30", t: "Knockout Finals — junior & senior (weekend 2)", cat: "ball", status: "proposed", note: "Cup finals. Draft scenario." },
-    { d: "2027-10-31", t: "Season ends", cat: "ball", status: "proposed", note: "Planner season window closes 31 October 2027." },
+    // ---- 2027 courses (mirror 2026 SAFA/CAF coaching courses) ----
+    { d: "2027-10-16", e: "2027-11-01", t: "SAFA / CAF D coaching course", cat: "course", status: "proposed", note: "Proposed to mirror 2026 (16 Oct – 1 Nov, Bothasig FC). Multi-day block." },
+    { d: "2027-10-16", e: "2027-10-23", t: "CAF C coaching course — Phase 1", cat: "course", status: "proposed", note: "Proposed to mirror 2026 (16–23 Oct, Ikamva / Cape Town Spurs)." },
+    { d: "2027-11-23", e: "2027-11-29", t: "CAF C coaching course — Phase 2", cat: "course", status: "proposed", note: "Proposed to mirror 2026 (23–29 Nov, Ikamva / Cape Town Spurs)." },
 
     // ---- 2027 functions (year-end) ----
     { d: "2027-11-20", t: "Annual Awards Evening", cat: "func", status: "proposed", note: "Mirrors 2026 (3rd Saturday). Venue to be confirmed." },
@@ -143,7 +138,7 @@
     return '<div class="cal-prov no-screen-hide">' +
       '<div><b>Cape Town Tygerberg Local Football Association</b></div>' +
       '<div>Season &amp; governance calendar &middot; present to 31 December 2027</div>' +
-      '<div>Basis: proposed dates for Management Committee sign-off. Governance dates per the Constitution (Articles 6.2, 6.3, 6.5, 6.6); football dates from the 2027 Season Planner on the 2026 structure; public holidays statutory under the Public Holidays Act 36 of 1994; religious observances indicative.</div>' +
+      '<div>Basis: proposed dates for Management Committee sign-off. The 2026 AGM (Circular 080/2026) and the junior and senior knockout finals (SAFA Cape Town 2027 tournament notice) are confirmed; 2027 governance dates per the Constitution (Articles 6.2, 6.3, 6.5, 6.6); courses mirror the 2026 SAFA/CAF dates; season rounds from the 2027 Season Planner; public holidays statutory under the Public Holidays Act 36 of 1994; religious observances indicative.</div>' +
       '<div>Prepared by the Treasurer &middot; compiled ' + EXTRACTED + ' &middot; status: <b>PROPOSED — not yet approved</b></div>' +
       '</div>';
   }
@@ -154,11 +149,11 @@
       return '<div class="cal-kt" style="border-top:3px solid ' + c.c + '"><div class="l">' + esc(lbl) + '</div><div class="n">' + esc(shortDate(dStr)) + '</div><div class="y">' + parse(dStr).getUTCFullYear() + '</div></div>';
     }
     return '<div class="cal-kts">' +
-      tile("AGM (proposed)", "2026-11-07", "gov") +
       tile("Awards Evening", "2026-11-21", "func") +
+      tile("Elective AGM", "2026-11-25", "gov") +
       tile("Season kick-off", "2027-04-03", "ball") +
-      tile("Knockout finals", "2027-10-23", "ball") +
-      tile("AGM 2027 (proposed)", "2027-11-06", "gov") +
+      tile("Senior KO final", "2027-10-02", "ball") +
+      tile("AGM 2027 (proposed)", "2027-11-24", "gov") +
       '</div>';
   }
 
@@ -269,8 +264,9 @@
       '<li><b>General club meetings.</b> Proposed as three, quarterly, on the 3rd Wednesday (March, June, September). The Constitution (Article 6.3.1) provides for General Meetings on the <b>3rd Wednesday of March, May, July and September</b> (four). Confirm whether to retain four or adopt three.</li>' +
       '<li><b>Youth Day clash.</b> The proposed 3rd-Wednesday General Meeting of 16 June 2027 falls on Youth Day, a public holiday. Consider moving it.</li>' +
       '<li><b>Eid al-Fitr.</b> The proposed Mancom meeting of 10 March 2027 falls on Eid al-Fitr (indicative). Consider moving it.</li>' +
-      '<li><b>AGM.</b> Must be held during November (Article 6.2.1), with 14 days written notice and the Treasurer\'s report drawn to 30 September (Articles 6.2.4, 6.2.7.11). Proposed Saturdays are placeholders for Mancom to fix.</li>' +
-      '<li><b>Football dates.</b> Season kick-off, knockout rounds and finals are drawn from the 2027 Season Planner on the 2026 structure. They are a planning scenario, not confirmed fixtures; LeagueRepublic remains the system of record.</li>' +
+      '<li><b>AGM.</b> The 2026 Elective AGM is confirmed for Wednesday 25 November 2026, 19h00, Saxon Rovers FC (2026–2028 term, Circular 080/2026). The 2027 AGM is proposed for Wednesday 24 November 2027, the 4th Wednesday of November, mirroring 2026. Must be held during November (Article 6.2.1), with 14 days written notice and the Treasurer\'s report drawn to 30 September (Articles 6.2.4, 6.2.7.11).</li>' +
+      '<li><b>Knockout finals.</b> The Junior Knockout Finals (24–25 September 2027) and Senior Knockout Finals (2 October 2027) are confirmed per the SAFA Cape Town 2027 tournament notice. The junior finals fall on the Heritage Day weekend. The season kick-off and earlier knockout rounds are a 2027 Season Planner scenario, not yet confirmed; LeagueRepublic remains the system of record.</li>' +
+      '<li><b>Courses.</b> The CAF C and SAFA/CAF D coaching course dates are proposed to mirror the 2026 courses; confirm with SAFA once the 2027 course calendar is released.</li>' +
       '</ul>' +
       '<p class="hint" style="margin-top:12px">Next phase: Mancom sign-off marks each date confirmed, after which budgets and linked items are attached per event.</p>' +
       '</div>';
