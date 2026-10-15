@@ -157,7 +157,7 @@
     <form id="rsvpForm" novalidate>
       <div class="errbox" id="errbox" role="alert" aria-live="assertive"></div>
 
-      <input class="hp" type="text" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+      <!-- anti-bot honeypot removed 15 Oct 2026: browser/password-manager autofill of this field was silently dropping genuine RSVPs -->
 
       <fieldset>
         <legend><span class="n">1</span> Who is replying?</legend>
@@ -306,7 +306,6 @@
     e.preventDefault();
     if(submitting) return;
     clearErr();
-    if(document.getElementById('website').value){finish('Thank you &ndash; your reply has been received.');return;}
     var mode=body.getAttribute('data-mode');
     var name=document.getElementById('name').value.trim();
     var mobile=document.getElementById('mobile').value.trim();
