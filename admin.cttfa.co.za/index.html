@@ -3264,8 +3264,13 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
   }
 
   // ---- correspondence drawer ----
+  // Internal / non-billable register entries (e.g. the CTTR referees account) are allocated
+  // internally by the Treasurer and must never receive a debtor statement or notice. They are
+  // flagged by register type 'internal' or by an explicit corr_exclude flag on the club meta.
+  // They stay visible on the debtors dashboard; they are only removed from correspondence runs.
+  function debCorrExcluded(c){ return !!(c && (c.corr_exclude===true || c.club_type==='internal')); }
   function debCorrScope(tierKey){
-    var clubs=((_deb&&_deb.clubs)||[]);
+    var clubs=((_deb&&_deb.clubs)||[]).filter(function(c){return !debCorrExcluded(c);});
     // Statement run goes to the whole list, not only clubs with balances: every club active in Sage,
     // every guest team, and anyone carrying a balance (owing or in credit) even if flagged inactive.
     // A nil-balance club still receives a statement confirming it is in order; the wording adapts.
