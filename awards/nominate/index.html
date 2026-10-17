@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en-ZA">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Awards Nominations 2026 &middot; CTTLFA</title>
+<meta name="description" content="Nominate clubs, players and coaches for the Cape Town Tygerberg Local Football Association 2026 Awards. Open to all member clubs.">
+<meta name="robots" content="noindex,follow">
+<link rel="canonical" href="https://www.cttfa.co.za/awards/nominate/">
+<meta property="og:title" content="CTTLFA 2026 Awards — Call for Nominations">
+<meta property="og:description" content="Nominate the clubs, players and coaches who stood out this season. Open to all member clubs.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://www.cttfa.co.za/awards/nominate/">
+<meta property="og:image" content="https://www.cttfa.co.za/social-card.png">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://fbbbsvkshajollduapaw.supabase.co" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Source+Sans+3:wght@400;500;600;700&display=swap">
+<style>
+  :root{
+    --navy:#0c2230;--navy-2:#102c3d;--navy-deep:#081822;
+    --gold:#c9a24b;--gold-soft:#e3c780;--gold-deep:#9a7622;
+    --ivory:#f3ece0;--ivory-dim:#cdbfa8;
+    --surface:#f7f4ee;--surface-raised:#fffdf8;--border:#d8cfbd;
+    --text:#223038;--text-muted:#5b6771;--field:#ffffff;--field-border:#b9ac95;
+    --ok:#296944;--warn:#9f6621;--full:#9a3130;--focus:#1f6f8b;--radius:12px;--maxw:760px;--formw:600px;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--navy-deep);color:var(--text);font-family:"Source Sans 3","Calibri","Segoe UI",sans-serif;font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  .page{max-width:var(--maxw);margin:0 auto;background:var(--surface);box-shadow:0 24px 64px rgba(0,0,0,.4)}
+
+  .invite{position:relative;background:radial-gradient(120% 90% at 50% 0%, var(--navy-2) 0%, var(--navy) 46%, var(--navy-deep) 100%);color:var(--ivory);text-align:center;padding:30px 20px 30px;overflow:hidden}
+  .invite::before{content:"";position:absolute;inset:12px;border:1px solid rgba(201,162,75,.38);pointer-events:none}
+  .invite::after{content:"";position:absolute;inset:16px;border:1px solid rgba(201,162,75,.16);pointer-events:none}
+  .inner{position:relative;z-index:1}
+  .host{font-size:.68rem;letter-spacing:.3em;text-transform:uppercase;color:var(--gold-soft);margin:0 0 12px;font-weight:600}
+  .crest{width:96px;height:auto;margin:0 auto 12px;display:block;filter:drop-shadow(0 6px 16px rgba(0,0,0,.4))}
+  .invited{font-size:.72rem;letter-spacing:.24em;text-transform:uppercase;color:var(--ivory-dim);margin:4px 0 8px}
+  .title{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;line-height:1;font-size:clamp(2rem,6.5vw,2.9rem);margin:2px 0;color:#fff;text-wrap:balance}
+  .title .yr{display:block;color:var(--gold);font-size:.42em;letter-spacing:.3em;font-weight:500;margin-top:8px;text-transform:uppercase}
+  .subtitle{font-family:"Cormorant Garamond",Georgia,serif;font-style:italic;font-size:clamp(1rem,2.8vw,1.22rem);color:var(--ivory);margin:10px auto 0;max-width:40ch;opacity:.92}
+  .rule{display:flex;align-items:center;justify-content:center;gap:12px;margin:16px auto 6px;max-width:240px}
+  .rule span{height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);flex:1}
+  .rule b{color:var(--gold);font-size:1rem;line-height:1}
+  .evref{font-size:.82rem;color:var(--ivory-dim);margin:6px 0 0}
+  .evref b{color:var(--gold-soft);font-weight:600}
+
+  .intro{background:var(--surface);padding:24px 20px 6px}
+  .intro h2{font-family:"Cormorant Garamond",Georgia,serif;font-weight:600;font-size:1.6rem;color:var(--navy);margin:0 0 6px;text-align:center}
+  .intro .lead{text-align:center;color:var(--text-muted);margin:0 auto 14px;max-width:58ch;font-size:.96rem}
+  .deadline{text-align:center;margin:0 auto 6px;font-size:.88rem;color:var(--warn);font-weight:600}
+  .howto{max-width:var(--formw);margin:10px auto 0;background:var(--surface-raised);border:1px solid var(--border);border-radius:var(--radius);padding:13px 16px;font-size:.88rem;color:var(--text)}
+  .howto b{color:var(--navy)}
+  .howto ul{margin:7px 0 0;padding-left:18px}
+  .howto li{margin:3px 0}
+
+  .closed{display:none;background:#f6e4e2;border:1px solid #e3b9b4;color:#7a1f1c;border-radius:var(--radius);padding:14px;text-align:center;margin:12px auto 4px;max-width:var(--formw);font-weight:600}
+  body[data-closed="1"] form{display:none}
+  body[data-closed="1"] .closed{display:block}
+  body[data-closed="1"] .deadline{display:none}
+
+  /* criteria accordion */
+  .criteria{max-width:var(--formw);margin:18px auto 4px}
+  .criteria h3{font-family:"Cormorant Garamond",serif;font-weight:600;font-size:1.3rem;color:var(--navy);text-align:center;margin:0 0 4px}
+  .criteria .cl{text-align:center;color:var(--text-muted);font-size:.86rem;margin:0 0 12px}
+  details.aw{background:var(--surface-raised);border:1px solid var(--border);border-radius:11px;margin:0 0 8px;overflow:hidden}
+  details.aw>summary{list-style:none;cursor:pointer;padding:12px 15px;display:flex;align-items:center;gap:10px;font-weight:700;color:var(--navy);font-size:.96rem}
+  details.aw>summary::-webkit-details-marker{display:none}
+  details.aw>summary .ab{margin-left:auto;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-deep);font-weight:700;background:#f3e9cf;border:1px solid #e3d3a4;border-radius:999px;padding:2px 9px}
+  details.aw>summary .cx{color:var(--gold-deep);transition:transform .15s}
+  details.aw[open]>summary .cx{transform:rotate(90deg)}
+  details.aw .cb{padding:0 15px 14px 15px;font-size:.9rem;color:var(--text)}
+  details.aw .cb .look{margin:4px 0 7px}
+  details.aw .cb ul{margin:4px 0 0;padding-left:18px}
+  details.aw .cb li{margin:3px 0}
+  details.aw .cb .note{margin-top:8px;font-size:.82rem;color:var(--warn)}
+
+  .formwrap{background:var(--surface);padding:10px 20px 14px}
+  form{display:block}
+  #nomForm{max-width:var(--formw);margin:0 auto}
+  fieldset{border:0;margin:0 0 16px;padding:0}
+  legend{font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep);font-weight:700;padding:0 0 7px;margin:0 0 11px;display:flex;align-items:center;gap:8px;width:100%;border-bottom:1px solid var(--border)}
+  legend .n{width:21px;height:21px;border-radius:50%;background:var(--navy);color:var(--gold-soft);display:inline-flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex:none}
+  label{display:block;font-size:.82rem;font-weight:600;color:var(--text);margin:0 0 5px}
+  .req{color:var(--full)}
+  .hint{font-weight:400;color:var(--text-muted);font-size:.78rem}
+  input,select,textarea{width:100%;font:inherit;font-size:1rem;color:var(--text);background:var(--field);border:1px solid var(--field-border);border-radius:9px;padding:10px 12px;margin:0 0 13px}
+  input[aria-invalid="true"],select[aria-invalid="true"],textarea[aria-invalid="true"]{border-color:var(--full);box-shadow:0 0 0 1px var(--full)}
+  textarea{min-height:92px;resize:vertical}
+  select{appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235b6771' stroke-width='2'><path d='M6 9l6 6 6-6'/></svg>");background-repeat:no-repeat;background-position:right 12px center;padding-right:38px}
+  input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid var(--focus);outline-offset:2px;border-color:var(--focus)}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+  @media (max-width:480px){.two{grid-template-columns:1fr}}
+  .awardpanel{background:#eef3f2;border:1px solid #cfe0db;border-radius:10px;padding:11px 14px;margin:0 0 14px;font-size:.86rem;color:var(--text);display:none}
+  .awardpanel.show{display:block}
+  .awardpanel b{color:var(--navy)}
+  .wc{font-size:.76rem;color:var(--text-muted);margin:-8px 0 13px;text-align:right}
+  .opt{display:none}
+  .opt.show{display:block}
+  .errbox{display:none;background:#f6e4e2;border:1px solid #e3b9b4;color:#7a1f1c;border-radius:9px;padding:10px 14px;margin:0 0 13px;font-size:.88rem;font-weight:600}
+  .errbox.show{display:block}
+  .feecheck{display:flex;gap:10px;align-items:flex-start;font-size:.82rem;font-weight:500;color:var(--text);line-height:1.45;cursor:pointer;text-align:left;margin:0 0 6px}
+  .feecheck input{width:20px;height:20px;flex:none;margin:1px 0 0}
+  .privacy{font-size:.75rem;color:var(--text-muted);text-align:center;margin:10px auto 2px;max-width:64ch}
+  .submit{width:100%;font:inherit;font-weight:700;font-size:1.02rem;cursor:pointer;background:var(--navy);color:var(--gold-soft);border:1px solid var(--gold-deep);border-radius:11px;padding:14px;margin:6px 0 4px;letter-spacing:.02em;transition:background .15s ease}
+  .submit:hover{background:var(--navy-2)}
+  .submit[disabled]{opacity:.6;cursor:wait}
+  .done{display:none;text-align:center;padding:16px 8px 8px;max-width:var(--formw);margin:0 auto}
+  body[data-done="1"] form{display:none}
+  body[data-done="1"] .done{display:block}
+  body[data-done="1"] .criteria{display:none}
+  .done .tick{width:56px;height:56px;border-radius:50%;background:var(--ok);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.9rem;margin:0 0 10px}
+  .done h3{font-family:"Cormorant Garamond",serif;font-size:1.6rem;color:var(--navy);margin:0 0 6px}
+  .done p{color:var(--text-muted);max-width:46ch;margin:0 auto 6px}
+  .done .again{margin-top:12px;background:var(--navy);color:var(--gold-soft);border:1px solid var(--gold-deep);border-radius:9px;padding:11px 18px;font:inherit;font-weight:700;cursor:pointer}
+  .foot{background:var(--navy-deep);color:var(--ivory-dim);text-align:center;padding:20px;font-size:.8rem;line-height:1.7}
+  .foot b{color:var(--gold-soft);font-weight:600}
+  .foot a{color:var(--gold-soft)}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body data-done="0" data-closed="0">
+<div class="page">
+
+  <header class="invite">
+    <div class="inner">
+      <p class="host">Cape Town Tygerberg Local Football Association</p>
+      <img class="crest" src="/assets/crest.png" alt="CTTLFA crest" width="96" height="101">
+      <p class="invited">2026 Season Awards &middot; Call for nominations</p>
+      <h1 class="title">Awards Nominations<span class="yr">2026 Season</span></h1>
+      <p class="subtitle">Tell us who stood out this season &mdash; the clubs, players and coaches who deserve to be recognised.</p>
+      <div class="rule"><span></span><b>&#9733;</b><span></span></div>
+      <p class="evref">Winners announced at the <b>Annual Awards Evening</b> &middot; Saturday 21 November 2026</p>
+    </div>
+  </header>
+
+  <section class="intro">
+    <h2>Nominate for the 2026 awards</h2>
+    <p class="lead">Every member club may nominate for any of the eight awards below. The Management Committee reviews all nominations and decides the winners, guided by your motivations.</p>
+    <p class="deadline" id="deadline">Nominations are open</p>
+
+    <div class="howto">
+      <b>How it works</b>
+      <ul>
+        <li>Choose an award, tell us who you are nominating, and write a short motivation. The motivation is what the panel weighs most &mdash; be specific and give examples.</li>
+        <li>You may nominate for as many awards as you like, and more than one nominee per award. Submit one at a time.</li>
+        <li>The nominee should be a club, player or coach registered with the Association and in good standing for 2026.</li>
+        <li>Nominations are confidential to the Association and used only for the awards process.</li>
+      </ul>
+    </div>
+
+    <div class="closed">Nominations are now closed. Please contact the CTTLFA office if you still need to submit one.</div>
+  </section>
+
+  <section class="criteria" id="criteria">
+    <h3>The eight awards &amp; what the panel looks for</h3>
+    <p class="cl">Tap an award to see the criteria.</p>
+  </section>
+
+  <section class="formwrap">
+    <form id="nomForm" novalidate>
+      <div class="errbox" id="errbox" role="alert" aria-live="assertive"></div>
+
+      <fieldset>
+        <legend><span class="n">1</span> The award</legend>
+        <label for="award">Which award are you nominating for? <span class="req" aria-hidden="true">*</span></label>
+        <select id="award" name="award"><option value="" selected disabled>Select an award&hellip;</option></select>
+        <div class="awardpanel" id="awardPanel"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="n">2</span> Your nominee</legend>
+        <label for="nominee" id="nomineeLbl">Who are you nominating? <span class="req" aria-hidden="true">*</span></label>
+        <input id="nominee" name="nominee" type="text" maxlength="140" placeholder="Full name, or club name">
+        <div class="opt" id="nomClubWrap">
+          <label for="nomClub" id="nomClubLbl">Their club <span class="req" aria-hidden="true">*</span></label>
+          <select id="nomClub" name="nomClub"><option value="" selected disabled>Select the club&hellip;</option></select>
+        </div>
+        <div class="opt" id="divWrap">
+          <label for="division">Division or age group <span class="hint">(optional, e.g. Premier Division, Under 16)</span></label>
+          <input id="division" name="division" type="text" maxlength="80">
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="n">3</span> Your motivation</legend>
+        <label for="motivation">Why does this nominee deserve the award? <span class="req" aria-hidden="true">*</span> <span class="hint">(a few sentences; be specific)</span></label>
+        <textarea id="motivation" name="motivation" maxlength="2500" placeholder="Give concrete examples &mdash; what they did this season, the impact, and why it stands out against the criteria."></textarea>
+        <div class="wc" id="wc">0 characters</div>
+        <label for="evidence">Supporting information <span class="hint">(optional &mdash; links, results, dates, or anything that helps the panel)</span></label>
+        <textarea id="evidence" name="evidence" maxlength="1500" placeholder="Paste links or add brief supporting notes."></textarea>
+      </fieldset>
+
+      <fieldset>
+        <legend><span class="n">4</span> Who is nominating?</legend>
+        <label for="club">Your club <span class="req" aria-hidden="true">*</span></label>
+        <select id="club" name="club"><option value="" selected disabled>Select your club&hellip;</option></select>
+        <div class="two">
+          <div><label for="name">Your name <span class="req" aria-hidden="true">*</span></label><input id="name" name="name" type="text" maxlength="120" autocomplete="name"></div>
+          <div><label for="role">Your role <span class="hint">(e.g. Secretary)</span></label><input id="role" name="role" type="text" maxlength="80"></div>
+        </div>
+        <label for="email">Email <span class="hint">(optional, in case the panel needs to reach you)</span></label>
+        <input id="email" name="email" type="email" maxlength="160" autocomplete="email" placeholder="name@example.co.za">
+      </fieldset>
+
+      <label class="feecheck"><input type="checkbox" id="consent"> <span>I confirm this nomination is made on behalf of my club, and I consent to CTTLFA holding these details for the 2026 awards process under the Protection of Personal Information Act 4 of 2013.</span></label>
+
+      <p class="privacy">Nominations are confidential to the Association and are used only to decide the 2026 awards.</p>
+      <button type="submit" class="submit" id="submitBtn">Submit nomination</button>
+    </form>
+
+    <div class="done" aria-live="polite">
+      <div class="tick" aria-hidden="true">&#10003;</div>
+      <h3>Thank you &ndash; nomination received</h3>
+      <p id="doneMsg">We have recorded your nomination.</p>
+      <p class="hint">The Management Committee will review every nomination and announce the winners at the Awards Evening on 21 November 2026.</p>
+      <button type="button" class="again" id="again">Nominate for another award</button>
+    </div>
+  </section>
+
+  <footer class="foot">
+    Hosted by the <b>Cape Town Tygerberg Local Football Association</b><br>
+    Enquiries: Barry at the office &middot; <a href="mailto:ops@cttlfa.com">ops@cttlfa.com</a> &middot; <a href="https://www.cttfa.co.za">www.cttfa.co.za</a>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var SB='https://fbbbsvkshajollduapaw.supabase.co/rest/v1';
+  var SBK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiYmJzdmtzaGFqb2xsZHVhcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODYyODgsImV4cCI6MjEwMzY2MjI4OH0.8heeqe-03Mji2NgHt17ZOCoctijRhF78cHvSQkrUUi0';
+  var EVENT='2026';
+  function rpc(fn,body){
+    return fetch(SB+'/rpc/'+fn,{method:'POST',headers:{apikey:SBK,Authorization:'Bearer '+SBK,'Content-Type':'application/json'},body:JSON.stringify(body||{})})
+      .then(function(r){return r.text().then(function(t){var j=null;try{j=JSON.parse(t);}catch(e){}return {ok:r.ok,status:r.status,data:j};});});
+  }
+  function esc(s){var d=document.createElement('div');d.textContent=(s==null?'':s);return d.innerHTML;}
+
+  // ----- award definitions (criteria + form behaviour) -----
+  // kind: club | player | coach  (drives the nominee labels)
+  var AWARDS=[
+    {k:'club_of_the_year',l:'Club of the Year',kind:'club',
+      look:'A member club that stood out across the whole season, on and off the field.',
+      pts:['Strong overall performance across age groups and divisions','Sound administration and good standing — fees, compliance and discipline','Growth in membership and participation','Real contribution to the Association and its community']},
+    {k:'community_engagement',l:'Community Engagement Award',kind:'club',
+      look:'A club that used football to make a real difference in its community.',
+      pts:['Outreach or community projects with tangible impact','Members actively involved, not just the committee','A clear link between the club and social responsibility']},
+    {k:'innovation_coaching',l:'Innovation in Coaching Award',kind:'coach',
+      look:'A coach who brought something new that measurably improved players.',
+      pts:['Innovative methods or programmes that improved player development','Sharing knowledge with the wider football community','Strong leadership and mentoring']},
+    {k:'youth_development',l:'Youth Development Award',kind:'club',
+      look:'A club with an outstanding junior pathway.',
+      pts:['Clear progression from mini and junior football to senior','Success in youth leagues and tournaments','Attention to player health, education and welfare']},
+    {k:'fair_play',l:'Fair Play Award',kind:'club',
+      look:'A club that set the standard for sportsmanship and conduct.',
+      pts:['Outstanding sportsmanship across teams, coaches and supporters','A clean disciplinary record','Respect for opponents, officials and the game'],
+      note:'This award is cross-checked against the Association’s disciplinary and card records, so speak to conduct, not only results.'},
+    {k:'player_of_the_year',l:'Player of the Year',kind:'player',
+      look:'The season’s standout senior player.',
+      pts:['Exceptional skill and consistency across the season','A major contribution to the team’s success','Leadership and conduct on and off the field']},
+    {k:'junior_player',l:'Junior Player of the Year',kind:'player',
+      look:'The outstanding junior player, Under 18 and younger.',
+      pts:['Talent, commitment and improvement in the junior categories','A pivotal role in the team’s performances','Maturity, sportsmanship and a role-model attitude']},
+    {k:'ladies_player',l:'Ladies Player of the Year',kind:'player',
+      look:'The standout player in the women’s game.',
+      pts:['Performance, consistency and dedication in the women’s division','A major contribution to the team and leadership','Promoting women’s participation in football']}
+  ];
+  var AWMAP={}; AWARDS.forEach(function(a){AWMAP[a.k]=a;});
+
+  var CLUBS={
+    "Full members":["Avendale Athletico","Barmsley Spurs","Bellville City","Bothasig","Brooklyn Superstars","C.R Vasco da Gama","Camps Bay","Chelsea Bridgetown","Clyde Pinelands","De Beers","Durbanville","Edgemead G/W","FC Kapstadt","FN Rangers","Fish Hoek","Garden Village","Garlandale","Goodwood United","Green Point","Hanover Park","Hellenic","Holy Cross","JMI","Kensington","Kuilsriver","Lansdowne","Meadowridge","Mutual","Northpine United","Norway Parks","Queens Park","Ruyterwacht","Rygersdal","Saxon Rovers","Shosholoza","Stephanian Ottery","Sunningdale City","Table View","Tramway","West End United","Wynberg St Johns","Young Bafana","YSD Macassar"],
+    "Associate members":["Badgers FC","Cape Town Spurs","Emeris","Grass Boots","Magic Ladies","University of Cape Town","YMO FC"]
+  };
+  function fillClubs(sel){
+    Object.keys(CLUBS).forEach(function(grp){
+      var og=document.createElement('optgroup');og.label=grp;
+      CLUBS[grp].forEach(function(c){var o=document.createElement('option');o.value=c;o.textContent=c;og.appendChild(o);});
+      sel.appendChild(og);
+    });
+  }
+  fillClubs(document.getElementById('club'));
+  fillClubs(document.getElementById('nomClub'));
+
+  // award select + criteria accordion
+  var awSel=document.getElementById('award'), crit=document.getElementById('criteria');
+  AWARDS.forEach(function(a){
+    var o=document.createElement('option');o.value=a.k;o.textContent=a.l;awSel.appendChild(o);
+    var d=document.createElement('details');d.className='aw';
+    var badge = a.kind==='club'?'Club award':(a.kind==='coach'?'Coach award':'Player award');
+    d.innerHTML='<summary><span class="cx">&#9656;</span> '+esc(a.l)+' <span class="ab">'+badge+'</span></summary>'+
+      '<div class="cb"><div class="look">'+esc(a.look)+'</div><ul>'+a.pts.map(function(p){return '<li>'+esc(p)+'</li>';}).join('')+'</ul>'+
+      (a.note?'<div class="note">'+esc(a.note)+'</div>':'')+'</div>';
+    crit.appendChild(d);
+  });
+
+  var body=document.body, errbox=document.getElementById('errbox');
+  var nomineeLbl=document.getElementById('nomineeLbl'), nomineeInp=document.getElementById('nominee');
+  var nomClubWrap=document.getElementById('nomClubWrap'), nomClubLbl=document.getElementById('nomClubLbl'), nomClubSel=document.getElementById('nomClub');
+  var divWrap=document.getElementById('divWrap'), awardPanel=document.getElementById('awardPanel');
+
+  function applyAward(){
+    var a=AWMAP[awSel.value];
+    if(!a){ awardPanel.classList.remove('show'); return; }
+    awardPanel.innerHTML='<b>'+esc(a.l)+'.</b> '+esc(a.look); awardPanel.classList.add('show');
+    if(a.kind==='club'){
+      nomineeLbl.innerHTML='Which club are you nominating? <span class="req" aria-hidden="true">*</span>';
+      nomineeInp.placeholder='Club name';
+      nomClubWrap.classList.remove('show'); divWrap.classList.remove('show');
+    }else if(a.kind==='coach'){
+      nomineeLbl.innerHTML='Coach’s full name <span class="req" aria-hidden="true">*</span>';
+      nomineeInp.placeholder='Full name of the coach';
+      nomClubLbl.innerHTML='Their club <span class="req" aria-hidden="true">*</span>';
+      nomClubWrap.classList.add('show'); divWrap.classList.remove('show');
+    }else{
+      nomineeLbl.innerHTML='Player’s full name <span class="req" aria-hidden="true">*</span>';
+      nomineeInp.placeholder='Full name of the player';
+      nomClubLbl.innerHTML='Their club <span class="req" aria-hidden="true">*</span>';
+      nomClubWrap.classList.add('show'); divWrap.classList.add('show');
+    }
+  }
+  awSel.addEventListener('change', applyAward);
+
+  var mot=document.getElementById('motivation'), wc=document.getElementById('wc');
+  mot.addEventListener('input', function(){ wc.textContent = mot.value.trim().length+' characters'+(mot.value.trim().length<40?' (aim for a few sentences)':''); });
+
+  function clearErr(){errbox.classList.remove('show');errbox.textContent='';['award','nominee','nomClub','motivation','club','name'].forEach(function(id){var e=document.getElementById(id);if(e)e.removeAttribute('aria-invalid');});}
+  function showErr(msg,focusId){errbox.textContent=msg;errbox.classList.add('show');if(focusId){var e=document.getElementById(focusId);if(e){e.setAttribute('aria-invalid','true');e.focus();}}errbox.scrollIntoView({block:'center',behavior:'smooth'});}
+
+  function fmtDate(d){try{var p=d.split('-');var dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));return dt.toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch(e){return null;}}
+  rpc('awards_noms_public',{p_event:EVENT}).then(function(r){
+    var e=r.data; if(!e) return;
+    if(e.noms_open===false){ body.setAttribute('data-closed','1'); }
+    var dl=document.getElementById('deadline');
+    if(e.deadline){ var f=fmtDate(e.deadline); if(f) dl.textContent='Please submit your nominations by '+f; }
+    else { dl.textContent='Nominations are open'; }
+  }).catch(function(){});
+
+  var submitting=false;
+  document.getElementById('nomForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    if(submitting) return;
+    clearErr();
+    var a=AWMAP[awSel.value];
+    if(!a){ showErr('Please choose an award.','award'); return; }
+    var nominee=nomineeInp.value.trim();
+    if(!nominee){ showErr(a.kind==='club'?'Please name the club you are nominating.':'Please enter who you are nominating.','nominee'); return; }
+    var nomClub='';
+    if(a.kind!=='club'){ nomClub=nomClubSel.value; if(!nomClub){ showErr('Please select the nominee’s club.','nomClub'); return; } }
+    else { nomClub=nominee; }
+    var motivation=mot.value.trim();
+    if(motivation.length<40){ showErr('Please give a motivation of at least a few sentences.','motivation'); return; }
+    var club=document.getElementById('club').value;
+    if(!club){ showErr('Please select your club.','club'); return; }
+    var name=document.getElementById('name').value.trim();
+    if(!name){ showErr('Please enter your name.','name'); return; }
+    if(!document.getElementById('consent').checked){ showErr('Please tick the consent box to submit.'); return; }
+
+    var payload={event_key:EVENT,award_key:a.k,award_label:a.l,nominee_name:nominee,nominee_club:nomClub,
+      nominee_division:document.getElementById('division').value.trim(),motivation:motivation,
+      evidence:document.getElementById('evidence').value.trim(),nominating_club:club,
+      nominator_name:name,nominator_role:document.getElementById('role').value.trim(),
+      nominator_email:document.getElementById('email').value.trim(),consent:true};
+    submitting=true;
+    var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='Sending…';
+    rpc('awards_nominate',{p:payload}).then(function(r){
+      submitting=false;btn.disabled=false;btn.textContent='Submit nomination';
+      if(r.data && r.data.ok){
+        document.getElementById('doneMsg').innerHTML='We have recorded your nomination of <b>'+esc(nominee)+'</b> for the <b>'+esc(a.l)+'</b>.';
+        body.setAttribute('data-done','1'); window.scrollTo({top:0,behavior:'smooth'});
+      }else if(r.data && r.data.error){
+        showErr(r.data.error, r.data.duplicate?'nominee':null);
+      }else{
+        showErr('Sorry, something went wrong sending your nomination. Please try again, or contact the CTTLFA office.');
+      }
+    }).catch(function(){
+      submitting=false;btn.disabled=false;btn.textContent='Submit nomination';
+      showErr('We could not reach the server. Please check your connection and try again.');
+    });
+  });
+
+  document.getElementById('again').addEventListener('click',function(){
+    // keep the nominator's club/name/role/email; clear the nominee + motivation + award
+    body.setAttribute('data-done','0'); clearErr();
+    awSel.selectedIndex=0; awardPanel.classList.remove('show');
+    nomineeInp.value=''; nomClubSel.selectedIndex=0; document.getElementById('division').value='';
+    mot.value=''; wc.textContent='0 characters'; document.getElementById('evidence').value='';
+    document.getElementById('consent').checked=false;
+    nomClubWrap.classList.remove('show'); divWrap.classList.remove('show');
+    window.scrollTo({top:document.querySelector('.criteria').offsetTop-10,behavior:'smooth'});
+    awSel.focus();
+  });
+})();
+</script>
+</body>
+</html>
