@@ -6,7 +6,7 @@
 (function(NS){
   "use strict";
   var EVENT = "2026";
-  var DATA = null, FILTER = "", GROUP = "all", COMPACT = true, OPENCAT = {}, EXP = {};
+  var DATA = null, CAND = null, FILTER = "", GROUP = "all", COMPACT = true, OPENCAT = {}, EXP = {};
 
   // kind drives nominee labels; ev = supporting Admin Centre tabs [label, data-tab]
   var EV = {
@@ -50,17 +50,17 @@
       look:"The standout player in the women's game.",
       crit:["Performance and dedication in the women's division","Contribution and leadership","Promoting women's participation"],ev:ev("fixtures")},
     // ---- Group 2: Mancom & committee awards (not club-nominated) ----
-    {k:"senior_team",l:"Senior Team of the Year",grp:"mancom",kind:"team",
+    {k:"senior_team",l:"Senior Team of the Year",grp:"mancom",kind:"team",refcls:"senior",
       look:"The best senior team of the season.",crit:["League and knockout success","Consistency across the season"],ev:ev("fixtures")},
     {k:"senior_coach",l:"Senior Coach of the Year",grp:"mancom",kind:"coach",
       look:"The best senior coach.",crit:["Team results and improvement","Player development and leadership"],ev:ev("fixtures")},
-    {k:"junior_team",l:"Junior Team of the Year",grp:"mancom",kind:"team",
+    {k:"junior_team",l:"Junior Team of the Year",grp:"mancom",kind:"team",refcls:"junior",
       look:"The best junior team.",crit:["Junior league and knockout success"],ev:ev("fixtures")},
     {k:"junior_club",l:"Junior Club of the Year",grp:"mancom",kind:"club",
       look:"The strongest junior club overall.",crit:["Strength across junior age groups","Junior participation and results"],ev:ev("fixtures","registrations")},
     {k:"junior_coach",l:"Junior Coach of the Year",grp:"mancom",kind:"coach",
       look:"The best junior coach.",crit:["Junior team results and player development"],ev:ev("fixtures")},
-    {k:"womens_team",l:"Women's Team of the Year",grp:"mancom",kind:"team",
+    {k:"womens_team",l:"Women's Team of the Year",grp:"mancom",kind:"team",refcls:"women",
       look:"The best women's team.",crit:["Women's league and knockout success"],ev:ev("fixtures")},
     {k:"girls_player",l:"Girls Player of the Year",grp:"mancom",kind:"player",
       look:"The best girls player.",crit:["Talent and improvement in girls football","A role-model attitude"],ev:ev("fixtures")},
@@ -71,11 +71,11 @@
     {k:"presidents",l:"President's Award",grp:"mancom",kind:"person",
       look:"The President's discretionary award.",crit:["Exceptional service or contribution, at the President's discretion"],ev:ev()},
     // ---- Group 3: results / knockout (from the competitions) ----
-    {k:"coke_cup_seniors",l:"Coke Cup — Seniors",grp:"results",kind:"team",
+    {k:"coke_cup_seniors",l:"Coke Cup — Seniors",grp:"results",kind:"team",refall:"cups",
       look:"Senior knockout cup winner.",crit:["Winner of the senior knockout competition"],ev:ev("fixtures")},
-    {k:"coke_cup_womens",l:"Coke Cup — Women's",grp:"results",kind:"team",
+    {k:"coke_cup_womens",l:"Coke Cup — Women's",grp:"results",kind:"team",refall:"cups",
       look:"Women's knockout cup winner.",crit:["Winner of the women's knockout competition"],ev:ev("fixtures")},
-    {k:"coke_cup_u18",l:"Coke Cup — Under 18",grp:"results",kind:"team",
+    {k:"coke_cup_u18",l:"Coke Cup — Under 18",grp:"results",kind:"team",refall:"cups",
       look:"Under-18 knockout cup winner.",crit:["Winner of the U18 knockout competition"],ev:ev("fixtures")}
   ];
   var FWMAP = {}; FW.forEach(function(a){ FWMAP[a.k]=a; });
@@ -151,7 +151,22 @@
       "#nomsRoot .nm-dec .sv{margin-top:8px;font:inherit;font-size:12.5px;font-weight:700;cursor:pointer;background:#1E7A46;color:#fff;border:0;border-radius:7px;padding:7px 14px}"+
       "#nomsRoot .nm-dec .svn{font-size:11px;color:#296944;margin-left:9px}"+
       "#nomsRoot .nm-decwin{font-size:12px;color:#14562f;margin-left:auto}"+
-      "#nomsRoot .nm-msg{padding:10px 2px;color:#59666b;font-size:12.5px}";
+      "#nomsRoot .nm-msg{padding:10px 2px;color:#59666b;font-size:12.5px}"+
+      "#nomsRoot .nm-dat{background:#eef3f5;border:1px solid #cddbe1;border-radius:9px;padding:9px 12px;margin:0 0 10px}"+
+      "#nomsRoot .nm-dat h6{margin:0 0 2px;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#1b4a5e;font-weight:800}"+
+      "#nomsRoot .nm-dat h6 .asof{font-weight:600;color:#6a7d86;text-transform:none;letter-spacing:0}"+
+      "#nomsRoot .nm-dat .hl{font-size:12px;font-weight:600;color:#1b4a5e;margin:4px 0 5px}"+
+      "#nomsRoot .nm-cand{padding:5px 0;border-top:1px dashed #d5e1e6}#nomsRoot .nm-cand.first{border-top:0}"+
+      "#nomsRoot .nm-cand .cn{font-weight:700;color:#184050;font-size:12.8px}"+
+      "#nomsRoot .nm-cand .cm{display:inline-block;font-size:11px;font-weight:700;background:#f3ead2;color:#7a5e12;border:1px solid #e4d3a6;border-radius:999px;padding:1px 8px;margin-left:6px;font-variant-numeric:tabular-nums}"+
+      "#nomsRoot .nm-cand .cw{font-size:12px;color:#44555f;margin-top:1px;line-height:1.45}"+
+      "#nomsRoot .nm-dat .note{font-size:11.5px;color:#5b6b73;margin-top:8px;font-style:italic;line-height:1.45}"+
+      "#nomsRoot .nm-dat details{margin-top:8px}#nomsRoot .nm-dat summary{cursor:pointer;font-size:11.5px;font-weight:700;color:#1b4a5e}"+
+      "#nomsRoot .nm-reftab{width:100%;border-collapse:collapse;margin-top:6px;font-size:11.5px}"+
+      "#nomsRoot .nm-reftab th{text-align:left;padding:3px 6px;border-bottom:1px solid #cddbe1;color:#59666b;font-weight:700}"+
+      "#nomsRoot .nm-reftab td{text-align:left;padding:3px 6px;border-bottom:1px solid #e9eff1}"+
+      "#nomsRoot .nm-reftab td.n{font-variant-numeric:tabular-nums;text-align:right}"+
+      "#nomsRoot .nm-nodata{font-size:11.5px;color:#6a5a2a;background:#faf7ef;border:1px dashed #e0d4b2;border-radius:8px;padding:7px 10px;margin:0 0 10px;line-height:1.45}";
     var s=document.createElement("style"); s.id="nm-style"; s.textContent=css; document.head.appendChild(s);
   }
 
@@ -163,13 +178,19 @@
     }
     injectStyle();
     root.innerHTML='<div class="card"><p class="hint">Loading the awards console&hellip;</p></div>';
-    NS.sb.rpc("awards_noms_list",{p_event:EVENT}).then(function(r){
+    Promise.all([
+      NS.sb.rpc("awards_noms_list",{p_event:EVENT}),
+      NS.sb.rpc("awards_candidates")
+    ]).then(function(res){
+      var r=res[0], rc=res[1];
       if(r.error){
         var m=(r.error.message||"");
         root.innerHTML='<div class="card"><h3>Award nominations</h3><p class="hint">'+(m.indexOf("not authorised")>-1?"This area is restricted. Ask an administrator for access.":"Could not load: "+esc(m))+'</p></div>';
         return;
       }
-      DATA=r.data; paint(root);
+      DATA=r.data;
+      CAND=(rc && !rc.error && rc.data) ? rc.data : null;
+      paint(root);
     });
   }
 
@@ -220,7 +241,7 @@
       '</div>';
 
     h += '<div id="nmBody"></div>';
-    h += '<p class="hint" style="font-size:11.5px;margin:12px 0 0">The 8 club awards take nominations from clubs. The Mancom, committee and results awards are decided internally &mdash; use the criteria and the linked Admin Centre data to deliberate, and record the winner in each. “Supporting data” buttons jump to the relevant tab.</p>';
+    h += '<p class="hint" style="font-size:11.5px;margin:12px 0 0">Each award shows its criteria, the candidates the Admin Centre data points to (with a short motivation against the criteria), and the club nominations. The 8 club awards take nominations; the Mancom, committee and results awards are decided internally. Record the winner in each. Where an award shows no data, it rests on nominations and judgement. “Supporting data” buttons jump to the full tab.</p>';
     h += '</div>';
     root.innerHTML=h;
 
@@ -281,6 +302,8 @@
     var h='';
     // criteria
     h += '<div class="nm-crit"><div class="look">'+esc(a.look)+'</div><ul>'+a.crit.map(function(c){return '<li>'+esc(c)+'</li>';}).join('')+'</ul></div>';
+    // data-driven candidates brought in from the Admin Centre
+    h += candPanel(a);
     // supporting data links
     if(a.ev && a.ev.length){
       h += '<div class="nm-evrow"><span class="nm-evlbl">Supporting data:</span>'+a.ev.map(function(x){return '<button class="nm-evb" data-tab="'+esc(x[1])+'">'+esc(x[0])+' →</button>';}).join('')+'</div>';
@@ -308,6 +331,48 @@
       }
     }
     return h;
+  }
+
+  function candPanel(a){
+    if(!CAND || !CAND.awards){ return ''; }
+    var c=CAND.awards[a.k];
+    if(!c){ return nodataLine(a); }
+    var items=(c.items||[]);
+    var h='<div class="nm-dat"><h6>From the Admin Centre data'+(CAND.asof?' <span class="asof">· as at '+esc(CAND.asof)+'</span>':'')+'</h6>';
+    if(c.headline){ h+='<div class="hl">'+esc(c.headline)+'</div>'; }
+    if(items.length){
+      h+=items.map(function(it,i){ return '<div class="nm-cand'+(i===0?" first":"")+'"><span class="cn">'+esc(it.name)+'</span>'+(it.metric?'<span class="cm">'+esc(it.metric)+'</span>':'')+'<div class="cw">'+esc(it.why)+'</div></div>'; }).join('');
+    } else {
+      h+='<div class="cw" style="font-size:12px;color:#5b6b73">No qualifying candidates in the data yet.</div>';
+    }
+    h+=refPanel(a);
+    if(c.note){ h+='<div class="note">'+esc(c.note)+'</div>'; }
+    h+='</div>';
+    return h;
+  }
+  function nodataLine(a){
+    if(!CAND){ return ''; }
+    return '<div class="nm-nodata">No objective Admin Centre metric feeds this award &mdash; it rests on the '+(a.grp==="club"?"club motivations below":"committee&rsquo;s judgement")+' against the criteria. If that feels thin, the criteria may need sharpening.</div>';
+  }
+  function refPanel(a){
+    if(!CAND || !CAND.ref){ return ''; }
+    if(a.refcls){
+      var rows=(CAND.ref.league_champions||[]).filter(function(x){return x.cls===a.refcls;});
+      if(!rows.length) return '';
+      return '<details><summary>All '+rows.length+' '+esc(a.refcls)+' league champions</summary>'+
+        '<table class="nm-reftab"><thead><tr><th>Division</th><th>Champion</th><th class="n">Pts</th><th class="n">GD</th></tr></thead><tbody>'+
+        rows.map(function(x){return '<tr><td>'+esc(x.division)+'</td><td>'+esc(x.team)+'</td><td class="n">'+esc(x.pts)+'</td><td class="n">'+(x.gd>=0?'+':'')+esc(x.gd)+'</td></tr>';}).join('')+
+        '</tbody></table></details>';
+    }
+    if(a.refall==='cups'){
+      var cw=(CAND.ref.cup_winners||[]);
+      if(!cw.length) return '';
+      return '<details><summary>All '+cw.length+' knockout cup finals</summary>'+
+        '<table class="nm-reftab"><thead><tr><th>Competition</th><th>Winner</th><th>Final result</th></tr></thead><tbody>'+
+        cw.map(function(x){return '<tr><td>'+esc(x.division)+'</td><td>'+esc(x.winner)+'</td><td>'+esc(x.score)+'</td></tr>';}).join('')+
+        '</tbody></table></details>';
+    }
+    return '';
   }
 
   function snippet(s){ s=String(s||"").replace(/\s+/g," ").trim(); return s.length>120 ? esc(s.slice(0,120))+"…" : esc(s); }
