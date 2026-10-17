@@ -610,7 +610,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
         <div class="gd-card" id="guidecard-practice">
           <a class="gd-thumb" href="voting-practice.html" target="_blank" rel="noopener" style="background:linear-gradient(150deg,#12306e,#0B1F4E);display:flex;align-items:center;justify-content:center"><span class="gd-tag">Practice</span><span style="width:74px;height:74px;border-radius:18px;background:var(--gold);display:flex;align-items:center;justify-content:center;box-shadow:0 8px 24px rgba(0,0,0,.35)"><svg viewBox="0 0 24 24" style="width:34px;height:34px;fill:none;stroke:#0B1F4E;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span></a>
           <div class="gd-body"><h4>Practice vote</h4>
-            <p>A safe practice version of the voting system. Rehearse the whole flow yourself — accredit delegates (with the 1 + 1 split), open a motion, cast on simulated phones, and see the weighted result and projector view. Nothing is recorded.</p>
+            <p>A safe practice version of the voting system. Rehearse the whole flow yourself — accredit a delegate who carries the club's block vote, open a motion, cast on simulated phones, and see the weighted result and projector view. Nothing is recorded.</p>
             <div class="gd-act"><a class="gd-btn p" href="voting-practice.html" target="_blank" rel="noopener"><svg viewBox="0 0 24 24"><path d="M14 3h7v7M21 3l-9 9M10 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5"/></svg>Open practice vote</a></div>
             <a class="gd-golink" href="#" onclick="goModule('meetings');return false">Open Meetings &amp; Voting <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
           </div>
@@ -741,7 +741,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
       <div id="accreditNeedsMeeting" class="banner">Select or create a meeting on the Meetings tab first.</div>
       <div id="accreditBody" class="hidden">
         <div class="card">
-          <h3 data-help="Check delegates in at the door. Search by SAFA number or surname, capture their cell and consent, then press Check in and issue code. Votes are worked out for you: a full club's first delegate gets both votes; a second delegate splits it to one each; a third is blocked. Give them the QR or SMS the code.">Accredit a delegate</h3>
+          <h3 data-help="Check delegates in at the door. Search by SAFA number or surname, capture their cell and consent, then press Check in and issue code. Each club registers one delegate who carries the club's whole vote as a block (Constitution Art 8.2): a full member club two votes, an associate club one. A second delegate for the same club is not accredited. Give them the QR or SMS the code.">Accredit a delegate</h3>
           <p class="hint">Search the whole registered roll by SAFA number or surname, the club fills in automatically. To narrow the search to one club, type its name in the club filter first. Or type a name to add someone manually. Capture a cell number and consent, then check them in. Two people can accredit at the same time on separate laptops.</p>
           <div class="row">
             <div style="flex:2"><label class="f">Find by SAFA number or surname</label><input type="text" id="acSearch" placeholder="SAFA number, or surname" autocomplete="off"><div class="search-list hidden" id="acResults"></div></div>
@@ -749,7 +749,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
           </div>
           <div class="row" style="margin-top:12px">
             <div><label class="f">Delegate name</label><input type="text" id="acName" placeholder="Selected, or type to add manually"></div>
-            <div style="max-width:210px"><label class="f" data-help="Worked out automatically from the club and who is already checked in. A full club's first delegate carries both votes; a second splits it to one each; a third, or a second associate delegate, is blocked as Subscribed. You never set this by hand.">Votes allocated</label><div id="acAllocInfo" class="allocbox">Select a club</div></div>
+            <div style="max-width:210px"><label class="f" data-help="Worked out automatically from the club. A full member club's delegate carries both its votes; an associate club's delegate carries its one vote (Constitution Art 8.2, block vote). A club's second delegate is blocked, its vote is already held. You never set this by hand.">Votes allocated</label><div id="acAllocInfo" class="allocbox">Select a club</div></div>
             <div style="max-width:180px"><label class="f">SAFA number</label><input type="text" id="acSafa" placeholder="Auto-filled from roll"></div>
             <div style="max-width:170px"><label class="f">Cell number</label><input type="tel" id="acCell" placeholder="072 000 0000"></div>
           </div>
@@ -1138,7 +1138,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
           <li><b>Capture the cell number</b> so you can SMS the code, and tick the <b>consent</b> box. The consent line covers holding the name and cell under POPIA.</li>
           <li>Press <span class="kk gold">Check in and issue code</span>. The QR code and six-character code pop up.</li>
         </ol>
-        <div class="callout"><b>Votes are worked out for you.</b> A full member club has two votes. The first delegate from that club is given both votes. If a second delegate from the same club checks in, the system automatically splits it to one vote each. A third is blocked and shows <span class="kk">Subscribed</span>. An associate club has one vote and one delegate only. You never add or split votes by hand, the box under "Votes allocated" tells you exactly what this delegate will carry.</div>
+        <div class="callout"><b>Votes are worked out for you.</b> Each club registers <b>one delegate</b>, who carries the club's whole vote as a block (Constitution Art 8.2). A full member club has <b>two votes</b> and an associate club <b>one</b>, and the single delegate casts them together. A guest team has no vote. A second delegate for the same club is not accredited and shows <span class="kk">already accredited</span>, the box under "Votes allocated" tells you exactly what the delegate will carry.</div>
         <p class="sub">Made a mistake? Use <span class="kk">Remove</span> on the checked-in list to take a delegate out and return their vote to the club. Use <span class="kk">New code</span> to cancel a code and issue a fresh one, for example if someone changes phones.</p>
       </div>
 
@@ -1214,8 +1214,8 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
       <div class="card help-card" id="h-faq">
         <h3>Common questions</h3>
         <div class="faq"><b>A delegate says their code will not work.</b><span>Check they are using it on the first phone that opened it, codes lock to one phone. If they changed phones, press New code on their row to issue a fresh one. The old one then stops working.</span></div>
-        <div class="faq"><b>We accredited the wrong person.</b><span>Press Remove on their row. Their vote goes back to the club and, if the club was split, it re-combines. Then accredit the correct delegate.</span></div>
-        <div class="faq"><b>A club is short and shows "Subscribed".</b><span>That club has already used all its votes (two for a full club, one for an associate). Remove a delegate first if you need to swap who holds the vote.</span></div>
+        <div class="faq"><b>We accredited the wrong person.</b><span>Press Remove on their row. The club's vote is freed. Then accredit the correct delegate, who takes up the club's block vote.</span></div>
+        <div class="faq"><b>A club already has its delegate and I cannot add another.</b><span>Each club registers one delegate, who carries the club's block vote (two for a full club, one for an associate). Remove that delegate first if you need to swap who holds the vote.</span></div>
         <div class="faq"><b>Can we change compliance after starting a vote?</b><span>No. It locks at the first Start to protect the result. Set it correctly before the first motion opens.</span></div>
         <div class="faq"><b>The vote closed before everyone voted.</b><span>The timer closes it automatically. Anyone who did not vote is recorded as an abstain, which is the correct treatment. Set a longer timer on the motion if the room needs more time.</span></div>
         <div class="faq"><b>Why can I not see who is winning while the vote is open?</b><span>The ballot is secret. Only the count of votes cast is shown live, never the Yes/No split. The result appears when the vote closes.</span></div>
@@ -1537,9 +1537,9 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     if(!c){ box.className="allocbox"; box.textContent="Select a club"; $("acAlloc").innerHTML=""; $("checkInBtn").disabled=true; return; }
     var alloc=allocatedForClub(cid), rem=Math.max(0, c.weight-alloc), comp=(complianceMap[cid]!==false);
     if(!comp){ box.className="allocbox full"; box.textContent="Club non-compliant, cannot be accredited"; $("checkInBtn").disabled=true; }
-    else if(rem<=0){ box.className="allocbox full"; box.textContent="Subscribed: "+alloc+" of "+c.weight+" vote"+(c.weight>1?"s":"")+" used"; $("checkInBtn").disabled=true; }
-    else { var give=(c.weight===2 && alloc===0)?2:1; box.className="allocbox ok"; box.textContent="This delegate gets "+give+" vote"+(give>1?"s":"")+" ("+alloc+" of "+c.weight+" used)"; $("checkInBtn").disabled=false; }
-    $("acAlloc").innerHTML = alloc+' of '+c.weight+' allocated'+(rem<=0?', club full':', '+rem+' left');
+    else if(rem<=0){ box.className="allocbox full"; box.textContent="This club's delegate is already accredited and carries its "+c.weight+" vote"+(c.weight>1?"s":"")+". Remove them to change who holds the vote."; $("checkInBtn").disabled=true; }
+    else { var give=c.weight; box.className="allocbox ok"; box.textContent="This delegate carries the club's "+give+" vote"+(give>1?"s":"")+" as a block (Constitution Art 8.2)."; $("checkInBtn").disabled=false; }
+    $("acAlloc").innerHTML = (rem<=0?'Delegate accredited &middot; '+c.weight+' vote'+(c.weight>1?'s':'')+' held':'One delegate &middot; '+c.weight+' vote'+(c.weight>1?'s':'')+' block');
   }
   function stopCiTimer(){ if(ciTimer){ clearInterval(ciTimer); ciTimer=null; } }
   async function loadComplianceMap(){
@@ -1660,7 +1660,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
   }
   $("acCell") && ($("acCell").onkeydown=function(e){ if(e.key==="Enter"){ e.preventDefault(); $("checkInBtn").click(); } });
   function accErr(res){
-    if(res.error==="subscribed") return "This club is fully accredited (maximum "+(res.max||"")+" vote"+((res.max||2)>1?"s":"")+"). Remove a delegate first to change it.";
+    if(res.error==="subscribed") return "This club already has its delegate accredited. A club registers one delegate, who carries its "+(res.max||2)+" vote"+((res.max||2)>1?"s":"")+" as a block (Art 8.2). Remove the current delegate first to change who holds the vote.";
     if(res.error==="already_accredited") return "This person is already accredited for this meeting.";
     if(res.error==="non_compliant") return "This club is non-compliant and cannot be accredited.";
     if(res.error==="no_name") return "Enter a delegate name.";
@@ -1680,7 +1680,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
       var res=r.data||{};
       if(!res.ok){ msg($("acMsg"), accErr(res),"err"); $("checkInBtn").disabled=false; return; }
       showQR(clubById(cid), res.code, res.weight);
-      msg($("acMsg"),"Accredited"+(res.count>1?", club now split "+res.count+" ways":"")+".","ok");
+      msg($("acMsg"),"Accredited. This delegate carries "+(res.weight||1)+" vote"+((res.weight||1)>1?"s":"")+" for the club (block vote).","ok");
       $("acName").value="";$("acSafa").value="";$("acCell").value="";$("acConsent").checked=false;$("acSearch").value="";selectedPerson=null;
       await loadCheckedIn(); refreshVotesOptions(); try{ $("acSearch").focus(); }catch(e){}
     }catch(e){ msg($("acMsg"), e.message||"Could not accredit.","err"); }

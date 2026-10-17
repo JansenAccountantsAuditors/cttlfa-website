@@ -119,7 +119,7 @@ input[type=text],input[type=number],select{border:1px solid var(--line);border-r
   <div class="panel on" id="p-accredit">
     <div class="card">
       <h2>Accreditation — at the door</h2>
-      <p class="hint">Check delegates in. A <b>full club</b> gets <b>2 votes</b>; if a <b>second delegate</b> from the same full club checks in, the two votes <b>split 1 + 1</b> and each gets their own code. An <b>associate club</b> has <b>one delegate, one vote</b> — a second is refused.</p>
+      <p class="hint">Check delegates in. Each club registers <b>one delegate</b>, who carries the club's whole vote as a <b>block</b> (Constitution Art 8.2): a <b>full club</b> casts <b>2 votes</b>, an <b>associate club</b> <b>1</b>. A second delegate from the same club is refused.</p>
       <div class="clist" id="clubList"></div>
       <div class="tot"><div><div class="k">Clubs accredited</div><div class="v" id="tClubs">0</div></div>
         <div><div class="k">Delegates checked in</div><div class="v" id="tDel">0</div></div>
@@ -188,15 +188,13 @@ var state;
 function fresh(){ return {dele:[], motion:null, ballots:{}, timer:null}; }
 function code(){var A="ABCDEFGHJKMNPQRSTUVWXYZ23456789",s="";for(var i=0;i<6;i++)s+=A[Math.floor(Math.random()*A.length)];return s;}
 function clubDele(cid){return state.dele.filter(function(d){return d.club===cid;});}
-function reweight(cid){ // full: 1 delegate=2, 2 delegates=1+1 ; assoc: 1
+function reweight(cid){ // one delegate per club carries the club's block vote (Art 8.2): full=2, assoc=1
   var ds=clubDele(cid), club=CLUBS.find(function(c){return c.id===cid;});
-  if(club.type==="assoc"){ if(ds[0]) ds[0].votes=1; return; }
-  if(ds.length===1) ds[0].votes=2; else if(ds.length===2){ds[0].votes=1;ds[1].votes=1;}
+  if(ds[0]) ds[0].votes = club.type==="assoc" ? 1 : 2;
 }
 function checkin(cid){
   var club=CLUBS.find(function(c){return c.id===cid;}), ds=clubDele(cid);
-  var max = club.type==="assoc"?1:2;
-  if(ds.length>=max){ flash(cid, club.type==="assoc"?"An associate club has one delegate only.":"A full club has at most two delegates."); return; }
+  if(ds.length>=1){ flash(cid, "Each club registers one delegate, who carries the club's block vote. Remove them to change who holds it."); return; }
   if(state.motion){ flash(cid,"Close the current motion before changing accreditation."); return; }
   state.dele.push({id:Date.now()+Math.random(), club:cid, code:code(), votes:0, name:"Delegate "+(ds.length+1)});
   reweight(cid); render();
