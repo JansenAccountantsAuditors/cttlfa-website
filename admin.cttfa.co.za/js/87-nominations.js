@@ -6,7 +6,7 @@
 (function(NS){
   "use strict";
   var EVENT = "2026";
-  var DATA = null, CAND = null, FILTER = "", GROUP = "all", COMPACT = true, OPENCAT = {}, EXP = {};
+  var DATA = null, CAND = null, FILTER = "", GROUP = "all", COMPACT = true, OPENCAT = {}, EXP = {}, MODE = "console";
 
   // kind drives nominee labels; ev = supporting Admin Centre tabs [label, data-tab]
   var EV = {
@@ -166,7 +166,24 @@
       "#nomsRoot .nm-reftab th{text-align:left;padding:3px 6px;border-bottom:1px solid #cddbe1;color:#59666b;font-weight:700}"+
       "#nomsRoot .nm-reftab td{text-align:left;padding:3px 6px;border-bottom:1px solid #e9eff1}"+
       "#nomsRoot .nm-reftab td.n{font-variant-numeric:tabular-nums;text-align:right}"+
-      "#nomsRoot .nm-nodata{font-size:11.5px;color:#6a5a2a;background:#faf7ef;border:1px dashed #e0d4b2;border-radius:8px;padding:7px 10px;margin:0 0 10px;line-height:1.45}";
+      "#nomsRoot .nm-nodata{font-size:11.5px;color:#6a5a2a;background:#faf7ef;border:1px dashed #e0d4b2;border-radius:8px;padding:7px 10px;margin:0 0 10px;line-height:1.45}"+
+      "#nomsRoot .nm-sum h4{font-family:inherit;font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:#184050;font-weight:800;margin:18px 2px 8px;border-bottom:2px solid #d3dbde;padding-bottom:5px}"+
+      "#nomsRoot .nm-sum h4:first-child{margin-top:4px}"+
+      "#nomsRoot .nm-sumgrp{font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:#7a6a3a;font-weight:800;margin:12px 2px 5px}"+
+      "#nomsRoot .nm-awrow{display:flex;align-items:baseline;gap:10px;padding:6px 8px;border-bottom:1px solid #eef2f3}"+
+      "#nomsRoot .nm-awrow .al{flex:1;min-width:0;font-size:13px;color:#2b3640}"+
+      "#nomsRoot .nm-awrow .aw-win{font-weight:800;color:#14562f;font-size:13px}"+
+      "#nomsRoot .nm-awrow .aw-src{font-size:10.5px;color:#7a8794;margin-left:6px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}"+
+      "#nomsRoot .nm-awrow .aw-todo{font-size:11px;font-weight:700;color:#9a6a1a;background:#faf1dc;border:1px solid #e6d3a6;border-radius:999px;padding:2px 10px}"+
+      "#nomsRoot .nm-awrow .aw-conf{font-size:11px;font-weight:700;color:#8a4a12;background:#f6e9dc;border:1px solid #e6c6a6;border-radius:999px;padding:2px 10px}"+
+      "#nomsRoot table.nm-sumt{width:100%;border-collapse:collapse;font-size:12px;margin:2px 0 4px}"+
+      "#nomsRoot table.nm-sumt th{text-align:left;padding:4px 7px;border-bottom:2px solid #d3dbde;color:#59666b;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.03em}"+
+      "#nomsRoot table.nm-sumt td{padding:4px 7px;border-bottom:1px solid #eceff1}"+
+      "#nomsRoot table.nm-sumt td.n{font-variant-numeric:tabular-nums;text-align:right}"+
+      "#nomsRoot table.nm-sumt td.ch{font-weight:700;color:#184050}"+
+      "#nomsRoot table.nm-sumt .pen{color:#8a4a12;font-weight:700}"+
+      "#nomsRoot .nm-sumnote{font-size:11.5px;color:#59666b;margin:4px 2px 0;font-style:italic}"+
+      "@media print{#sideNav,.nm-bar,.nm-tiles,.nm-evt{display:none!important}#nomsRoot .nm-sum h4{break-after:avoid}#nomsRoot table.nm-sumt{font-size:10.5px}}";
     var s=document.createElement("style"); s.id="nm-style"; s.textContent=css; document.head.appendChild(s);
   }
 
@@ -220,9 +237,9 @@
       ["Shortlisted", shortlisted, "sl"],
       ["Winners set", decided+" / "+FW.length, ""]
     ];
-    h += '<div class="nm-tiles">'+tiles.map(function(t){ return '<div class="nm-tile'+(t[2]==="sl"?" sl":"")+'"><div class="n">'+esc(t[1])+'</div><div class="l">'+esc(t[0])+'</div></div>'; }).join("")+'</div>';
+    if(MODE==="console"){ h += '<div class="nm-tiles">'+tiles.map(function(t){ return '<div class="nm-tile'+(t[2]==="sl"?" sl":"")+'"><div class="n">'+esc(t[1])+'</div><div class="l">'+esc(t[0])+'</div></div>'; }).join("")+'</div>'; }
 
-    h += '<div class="nm-bar">'+
+    var consoleControls = MODE==="console" ? (
       '<input class="nm-search" id="nmSearch" type="search" placeholder="Search nominee, club, nominator, motivation…" value="'+esc(FILTER)+'">'+
       '<div class="nm-seg" id="nmGroupSeg">'+
         '<button data-g="all"'+(GROUP==="all"?' class="on"':'')+'>All awards</button>'+
@@ -233,11 +250,16 @@
       '<div class="nm-seg" id="nmViewSeg">'+
         '<button data-v="compact"'+(COMPACT?' class="on"':'')+'>Compact</button>'+
         '<button data-v="detailed"'+(!COMPACT?' class="on"':'')+'>Detailed</button>'+
-      '</div>'+
+      '</div>'
+    ) : '';
+    h += '<div class="nm-bar">'+
+      consoleControls+
       '<span class="sp"></span>'+
+      '<button class="btn sm" id="nmMode" type="button">'+(MODE==="summary"?"&larr; Back to console":"★ Winners summary")+'</button>'+
+      (MODE==="summary"?'<button class="btn ghost sm" id="nmPrint" type="button">Print / PDF</button>':'')+
       '<button class="btn ghost sm" id="nmRefresh" type="button">Refresh</button>'+
       '<button class="btn ghost sm" id="nmCsv" type="button">Export CSV</button>'+
-      (w?'<button class="btn sm" id="nmToggle" type="button">'+(open?"Close nominations":"Re-open nominations")+'</button>':'')+
+      (w&&MODE==="console"?'<button class="btn ghost sm" id="nmToggle" type="button">'+(open?"Close nominations":"Re-open nominations")+'</button>':'')+
       '</div>';
 
     h += '<div id="nmBody"></div>';
@@ -245,17 +267,20 @@
     h += '</div>';
     root.innerHTML=h;
 
-    NS.$("nmSearch").addEventListener("input", function(){ FILTER=this.value; body(w); });
-    Array.prototype.forEach.call(NS.$("nmGroupSeg").querySelectorAll("button"), function(b){ b.addEventListener("click", function(){ GROUP=b.getAttribute("data-g"); paint(root); }); });
-    Array.prototype.forEach.call(NS.$("nmViewSeg").querySelectorAll("button"), function(b){ b.addEventListener("click", function(){ COMPACT=(b.getAttribute("data-v")==="compact"); body(w); }); });
+    var se=NS.$("nmSearch"); if(se) se.addEventListener("input", function(){ FILTER=this.value; body(w); });
+    var gs=NS.$("nmGroupSeg"); if(gs) Array.prototype.forEach.call(gs.querySelectorAll("button"), function(b){ b.addEventListener("click", function(){ GROUP=b.getAttribute("data-g"); paint(root); }); });
+    var vs=NS.$("nmViewSeg"); if(vs) Array.prototype.forEach.call(vs.querySelectorAll("button"), function(b){ b.addEventListener("click", function(){ COMPACT=(b.getAttribute("data-v")==="compact"); body(w); }); });
+    NS.$("nmMode").addEventListener("click", function(){ MODE=(MODE==="summary"?"console":"summary"); paint(root); });
+    var pr=NS.$("nmPrint"); if(pr) pr.addEventListener("click", function(){ try{ window.print(); }catch(e){} });
     NS.$("nmRefresh").addEventListener("click", renderNoms);
     NS.$("nmCsv").addEventListener("click", exportCsv);
-    if(w){ NS.$("nmToggle").addEventListener("click", function(){ toggleOpen(open); }); }
+    var tg=NS.$("nmToggle"); if(w && tg){ tg.addEventListener("click", function(){ toggleOpen(open); }); }
     body(w);
   }
 
   function body(w){
     var host=NS.$("nmBody"); if(!host) return;
+    if(MODE==="summary"){ summaryBody(host,w); return; }
     var f=FILTER.toLowerCase();
     var noms=(DATA.noms||[]);
     var matched = !f ? noms : noms.filter(function(n){
@@ -296,6 +321,66 @@
       Array.prototype.forEach.call(host.querySelectorAll(".nm-del"), function(b){ b.addEventListener("click", function(ev){ ev.stopPropagation(); del(b.getAttribute("data-id")); }); });
       Array.prototype.forEach.call(host.querySelectorAll(".nm-dec .sv"), function(b){ b.addEventListener("click", function(){ saveDecision(b.getAttribute("data-k")); }); });
     }
+  }
+
+  function clsLabel(c){ return ({senior:"Senior & reserve divisions",women:"Women",vets:"Veterans / over-age",junior:"Junior (Under-18 to Under-12)"})[c]||c; }
+  function winnerOf(a){
+    var d=(DATA.decisions||{})[a.k];
+    if(d && d.winner) return {w:d.winner, src:"recorded"};
+    if(a.grp==="results" && CAND && CAND.awards){
+      var it=(CAND.awards[a.k] && CAND.awards[a.k].items) || [];
+      if(it.length){ var nm=it[0].name||""; if(/^Drawn/i.test(nm)) return {w:null, pen:true}; return {w:nm, src:"from results"}; }
+    }
+    return null;
+  }
+  function summaryBody(host,w){
+    var champs=(CAND && CAND.ref && CAND.ref.league_champions) || [];
+    var cups=(CAND && CAND.ref && CAND.ref.cup_winners) || [];
+    var done=0; FW.forEach(function(a){ var r=winnerOf(a); if(r && r.w) done++; });
+    var h='';
+    h += '<div class="nm-tiles">'+
+      '<div class="nm-tile"><div class="n">'+done+' / '+FW.length+'</div><div class="l">Winners confirmed</div></div>'+
+      '<div class="nm-tile sl"><div class="n">'+(FW.length-done)+'</div><div class="l">Still to conclude</div></div>'+
+      '<div class="nm-tile"><div class="n">'+champs.length+'</div><div class="l">League champions</div></div>'+
+      '<div class="nm-tile"><div class="n">'+cups.length+'</div><div class="l">Knockout winners</div></div>'+
+    '</div>';
+    h += '<div class="nm-sum"><h4>Awards &mdash; winners &amp; outstanding</h4>';
+    ["club","mancom","results"].forEach(function(g){
+      h += '<div class="nm-sumgrp">'+esc(GRPLBL[g])+'</div>';
+      FW.filter(function(a){return a.grp===g;}).forEach(function(a){
+        var r=winnerOf(a), right;
+        if(r && r.w) right='<span class="aw-win">&#127942; '+esc(r.w)+'</span><span class="aw-src">'+esc(r.src)+'</span>';
+        else if(r && r.pen) right='<span class="aw-conf">Final drawn &mdash; confirm penalties</span>';
+        else right='<span class="aw-todo">To conclude</span>';
+        h += '<div class="nm-awrow"><span class="al">'+esc(a.l)+'</span>'+right+'</div>';
+      });
+    });
+    h += '</div>';
+    if(champs.length){
+      h += '<div class="nm-sum"><h4>2026 League champions</h4>';
+      ["senior","women","vets","junior"].forEach(function(c){
+        var rows=champs.filter(function(x){return x.cls===c;}).sort(function(a,b){return (a.division>b.division)?1:(a.division<b.division?-1:0);});
+        if(!rows.length) return;
+        h += '<div class="nm-sumgrp">'+esc(clsLabel(c))+'</div>'+
+          '<table class="nm-sumt"><thead><tr><th>Division</th><th>Champion</th><th class="n">Pts</th><th class="n">GD</th></tr></thead><tbody>'+
+          rows.map(function(x){return '<tr><td>'+esc(x.division)+'</td><td class="ch">'+esc(x.team)+'</td><td class="n">'+esc(x.pts)+'</td><td class="n">'+(x.gd>=0?'+':'')+esc(x.gd)+'</td></tr>';}).join('')+
+          '</tbody></table>';
+      });
+      h += '</div>';
+    }
+    if(cups.length){
+      h += '<div class="nm-sum"><h4>2026 Knockout cup winners</h4>'+
+        '<table class="nm-sumt"><thead><tr><th>Competition</th><th>Winner</th><th>Final</th></tr></thead><tbody>'+
+        cups.map(function(x){
+          var wn=(x.winner==="penalties") ? '<span class="pen">Drawn &mdash; penalties (confirm)</span>' : '<span class="ch">'+esc(x.winner)+'</span>';
+          return '<tr><td>'+esc(x.division)+'</td><td>'+wn+'</td><td>'+esc(x.score)+'</td></tr>';
+        }).join('')+
+        '</tbody></table>'+
+        '<div class="nm-sumnote">Champions and cup winners are drawn live from the completed league and knockout results'+(CAND && CAND.asof?' (as at '+esc(CAND.asof)+')':'')+'. A final level after normal time shows the drawn score &mdash; confirm the penalty winner. Award winners update here as the Management Committee records each decision in the console.</div>'+
+      '</div>';
+    }
+    if(!CAND){ h = '<div class="nm-msg">The results summary needs the Admin Centre data, which is still loading or is unavailable. Try Refresh.</div>'+h; }
+    host.innerHTML=h;
   }
 
   function catBody(a,list,w,f){
