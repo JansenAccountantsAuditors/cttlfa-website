@@ -148,6 +148,7 @@
         <li>Choose an award, tell us who you are nominating, and write a short motivation. The motivation is what the panel weighs most &mdash; be specific and give examples.</li>
         <li>You may nominate for as many awards as you like, and more than one nominee per award. Submit one at a time.</li>
         <li>The nominee should be a club, player or coach registered with the Association and in good standing for 2026.</li>
+        <li>We email you a confirmation of each nomination, so please use an address you check.</li>
         <li>Nominations are confidential to the Association and used only for the awards process.</li>
       </ul>
     </div>
@@ -202,7 +203,7 @@
           <div><label for="name">Your name <span class="req" aria-hidden="true">*</span></label><input id="name" name="name" type="text" maxlength="120" autocomplete="name"></div>
           <div><label for="role">Your role <span class="hint">(e.g. Secretary)</span></label><input id="role" name="role" type="text" maxlength="80"></div>
         </div>
-        <label for="email">Email <span class="hint">(optional, in case the panel needs to reach you)</span></label>
+        <label for="email">Your email <span class="req" aria-hidden="true">*</span> <span class="hint">(your confirmation is sent here)</span></label>
         <input id="email" name="email" type="email" maxlength="160" autocomplete="email" placeholder="name@example.co.za">
       </fieldset>
 
@@ -232,6 +233,7 @@
 (function(){
   "use strict";
   var SB='https://fbbbsvkshajollduapaw.supabase.co/rest/v1';
+  var FN='https://fbbbsvkshajollduapaw.supabase.co/functions/v1';
   var SBK='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZiYmJzdmtzaGFqb2xsZHVhcGF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgwODYyODgsImV4cCI6MjEwMzY2MjI4OH0.8heeqe-03Mji2NgHt17ZOCoctijRhF78cHvSQkrUUi0';
   var EVENT='2026';
   function rpc(fn,body){
@@ -327,7 +329,7 @@
   var mot=document.getElementById('motivation'), wc=document.getElementById('wc');
   mot.addEventListener('input', function(){ wc.textContent = mot.value.trim().length+' characters'+(mot.value.trim().length<40?' (aim for a few sentences)':''); });
 
-  function clearErr(){errbox.classList.remove('show');errbox.textContent='';['award','nominee','nomClub','motivation','club','name'].forEach(function(id){var e=document.getElementById(id);if(e)e.removeAttribute('aria-invalid');});}
+  function clearErr(){errbox.classList.remove('show');errbox.textContent='';['award','nominee','nomClub','motivation','club','name','email'].forEach(function(id){var e=document.getElementById(id);if(e)e.removeAttribute('aria-invalid');});}
   function showErr(msg,focusId){errbox.textContent=msg;errbox.classList.add('show');if(focusId){var e=document.getElementById(focusId);if(e){e.setAttribute('aria-invalid','true');e.focus();}}errbox.scrollIntoView({block:'center',behavior:'smooth'});}
 
   function fmtDate(d){try{var p=d.split('-');var dt=new Date(Date.UTC(+p[0],+p[1]-1,+p[2]));return dt.toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}catch(e){return null;}}
@@ -357,19 +359,22 @@
     if(!club){ showErr('Please select your club.','club'); return; }
     var name=document.getElementById('name').value.trim();
     if(!name){ showErr('Please enter your name.','name'); return; }
+    var email=document.getElementById('email').value.trim();
+    if(!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ showErr('Please enter a valid email address so we can send your confirmation.','email'); return; }
     if(!document.getElementById('consent').checked){ showErr('Please tick the consent box to submit.'); return; }
 
     var payload={event_key:EVENT,award_key:a.k,award_label:a.l,nominee_name:nominee,nominee_club:nomClub,
       nominee_division:document.getElementById('division').value.trim(),motivation:motivation,
       evidence:document.getElementById('evidence').value.trim(),nominating_club:club,
       nominator_name:name,nominator_role:document.getElementById('role').value.trim(),
-      nominator_email:document.getElementById('email').value.trim(),consent:true};
+      nominator_email:email,consent:true};
     submitting=true;
     var btn=document.getElementById('submitBtn');btn.disabled=true;btn.textContent='Sending…';
     rpc('awards_nominate',{p:payload}).then(function(r){
       submitting=false;btn.disabled=false;btn.textContent='Submit nomination';
       if(r.data && r.data.ok){
-        document.getElementById('doneMsg').innerHTML='We have recorded your nomination of <b>'+esc(nominee)+'</b> for the <b>'+esc(a.l)+'</b>.';
+        if(r.data.id){ fetch(FN+'/awards-nom-confirm',{method:'POST',headers:{apikey:SBK,Authorization:'Bearer '+SBK,'Content-Type':'application/json'},body:JSON.stringify({id:r.data.id})}).catch(function(){}); }
+        document.getElementById('doneMsg').innerHTML='We have recorded your nomination of <b>'+esc(nominee)+'</b> for the <b>'+esc(a.l)+'</b>. A confirmation has been emailed to <b>'+esc(email)+'</b>.';
         body.setAttribute('data-done','1'); window.scrollTo({top:0,behavior:'smooth'});
       }else if(r.data && r.data.error){
         showErr(r.data.error, r.data.duplicate?'nominee':null);
