@@ -94,6 +94,17 @@
   .snav:hover{color:#fff;background:rgba(255,255,255,.06)}
   .snav.on{color:#fff;background:rgba(244,180,26,.13);box-shadow:inset 3px 0 0 var(--gold)}
   .snav .ic{width:18px;height:18px;flex:0 0 auto}
+  .burger{display:none;background:transparent;border:0;color:#fff;cursor:pointer;padding:7px;border-radius:9px}
+  .burger:hover{background:rgba(255,255,255,.12)}
+  .grp{margin-bottom:2px}
+  .grp-h{display:flex;align-items:center;gap:8px;width:100%;text-align:left;font-family:var(--cond);text-transform:uppercase;letter-spacing:.12em;font-weight:700;font-size:10.5px;color:#6f83b8;background:transparent;border:0;padding:13px 12px 6px;cursor:pointer}
+  .grp-h:hover{color:#9fb0d8}
+  .grp-h .cx{margin-left:auto;transition:transform .15s;opacity:.65}
+  .grp.closed .cx{transform:rotate(-90deg)}
+  .grp.closed .snav{display:none}
+  .navscrim{display:none;position:fixed;inset:0;background:rgba(7,26,74,.5);z-index:55}
+  body.navopen .navscrim{display:block}
+  body.rolefincom .burger{display:none!important}
   .subnav{background:#fff;border-bottom:1px solid var(--line)}
   .subnav-inner{margin:0;display:flex;align-items:center;gap:2px;padding:0 28px;flex-wrap:wrap}
   .subnav-lbl{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.06em;font-size:11px;color:var(--muted);padding-right:14px;margin-right:6px;border-right:1px solid var(--line)}
@@ -102,10 +113,9 @@
   .subtab.on{color:var(--navy);border-bottom-color:var(--gold)}
   @media(max-width:820px){
     .shell{flex-direction:column;min-height:0}
-    .side{flex:none;display:flex;flex-direction:row;gap:6px;overflow-x:auto;padding:8px 10px;border-right:0;border-bottom:1px solid rgba(255,255,255,.08)}
-    .side .side-lbl{display:none}
-    .snav{width:auto;margin-bottom:0;white-space:nowrap}
-    .snav.on{box-shadow:inset 0 -3px 0 var(--gold)}
+    .burger{display:inline-flex;align-items:center;justify-content:center}
+    .side{position:fixed;top:0;left:0;bottom:0;width:276px;z-index:60;transform:translateX(-100%);transition:transform .22s;overflow:auto;flex:none;border-right:0;border-bottom:0;padding:16px 12px 34px;box-shadow:0 20px 50px rgba(0,0,0,.45)}
+    body.navopen .side{transform:translateX(0)}
     .main .wrap{padding:16px 16px}
   }
   .uadd{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
@@ -337,7 +347,7 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
 <div id="appView" class="hidden">
   <header class="top">
     <div class="topbar">
-      <div class="tb-left" aria-hidden="true"></div>
+      <div class="tb-left"><button class="burger" id="navBurger" type="button" aria-label="Menu" title="Menu"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button></div>
       <div class="tb-brand">
         <div class="logo" id="topLogo">CT</div>
         <div class="brandwrap"><span class="bt">CTTLFA</span><span class="bs">Admin Centre</span></div>
@@ -350,40 +360,43 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     </div>
   </header>
   <div class="shell">
+    <div class="navscrim" id="navScrim"></div>
     <div class="print-only print-letterhead"><img src="cttlfa-logo.jpg" alt="CTTLFA crest"><div class="plh-txt"><div class="plh-org">Cape Town Tygerberg Local Football Association</div><div class="plh-sub">Administration Centre · Confidential · internal</div></div></div>
     <aside class="side" id="sideNav">
-      <div class="side-lbl">Admin Centre</div>
       <button class="snav on" data-tab="home" title="The Admin Centre home and your action queue."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V10"/></svg>Home</button>
-      <div class="side-lbl" style="margin-top:14px">Meetings</div>
+      <div class="grp"><button class="grp-h" type="button">Governance &amp; Meetings <svg class="cx" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <button class="snav" data-tab="meetings" title="Meetings and voting — accreditation, motions, live ballots and the record."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>Meetings &amp; Voting</button>
-      <div class="side-lbl" style="margin-top:14px">Clubs &amp; members</div>
-      <button class="snav" data-tab="registrations" title="SAFA card-cycle registration analytics and per-club profiles."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg>Registrations</button>
-      <button class="snav" data-tab="clubdb" title="The central club database — every club mapped across the register, Sage, portal, registrations and the website."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>Club Database</button>
+      <button class="snav" data-tab="calendar" title="Season &amp; Governance Calendar — proposed dates to end December 2027 for Mancom sign-off."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M7 14h4M13 17h4"/></svg>Season Calendar</button>
+      <button class="snav" data-tab="awards" title="Awards Evening RSVPs — who has confirmed, outstanding clubs, totals and CSV export."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 0-3 3"/></svg>Awards RSVPs</button>
+      <button class="snav" data-tab="noms" title="Award nominations — clubs' nominations grouped by award for Mancom review, with shortlisting and CSV export."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.5 1.6 6.7L12 17l-6.2 3.6 1.6-6.7L2.2 9.5l6.9-.6z"/></svg>Award Nominations</button>
+      <button class="snav" data-tab="fincom" title="The Finance Committee dashboard. Restricted to Fincom members."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg>Fincom</button>
+      </div>
+      <div class="grp"><button class="grp-h" type="button">Clubs &amp; Compliance <svg class="cx" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <button class="snav" data-tab="clubprofile" title="One place per club — registrations, debtors and discipline drawn into a single club two-pager."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2.4"/><path d="M5.5 16c.5-1.7 2-2.8 3.5-2.8s3 1.1 3.5 2.8M14.5 9h4M14.5 13h4"/></svg>Club Profile</button>
-      <button class="snav" data-tab="clubcontacts" title="The email addresses that may sign in to the club portal, per club."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 7l8 6 8-6"/></svg>Club Contacts</button>
-      <button class="snav" data-tab="clubportal" title="The club-facing portal — preview a club's view and manage who has access."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>Club Portal</button>
-      <div class="side-lbl" style="margin-top:14px">Finance</div>
       <button class="snav" data-tab="debtors" title="Live club debtor balances, ageing, collections and correspondence."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Club Debtors</button>
       <button class="snav" data-tab="discipline" title="Discipline and cards — yellow-card accumulation, suspensions, and administrative rulings and fines, read live from the disciplinary system."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="14" rx="1"/><path d="M9 21h6M12 17v4"/></svg>Discipline &amp; Cards</button>
       <button class="snav" data-tab="referees" title="Referees — accreditation, SAFA linkage, appointments this season and the full referee register, read live from the disciplinary system."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/></svg>Referees</button>
-      <button class="snav" data-tab="fincom" title="The Finance Committee dashboard. Restricted to Fincom members."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg>Fincom</button>
-      <div class="side-lbl" style="margin-top:14px">Football</div>
+      <button class="snav" data-tab="clubdb" title="The central club database — every club mapped across the register, Sage, portal, registrations and the website."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg>Club Database</button>
+      <button class="snav" data-tab="clubcontacts" title="The email addresses that may sign in to the club portal, per club."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M4 7l8 6 8-6"/></svg>Club Contacts</button>
+      <button class="snav" data-tab="clubportal" title="The club-facing portal — preview a club's view and manage who has access."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>Club Portal</button>
+      </div>
+      <div class="grp"><button class="grp-h" type="button">Competitions &amp; Season <svg class="cx" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
+      <button class="snav" data-tab="registrations" title="SAFA card-cycle registration analytics and per-club profiles."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg>Registrations</button>
       <button class="snav" data-tab="fixtures" title="Season fixture analytics from LeagueRepublic — team entrants, teams per club, day and kick-off breakdowns, a season calendar, and fixture issues. Seasons 2022 to 2026."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>Fixture Analytics</button>
-      <button class="snav" data-tab="lognotes" title="Add public notes to the league logs — mark a fixture as a no result or a points adjustment, with a short note shown under that division's log on the public site."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>Log Notes</button>
       <button class="snav" data-tab="planner27" title="2027 season scenario planner — size the season, model promotion/relegation, resize divisions, and draft the 2027 fixtures with weather and public-holiday context."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>2027 Planner</button>
-      <div class="side-lbl" style="margin-top:14px">Website</div>
+      <button class="snav" data-tab="lognotes" title="Add public notes to the league logs — mark a fixture as a no result or a points adjustment, with a short note shown under that division's log on the public site."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg>Log Notes</button>
+      </div>
+      <div class="grp"><button class="grp-h" type="button">Website <svg class="cx" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <button class="snav" data-tab="webadmin" title="Edit the public cttfa.co.za content in-house."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>Website Admin</button>
       <button class="snav" data-tab="webstats" title="Live Google Analytics for the public cttfa.co.za site."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg>Website Analytics</button>
       <a class="snav" data-ext="1" href="https://www.cttfa.co.za" target="_blank" rel="noopener" style="text-decoration:none" title="Open the public cttfa.co.za site as members and the public see it (new tab)."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg>Live Website</a>
-      <div class="side-lbl" style="margin-top:14px">Events</div>
-      <button class="snav" data-tab="awards" title="Awards Evening RSVPs — who has confirmed, outstanding clubs, totals and CSV export."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 0-3 3"/></svg>Awards RSVPs</button>
-      <button class="snav" data-tab="noms" title="Award nominations — clubs' nominations grouped by award for Mancom review, with shortlisting and CSV export."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.9 6.3 6.9.6-5.2 4.5 1.6 6.7L12 17l-6.2 3.6 1.6-6.7L2.2 9.5l6.9-.6z"/></svg>Award Nominations</button>
-      <button class="snav" data-tab="calendar" title="Season &amp; Governance Calendar — proposed dates to end December 2027 for Mancom sign-off."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18M7 14h4M13 17h4"/></svg>Season Calendar</button>
-      <div class="side-lbl" style="margin-top:14px">System</div>
+      </div>
+      <div class="grp closed"><button class="grp-h" type="button">System &amp; Help <svg class="cx" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
       <button class="snav" data-tab="integrity" title="Data integrity — the four inputs (Sage, LeagueRepublic, SAFA registrations, dash), the internal mapping that arranges them, and the platform and operations monitors."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v5c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V6z"/><path d="M9 12l2 2 4-4"/></svg>Data Integrity</button>
       <button class="snav" data-tab="users" title="The user list — who may sign in, and their access level. Administrators manage this."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg>Users</button>
       <button class="snav" data-tab="guides" title="Guides and infographics — one-look visual explainers of how each part of the Admin Centre works."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5a2 2 0 0 1 2-2h6v16H6a2 2 0 0 0-2 2z"/><path d="M20 5a2 2 0 0 0-2-2h-6v16h6a2 2 0 0 1 2 2z"/></svg>Guides</button>
       <button class="snav" data-tab="help" title="Full how-to guidance for every part of the Admin Centre."><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Help</button>
+      </div>
     </aside>
     <main class="main">
     <nav class="subnav" id="votingSubnav" style="display:none"><div class="subnav-inner">
@@ -426,6 +439,18 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
       #tab-home .hfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
       #tab-home .hchip{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;padding:3px 8px;border-radius:20px}
       #tab-home .hchip.live{background:#e6efe9;color:#1c7c4a} #tab-home .hchip.ext{background:#EEF2FA;color:var(--muted)} #tab-home .hchip.soon{background:#FBF0D8;color:#9f6621}
+            #tab-home .hsec-h{display:flex;align-items:center;gap:12px;margin:26px 0 12px}
+      #tab-home .hsec-h .lbl{font-family:var(--cond);text-transform:uppercase;letter-spacing:.14em;font-weight:800;font-size:13.5px;color:var(--navy)}
+      #tab-home .hsec-h .rule{flex:1;height:1px;background:var(--line)}
+      #tab-home .hsec-h .cnt{font-family:var(--cond);font-size:11.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+      #tab-home .hmod.lead{border-color:#cdd9f3;box-shadow:0 2px 10px rgba(18,63,181,.08)}
+      #tab-home .hchip.hub{background:var(--navy);color:#ffd873}
+      #tab-home .hic.awards{background:#b07d12} #tab-home .hic.notes{background:#4F6D7F} #tab-home .hic.sys{background:#44566a} #tab-home .hic.help{background:#5A667C}
+      #tab-home .hsubrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:12px}
+      #tab-home .hsubrow .lab{font-family:var(--cond);text-transform:uppercase;letter-spacing:.07em;font-size:11px;font-weight:700;color:var(--muted)}
+      #tab-home .hpill{font-size:12.5px;font-weight:600;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 14px;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+      #tab-home .hpill:hover{border-color:#cdd9f3;background:#f7f9fe}
+      #tab-home .hpill svg{width:14px;height:14px;stroke:var(--blue);fill:none;stroke-width:2}
       </style>
       <div class="card homehero">
         <div class="homecrest" id="homeCrest"></div>
@@ -434,19 +459,39 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
         <p class="desc">The CTTLFA Admin Centre is the association&rsquo;s single online workspace for the Management Committee and staff. From one place you run meetings and voting, manage player registrations and club profiles, reach the website and discipline systems, follow fixtures and finances, and open the public site. Each function is its own module, brought together here so the whole association is administered from a single, secure home.</p>
       </div>
       <div id="homeInbox" class="hidden" style="margin-top:16px"></div>
+      <div class="hsec-h"><span class="lbl">Governance &amp; Meetings</span><span class="rule"></span><span class="cnt">4 pages</span></div>
       <div class="homegrid">
         <div class="hmod" data-area="voting"><div class="hic voting"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>Voting &amp; Meetings</h3><p>Run AGMs, SGMs and Mancom meetings — accreditation, motions, live secret ballots and the formal record.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="meetings">Open</button></div></div>
+        <div class="hmod" data-area="calendar"><div class="hic cal"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Season Calendar</h3><p>The association&rsquo;s proposed season and governance calendar to the end of 2027 — AGM, SGM, Mancom and club meetings, the football season and knockouts, functions, courses and public holidays — laid out for Management Committee sign-off.</p><div class="hfoot"><span class="hchip soon">Proposed</span><button class="btn gold sm" data-goto="calendar">Open</button></div></div>
+        <div class="hmod" data-area="awards"><div class="hic awards"><svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 0-3 3"/></svg></div><h3>Awards</h3><p>Awards Evening RSVPs and the 2026 award nominations, grouped by award for Mancom review and deliberation.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="awards">Open</button></div></div>
+        <div class="hmod" data-area="fincom"><div class="hic fincom"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div><h3>Fincom Dashboard</h3><p>The Finance Committee operating dashboard — mandate, budget, monthly phasing, debtors, compliance and the Mancom packs. Restricted to Fincom members.</p><div class="hfoot"><span class="hchip live">Live · restricted</span><button class="btn gold sm" data-goto="fincom">Open</button></div></div>
+      </div>
+      <div class="hsec-h"><span class="lbl">Clubs &amp; Compliance</span><span class="rule"></span><span class="cnt">4 pages + club admin</span></div>
+      <div class="homegrid">
+        <div class="hmod lead" data-area="debtors"><div class="hic cprof"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2.2"/><path d="M5.5 16c.4-1.6 1.9-2.6 3.5-2.6s3.1 1 3.5 2.6M14.5 9h4M14.5 12.5h4"/></svg></div><h3>Club Profile <span class="hchip hub">Hub</span></h3><p>One place per club &mdash; registrations, players and referees, the Sage debtor position, and the club&rsquo;s discipline and fines, drawn together into a single club two-pager for Mancom.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="clubprofile">Open</button></div></div>
+        <div class="hmod" data-area="debtors"><div class="hic fin"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Club Debtors</h3><p>Live club debtor balances from Sage — ageing, who is paying, the constitutional collection cadence, and the out-of-compliance register for Mancom.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="debtors">Open</button></div></div>
+        <div class="hmod" data-area="debtors"><div class="hic disc"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="14" rx="1"/><path d="M9 21h6M12 17v4"/></svg></div><h3>Discipline &amp; Cards</h3><p>Yellow cards and accumulation, suspensions at risk, and administrative rulings and fines reconciled to Sage &mdash; read live from the disciplinary system for Mancom.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="discipline">Open</button></div></div>
+        <div class="hmod" data-area="debtors"><div class="hic disc"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/></svg></div><h3>Referees</h3><p>Referee accreditation and SAFA linkage, appointments this season, by-level breakdown and the full referee register &mdash; read live from the disciplinary system for Mancom.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="referees">Open</button></div></div>
+      </div>
+      <div class="hsubrow"><span class="lab">Club admin:</span><button class="hpill" data-goto="clubdb"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/></svg>Club Database</button><button class="hpill" data-goto="clubcontacts"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4z"/><path d="M4 7l8 6 8-6"/></svg>Club Contacts</button><button class="hpill" data-goto="clubportal"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>Club Portal</button></div>
+      <div class="hsec-h"><span class="lbl">Competitions &amp; Season</span><span class="rule"></span><span class="cnt">4 pages</span></div>
+      <div class="homegrid">
         <div class="hmod" data-area="registrations"><div class="hic reg"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13A4 4 0 0 1 16 11"/></svg></div><h3>Registrations &amp; Clubs</h3><p>The full SAFA card-cycle analytics and per-club profiles, with live teams, fixtures, results and CSV/PDF exports.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="registrations">Open</button></div></div>
         <div class="hmod" data-area="fixtures"><div class="hic fix"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Fixtures &amp; Results</h3><p>Full season fixture analytics drawn live from LeagueRepublic — team entrants, teams per club, day and kick-off breakdowns, a season calendar and fixture issues, across 2022 to 2026. The LeagueRepublic admin sign-in sits on the page.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="fixtures">Open</button></div></div>
         <div class="hmod" data-area="fixtures"><div class="hic fix"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><h3>2027 Season Planner</h3><p>Scenario-build the 2027 season on the 2026 structure — size the calendar, model promotion/relegation, resize divisions, keep junior clubs playing together, and draft the fixtures with weather and public-holiday context.</p><div class="hfoot"><span class="hchip live">Planning</span><button class="btn gold sm" data-goto="planner27">Open</button></div></div>
+        <div class="hmod" data-area="fixtures"><div class="hic notes"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M9 13h6M9 17h4"/></svg></div><h3>Log Notes</h3><p>Public notes on the league logs &mdash; mark a no-result or a points adjustment, shown under that division on the public site.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="lognotes">Open</button></div></div>
+      </div>
+      <div class="hsec-h"><span class="lbl">Website</span><span class="rule"></span><span class="cnt">3 pages</span></div>
+      <div class="homegrid">
         <div class="hmod" data-area="webadmin"><div class="hic web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg></div><h3>Website Admin</h3><p>Edit the public cttfa.co.za content in-house — clubs (detail, map pins and LeagueRepublic names), committee, downloads, sponsors, notices, news, key dates and gallery, plus a live-data refresh and last-updated view. Changes show on the live site on the next page load.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="webadmin">Open</button></div></div>
-        <div class="hmod" data-area="debtors"><div class="hic disc"><svg viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="14" rx="1"/><path d="M9 21h6M12 17v4"/></svg></div><h3>Discipline &amp; Cards</h3><p>Yellow cards and accumulation, suspensions at risk, and administrative rulings and fines reconciled to Sage &mdash; read live from the disciplinary system for Mancom.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="discipline">Open</button></div></div>
-        <div class="hmod" data-area="debtors"><div class="hic disc"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 8v5l3 2"/></svg></div><h3>Referees</h3><p>Referee accreditation and SAFA linkage, appointments this season, by-level breakdown and the full referee register &mdash; read live from the disciplinary system for Mancom.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="referees">Open</button></div></div>
-        <div class="hmod" data-area="debtors"><div class="hic cprof"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2.2"/><path d="M5.5 16c.4-1.6 1.9-2.6 3.5-2.6s3.1 1 3.5 2.6M14.5 9h4M14.5 12.5h4"/></svg></div><h3>Club Profile</h3><p>One place per club &mdash; registrations, players and referees, the Sage debtor position, and the club&rsquo;s discipline and fines, drawn together into a single club two-pager for Mancom.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="clubprofile">Open</button></div></div>
-        <div class="hmod" data-area="fincom"><div class="hic fincom"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 15v3M12 10v8M17 6v12"/></svg></div><h3>Fincom Dashboard</h3><p>The Finance Committee operating dashboard — mandate, budget, monthly phasing, debtors, compliance and the Mancom packs. Restricted to Fincom members.</p><div class="hfoot"><span class="hchip live">Live · restricted</span><button class="btn gold sm" data-goto="fincom">Open</button></div></div>
-        <div class="hmod" data-area="debtors"><div class="hic fin"><svg viewBox="0 0 24 24"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div><h3>Club Debtors</h3><p>Live club debtor balances from Sage — ageing, who is paying, the constitutional collection cadence, and the out-of-compliance register for Mancom.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="debtors">Open</button></div></div>
-        <div class="hmod" data-area="clubportal"><div class="hic portal"><svg viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg></div><h3>Club Portal</h3><p>The club-facing side of the association at club.cttfa.co.za — each club signs in to see its own account, statement, status and fixtures. Preview any club&rsquo;s view and manage who has access.</p><div class="hfoot"><span class="hchip ext">In testing</span><button class="btn gold sm" data-goto="clubportal">Open</button></div></div>
-        <div class="hmod" data-area="calendar"><div class="hic cal"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><h3>Season Calendar</h3><p>The association&rsquo;s proposed season and governance calendar to the end of 2027 — AGM, SGM, Mancom and club meetings, the football season and knockouts, functions, courses and public holidays — laid out for Management Committee sign-off.</p><div class="hfoot"><span class="hchip soon">Proposed</span><button class="btn gold sm" data-goto="calendar">Open</button></div></div>
+        <div class="hmod" data-area="webstats"><div class="hic stats"><svg viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 14l3-3 3 3 5-6"/></svg></div><h3>Website Analytics</h3><p>Live Google Analytics for the public cttfa.co.za site &mdash; visitors, sources, popular pages and devices.</p><div class="hfoot"><span class="hchip live">Live</span><button class="btn gold sm" data-goto="webstats">Open</button></div></div>
+        <div class="hmod" data-area="webadmin"><div class="hic site"><svg viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6M10 14L21 3"/></svg></div><h3>Live Website</h3><p>Open the public cttfa.co.za site in a new tab, as members and the public see it.</p><div class="hfoot"><span class="hchip ext">Opens site</span><a class="btn gold sm" href="https://www.cttfa.co.za" target="_blank" rel="noopener">Open &#8599;</a></div></div>
+      </div>
+      <div class="hsec-h"><span class="lbl">System &amp; Help</span><span class="rule"></span><span class="cnt">3 pages</span></div>
+      <div class="homegrid">
+        <div class="hmod" data-area="voting"><div class="hic sys"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v5c0 5-3.5 8.5-8 11-4.5-2.5-8-6-8-11V6z"/><path d="M9 12l2 2 4-4"/></svg></div><h3>Data Integrity</h3><p>The four inputs (Sage, LeagueRepublic, SAFA, dash), the mapping that arranges them, and the platform monitors.</p><div class="hfoot"><span class="hchip live">Healthy</span><button class="btn gold sm" data-goto="integrity">Open</button></div></div>
+        <div class="hmod" data-area="voting"><div class="hic reg"><svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/></svg></div><h3>Users</h3><p>Who may sign in to the Admin Centre, and their access level. Administrators manage this.</p><div class="hfoot"><span class="hchip link">Admin</span><button class="btn gold sm" data-goto="users">Open</button></div></div>
+        <div class="hmod" data-area="voting"><div class="hic help"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><path d="M12 17h.01"/></svg></div><h3>Guides &amp; Help</h3><p>Visual explainers and full how-to guidance for every part of the Admin Centre.</p><div class="hfoot"><span class="hchip link">Reference</span><button class="btn gold sm" data-goto="guides">Open</button></div></div>
       </div>
       <p class="hint" style="margin-top:12px">External tools open in a new tab, so the Admin Centre stays open here to return to. Built for CTTLFA by the Treasurer&rsquo;s office &mdash; each function is a module that can be refined on its own.</p>
     </section>
@@ -910,7 +955,8 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
 .qnav-fab:hover{background:#ffc93c} .qnav-fab.on{transform:rotate(45deg);background:var(--navy);color:#fff}
 .qnav-menu{background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 16px 40px rgba(7,26,74,.22);padding:8px;min-width:224px;max-height:70vh;overflow:auto}
 .qnav-menu .qnav-h{font-family:var(--cond);font-weight:700;text-transform:uppercase;letter-spacing:.05em;font-size:11px;color:var(--muted);padding:6px 10px 8px}
-.qnav-item{display:block;width:100%;text-align:left;background:transparent;border:0;border-radius:9px;padding:10px 12px;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;min-height:40px}
+.qnav-item{display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:transparent;border:1px solid transparent;border-radius:10px;padding:8px 10px;font:inherit;font-size:13.5px;font-weight:600;color:var(--ink);cursor:pointer;min-height:40px}
+.qnav-item .qnav-ic{width:32px;height:32px;flex:0 0 auto;border-radius:9px;background:#eaf0fe;display:flex;align-items:center;justify-content:center;color:var(--blue)}
 .qnav-item:hover{background:var(--line2);color:var(--navy)}
 @media print{.qnav{display:none}}
 @media(max-width:600px){.qnav{right:14px;bottom:14px}}
@@ -1446,6 +1492,14 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
     if(t.getAttribute("data-ext")) return;
     t.onclick=function(){ goTab(t.dataset.tab); };
   });
+  /* grouped sidebar collapse + mobile drawer */
+  Array.prototype.forEach.call(document.querySelectorAll("#sideNav .grp-h"),function(hh){ hh.onclick=function(){ hh.parentNode.classList.toggle("closed"); }; });
+  (function(){ var bg=document.getElementById("navBurger"), sc=document.getElementById("navScrim");
+    function cl(){ document.body.classList.remove("navopen"); }
+    if(bg) bg.onclick=function(){ document.body.classList.toggle("navopen"); };
+    if(sc) sc.onclick=cl;
+    Array.prototype.forEach.call(document.querySelectorAll("#sideNav .snav"),function(s){ s.addEventListener("click",function(){ if(window.innerWidth<=820) cl(); }); });
+  })();
   /* ---------- quick navigation (floating +) ---------- */
   function ensureQuickNav(){
     if(document.getElementById("qnav")){ qnavBuildMenu(); return; }
@@ -1459,26 +1513,22 @@ td.num,th.num,td.r,th.r,td[align=right],th[align=right]{font-variant-numeric:tab
   }
   function qnavBuildMenu(){
     var menu=document.getElementById("qnavMenu"); if(!menu) return;
-    var items=[]; items.push({t:"↑  Top of page",act:function(){ try{ window.scrollTo({top:0,behavior:"smooth"}); }catch(e){ window.scrollTo(0,0); } }});
-    function tab(label,name){ return {t:label,act:function(){ goTab(name); }}; }
-    function ext(label,url){ return {t:label+"  ↗",act:function(){ window.open(url,"_blank","noopener"); }}; }
-    if(meRole==="fincom"){ items.push(tab("Fincom Dashboard","fincom")); }
-    else {
-      items.push(tab("Home","home"));
-      items.push(tab("Voting & Meetings","meetings"));
-      items.push(tab("Registrations & Clubs","registrations"));
-      items.push(tab("Website Analytics","webstats"));
-      items.push(tab("Awards RSVPs","awards"));
-      items.push(tab("Season Calendar","calendar"));
-      items.push(tab("Website Admin","webadmin"));
-      items.push(tab("Fincom Dashboard","fincom"));
-      items.push(tab("Data Integrity","integrity"));
-      if(meRole==="administrator") items.push(tab("Users","users"));
-      items.push(ext("Fixtures & Results","https://cttfass.leaguerepublic.com"));
-      items.push(ext("Live website","https://www.cttfa.co.za"));
+    var items=[];
+    function tab(label,name,ic){ return {t:label,ic:ic,act:function(){ goTab(name); }}; }
+    if(meRole==="fincom"){
+      items.push(tab("Fincom Dashboard","fincom","<path d=\"M3 3v18h18\"/><path d=\"M7 15v3M12 10v8M17 6v12\"/>"));
+      items.push(tab("Help & guide","help",null));
+    } else {
+      items.push(tab("Fixtures & Results","fixtures","<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\"/><path d=\"M16 2v4M8 2v4M3 10h18\"/>"));
+      items.push(tab("Club Profile","clubprofile","<rect x=\"3\" y=\"4\" width=\"18\" height=\"16\" rx=\"2\"/><circle cx=\"9\" cy=\"10\" r=\"2.4\"/><path d=\"M5.5 16c.5-1.7 2-2.8 3.5-2.8s3 1.1 3.5 2.8M14.5 9h4M14.5 13h4\"/>"));
+      items.push(tab("Club Debtors","debtors","<path d=\"M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6\"/>"));
+      items.push(tab("Registrations","registrations","<path d=\"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M22 21v-2a4 4 0 0 0-3-3.87\"/>"));
+      items.push(tab("Discipline & Cards","discipline","<rect x=\"7\" y=\"3\" width=\"10\" height=\"14\" rx=\"1\"/><path d=\"M9 21h6M12 17v4\"/>"));
+      items.push(tab("Referees","referees","<circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M12 8v5l3 2\"/>"));
+      items.push(tab("Awards","awards","<path d=\"M12 2l2.9 6.3 6.9.6-5.2 4.5 1.6 6.7L12 17l-6.2 3.6 1.6-6.7L2.2 9.5l6.9-.6z\"/>"));
     }
-    items.push(tab("Help & guide","help"));
-    menu.innerHTML='<div class="qnav-h">Jump to</div>'+items.map(function(it,i){ return '<button class="qnav-item" data-i="'+i+'">'+esc(it.t)+'</button>'; }).join("");
+    function row(it,i){ var ic=it.ic?'<span class="qnav-ic"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+it.ic+'</svg></span>':''; return '<button class="qnav-item" data-i="'+i+'">'+ic+'<span>'+esc(it.t)+'</span></button>'; }
+    menu.innerHTML='<div class="qnav-h">Quick links</div>'+items.map(row).join("");
     Array.prototype.forEach.call(menu.querySelectorAll(".qnav-item"),function(b){ b.onclick=function(){ var it=items[+b.dataset.i]; menu.classList.add("hidden"); var f=document.getElementById("qnavFab"); if(f) f.classList.remove("on"); try{ it.act(); }catch(e){} }; });
   }
 
