@@ -1728,6 +1728,37 @@ body .card,body .tile,body .twf,body .dash-card,body .cmp,body .infog{background
 body .card-f{background:#FBF7F0}
 .club{position:relative}.club-open{position:absolute;inset:0;width:100%;height:100%;border:0;background:transparent;cursor:pointer;z-index:1;padding:0;font:inherit}.club .clinks a{position:relative;z-index:2}
 .leaflet-control-attribution a{text-decoration:underline!important}
+
+/* SA football pyramid (governance) */
+.sap{text-align:center}
+.sap h3{font-size:26px;text-wrap:balance}
+.sap .ig-sub{max-width:66ch;margin:0 auto 26px;font-size:14.5px}
+.sap-cols{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:36px;align-items:start}
+@media (max-width:900px){.sap-cols{grid-template-columns:minmax(0,1fr)}}
+.sap-cols>div{min-width:0}
+.sap-pt{font-family:var(--cond);text-transform:uppercase;letter-spacing:.16em;font-weight:700;font-size:13px;color:var(--blue);margin:0 0 14px}
+.sap-pyr{display:flex;flex-direction:column;align-items:center;gap:8px}
+.sap-band{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;width:100%;margin-top:6px}
+.sap-band::before,.sap-band::after{content:"";flex:1;height:1px;background:var(--line)}
+.sap-band:first-child{margin-top:0}
+.sap-t{position:relative;width:var(--w);max-width:100%;border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.sap-t .tn{font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;opacity:.85}
+.sap-t .nm{font-family:var(--head);font-weight:800;font-size:16px;line-height:1.2}
+.sap-t .sp{font-size:13px;opacity:.9;max-width:46ch;line-height:1.45}
+.sap-pro{background:var(--navy);color:#fff}
+.sap-semi{background:var(--blue);color:#fff}
+.sap-am{background:#EEF2FC;color:var(--navy)}
+.sap-us{background:var(--gold);color:var(--navy);margin-top:12px;box-shadow:0 0 0 3px #fff,0 0 0 5px var(--navy)}
+.sap-here{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;font-family:var(--cond);font-weight:700;font-size:12px;letter-spacing:.12em;text-transform:uppercase;padding:2px 12px;border-radius:999px;white-space:nowrap}
+.sap-ud{max-width:52ch;margin:16px auto 0;font-size:13px;background:#FFF4D6;border:1px dashed var(--gold);border-radius:10px;padding:9px 14px}
+.sap-ud b{color:var(--navy)}
+.sap .orgbox{width:100%;max-width:300px}
+.sap-ctx{font-size:12.5px;color:var(--muted);max-width:40ch;margin:12px auto 0}
+.sap-key{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:28px auto 0;max-width:900px;border-top:1px solid var(--line);padding-top:20px}
+@media (max-width:640px){.sap-key{grid-template-columns:minmax(0,1fr)}}
+.sap-key div{font-size:13px;color:var(--muted)}
+.sap-key b{display:flex;align-items:center;justify-content:center;gap:8px;font-family:var(--head);color:var(--navy);font-size:14.5px;margin-bottom:2px}
+.sap-sw{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid var(--line)}
 </style>
 <link rel="stylesheet" href="assets/leaflet.css">
 <script defer src="assets/leaflet.js"></script>
@@ -3206,21 +3237,48 @@ body .card-f{background:#FBF7F0}
         </svg>
       </div>
 
-      <div class="infog" style="margin-top:22px">
-        <h3>Where we sit in the game</h3>
-        <p class="ig-sub">Cape Town Tygerberg is a Local Football Association: the grassroots tier of organised football. We are affiliated upward through SAFA Cape Town, our regional mother body, to SAFA, CAF and FIFA. That places our competitions, player registrations and referee standards inside the official South African and world football framework.</p>
-        <div class="orgc">
-          <div class="orgbox"><b>FIFA &amp; CAF</b><span>World and African governing bodies</span></div>
-          <div class="orgline"></div>
-          <div class="orgbox"><b>SAFA</b><span>South African Football Association — the national body</span></div>
-          <div class="orgline"></div>
-          <div class="orgbox"><b>SAFA Cape Town</b><span>Our regional mother body</span></div>
-          <div class="orgline"></div>
-          <div class="orgbox lead"><b>Cape Town Tygerberg LFA</b><span>Our Local Football Association — established 1993</span></div>
-          <div class="orgline"></div>
-          <div class="orgbox" style="min-width:280px"><b>Members &amp; clubs</b><span>50 affiliated clubs, and their teams, players and match officials</span></div>
-        </div>
+      <div class="infog sap" style="margin-top:22px">
+  <h3>Where we sit in South African football</h3>
+  <p class="ig-sub">South African football is built like a pyramid, with five levels of men's league football. The professional clubs you see on TV are at the top. Most players in the country play at the bottom, in community football run by Local Football Associations. Cape Town Tygerberg is one of them.</p>
+  <div class="sap-cols">
+    <div>
+      <p class="sap-pt">The five levels</p>
+      <div class="sap-pyr" role="list" aria-label="The five levels of South African men's league football, from the top">
+        <div class="sap-band">Professional</div>
+        <div class="sap-t sap-pro" style="--w:56%" role="listitem"><span class="tn">Level 1</span><span class="nm">Premier Division</span><span class="sp">The top league in the country. 16 full-time clubs.</span></div>
+        <div class="sap-t sap-pro" style="--w:66%" role="listitem"><span class="tn">Level 2</span><span class="nm">National First Division</span><span class="sp">The second professional league. 16 clubs.</span></div>
+        <div class="sap-band">Semi-professional</div>
+        <div class="sap-t sap-semi" style="--w:78%" role="listitem"><span class="tn">Level 3</span><span class="nm">SAFA Second Division</span><span class="sp">Played as a separate league in each of SAFA's 9 provinces.</span></div>
+        <div class="sap-band">Amateur</div>
+        <div class="sap-t sap-am" style="--w:89%" role="listitem"><span class="tn">Level 4</span><span class="nm">Regional League</span><span class="sp">A league in each of SAFA's 52 regions. Ours is run by SAFA Cape Town.</span></div>
+        <div class="sap-t sap-us" style="--w:100%" role="listitem"><span class="sap-here">This is us</span><span class="tn">Level 5</span><span class="nm">Local Football Associations</span><span class="sp">341 LFAs run community football across the country, for seniors, juniors, veterans and women. Cape Town Tygerberg is one of them.</span></div>
       </div>
+      <p class="sap-ud"><b>Moving up and down.</b> Clubs move between levels through promotion and relegation. Our league champions can earn a place in the Regional League through SAFA Cape Town's play-offs, and from there the path runs all the way to the top.</p>
+    </div>
+    <div>
+      <p class="sap-pt">Who we answer to</p>
+      <div class="orgc">
+        <div class="orgbox"><b>FIFA &amp; CAF</b><span>World and African football</span></div>
+        <div class="orgline"></div>
+        <div class="orgbox"><b>SAFA</b><span>South African Football Association, the national body</span></div>
+        <div class="orgline"></div>
+        <div class="orgbox"><b>SAFA Western Cape</b><span>One of SAFA's 9 provinces</span></div>
+        <div class="orgline"></div>
+        <div class="orgbox"><b>SAFA Cape Town</b><span>Our region, one of 52</span></div>
+        <div class="orgline"></div>
+        <div class="orgbox lead"><b>Cape Town Tygerberg LFA</b><span>Our Local Football Association, established 1993</span></div>
+        <div class="orgline"></div>
+        <div class="orgbox"><b>Members &amp; clubs</b><span>50 affiliated clubs, their teams, players and match officials</span></div>
+      </div>
+      <p class="sap-ctx">Our player registrations, competitions and referees all sit inside this chain, so the same rules apply here as at every level above us.</p>
+    </div>
+  </div>
+  <div class="sap-key" aria-label="What the terms mean">
+    <div><b><span class="sap-sw" style="background:var(--navy)"></span>Professional</b>Players are paid full-time. Run by the Premier Soccer League.</div>
+    <div><b><span class="sap-sw" style="background:var(--blue)"></span>Semi-professional</b>Players are paid part-time. Run by SAFA.</div>
+    <div><b><span class="sap-sw" style="background:#EEF2FC"></span>Amateur</b>Players play for the love of the game. Run by SAFA, its regions and LFAs.</div>
+  </div>
+</div>
 
 
       <h3 class="blocktitle" style="font-size:20px">SAFA Cape Town governing documents</h3>
