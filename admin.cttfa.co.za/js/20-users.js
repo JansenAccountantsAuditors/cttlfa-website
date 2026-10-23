@@ -2,8 +2,8 @@
 (function(NS){
   "use strict";
   /* ---------- users ---------- */
-  var AREA_LABELS={voting:"Voting",registrations:"Registrations",webadmin:"Website Admin",discipline:"Discipline",fincom:"Fincom",debtors:"Club Debtors",fixtures:"Fixtures",site:"Live site"};
-  var AREA_ORDER=["voting","registrations","webadmin","discipline","fincom","debtors","fixtures","site"];
+  var AREA_LABELS={voting:"Voting",registrations:"Registrations",webadmin:"Website Admin",discipline:"Discipline",fincom:"Fincom",debtors:"Club Debtors",fixtures:"Fixtures",site:"Live site",calendar:"Season Calendar"};
+  var AREA_ORDER=["voting","registrations","webadmin","discipline","fincom","debtors","fixtures","site","calendar"];
   var _uEditing=null;
   async function loadUsers(){
     var _S=NS.session(), me=_S.me, meRole=_S.role;
