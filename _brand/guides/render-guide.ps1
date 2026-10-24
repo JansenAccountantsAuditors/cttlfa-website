@@ -9,7 +9,7 @@ $tmp  = Join-Path $env:TEMP 'cttlfa-guide'
 New-Item -ItemType Directory -Force $tmp | Out-Null
 $png = Join-Path $tmp 'guide.png'
 $pdf = Join-Path $docs 'cttlfa-protest-complaint-guide-2026.pdf'
-& $edge --headless=new --disable-gpu --hide-scrollbars --user-data-dir="$tmp\prof" --virtual-time-budget=8000 --force-device-scale-factor=2 --window-size=1200,2095 --screenshot="$png" $url | Out-Null
+& $edge --headless=new --disable-gpu --hide-scrollbars --user-data-dir="$tmp\prof" --virtual-time-budget=8000 --force-device-scale-factor=2 --window-size=1200,2226 --screenshot="$png" $url | Out-Null
 & $edge --headless=new --disable-gpu --user-data-dir="$tmp\prof" --virtual-time-budget=8000 --no-pdf-header-footer --print-to-pdf="$pdf" $url | Out-Null
 Start-Sleep -Seconds 2
 Add-Type -AssemblyName System.Drawing
