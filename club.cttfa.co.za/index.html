@@ -216,6 +216,16 @@
   .faqq summary::-webkit-details-marker{display:none}
   .faqq[open] summary{border-bottom:1px solid var(--hair)}
   .faqq .fa{padding:12px 16px;font-size:13px;color:var(--muted);line-height:1.6}
+  .avbar{background:#fbf3df;border-bottom:1px solid #ecd9a6;color:#5b4410;font-size:13px}
+  .avbar .wrap{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding-top:9px;padding-bottom:9px}
+  .avbar b{color:#3d2d08}
+  .avtag{display:inline-block;background:#071A4A;color:#fff;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:3px 10px}
+  body.adminview #btnSignout{display:none!important}
+  .avtoast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,140%);background:#071A4A;color:#fff;border-radius:12px;padding:10px 16px;font-size:13.5px;box-shadow:0 12px 30px rgba(7,26,74,.3);transition:transform .2s;z-index:9999;max-width:calc(100vw - 32px)}
+  .avtoast.show{transform:translate(-50%,0)}
+  @media(prefers-reduced-motion:reduce){.avtoast{transition:none}}
+  .dsc-note{font-size:12.5px;color:var(--muted);line-height:1.55;margin:12px 0 0}
+  .num{text-align:right;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -281,6 +291,7 @@
       <button role="tab" id="tabOverviewBtn" aria-selected="true" onclick="showTab('overview')">Overview</button>
       <button role="tab" id="tabLeagueBtn" aria-selected="false" onclick="showTab('league')">League &amp; Fixtures</button>
       <button role="tab" id="tabRegBtn" aria-selected="false" onclick="showTab('reg')">Members</button>
+      <button role="tab" id="tabDiscBtn" aria-selected="false" onclick="showTab('disc')">Discipline</button>
       <button role="tab" id="tabFinanceBtn" aria-selected="false" onclick="showTab('finance')">Finance</button>
       <button role="tab" id="tabCorrBtn" aria-selected="false" onclick="showTab('corr')">Correspondence</button>
       <button role="tab" id="tabClubBtn" aria-selected="false" onclick="showTab('club')">Club admin</button>
@@ -300,6 +311,10 @@
     <div id="tab-reg" hidden>
       <div class="loading" id="rgLoading">Loading members&hellip;</div>
       <div id="rgBody" hidden></div>
+    </div>
+    <div id="tab-disc" hidden>
+      <div class="loading" id="dsLoading">Loading your discipline record&hellip;</div>
+      <div id="dsBody" hidden></div>
     </div>
     <div id="tab-finance" hidden>
       <div class="loading" id="fnLoading">Loading your account&hellip;</div>
@@ -341,7 +356,33 @@ var CONFIG = {
   SITE_URL: 'https://club.cttfa.co.za'
 };
 var sb = window.supabase.createClient(CONFIG.SUPA_URL, CONFIG.SUPA_ANON);
+
+/* ---------------- Admin Centre view (read-only, opened inside admin.cttfa.co.za) ----------------
+   The Admin Centre frames this page with ?adminview=1 and posts the signed-in admin's access token
+   and the club key. Every read then carries the header x-cttlfa-view-club; the database only honours
+   it for active Admin Centre users, and every portal write refuses while it is present. */
+var ADMINVIEW = /[?&]adminview=1\b/.test(location.search) && window.parent !== window;
+var AV_ORIGINS = ['https://www.admin.cttfa.co.za','https://admin.cttfa.co.za'];
+var AV_CLUB = null, AV_ORIGIN = null, AV_BOOTED = false;
+function avClient(token, club){
+  return window.supabase.createClient(CONFIG.SUPA_URL, CONFIG.SUPA_ANON, {
+    auth:{ persistSession:false, autoRefreshToken:false, detectSessionInUrl:false, storageKey:'cttlfa-adminview' },
+    global:{ headers:{ Authorization:'Bearer '+token, 'x-cttlfa-view-club': club } } });
+}
+function avToast(t){
+  var d=document.getElementById('avToast');
+  if(!d){ d=document.createElement('div'); d.id='avToast'; d.className='avtoast'; d.setAttribute('role','status'); d.setAttribute('aria-live','polite'); document.body.appendChild(d); }
+  d.textContent=t; d.className='avtoast show'; clearTimeout(avToast._h); avToast._h=setTimeout(function(){ d.className='avtoast'; },4000);
+}
+function avBlocked(){ if(!ADMINVIEW) return false; avToast('Admin Centre view is read-only. Nothing can be changed or paid from here.'); return true; }
+function avPost(msg){ if(ADMINVIEW && AV_ORIGIN){ try{ window.parent.postMessage(msg, AV_ORIGIN); }catch(e){} } }
+function avSizeLoop(){
+  if(!ADMINVIEW) return; var last=0;
+  function send(){ var h=Math.ceil(document.documentElement.scrollHeight); if(h!==last){ last=h; avPost({type:'cttlfa-adminview-height', h:h}); } }
+  try{ new ResizeObserver(send).observe(document.body); }catch(e){} setInterval(send, 1200); send();
+}
 var mode='signin', HOME=null, PROFILE=null, SEASON=null, MEMBERS=null;
+var DISC_DONE=false, DISC=null, OV_REG=null;
 var LEAGUE_DONE=false, REG_DONE=false, FIN_DONE=false, CORR_DONE=false, CLUB_DONE=false, RES_DONE=false, HELP_DONE=false;
 var HELP_WIRED=false, _helpBubble=null;
 
@@ -440,12 +481,13 @@ el('rcForm').addEventListener('submit', function(){ doSetNewPassword(); });
 
 /* ---------------- tabs ---------------- */
 function showTab(t){
-  ['overview','league','reg','finance','corr','club','resources','help'].forEach(function(x){
+  ['overview','league','reg','disc','finance','corr','club','resources','help'].forEach(function(x){
     el('tab-'+x).hidden = (x!==t);
     var b=el('tab'+x.charAt(0).toUpperCase()+x.slice(1)+'Btn'); if(b) b.setAttribute('aria-selected', x===t);
   });
   if(t==='league' && !LEAGUE_DONE){ LEAGUE_DONE=true; loadLeague(); }
   if(t==='reg' && !REG_DONE){ REG_DONE=true; loadReg(); }
+  if(t==='disc' && !DISC_DONE){ DISC_DONE=true; loadDisc(); }
   if(t==='finance' && !FIN_DONE){ FIN_DONE=true; loadFinance(); }
   if(t==='corr' && !CORR_DONE){ CORR_DONE=true; loadCorr(); }
   if(t==='club' && !CLUB_DONE){ CLUB_DONE=true; loadClub(); }
@@ -456,7 +498,7 @@ function showTab(t){
 
 /* ---------------- boot ---------------- */
 async function boot(){
-  el('authView').hidden=true; el('appView').hidden=false; el('btnSignout').hidden=false;
+  el('authView').hidden=true; el('appView').hidden=false; el('btnSignout').hidden=ADMINVIEW;
   el('helpToggle').hidden=false; initHelp();
   var r=await sb.rpc('portal_home');
   if(r.error){ el('ovLoading').textContent='Could not load your account: '+r.error.message; return; }
@@ -467,13 +509,19 @@ async function boot(){
     return;
   }
   el('topSub').textContent=HOME.name||'Club Portal';
+  if(ADMINVIEW && !el('avBar')){
+    var bar=document.createElement('div'); bar.id='avBar'; bar.className='avbar';
+    bar.innerHTML='<div class="wrap"><span class="avtag">Admin Centre view</span><span>You are seeing exactly what <b>'+esc(HOME.name||'this club')+'</b> sees at club.cttfa.co.za. Read-only: nothing can be changed, uploaded or paid from here.</span></div>';
+    var tb=document.querySelector('.tabsbar'); if(tb) tb.parentNode.insertBefore(bar, tb);
+  }
   var pr=await Promise.all([ sb.rpc('portal_profile'), sb.rpc('portal_meetings'), sb.rpc('portal_registrations') ]);
   PROFILE=(pr[0]&&pr[0].data)||{};
   var meet=(pr[1]&&pr[1].data)||{has:false};
   var reg=(pr[2]&&pr[2].data)||{};
   try{ var res=await fetch(CONFIG.SEASON_URL,{cache:'no-store'}); SEASON=await res.json(); }catch(e){ SEASON=null; }
+  OV_REG=reg;
   renderOverview(meet, reg);
-  payReturnBanner();
+  if(!ADMINVIEW) payReturnBanner();
 }
 
 /* ---------------- season matching ---------------- */
@@ -615,6 +663,7 @@ function renderOverview(meet, reg){
   var links=[];
   if(p.website) links.push('<a href="'+esc(p.website)+'" target="_blank" rel="noopener">Website &#8599;</a>');
   if(p.facebook) links.push('<a href="'+esc(p.facebook)+'" target="_blank" rel="noopener">Facebook &#8599;</a>');
+  links.push('<a href="#" id="ovSummaryPdf" onclick="clubSummaryPDF();return false">Club summary (PDF)</a>');
   var memLabel = (HOME.type==='full'?'Full member':(HOME.type==='associate'?'Associate member':''));
   html+='<div class="card idhero">'+crestHTML(96)
       +'<div class="idmeta"><h1>'+esc(HOME.name||'Your club')+'</h1>'
@@ -838,6 +887,7 @@ function membersCSV(){
 
 /* ---------------- FINANCE: PayFast online payment ---------------- */
 async function doPayNow(){
+  if(avBlocked()) return;
   var amtEl=el('payAmt'), msg=el('payMsg'), btn=el('payNow');
   msg.className='msg';
   var amt=Math.round((Number(amtEl&&amtEl.value)||0)*100)/100;
@@ -1073,6 +1123,87 @@ async function loadCorr(){
   el('coBody').innerHTML=h; el('coLoading').hidden=true; el('coBody').hidden=false;
 }
 
+/* ---------------- DISCIPLINE (cards, rulings, fines) ---------------- */
+async function fetchDisc(){
+  if(DISC) return DISC;
+  var r=await sb.rpc('portal_discipline'); if(r.error) throw r.error;
+  DISC=r.data||{}; return DISC;
+}
+function csvCell(v){ v=String(v==null?'':v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+async function loadDisc(){
+  var d;
+  try{ d=await fetchDisc(); }catch(e){ el('dsBody').innerHTML='<p class="empty">Could not load your discipline record: '+esc(e.message||e)+'</p>'; el('dsLoading').hidden=true; el('dsBody').hidden=false; return; }
+  if(d.authorised===false){ el('dsBody').innerHTML='<p class="empty">Your discipline record is not available.</p>'; el('dsLoading').hidden=true; el('dsBody').hidden=false; return; }
+  var rul=d.rulings||[], cards=d.cards||[], byDiv=d.cards_by_division||[];
+  var out=Number(d.fines_outstanding)||0;
+  var h='<div class="card"><div class="sechead"><h2 data-help="Your club&rsquo;s record in the LFA disciplinary system: yellow cards, Disciplinary Committee rulings and fines. Fines are billed to your club account.">Discipline record</h2></div>'
+    +'<div class="stats">'
+      +'<div class="stat"><div class="sl">Yellow cards</div><div class="sv">'+num(d.cards_total)+'</div><div class="sn">this season</div></div>'
+      +'<div class="stat"><div class="sl">DC rulings</div><div class="sv">'+num(d.rulings_total)+'</div><div class="sn">cases decided</div></div>'
+      +'<div class="stat"><div class="sl">Fines issued</div><div class="sv">'+money(d.fines_issued)+'</div><div class="sn">'+money(d.fines_paid)+' paid</div></div>'
+      +'<div class="stat'+(out>0?' accent':'')+'"><div class="sl">Fines outstanding</div><div class="sv">'+(out>0?money(out):'&ndash;')+'</div><div class="sn">'+(out>0?'on your account':'nothing outstanding')+'</div></div>'
+    +'</div>'
+    +'<p class="dsc-note">From the LFA disciplinary system'+(d.as_at?(', as at '+dateZA(d.as_at)):'')+'. Fines are billed to your club account and appear on your statement under Finance. Queries about a case go to the DC office.</p></div>';
+  h+='<div class="card"><div class="sechead"><h2>Disciplinary Committee rulings</h2>'+(rul.length?'<button class="link" type="button" id="dsRulCsv">Download CSV</button>':'')+'</div>';
+  if(!rul.length) h+='<p class="empty">No rulings against your club&rsquo;s players on record.</p>';
+  else {
+    h+='<div class="tblwrap"><table><thead><tr><th>Case</th><th>Match date</th><th>Player</th><th>Charge / article</th><th>Outcome</th><th class="num">Fine</th><th>Fine status</th><th>Invoice</th></tr></thead><tbody>';
+    rul.forEach(function(x){
+      var fs = !x.fine_issued ? '&ndash;' : (x.fine_paid ? '<span class="pill good"><span class="dot"></span>Paid</span>' : '<span class="pill warn"><span class="dot"></span>Outstanding</span>');
+      h+='<tr><td>'+esc(x['case']||'&ndash;')+'</td><td style="white-space:nowrap">'+(x.date?dateZA(x.date):'&ndash;')+'</td><td>'+esc(x.player||'&ndash;')+'</td><td>'+esc([x.charge,x.article].filter(Boolean).join(' · ')||'&ndash;')+'</td><td>'+esc(x.outcome||'&ndash;')+'</td><td class="num">'+(x.fine_issued?money(x.fine):'&ndash;')+'</td><td>'+fs+'</td><td>'+esc(x.invoice||'&ndash;')+'</td></tr>';
+    });
+    h+='</tbody></table></div>';
+  }
+  h+='</div>';
+  h+='<div class="card"><div class="sechead"><h2>Yellow cards</h2>'+(cards.length?'<button class="link" type="button" id="dsCardCsv">Download CSV</button>':'')+'</div>';
+  if(!cards.length) h+='<p class="empty">No yellow cards on record.</p>';
+  else {
+    h+='<div class="tblwrap"><table><thead><tr><th>Division</th><th class="num">Cards</th></tr></thead><tbody>'
+      +byDiv.map(function(x){ return '<tr><td>'+esc(x.division)+'</td><td class="num">'+num(x.n)+'</td></tr>'; }).join('')+'</tbody></table></div>';
+    h+='<details style="margin-top:12px"><summary style="cursor:pointer;font-weight:700;font-size:13.5px">Every card ('+num(cards.length)+')</summary><div class="tblwrap" style="margin-top:10px"><table><thead><tr><th>Date</th><th>Player</th><th>Division</th><th>Opponent</th></tr></thead><tbody>'
+      +cards.map(function(x){ return '<tr><td style="white-space:nowrap">'+(x.date?dateZA(x.date):'&ndash;')+'</td><td>'+esc(x.player||'&ndash;')+'</td><td>'+esc(x.division||'&ndash;')+'</td><td>'+esc(x.opponent||'&ndash;')+'</td></tr>'; }).join('')+'</tbody></table></div></details>';
+  }
+  h+='</div>';
+  el('dsBody').innerHTML=h; el('dsLoading').hidden=true; el('dsBody').hidden=false;
+  var nm=(HOME&&HOME.name)||'club';
+  var rc=el('dsRulCsv'); if(rc) rc.onclick=function(){ dl(nm+' - DC rulings.csv', ['Case,Match date,Player,Charge,Article,Outcome,Fine,Fine issued,Fine paid,Invoice'].concat(rul.map(function(x){ return [x['case'],x.date?String(x.date).slice(0,10):'',x.player,x.charge,x.article,x.outcome,x.fine,x.fine_issued?'Yes':'No',x.fine_paid?'Yes':'No',x.invoice].map(csvCell).join(','); })).join('\n'), 'text/csv'); };
+  var cc=el('dsCardCsv'); if(cc) cc.onclick=function(){ dl(nm+' - yellow cards.csv', ['Date,Player,Division,Opponent'].concat(cards.map(function(x){ return [x.date?String(x.date).slice(0,10):'',x.player,x.division,x.opponent].map(csvCell).join(','); })).join('\n'), 'text/csv'); };
+}
+
+/* ---------------- CLUB SUMMARY PDF (one page per club, same data as the portal) ---------------- */
+async function clubSummaryPDF(){
+  var JS=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF; if(!JS){ avToast('The PDF library has not loaded yet. Please try again.'); return; }
+  var disc=null; try{ disc=await fetchDisc(); }catch(e){ disc=null; }
+  try{
+    var doc=new JS({unit:'pt',format:'a4'}), W=doc.internal.pageSize.getWidth(), M=40;
+    var S={ org_contact: (HOME&&HOME.org_contact)||'treasurer@cttfa.co.za', statement_footer:'Cape Town Tygerberg Local Football Association · Club summary from the Club Portal. Management-prepared figures; not audited.' };
+    var y=stLetterhead(doc,S,'CLUB SUMMARY')+22, p=PROFILE||{}, reg=OV_REG||{};
+    doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor.apply(doc,ST_INK); doc.text(HOME.name||'Club', M, y);
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor.apply(doc,ST_MUTED);
+    var sub=[]; if(HOME.code) sub.push('Ref '+HOME.code); if(HOME.type) sub.push(HOME.type==='full'?'Full member':(HOME.type==='associate'?'Associate member':HOME.type)); if(p.ground) sub.push(p.ground+(p.suburb?', '+p.suburb:'')); sub.push('Prepared '+dateZA(stIso(new Date())));
+    doc.text(sub.join('   ·   '), M, y+15); y+=34;
+    function sec(t){ doc.setFont('helvetica','bold'); doc.setFontSize(10.5); doc.setTextColor.apply(doc,ST_NAVY); doc.text(t.toUpperCase(), M, y); y+=8; }
+    function kv(rows){ doc.autoTable({ startY:y, body:rows, theme:'plain', margin:{left:M,right:M}, styles:{fontSize:9.5,cellPadding:3,textColor:ST_INK}, columnStyles:{0:{textColor:ST_MUTED,cellWidth:170},1:{fontStyle:'bold'}} }); y=doc.lastAutoTable.finalY+16; }
+    function tbl(head, body){ doc.autoTable({ startY:y, head:[head], body:body, theme:'grid', margin:{left:M,right:M}, styles:{fontSize:8.5,cellPadding:3.5,lineColor:ST_HAIR,textColor:ST_INK}, headStyles:{fillColor:ST_NAVY,textColor:255,fontStyle:'bold'} }); y=doc.lastAutoTable.finalY+16; }
+    var bal=Number(HOME.balance)||0, over=Number(HOME.over)||0, ag=HOME.ageing||{};
+    sec('Account and standing');
+    kv([['Balance', stAmtR(bal)],['Overdue', over>0?stAmtR(over):'–'],['Standing', HOME.out_of_compliance?'Out of compliance':(bal<0?'In credit':(over>0?'Amount overdue':(bal>0?'Balance owing':'Up to date')))],
+        ['Ageing (current / 30 / 60 / 90 / 120+)', [ag.current,ag.d30,ag.d60,ag.d90,ag.d120].map(stAmt).join(' / ')],['As at', HOME.as_at?dateZA(HOME.as_at):'–']]);
+    sec('Registrations');
+    kv([['Registered players', (reg.players!=null?num(reg.players):'–')+(reg.cycle_label?' ('+reg.cycle_label+' cycle)':'')],['Seniors / juniors', num(reg.seniors)+' / '+num(reg.juniors)],['Referees', num(reg.referees)],['Foreign players', num(reg.foreign)]]);
+    var divs=myDivisions();
+    if(divs.length){ sec('Teams and league positions'); tbl(['Competition','Position','Played','Points'], divs.map(function(d){ return [d.name, d.pos?(d.pos+' of '+d.size):'–', String(d.played), d.row?String(d.row[7]):'–']; })); }
+    if(disc && disc.authorised!==false){
+      sec('Discipline');
+      kv([['Yellow cards', num(disc.cards_total)],['DC rulings', num(disc.rulings_total)],['Fines issued / paid', stAmtR(disc.fines_issued)+' / '+stAmtR(disc.fines_paid)],['Fines outstanding', Number(disc.fines_outstanding)>0?stAmtR(disc.fines_outstanding):'–']]);
+      var unpaid=(disc.rulings||[]).filter(function(x){ return x.fine_issued && !x.fine_paid; });
+      if(unpaid.length) tbl(['Case','Player','Article','Fine','Invoice'], unpaid.map(function(x){ return [x['case']||'–', x.player||'–', x.article||'–', stAmtR(x.fine), x.invoice||'–']; }));
+    }
+    stFooters(doc,S);
+    doc.save((HOME.name||'Club')+' - club summary.pdf');
+  }catch(e){ avToast('Could not build the PDF: '+(e.message||e)); }
+}
+
 /* ---------------- CLUB ADMIN (self-service) ---------------- */
 async function loadClub(){
   var p=PROFILE||{};
@@ -1143,9 +1274,10 @@ function drawExec(execs){
   var box=el('execList'); if(!box) return;
   if(!execs.length){ box.innerHTML='<p class="empty">No office-bearers added yet.</p>'; return; }
   box.innerHTML=execs.map(function(e){ return '<div class="exec"><div class="who"><b>'+esc(e.name)+'</b>'+(e.member_match?' <span class="pill neutral" style="font-size:10.5px">registered</span>':'')+'<div class="r">'+esc(e.role)+'</div></div><div class="cx">'+esc(e.email||'')+(e.phone?('<br>'+esc(e.phone)):'')+'</div><button class="btn danger sm" data-x="'+e.id+'" type="button">Remove</button></div>'; }).join('');
-  Array.prototype.forEach.call(box.querySelectorAll('[data-x]'),function(b){ b.onclick=async function(){ if(!confirm('Remove this office-bearer?')) return; await sb.rpc('portal_exec_remove',{p_id:Number(b.dataset.x)}); CLUB_DONE=false; loadClub(); }; });
+  Array.prototype.forEach.call(box.querySelectorAll('[data-x]'),function(b){ b.onclick=async function(){ if(avBlocked()) return; if(!confirm('Remove this office-bearer?')) return; await sb.rpc('portal_exec_remove',{p_id:Number(b.dataset.x)}); CLUB_DONE=false; loadClub(); }; });
 }
 async function addExec(mem){
+  if(avBlocked()) return;
   var m=el('xMsg'); m.style.color='var(--muted)'; m.textContent='';
   var name=(el('xn').value||'').trim(), role=(el('xr').value||'').trim(), email=(el('xe').value||'').trim(), phone=(el('xp').value||'').trim();
   if(!name||!role){ m.style.color='var(--bad)'; m.textContent='Name and role are required.'; return; }
@@ -1163,6 +1295,7 @@ function drawDocs(docs){
   Array.prototype.forEach.call(box.querySelectorAll('[data-doc]'),function(b){ b.onclick=async function(){ b.disabled=true; try{ var r=await sb.storage.from('club-docs').createSignedUrl(b.dataset.doc,120); if(r.data&&r.data.signedUrl) window.open(r.data.signedUrl,'_blank','noopener'); else alert('Could not open the document.'); }catch(e){ alert('Could not open the document.'); } b.disabled=false; }; });
 }
 async function uploadDoc(ev){
+  if(avBlocked()){ try{ ev.target.value=''; }catch(e){} return; }
   var f=ev.target.files&&ev.target.files[0]; if(!f) return;
   var m=el('docMsg'); m.style.color='var(--muted)';
   if(f.size>15*1024*1024){ m.style.color='var(--bad)'; m.textContent='File is larger than 15 MB. Please upload a smaller PDF.'; return; }
@@ -1178,6 +1311,7 @@ async function uploadDoc(ev){
   CLUB_DONE=false; setTimeout(loadClub,700);
 }
 async function submitClubEdit(){
+  if(avBlocked()) return;
   var m=el('ef_msg'); m.style.color='var(--muted)'; m.textContent='Submitting…';
   function v(id){ return (el(id)&&el(id).value.trim())||''; }
   function orig(o,k){ return (o&&o[k]!=null)?String(o[k]).trim():''; }
@@ -1303,6 +1437,20 @@ function initHelp(){
 
 /* ---------------- start ---------------- */
 (async function(){
+  if(ADMINVIEW){
+    document.body.classList.add('adminview');
+    el('authView').hidden=true;
+    window.addEventListener('message', function(ev){
+      if(AV_ORIGINS.indexOf(ev.origin)<0) return;
+      var d=ev.data||{}; if(d.type!=='cttlfa-adminview' || !d.token || !d.club) return;
+      AV_ORIGIN=ev.origin;
+      if(AV_CLUB && d.club!==AV_CLUB){ location.reload(); return; }
+      AV_CLUB=d.club; sb=avClient(d.token, d.club);
+      if(!AV_BOOTED){ AV_BOOTED=true; avSizeLoop(); boot(); }
+    });
+    AV_ORIGINS.forEach(function(o){ try{ window.parent.postMessage({type:'cttlfa-adminview-ready'}, o); }catch(e){} });
+    return;
+  }
   setMode('signin');
   if(RECOVERY_MODE) return;
   var s=await sb.auth.getSession();
