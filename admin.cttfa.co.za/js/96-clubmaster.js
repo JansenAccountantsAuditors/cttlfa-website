@@ -32,6 +32,7 @@
 
   /* first-team base name for LeagueRepublic */
   function lrBase(k) { var m = String(k || "").match(/^(.*?)\s+([A-H])\.?$/); return m ? m[1] : String(k || "").replace(/\.$/, ""); }
+  function isConf(l) { return l.method === "manual" && !!(l.note && String(l.note).trim()); }
   function cellFor(c, sys) {
     var ls = (c.links || []).filter(function (l) { return l.system === sys; });
     if (!ls.length) return { state: "missing", html: '<span class="cm-st bad"><span aria-hidden="true">■</span> Missing</span>' };
@@ -43,11 +44,14 @@
       same = names.length === 1 && names[0] === c.name;
       if (ls.length > 1) extra = ' <span class="cm-sub" title="' + esc(ls.map(function (l) { return l.key; }).join(", ")) + '">' + num(ls.length) + ' teams</span>';
     } else {
-      names = ls.map(function (l) { return l.name || l.key; });
+      var main = ls.filter(function (l) { return !isConf(l); }), conf = ls.filter(isConf);
+      if (!main.length) { main = ls; conf = []; }
+      names = main.map(function (l) { return l.name || l.key; });
       same = names.length === 1 && names[0] === c.name;
+      if (conf.length) extra += ' <span class="cm-sub" title="' + esc(conf.map(function (l) { return l.note; }).join(" | ")) + '">also: ' + esc(conf.map(function (l) { return l.name || l.key; }).join(", ")) + ' (confirmed)</span>';
       if (sys === "sage") extra = ' <span class="cm-sub">' + esc(ls.map(function (l) { return l.key; }).join(", ")) + '</span>';
     }
-    var multi = sys !== "leaguerepublic" && sys !== "safa" && ls.length > 1;
+    var multi = sys !== "leaguerepublic" && sys !== "safa" && ls.filter(function (l) { return !isConf(l); }).length > 1;
     var gone = ls.some(function (l) { return !l.present; });
     var st = gone ? '<span class="cm-st bad"><span aria-hidden="true">■</span> Gone at source</span>'
       : multi ? '<span class="cm-st warn"><span aria-hidden="true">▲</span> ' + num(ls.length) + ' linked</span>'
@@ -76,7 +80,7 @@
     var un = D.unlinked || [], gone = D.gone || [], can = !!D.can_edit;
     var multi = [];
     (D.clubs || []).forEach(function (c) {
-      ["sage", "website", "dc"].forEach(function (s) { var n = (c.links || []).filter(function (l) { return l.system === s; }); if (n.length > 1) multi.push({ club: c.name, system: s, keys: n.map(function (l) { return l.key; }) }); });
+      ["sage", "website", "dc"].forEach(function (s) { var n = (c.links || []).filter(function (l) { return l.system === s; }); if (n.filter(function (l) { return !isConf(l); }).length > 1) multi.push({ club: c.name, system: s, keys: n.map(function (l) { return l.key; }) }); });
     });
     if (!un.length && !gone.length && !multi.length) return '<div class="cm-ok"><span aria-hidden="true">●</span> Nothing needs attention: every item in every system is linked to a club, and every link still exists at source.</div>';
     var h = '<h4 class="cm-h4">Needs attention</h4><div class="cm-tblwrap"><table class="cm-tbl"><thead><tr><th scope="col">System</th><th scope="col">Item</th><th scope="col">Issue</th>' + (can ? '<th scope="col">Action</th>' : "") + '</tr></thead><tbody>';
