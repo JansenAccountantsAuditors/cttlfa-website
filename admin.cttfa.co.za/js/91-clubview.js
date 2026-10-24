@@ -128,10 +128,19 @@
       if (!f || ev.source !== f.contentWindow) return;
       if (d.type === "cttlfa-adminview-ready") { FRAME_ORIGIN = ev.origin; sendToken(); }
       else if (d.type === "cttlfa-adminview-height" && d.h) f.style.height = Math.max(600, Math.min(20000, Number(d.h) || 0)) + "px";
+      else if (d.type === "cttlfa-adminview-toast" && d.text) toast(String(d.text).slice(0, 200));
     });
   }
   function startToken() { stopToken(); TOKEN_TIMER = setInterval(function () { if (!document.getElementById("cvFrame")) { stopToken(); return; } sendToken(); }, 4 * 60 * 1000); }
   function stopToken() { if (TOKEN_TIMER) { clearInterval(TOKEN_TIMER); TOKEN_TIMER = null; } }
+
+  function toast(t) {
+    var x = document.getElementById("cvToast");
+    if (!x) { x = document.createElement("div"); x.id = "cvToast"; x.setAttribute("role", "status"); x.setAttribute("aria-live", "polite");
+      x.style.cssText = "position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:#071A4A;color:#fff;padding:11px 16px;border-radius:12px;font-size:13.5px;box-shadow:0 12px 30px rgba(7,26,74,.3);z-index:9999;max-width:calc(100vw - 32px);display:none";
+      document.body.appendChild(x); }
+    x.textContent = t; x.style.display = "block"; clearTimeout(toast._h); toast._h = setTimeout(function () { x.style.display = "none"; }, 4500);
+  }
 
   /* ---------- internal panel ---------- */
   function kv(rows) { return '<dl class="cv-kv">' + rows.filter(Boolean).map(function (x) { return '<dt>' + x[0] + '</dt><dd>' + x[1] + '</dd>'; }).join("") + '</dl>'; }

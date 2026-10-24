@@ -370,6 +370,7 @@ function avClient(token, club){
     global:{ headers:{ Authorization:'Bearer '+token, 'x-cttlfa-view-club': club } } });
 }
 function avToast(t){
+  if(ADMINVIEW && AV_ORIGIN){ avPost({type:'cttlfa-adminview-toast', text:t}); return; }
   var d=document.getElementById('avToast');
   if(!d){ d=document.createElement('div'); d.id='avToast'; d.className='avtoast'; d.setAttribute('role','status'); d.setAttribute('aria-live','polite'); document.body.appendChild(d); }
   d.textContent=t; d.className='avtoast show'; clearTimeout(avToast._h); avToast._h=setTimeout(function(){ d.className='avtoast'; },4000);
