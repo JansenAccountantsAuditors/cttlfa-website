@@ -7,7 +7,7 @@
    same current SAFA card-cycle figures the club sees. Replaces the old two-pager. */
 (function (NS) {
   "use strict";
-  var PORTAL = "https://club.cttfa.co.za";
+  var PORTAL = "https://www.club.cttfa.co.za", PORTAL_ORIGINS = ["https://www.club.cttfa.co.za", "https://club.cttfa.co.za"], FRAME_ORIGIN = null;
   var IDX = null, Q = "", CUR = null, TOKEN_TIMER = null, LISTENER = false;
 
   function esc(s) { return NS.esc ? NS.esc(s == null ? "" : String(s)) : String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" }[c]; }); }
@@ -117,16 +117,16 @@
     var f = document.getElementById("cvFrame"); if (!f || !CUR) return;
     NS.sb.auth.getSession().then(function (s) {
       var t = s && s.data && s.data.session && s.data.session.access_token;
-      if (t && f.contentWindow) f.contentWindow.postMessage({ type: "cttlfa-adminview", token: t, club: CUR.key }, PORTAL);
+      if (t && f.contentWindow) f.contentWindow.postMessage({ type: "cttlfa-adminview", token: t, club: CUR.key }, FRAME_ORIGIN || PORTAL);
     });
   }
   function listen() {
     if (LISTENER) return; LISTENER = true;
     window.addEventListener("message", function (ev) {
-      if (ev.origin !== PORTAL) return;
+      if (PORTAL_ORIGINS.indexOf(ev.origin) < 0) return;
       var d = ev.data || {}, f = document.getElementById("cvFrame");
       if (!f || ev.source !== f.contentWindow) return;
-      if (d.type === "cttlfa-adminview-ready") sendToken();
+      if (d.type === "cttlfa-adminview-ready") { FRAME_ORIGIN = ev.origin; sendToken(); }
       else if (d.type === "cttlfa-adminview-height" && d.h) f.style.height = Math.max(600, Math.min(20000, Number(d.h) || 0)) + "px";
     });
   }
