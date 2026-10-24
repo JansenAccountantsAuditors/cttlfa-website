@@ -1,0 +1,8 @@
+# Club portal: may be framed ONLY by the Admin Centre (read-only Club Profile view).
+# Overrides the site-wide X-Frame-Options SAMEORIGIN from the root .htaccess, which would
+# otherwise block admin.cttfa.co.za from showing the portal. No other site may frame it.
+<IfModule mod_headers.c>
+  Header unset X-Frame-Options
+  Header always unset X-Frame-Options
+  Header set Content-Security-Policy "frame-ancestors 'self' https://www.admin.cttfa.co.za https://admin.cttfa.co.za"
+</IfModule>
