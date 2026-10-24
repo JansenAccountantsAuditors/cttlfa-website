@@ -1791,6 +1791,11 @@ body .card-f{background:#FBF7F0}
 .dc-inl{background:none;border:0;padding:0;color:var(--blue);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer}
 .dc-formlink{display:block;margin:8px auto 0;background:none;border:0;padding:0;color:var(--blue);font:700 12.5px var(--body);text-decoration:underline;cursor:pointer}
 #page-discipline .dc-dl{margin-top:16px;width:100%;justify-content:center;background:var(--gold);border-color:var(--gold);color:var(--navy)}
+
+/* Discipline page: club guide */
+.dc-guide{max-width:760px;margin:0 auto;border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow-sm);background:#fff}
+.dc-guide img{display:block;width:100%;height:auto}
+#dc-guide{scroll-margin-top:96px}
 </style>
 <link rel="stylesheet" href="assets/leaflet.css">
 <script defer src="assets/leaflet.js"></script>
@@ -3389,6 +3394,7 @@ body .card-f{background:#FBF7F0}
         <button type="button" onclick="dcJump('dc-process')">The process</button>
         <button type="button" onclick="dcJump('dc-routes')">Which route?</button>
         <button type="button" onclick="dcJump('dc-pc')">Protests &amp; complaints</button>
+        <button type="button" onclick="dcJump('dc-guide')">Club guide</button>
         <button type="button" onclick="dcJump('dc-fees')">Deadlines &amp; fees</button>
         <button type="button" onclick="dcJump('dc-steps')">Step-by-step</button>
         <button type="button" onclick="dcJump('dc-docs')">Governing documents</button>
@@ -3403,7 +3409,7 @@ body .card-f{background:#FBF7F0}
           <div class="dls"><span class="n">3</span><h5>Send it within 4 days</h5><p>Email the form and proof of payment to <a href="mailto:dc@cttlfa.com">dc@cttlfa.com</a>. Your full written grounds follow within a further 2 days.</p></div>
         </div>
         <div class="dc-lodge-cta"><a class="dc-cta gold" href="docs/cttlfa-protest-complaint-form-2026.pdf" download="CTTLFA Protest and Complaint Form 2026.pdf">Download the form (PDF)</a><a class="dc-cta blue" href="mailto:dc@cttlfa.com?subject=Protest%20or%20complaint%20%E2%80%94%20CTTLFA">Email the Disciplinary Committee</a></div>
-        <p class="dc-lodge-foot">Not sure whether it is a protest or a complaint? <button type="button" class="dc-inl" onclick="dcJump('dc-routes')">See which route you need</button>. Want to challenge a decision? <button type="button" class="dc-inl" onclick="dcJump('dc-steps')">See how to appeal</button>.</p>
+        <p class="dc-lodge-foot">Not sure whether it is a protest or a complaint? <button type="button" class="dc-inl" onclick="dcJump('dc-routes')">See which route you need</button>. Want to challenge a decision? <button type="button" class="dc-inl" onclick="dcJump('dc-steps')">See how to appeal</button>. Prefer a one-page summary? <a class="dc-inl" href="docs/cttlfa-protest-complaint-guide-2026.pdf" download="CTTLFA Protest and Complaint Guide 2026.pdf">Download the club guide</a>.</p>
       </div>
       <h3 class="dc-h">How the three documents fit together</h3>
       <div class="dc-docs">
@@ -3428,7 +3434,7 @@ body .card-f{background:#FBF7F0}
       <div class="routes">
         <div class="route"><div class="rh"><span class="ric"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg></span><h4>Protest</h4></div>
           <div class="meta2"><span class="tag tag-blue">Within 4 days</span><span class="tag tag-gold">R700</span><span class="tag tag-green">→ Disciplinary Committee</span></div>
-          <p>About a match — an ineligible or unregistered player, or a matter raised with the referee during the game. Lodged by a team directly involved.</p><button type="button" class="dc-formlink" onclick="dcJump('dc-lodge')">Get the form</button></div>
+          <p>About a match — an ineligible or unregistered player, or a matter raised with the referee before or during the game. Lodged by a team directly involved.</p><button type="button" class="dc-formlink" onclick="dcJump('dc-lodge')">Get the form</button></div>
         <div class="route"><div class="rh"><span class="ric"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><h4>Complaint</h4></div>
           <div class="meta2"><span class="tag tag-blue">Within 4 days</span><span class="tag tag-gold">R700</span><span class="tag tag-green">→ Disciplinary Committee</span></div>
           <p>Misconduct or an off-field offence by a team, official, player or club. Not against a referee's playing decision, unless corruption is alleged.</p><button type="button" class="dc-formlink" onclick="dcJump('dc-lodge')">Get the form</button></div>
@@ -3447,12 +3453,12 @@ body .card-f{background:#FBF7F0}
           <div class="pchead">
             <span class="rl">Rule 11</span>
             <h4>Protest</h4>
-            <p>About a match — an ineligible or unregistered player, or a matter raised with the referee during the game.</p>
+            <p>About a match — an ineligible or unregistered player, or a matter raised with the referee before or during the game.</p>
           </div>
           <div class="pcbody">
             <div class="meta2" style="margin:0 0 12px"><span class="tag tag-blue">Within 4 days</span><span class="tag tag-gold">R700</span><span class="tag tag-green">+2 days for grounds</span></div>
-            <div class="pc-row"><b>Who lodges</b><span>The captain or a listed team official, recorded on the official return and signed on both team sheets on the day.</span></div>
-            <div class="pc-row"><b>How</b><span>Written notice of intention on the prescribed form, signed by a club executive, with the fee and proof of payment.</span></div>
+            <div class="pc-row"><b>Who lodges</b><span>The captain or a listed team official of a team in the game, raised with the referee and recorded on both team returns (Rules 11.1, 11.12). An ineligible or unregistered opponent can also be protested in writing within 4 days (Rule 11.13).</span></div>
+            <div class="pc-row"><b>How</b><span>Written notice of intention on the prescribed form, signed by a club executive, with the fee and proof of payment. The proof must show the club, team, opposition and fixture date; a generic deposit slip is not accepted.</span></div>
             <div class="pc-row"><b>Then</b><span>Full written grounds and evidence within a further 2 days. Both clubs are asked to attend the hearing.</span></div>
             <div class="pc-row"><b>Where</b><span>The Disciplinary Committee — <a href="mailto:dc@cttlfa.com">dc@cttlfa.com</a></span></div>
             <a class="btn dc-dl" href="docs/cttlfa-protest-complaint-form-2026.pdf" download="CTTLFA Protest and Complaint Form 2026.pdf">Download the form (PDF)</a>
@@ -3483,9 +3489,14 @@ body .card-f{background:#FBF7F0}
         </div>
         <div class="pc-note">
           <h5>Informal complaint (Rule 2.12.3)</h5>
-          <p>A minor, day-to-day matter can be raised informally within <b>72 hours</b>, with no fee, for the office to resolve. It does not replace a formal complaint where one is required. <a href="mailto:dc@cttlfa.com?subject=Informal%20complaint%20%E2%80%94%20CTTLFA&body=Dear%20Disciplinary%20Committee%2C%0A%0AINFORMAL%20COMPLAINT%20%28Rule%202.12.3%29%20%E2%80%94%20lodged%20within%2072%20hours%2C%20no%20fee.%0A%0AClub%20or%20party%20lodging%3A%0AMatter%3A%0AWhat%20happened%20%28date%2C%20division%29%3A%0A%0AName%3A%0APosition%3A%0AContact%20number%3A%0A%0AThank%20you.">Raise it informally →</a></p>
+          <p>Match officials who are not properly equipped or attired (Rule 2.12) can be reported informally within <b>72 hours</b>, with evidence. Note it on the team return or send a written report to the General Secretary. It does not replace a formal complaint where one is required. <a href="mailto:gs@cttlfa.com?subject=Informal%20complaint%20(Rule%202.12.3)%20%E2%80%94%20CTTLFA&body=Dear%20General%20Secretary%2C%0A%0AINFORMAL%20COMPLAINT%20(Rule%202.12.3)%20%E2%80%94%20match%20official%20equipment%20or%20attire%2C%20lodged%20within%2072%20hours.%0A%0AClub%20lodging%3A%0AFixture%20(teams%2C%20division%2C%20date)%3A%0AMatch%20official%3A%0AWhat%20was%20not%20in%20order%3A%0AEvidence%20attached%3A%0A%0AName%3A%0APosition%3A%0AContact%20number%3A%0A%0AThank%20you.">Report it to the General Secretary →</a></p>
         </div>
       </div>
+
+      <h3 class="dc-h" id="dc-guide" style="margin-top:52px">The club guide</h3>
+      <p class="dc-intro" style="color:var(--muted);max-width:760px;margin-bottom:18px">The one-page guide circulated to clubs, updated to match the 2026 Rules and Regulations. Tap it to open it full size.</p>
+      <figure class="dc-guide"><a href="docs/cttlfa-protest-complaint-guide-2026.jpg" target="_blank" rel="noopener"><img src="docs/cttlfa-protest-complaint-guide-2026-web.jpg" alt="How to lodge a protest or a complaint: the CTTLFA club guide. Protests (Rule 11) and complaints (Rule 12) are lodged within 4 days on the prescribed form, signed by a club executive, with the R700 fee and proof of payment, to dc@cttlfa.com; full grounds follow within a further 2 days. Appeals go to the Appeal Committee within 7 days with a R1 000 fee." loading="lazy" width="1400" height="2444"></a></figure>
+      <div class="dc-lodge-cta"><a class="dc-cta gold" href="docs/cttlfa-protest-complaint-guide-2026.pdf" download="CTTLFA Protest and Complaint Guide 2026.pdf">Download the guide (PDF)</a><a class="dc-cta blue" href="docs/cttlfa-protest-complaint-guide-2026.jpg" download="CTTLFA Protest and Complaint Guide 2026.jpg">Download as image</a></div>
 
       <h3 class="dc-h" id="dc-fees" style="margin-top:52px">Deadlines &amp; fees</h3>
       <div class="card" style="padding:6px 20px 14px"><div class="tbl-scroll"><table class="tbl dc-tbl">
@@ -3500,11 +3511,11 @@ body .card-f{background:#FBF7F0}
           <tr><td class="l">Appeal — written reasons</td><td class="l">+5 days</td><td>—</td></tr>
           <tr><td class="l">Escalation — appeal to SAFA Cape Town</td><td class="l">—</td><td class="pts">R5 000</td></tr>
         </tbody></table></div></div>
-      <p class="center" style="color:var(--muted);font-size:12.5px;margin-top:10px">Deadlines are strict and run from the match or the decision. A protest, complaint or appeal without its fee and proof of payment inside the deadline is not entertained.</p>
+      <p class="center" style="color:var(--muted);font-size:12.5px;margin-top:10px">Deadlines are strict and run from the match or the decision. A protest, complaint or appeal without its fee and proof of payment inside the deadline is not entertained. Fees are forfeited if a matter is withdrawn, dismissed as defective or unsuccessful.</p>
 
       <h3 class="dc-h" id="dc-steps" style="margin-top:52px">Step-by-step for clubs</h3>
       <details class="acc"><summary>Lodge a protest</summary><div class="accb"><ol>
-        <li><b>On the day —</b> your captain or a listed team official records the protest with the referee before or during the match, and it is noted and signed on both team returns.</li>
+        <li><b>On the day —</b> your captain or a listed team official records the protest with the referee before or during the match, and it is noted and signed on both team returns. If an opponent fielded an unregistered, suspended or improperly registered player, you may instead protest in writing within 4 days (Rule 11.13).</li>
         <li><b>Within 4 days of the match —</b> submit a written intention to protest on the <a class="dc-inl" href="docs/cttlfa-protest-complaint-form-2026.pdf" download="CTTLFA Protest and Complaint Form 2026.pdf">prescribed form</a>, signed by a club executive, with the <b>R700</b> fee and proof of payment (showing club, team, opponent and date). No fee in time, no protest.</li>
         <li><b>Within the next 2 days —</b> submit your full written grounds with supporting statements, documents and evidence.</li>
         <li><b>Attend the hearing —</b> both clubs are asked to be present at the Disciplinary Committee, which decides the protest on its merits.</li>
@@ -3524,7 +3535,7 @@ body .card-f{background:#FBF7F0}
         <li><b>After the decision —</b> if only the terms are given, you have 10 days to request the written grounds. Pay any fine promptly — a suspension runs until it is paid.</li>
       </ol></div></details>
       <details class="acc"><summary>Lodge an appeal</summary><div class="accb"><ol>
-        <li><b>Check it can be appealed —</b> warnings, reprimands, suspensions of less than three matches, and small fines cannot be appealed.</li>
+        <li><b>Check it can be appealed —</b> warnings, reprimands, short suspensions, and fines under R1 000 for a club or member (R500 for others) cannot be appealed.</li>
         <li><b>Within 7 days of the decision —</b> send a written notice of intention to appeal to the Appeal Committee, stating whether you appeal the verdict, the sentence, or both, and pay the <b>R1 000</b> deposit before the deadline.</li>
         <li><b>Within a further 5 days —</b> submit your written grounds: an inaccurate view of the facts and/or a wrong application of the law.</li>
         <li><b>The appeal is heard within 21 days —</b> the Appeal Committee decides the matter on the verdict, the sentence, or both.</li>
@@ -6244,7 +6255,8 @@ let DOWNLOADS=[
   {n:"SAFA Cape Town Standing Orders",m:"Standing orders of the regional body",t:"Governance",f:"docs/safa-cape-town-standing-orders.pdf",d:"SAFA Cape Town Standing Orders.pdf"},
   /* Discipline */
   {n:"Disciplinary Code 2026",m:"Offences, hearings, sanctions and appeals",t:"Discipline",f:"docs/cttlfa-disciplinary-code-2026.pdf",d:"CTTLFA Disciplinary Code 2026.pdf"},
-  {n:"Protest & Complaint Form 2026",m:"The form clubs use to lodge a protest or complaint, with the fee and proof of payment",t:"Discipline",f:"docs/cttlfa-protest-complaint-form-2026.pdf",d:"CTTLFA Protest and Complaint Form 2026.pdf"},
+  {n:"Protest & Complaint Guide 2026",m:"One-page club guide to lodging a protest or complaint",t:"Discipline",f:"docs/cttlfa-protest-complaint-guide-2026.pdf",d:"CTTLFA Protest and Complaint Guide 2026.pdf"},
+{n:"Protest & Complaint Form 2026",m:"The form clubs use to lodge a protest or complaint, with the fee and proof of payment",t:"Discipline",f:"docs/cttlfa-protest-complaint-form-2026.pdf",d:"CTTLFA Protest and Complaint Form 2026.pdf"},
   /* Referees */
   {n:"Referees Committee Constitution 2024",m:"Constitution of the CTTLFA Referees Committee",t:"Referees",f:"docs/cttlfa-referees-committee-constitution-2024.pdf",d:"CTTLFA Referees Committee Constitution 2024.pdf"},
   /* Forms */
